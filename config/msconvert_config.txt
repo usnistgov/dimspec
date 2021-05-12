@@ -1,0 +1,5 @@
+mzML=true
+zlib=true
+inten64=true
+filter="peakPicking vendor msLevel=1-"
+filter="threshold absolute 1 most-intense 1-"
