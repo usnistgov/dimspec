@@ -25,7 +25,7 @@ get_suspectlist <- function(destfile = file.path("src", "compoundlist", "suspect
 #' This simply points your browser to the NIST public data repository for the
 #' current NIST suspect list, where you can find additional information. Click
 #' the download button in the left column of any file to download it.
-#'
+#'s
 #' Requires the file "suspectlist_url.txt" to be present in the `config`
 #' subdirectory of the current working directory.
 #'
@@ -36,7 +36,7 @@ get_suspectlist <- function(destfile = file.path("src", "compoundlist", "suspect
 #' suspectlist_at_NIST()
 suspectlist_at_NIST <- function() {
   url_file <- file.path('config', 'suspectlist_url.txt')
-  if (!exists(url_file)) stop('Could not locate the "suspectlist_url.txt" file in the expected location.')
+  if (!file.exists(url_file)) stop('Could not locate the "suspectlist_url.txt" file in the expected location.')
   url <- readLines(url_file, warn = FALSE)
   url <- gsub("\\/ds\\/", "\\/id\\/", url)
   url <- dirname(url)

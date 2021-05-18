@@ -16,11 +16,11 @@ create table if not exists compounds
 	id 				INTEGER PRIMARY KEY,
 	name 			TEXT, 				-- name of compound, uncontrolled
 	inchi 			TEXT, 				-- inchi structure of compound, as submitted
-	inchikey 		TEXT, 				-- inchikey structure of compound, derived
-	smiles 			TEXT, 				-- smiles structure of compound, derived
-	additional 		TEXT, 				-- additional information, as submitted
 	source 			TEXT, 				-- DOI/Link of compound structure's source
 	source_type 	TEXT, 				-- one-letter character indicating type of source
+	additional 		TEXT, 				-- additional information, as submitted
+	smiles 			TEXT, 				-- smiles structure of compound, derived
+	inchikey 		TEXT, 				-- inchikey structure of compound, derived
 	local_pos 		INTEGER, 			-- number of atoms with positive charges, derived
 	local_neg 		INTEGER, 			-- number of atoms with negative charges, derived
 	formula 		TEXT, 				-- elemental formula, derived
@@ -59,29 +59,27 @@ create table if not exists solvent_mix
 (
 	mix_id			INTEGER,			-- mixture identifier to gather discrete components
 	component		INTEGER,			-- foreign key to solvent_fractions
-	FOREIGN KEY (component) REFERENCES solvent_fractions(id)
-);
-
-create table if not exists solvent_fractions
-	/*
-		Mobile phase solvent fractions for a given elution method. Does not require that a given mix fraction adds to 1.
-	*/
-(
-	id				INTEGER PRIMARY KEY,
-	solvent_id		INTEGER,			-- foreign key to solvents
 	fraction		REAL NOT NULL,		-- amount fraction amount of this solvent in the mixture, contrained from 0 - 1
-	FOREIGN KEY (solvent_id) REFERENCES solvents(id),
+	FOREIGN KEY (component) REFERENCES solvents(id),
 	CHECK (fraction BETWEEN 0 AND 1)
 );
 
-create view if not exists mobile_phase AS
-	select sm.mix_id, s.name as solvent, sf.fraction from solvent_mix sm
-		left join solvent_fractions sf on sf.id = sm.component
-		left join solvents s on s.id = sf.solvent_id;
+create view if not exists view_mobile_phase AS
+	select sm.mix_id, s.name as solvent, sm.fraction from solvent_mix sm
+		left join solvents s on s.id = sm.component;
 
-create table if not exists methods
+create table if not exists vendors
 	/*
-		Holds chromatographic elution programs and descriptions. A maximum of four mobile phases is supported.
+		Normalization table holding commercial instrument vendor information.
+	*/
+(
+	id				INTEGER PRIMARY KEY,
+	name			TEXT NOT NULL		-- company name
+);
+
+create table if not exists ms_method
+	/*
+		Mass spectrometer method settings.
 	*/
 (
 	id				INTEGER PRIMARY KEY,
@@ -90,24 +88,38 @@ create table if not exists methods
 	polarity 		TEXT, 				-- ionization polarity (negative, positive, or negative/positive)
 	ce_value 		TEXT, 				-- value for collision energy, normally a number but can be a range
 	ce_desc 		TEXT, 				-- description/context of the collision energy value (normalized, stepped, range, etc.)
-	ms_vendor 		TEXT, 				-- vendor of the mass spectrometer
+	ms_vendor 		INTEGER,			-- vendor of the mass spectrometer
 	ms_type 		TEXT, 				-- type of mass analyzers (QTOF, Q-ORBITRAP, etc.)
 	qc_method 		INTEGER, 			-- (0, 1) boolean: does the experiment have a QC method in place
 	qc_type 		TEXT, 				-- category of QC analysis (TBD)
 	source 			TEXT, 				-- citation for the experimental method
+	FOREIGN KEY (ms_vendor) REFERENCES vendors(id),
+	CHECK (polarity IN ('negative', 'positive', 'negative/positive')),
 	CHECK (qc_method IN (0, 1))
 );
 
 create table if not exists mobile_phases
+	/*
+		Description of mobile phases used during a chromatographic separation.
+	*/
 (
 	method_id		INTEGER,			-- foreign key to methods
-	mp				INTEGER,			-- foreign key to solvent_mix
+	carrier			INTEGER,			-- foreign key to solvent_mix
 	additive		TEXT,				-- buffer/salt/acid addition to mobile phase
 	duration		REAL NOT NULL,		-- time duration mobile phase was applied
-	duration_units	TEXT NOT NULL DEFAULT "min", -- time duration units, constrained to one of "second" or "minute"
+	duration_units	TEXT NOT NULL DEFAULT "minute", -- time duration units, constrained to one of "second" or "minute"
 	FOREIGN KEY (method_id) REFERENCES methods(id),
-	FOREIGN KEY (mp) REFERENCES solvent_mix(mix_id),
+	FOREIGN KEY (carrier) REFERENCES solvent_mix(mix_id),
 	CHECK (duration_units IN ("second", "minute"))
+);
+
+create table if not exists sample_classes
+	/*
+		Normalization table linking to samples to hold controlled vocabulary.
+	*/
+(
+	id				INTEGER PRIMARY KEY,
+	name			TEXT NOT NULL UNIQUE	-- name of the sample class
 );
 
 create table if not exists samples
@@ -117,8 +129,9 @@ create table if not exists samples
 (
 	id				INTEGER PRIMARY KEY,
 	name			TEXT, 				-- user-defined name of the sample
-	sample_class	TEXT, 				-- sample class, controlled
-	source 			TEXT 				-- citation for the sample source
+	sample_class	INTEGER, 			-- foreign key to sample_classes
+	source 			TEXT, 				-- citation for the sample source
+	FOREIGN KEY (sample_class) REFERENCES sample_classes(id)
 );
 
 create table if not exists peaks
