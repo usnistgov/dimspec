@@ -1,4 +1,4 @@
-list_extract_w_metadata <- function(peaklist_data) {
+list_extract_w_metadata <- function(peaklist_data, output_dir = "extract") {
   peaklist <- peaklist_data$PEAKLIST
   rawfiles <- paste(getwd(), "/input/", unique(peaklist$FILENAME), sep = "")
   msconvert <- readLines('config/msconvert_location.txt', warn = FALSE)
@@ -29,10 +29,12 @@ list_extract_w_metadata <- function(peaklist_data) {
       scans <- which(names(peak$mzML$run$spectrumList) == "spectrum")
       mslevels <- sapply(scans, getmslevel, mzml = peak)
       if (length(which(mslevels == 2)) > 0) {
-        saveRDS(peak, paste("output/extract/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], ".RDS", sep = ""))
+        saveRDS(peak, paste("output/", output_dir, "/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], ".RDS", sep = ""))
+        print(paste("Saved file at: output/extract/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], ".RDS", sep = ""))
       }
       if (length(which(mslevels == 2)) == 0) {
-        saveRDS(peak, paste("output/extract/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], "_NoMS2.RDS", sep = ""))
+        saveRDS(peak, paste("output/", output_dir, "/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], "_NoMS2.RDS", sep = ""))
+        print(paste("Saved file at: output/extract/", gsub("\\.[[:alpha:]]*", "", basename(rawfiles[j])), "_", subpeaklist$DB_IDENTIFIER[i], ".RDS", sep = ""))
       }
     }
   }

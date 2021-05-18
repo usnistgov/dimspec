@@ -1,0 +1,75 @@
+	Sampler.TempCtrl = 	On
+	Sampler.Temperature.Nominal = 	7.0 [°C]
+	Sampler.Temperature.LowerLimit = 	4.0 [°C]
+	Sampler.Temperature.UpperLimit = 	45.0 [°C]
+	Sampler.ReadyTempDelta = 	1.0 [°C]
+	ColumnOven_1.TempCtrl = 	On
+	ColumnOven_1.Temperature.Nominal = 	40.0 [°C]
+	ColumnOven_1.Temperature.LowerLimit = 	5.0 [°C]
+	ColumnOven_1.Temperature.UpperLimit = 	60.0 [°C]
+	EquilibrationTime = 	0.5 [min]
+	ColumnOven_1.ReadyTempDelta = 	1.0 [°C]
+	Cooler_TempCtrl = 	Off
+	Column_A.ActiveColumn = 	No
+	Column_B.ActiveColumn = 	No
+	Pressure.LowerLimit = 	0 [bar]
+	Pressure.UpperLimit = 	1000 [bar]
+	MaximumFlowRampDown = 	5.998 [ml/min²]
+	MaximumFlowRampUp = 	6.000 [ml/min²]
+	%A.Equate = 	"10 mM AmmAc in Water"
+	%B.Equate = 	"10 mM AmmAc in Methanol"
+	%C.Equate = 	"%C"
+	DrawSpeed = 	3000 [nl/s]
+	DrawDelay = 	3000 [ms]
+	DispSpeed = 	20000 [nl/s]
+	DispenseDelay = 	0 [ms]
+	WasteSpeed = 	32000 [nl/s]
+	WashSpeed = 	20000 [nl/s]
+	LoopWashFactor = 	2.000
+	SampleHeight = 	2.000 [mm]
+	PunctureDepth = 	10.000 [mm]
+	WashVolume = 	150.000 [µl]
+	SyncWithPump = 	On
+	Sampler.PumpDevice = 	"PumpLeft"
+	LowDispersionMode = 	Off
+	InjectMode = 	ulPickUp
+	FirstTransportVial = 	G1
+	LastTransportVial = 	G1
+	TransportVialCapacity = 	10000
+	TransLiquidHeight = 	5.000 [mm]
+	TransVialPunctureDepth = 	11.000 [mm]
+	FlushVolume = 	50.000 [µl]
+	PumpLeft_Pressure.Step = 	0.01 [s]
+	PumpLeft_Pressure.Average = 	On
+
+-5.000	Flow = 	0.450 [ml/min]
+	%B = 	5.0 [%]
+	%C = 	0.0 [%]
+	PumpLeft.Curve = 	5
+
+ 0.000	Wait	DAD.Ready and ColumnOven_1.Ready and Sampler.Ready and PumpLeft.Ready and PumpModule.Ready
+	Inject
+	PumpLeft_Pressure.AcqOn
+	CollectFractions = 	No
+
+ 1.000	Flow = 	0.450 [ml/min]
+	%B = 	5.0 [%]
+	%C = 	0.0 [%]
+	PumpLeft.Curve = 	5
+
+16.000	Flow = 	0.450 [ml/min]
+	%B = 	95.0 [%]
+	%C = 	0.0 [%]
+	PumpLeft.Curve = 	5
+
+26.000	PumpLeft_Pressure.AcqOff
+	Flow = 	0.450 [ml/min]
+	%B = 	95.0 [%]
+	%C = 	0.0 [%]
+	PumpLeft.Curve = 	5
+	Flow = 	0.450 [ml/min]
+	%B = 	5.0 [%]
+	%C = 	0.0 [%]
+	PumpLeft.Curve = 	5
+
+	End

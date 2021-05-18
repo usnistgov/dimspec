@@ -1,5 +1,9 @@
 if (!dir.exists("input")) {dir.create("input")}
 if (!dir.exists("output")) {dir.create("output")}
+if (!dir.exists("output/gather")) {dir.create("output/gather")}
+if (!dir.exists("output/aggregate")) {dir.create("output/aggregate")}
+if (!dir.exists("output/extract")) {dir.create("output/extract")}
+if (!dir.exists("output/example")) {dir.create("output/example")}
 
 packs       <- c("XML", "base64enc", "xlsx", "ggplot2")
 
