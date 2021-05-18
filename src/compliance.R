@@ -20,5 +20,5 @@ rm(packs, packs_TRUE, packs_FALSE)
 
 sources <- list.files('src', pattern = ".R", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(".RDS", sources)]
-sources <- sources[-which(sources == "src/compliance.R")]
+sources <- sources[-which(sources == file.path("src", "compliance.R"))]
 sapply(sources, source)
