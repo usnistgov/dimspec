@@ -2,9 +2,10 @@
 create database if not exists nist_pfas_nta_dev;
 	-- Database to hold results of non-targeted analyses mass spectrometry experiments.
 	-- To build, open a new database in SQLite in this directory
-		-- .read build.sql
+		sqlite3 nist_pfas_nta_dev
+		.read build.sql
 	-- Example data can be read in with
-		-- .read demo_data.sql
+		.read demo_data.sql
 */
 
 create table if not exists compounds
@@ -63,7 +64,7 @@ create table if not exists solvent_mix
 
 create table if not exists solvent_fractions
 	/*
-		Mobile phase solvent fractions for a given elution method.
+		Mobile phase solvent fractions for a given elution method. Does not require that a given mix fraction adds to 1.
 	*/
 (
 	id				INTEGER PRIMARY KEY,
