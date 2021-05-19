@@ -13,15 +13,22 @@ create table if not exists elements
 		Elemental isotope abundance ratios for comparison and deconvolution.
 	*/
 (
-	atomic_number	INTEGER NOT NULL,	-- periodic table atomic number (e.g. 2)
+	atomic_number	INTEGER PRIMARY KEY,	-- periodic table atomic number (e.g. 2)
 	symbol			TEXT NOT NULL,		-- periodic table symbol (e.g. "He")
-	common_name		TEXT NOT NULL,		-- periodic table common name (e.g. "Helium")
-	exact_mass		REAL NOT NULL,		-- exact atomic mass (e.g. 4.00260325413)
-	abundance		REAL NOT NULL,		-- isotopic abundance of exact_mass (e.g. 0.99999866)
-	CHECK (abundance BETWEEN 0 AND 1)
+	common_name		TEXT NOT NULL		-- periodic table common name (e.g. "Helium")
 );
 
-.import --csv --skip 1 data/elements.csv elements
+create table if not exists isotopes
+	/*
+		Elemental isotope abundance ratios for comparison and deconvolution.
+	*/
+(
+	atomic_number	INTEGER,			-- periodic table atomic number (e.g. 2)
+	exact_mass		REAL NOT NULL,		-- exact atomic mass (e.g. 4.00260325413)
+	abundance		REAL NOT NULL,		-- isotopic abundance of exact_mass (e.g. 0.99999866)
+	FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number),
+	CHECK (abundance BETWEEN 0 AND 1)
+);
 
 create table if not exists compounds
 	/*
@@ -78,10 +85,6 @@ create table if not exists solvent_mix
 	FOREIGN KEY (component) REFERENCES solvents(id),
 	CHECK (fraction BETWEEN 0 AND 1)
 );
-
-create view if not exists view_mobile_phase AS
-	select sm.mix_id, s.name as solvent, sm.fraction from solvent_mix sm
-		left join solvents s on s.id = sm.component;
 
 create table if not exists vendors
 	/*
@@ -221,3 +224,16 @@ create table if not exists fragment_ms1data_linkage
 	FOREIGN KEY (fragment_id) REFERENCES fragments(id),
 	FOREIGN KEY (data_id) REFERENCES ms1data(id)
 );
+
+.import --csv --skip 1 data/elements.csv elements
+.import --csv --skip 1 data/isotopes.csv isotopes
+
+create view if not exists element_isotopes as
+	select e.atomic_number, e.symbol, e.common_name, i.exact_mass, i.abundance
+	from elements e
+	join isotopes i on e.atomic_number = i.atomic_number;
+
+create view if not exists view_mobile_phase AS
+	select sm.mix_id, s.name as solvent, sm.fraction from solvent_mix sm
+		left join solvents s on s.id = sm.component;
+		
