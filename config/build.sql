@@ -1,12 +1,30 @@
-/*
-create database if not exists nist_pfas_nta_dev;
-	-- Database to hold results of non-targeted analyses mass spectrometry experiments.
-	-- To build, open a new database in SQLite in this directory
-		sqlite3 nist_pfas_nta_dev
-		.read build.sql
-	-- Example data can be read in with
-		.read demo_data.sql
-*/
+/*=============================================================================
+NIST database to hold results of non-targeted analysis high-resolution 
+accurate-mass mass spectrometry (NTA-HRAM-MS) experiments.
+
+					** Development version **
+					
+For information or support, contact the development team at
+	- NIST PFAS Program		PFAS@nist.gov
+	- Jared M. Ragland		jared.ragland@nist.gov
+	- Benjamin J. Place		benjamin.place@nist.gov
+===============================================================================
+Use this file to create a sketch of the SQLite database. Building in this 
+manner requires sqlite3 to be installed. For easiest implementation, navigate 
+to the ~config directory in your terminal.
+
+	sqlite3 nist_pfas_nta_dev
+	.read build.sql
+
+This will create the schema on your local machine for local population.
+Example data (a full demonstration version will be provided in the future) can 
+be read in with
+
+	.read demo_data.sql
+	
+=============================================================================*/
+
+/* Create tables */
 
 create table if not exists elements
 	/*
