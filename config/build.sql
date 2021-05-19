@@ -8,6 +8,21 @@ create database if not exists nist_pfas_nta_dev;
 		.read demo_data.sql
 */
 
+create table if not exists elements
+	/*
+		Elemental isotope abundance ratios for comparison and deconvolution.
+	*/
+(
+	atomic_number	INTEGER NOT NULL,	-- periodic table atomic number (e.g. 2)
+	symbol			TEXT NOT NULL,		-- periodic table symbol (e.g. "He")
+	common_name		TEXT NOT NULL,		-- periodic table common name (e.g. "Helium")
+	exact_mass		REAL NOT NULL,		-- exact atomic mass (e.g. 4.00260325413)
+	abundance		REAL NOT NULL,		-- isotopic abundance of exact_mass (e.g. 0.99999866)
+	CHECK (abundance BETWEEN 0 AND 1)
+);
+
+.import --csv --skip 1 data/elements.csv elements
+
 create table if not exists compounds
 	/*
 		Controlled list of chemical compounds with attributable analytical data.
