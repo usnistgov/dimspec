@@ -26,7 +26,9 @@ create table if not exists isotopes
 	atomic_number	INTEGER,			-- periodic table atomic number (e.g. 2)
 	exact_mass		REAL NOT NULL,		-- exact atomic mass (e.g. 4.00260325413)
 	abundance		REAL NOT NULL,		-- isotopic abundance of exact_mass (e.g. 0.99999866)
-	FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number),
+	FOREIGN KEY (atomic_number)
+		REFERENCES elements(atomic_number)
+		ON UPDATE CASCADE,
 	CHECK (abundance BETWEEN 0 AND 1)
 );
 
@@ -57,7 +59,7 @@ create table if not exists compounds
 
 create table if not exists solvents
 	/*
-		mobile phase solvent list: controlled.
+		Mobile phase solvent list: controlled.
 	*/
 (
 	id				INTEGER PRIMARY KEY,
@@ -71,7 +73,9 @@ create table if not exists solvent_aliases
 (
 	solvent_id		INTEGER,			-- foreign key to the solvents table
 	alias			TEXT UNIQUE,		-- human meaningful name(s) associated with a solvent
-	FOREIGN KEY (solvent_id) REFERENCES solvents(id)
+	FOREIGN KEY (solvent_id)
+		REFERENCES solvents(id)
+		ON UPDATE CASCADE
 );
 
 create table if not exists solvent_mix
@@ -82,7 +86,9 @@ create table if not exists solvent_mix
 	mix_id			INTEGER,			-- mixture identifier to gather discrete components
 	component		INTEGER,			-- foreign key to solvent_fractions
 	fraction		REAL NOT NULL,		-- amount fraction amount of this solvent in the mixture, contrained from 0 - 1
-	FOREIGN KEY (component) REFERENCES solvents(id),
+	FOREIGN KEY (component)
+		REFERENCES solvents(id)
+		ON UPDATE CASCADE,
 	CHECK (fraction BETWEEN 0 AND 1)
 );
 
@@ -111,7 +117,9 @@ create table if not exists ms_method
 	qc_method 		INTEGER, 			-- (0, 1) boolean: does the experiment have a QC method in place
 	qc_type 		TEXT, 				-- category of QC analysis (TBD)
 	source 			TEXT, 				-- citation for the experimental method
-	FOREIGN KEY (ms_vendor) REFERENCES vendors(id),
+	FOREIGN KEY (ms_vendor)
+		REFERENCES vendors(id)
+		ON UPDATE CASCADE,
 	CHECK (polarity IN ('negative', 'positive', 'negative/positive')),
 	CHECK (qc_method IN (0, 1))
 );
@@ -126,8 +134,12 @@ create table if not exists mobile_phases
 	additive		TEXT,				-- buffer/salt/acid addition to mobile phase
 	duration		REAL NOT NULL,		-- time duration mobile phase was applied
 	duration_units	TEXT NOT NULL DEFAULT "minute", -- time duration units, constrained to one of "second" or "minute"
-	FOREIGN KEY (method_id) REFERENCES methods(id),
-	FOREIGN KEY (carrier) REFERENCES solvent_mix(mix_id),
+	FOREIGN KEY (method_id)
+		REFERENCES methods(id)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (carrier)
+		REFERENCES solvent_mix(mix_id)
+		ON UPDATE CASCADE,
 	CHECK (duration_units IN ("second", "minute"))
 );
 
@@ -149,7 +161,9 @@ create table if not exists samples
 	name			TEXT, 				-- user-defined name of the sample
 	sample_class	INTEGER, 			-- foreign key to sample_classes
 	source 			TEXT, 				-- citation for the sample source
-	FOREIGN KEY (sample_class) REFERENCES sample_classes(id)
+	FOREIGN KEY (sample_class)
+		REFERENCES sample_classes(id)
+		ON UPDATE CASCADE
 );
 
 create table if not exists peaks
@@ -167,9 +181,15 @@ create table if not exists peaks
 	rt_start 		REAL NOT NULL, 		-- peak retention time start point
 	rt_center 		REAL NOT NULL, 		-- peak retention time centroid, derived
 	rt_end 			REAL NOT NULL, 		-- peak retention time end point
-	FOREIGN KEY (compound_id) REFERENCES compounds(id),
-	FOREIGN KEY (exp_id) REFERENCES methods(id),
-	FOREIGN KEY (sample_id) REFERENCES samples(id),
+	FOREIGN KEY (compound_id)
+		REFERENCES compounds(id)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (exp_id)
+		REFERENCES methods(id)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (sample_id)
+		REFERENCES samples(id)
+		ON UPDATE CASCADE,
 	CHECK (charge IN (-1, 1))
 );
 
@@ -182,7 +202,9 @@ create table if not exists ms1data
 	peak_id			INTEGER, 			-- foreign key to ms1data
 	scantime 		REAL NOT NULL, 		-- scan time of spectrum
 	ms1_data 		TEXT NOT NULL, 		-- locator/actual MS1 isotope data
-	FOREIGN KEY (peak_id) REFERENCES peaks(id)
+	FOREIGN KEY (peak_id)
+		REFERENCES peaks(id)
+		ON UPDATE CASCADE
 );
 
 create table if not exists ms2data
@@ -194,7 +216,9 @@ create table if not exists ms2data
 	peak_id			INTEGER, 			-- foreign key to ms1data
 	scantime 		REAL NOT NULL, 		-- scan time of spectrum
 	ms2_data 		TEXT NOT NULL, 		-- locator/actual MS2 fragmentation data
-	FOREIGN KEY (peak_id) REFERENCES peaks(id)
+	FOREIGN KEY (peak_id)
+		REFERENCES peaks(id)
+		ON UPDATE CASCADE
 );
 
 create table if not exists fragments
@@ -221,9 +245,15 @@ create table if not exists fragment_ms1data_linkage
 	fragment_id 	INTEGER NOT NULL, 	-- foreign key to fragment_table
 	data_id 		INTEGER NOT NULL, 	-- foreign key to data_table
 	mz_error 		REAL NOT NULL, 		-- measured mass error from fragment_table$MZ, derived
-	FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-	FOREIGN KEY (data_id) REFERENCES ms1data(id)
+	FOREIGN KEY (fragment_id)
+		REFERENCES fragments(id)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (data_id)
+		REFERENCES ms1data(id)
+		ON UPDATE CASCADE
 );
+
+/* Import default data tables */
 
 .import --csv --skip 1 data/elements.csv elements
 .import --csv --skip 1 data/isotopes.csv isotopes
