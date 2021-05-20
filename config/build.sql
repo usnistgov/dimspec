@@ -32,8 +32,8 @@ create table if not exists elements
 	*/
 (
 	atomic_number	INTEGER PRIMARY KEY,	-- periodic table atomic number (e.g. 2)
-	symbol			TEXT NOT NULL,		-- periodic table symbol (e.g. "He")
-	common_name		TEXT NOT NULL		-- periodic table common name (e.g. "Helium")
+	symbol			TEXT NOT NULL UNIQUE,	-- periodic table symbol (e.g. "He")
+	common_name		TEXT NOT NULL UNIQUE	-- periodic table common name (e.g. "Helium")
 );
 
 create table if not exists isotopes
@@ -50,29 +50,46 @@ create table if not exists isotopes
 	CHECK (abundance BETWEEN 0 AND 1)
 );
 
+create table if not exists source_types
+	/*
+		Validation list of source types to be used in the compounds table.
+	*/
+(
+	id				INTEGER PRIMARY KEY,
+	abbreviation	TEXT NOT NULL,		-- (single) letter abbreviation for the source type
+	st_type			TEXT NOT NULL,		-- full name of the source type
+	definition		TEXT NOT NULL		-- definition of the source type
+);
+
 create table if not exists compounds
 	/*
 		Controlled list of chemical compounds with attributable analytical data.
 	*/
 (
 	id 				INTEGER PRIMARY KEY,
-	name 			TEXT, 				-- name of compound, uncontrolled
-	inchi 			TEXT, 				-- inchi structure of compound, as submitted
-	source 			TEXT, 				-- DOI/Link of compound structure's source
-	source_type 	TEXT, 				-- one-letter character indicating type of source
+	name 			TEXT NOT NULL,		-- name of compound, uncontrolled
+	inchi 			TEXT NOT NULL,		-- inchi structure of compound, as submitted
+	source 			TEXT NOT NULL,		-- DOI/Link of compound structure's source
+	source_type 	INTEGER NOT NULL,	-- one-letter character indicating type of source
 	additional 		TEXT, 				-- additional information, as submitted
-	smiles 			TEXT, 				-- smiles structure of compound, derived
-	inchikey 		TEXT, 				-- inchikey structure of compound, derived
-	local_pos 		INTEGER, 			-- number of atoms with positive charges, derived
-	local_neg 		INTEGER, 			-- number of atoms with negative charges, derived
-	formula 		TEXT, 				-- elemental formula, derived
-	fixedmass 		REAL, 				-- exact mass of compound, derived
-	netcharge 		INTEGER, 			-- total formal charge of compound, derived
+	smiles 			TEXT NOT NULL, 		-- smiles structure of compound, derived
+	inchikey 		TEXT NOT NULL, 		-- inchikey structure of compound, derived
+	local_pos 		INTEGER NOT NULL DEFAULT 0,	-- number of atoms with positive charges, derived
+	local_neg 		INTEGER NOT NULL DEFAULT 0,	-- number of atoms with negative charges, derived
+	formula 		TEXT NOT NULL, 				-- elemental formula, derived
+	fixedmass 		REAL NOT NULL, 				-- exact mass of compound, derived
+	netcharge 		INTEGER NOT NULL DEFAULT 0,	-- total formal charge of compound, derived
 	dtxsid 			TEXT, 				-- dtxsid identifier
 	dtxcid 			TEXT, 				-- dtxcid identifier
 	casrn 			TEXT, 				-- CAS registry number
 	pubchemid 		TEXT, 				-- PubChem identifier
-	inspectedby 	TEXT 				-- user inspection id
+	inspectedby 	TEXT, 				-- user inspection id
+	inspectedon		TEXT,				-- timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC)
+	CHECK (local_pos >= 0),
+	CHECK (local_neg >= 0),
+	FOREIGN KEY (source_type)
+		REFERENCES source_types(id)
+		ON UPDATE CASCADE
 );
 
 create table if not exists solvents
@@ -150,8 +167,8 @@ create table if not exists mobile_phases
 	method_id		INTEGER,			-- foreign key to methods
 	carrier			INTEGER,			-- foreign key to solvent_mix
 	additive		TEXT,				-- buffer/salt/acid addition to mobile phase
-	duration		REAL NOT NULL,		-- time duration mobile phase was applied
-	duration_units	TEXT NOT NULL DEFAULT "minute", -- time duration units, constrained to one of "second" or "minute"
+	duration		REAL,				-- time duration mobile phase was applied
+	duration_units	TEXT, 				-- time duration units, constrained to one of "second" or "minute"
 	FOREIGN KEY (method_id)
 		REFERENCES methods(id)
 		ON UPDATE CASCADE,
@@ -172,13 +189,14 @@ create table if not exists sample_classes
 
 create table if not exists samples
 	/*
-		Samples from which analytical data are derived.
+		Samples from which analytical data are derived. What goes into an analytical instrument.
 	*/
 (
 	id				INTEGER PRIMARY KEY,
 	name			TEXT, 				-- user-defined name of the sample
 	sample_class	INTEGER, 			-- foreign key to sample_classes
 	source 			TEXT, 				-- citation for the sample source
+	data_generator	TEXT,				-- generator of data for this sample
 	FOREIGN KEY (sample_class)
 		REFERENCES sample_classes(id)
 		ON UPDATE CASCADE
@@ -217,9 +235,10 @@ create table if not exists ms1data
 	*/
 (
 	id 				INTEGER PRIMARY KEY,
-	peak_id			INTEGER, 			-- foreign key to ms1data
+	peak_id			INTEGER, 			-- foreign key to peaks
 	scantime 		REAL NOT NULL, 		-- scan time of spectrum
 	ms1_data 		TEXT NOT NULL, 		-- locator/actual MS1 isotope data
+	contributor		TEXT,				-- contributor for these data
 	FOREIGN KEY (peak_id)
 		REFERENCES peaks(id)
 		ON UPDATE CASCADE
@@ -231,7 +250,7 @@ create table if not exists ms2data
 	*/
 (
 	id 				INTEGER PRIMARY KEY,
-	peak_id			INTEGER, 			-- foreign key to ms1data
+	peak_id			INTEGER, 			-- foreign key to peaks
 	scantime 		REAL NOT NULL, 		-- scan time of spectrum
 	ms2_data 		TEXT NOT NULL, 		-- locator/actual MS2 fragmentation data
 	FOREIGN KEY (peak_id)
@@ -261,7 +280,7 @@ create table if not exists fragment_ms1data_linkage
 	*/
 (
 	fragment_id 	INTEGER NOT NULL, 	-- foreign key to fragment_table
-	data_id 		INTEGER NOT NULL, 	-- foreign key to data_table
+	data_id 		INTEGER NOT NULL, 	-- foreign key to ms1data
 	mz_error 		REAL NOT NULL, 		-- measured mass error from fragment_table$MZ, derived
 	FOREIGN KEY (fragment_id)
 		REFERENCES fragments(id)
@@ -275,6 +294,7 @@ create table if not exists fragment_ms1data_linkage
 
 .import --csv --skip 1 data/elements.csv elements
 .import --csv --skip 1 data/isotopes.csv isotopes
+.import --csv --skip 1 data/source_types.csv source_types
 
 create view if not exists element_isotopes as
 	select e.atomic_number, e.symbol, e.common_name, i.exact_mass, i.abundance

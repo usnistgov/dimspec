@@ -4,7 +4,7 @@
 	You may also directly import these files into the appropriate tables using your SQLite IDE of choice; CSVs are named for their associated tables.
 */
 
-/* To build in console, use*/
+/* To build in console, use each of the following as needed. */
 .import --csv --skip 1 demo/solvents.csv solvents 
 .import --csv --skip 1 demo/solvent_aliases.csv solvent_aliases
 .import --csv --skip 1 demo/solvent_mix.csv solvent_mix
@@ -14,4 +14,3 @@
 .import --csv --skip 1 demo/samples.csv samples
 .import --csv --skip 1 demo/vendors.csv vendors
 .import --csv --skip 1 demo/ms_method.csv ms_method
-
