@@ -5,7 +5,7 @@ if (!dir.exists("output/aggregate")) {dir.create("output/aggregate")}
 if (!dir.exists("output/extract")) {dir.create("output/extract")}
 if (!dir.exists("output/example")) {dir.create("output/example")}
 
-packs       <- c("XML", "base64enc", "xlsx", "ggplot2")
+packs       <- c("XML", "base64enc", "xlsx", "ggplot2", "logger", "tools")
 
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
