@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<xs:schema>
+  <xs:complexType name="chromatography">
+    <xs:element minOccurs="1" maxOccurs="1" name="Vendor">
+      <xs:simpleType>
+        <xs:attribute name="type" type="xs:string" default="LC" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="LC"/>
+              <xs:enumeration value="GC"/>
+              <xs:enumeration value="CE"/>
+              <xs:enumeration value="SEC"/>
+              <xs:enumeration value="none"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:simpleType>
+    </xs:element>
+    
+    
+  </xs:complexType>
+  <xs:complexType name="massspectrometry">
+    
+  </xs:complexType>
+</xs:schema>

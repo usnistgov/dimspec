@@ -1,0 +1,71 @@
+<method_xml>
+<method>
+	<massspectrometry>
+		<ceunits> NCE </ceunits>
+
+		<polarity> negative </polarity>
+
+		<vunits> V </vunits>
+
+		<vvalue> 2500 </vvalue>
+
+		<massanalyzer1> quadrupole </massanalyzer1>
+
+		<massanalyzer2> orbitrap </massanalyzer2>
+
+		<detector> inductive detector </detector>
+
+		<fragmode> HCD </fragmode>
+
+		<imode> electrospray ionization </imode>
+
+		<cetype> stepped </cetype>
+
+		<msvendor> Thermo Fisher Scientific </msvendor>
+
+		<cevalue> 30 </cevalue>
+
+	</massspectrometry>
+	<chromatography>
+		<collen> 50 </collen>
+
+		<colvendor> Agilent Technologies </colvendor>
+
+		<mp3solvent> none </mp3solvent>
+
+		<colchemistry> C18 </colchemistry>
+
+		<mp3additive> none </mp3additive>
+
+		<mp2solvent> methanol </mp2solvent>
+
+		<vendor> Thermo Fisher Scientific </vendor>
+
+		<mp4additive> none </mp4additive>
+
+		<mp4solvent> none </mp4solvent>
+
+		<ctype> LC </ctype>
+
+		<mp1additive> 10 mM Ammonium Acetate </mp1additive>
+
+		<colname> Poroshell C18 </colname>
+
+		<mp2additive> 10 mM ammonium acetate </mp2additive>
+
+		<mp1solvent> water </mp1solvent>
+
+		<colid> 2.1 </colid>
+
+		<coldp> 1.8 </coldp>
+
+	</chromatography>
+	<qcmethod>
+		<qcused> TRUE </qcused>
+
+		<qctype> Mass Analyzer Calibration </qctype>
+		<qctype> External Standard Verification </qctype>
+
+	</qcmethod>
+</method>
+</method_xml>
