@@ -9,18 +9,22 @@ For information or support, contact the development team at
 	- Jared M. Ragland		jared.ragland@nist.gov
 	- Benjamin J. Place		benjamin.place@nist.gov
 ===============================================================================
-Use this file to create a sketch of the SQLite database. Building in this 
-manner requires sqlite3 to be installed. For easiest implementation, navigate 
-to the ~config directory in your terminal.
+Use this script to create a sketch of the SQLite database. Building in this 
+manner requires sqlite3 to be installed. Run from the project directory with
 
 	sqlite3 nist_pfas_nta_dev
-	.read build.sql
+	.read config/build.sql
+
+Note that build files are mostly located in the "config" directory and local 
+paths will need to be referenced appropriately, which may require modifications 
+to this script. This mostly applies to the commands in this introductory 
+section and at the end of this script file where default tables are populated.
 
 This will create the schema on your local machine for local population.
 Example data (a full demonstration version will be provided in the future) can 
 be read in with
 
-	.read demo_data.sql
+	.read config/demo_data.sql
 	
 =============================================================================*/
 
@@ -168,14 +172,15 @@ create table if not exists mobile_phases
 	carrier			INTEGER,			-- foreign key to solvent_mix
 	additive		TEXT,				-- buffer/salt/acid addition to mobile phase
 	duration		REAL,				-- time duration mobile phase was applied
-	duration_units	TEXT, 				-- time duration units, constrained to one of "second" or "minute"
+	duration_units	TEXT DEFAULT "minutes",	-- time duration units, constrained to one of "second" or "minutes"
 	FOREIGN KEY (method_id)
 		REFERENCES methods(id)
 		ON UPDATE CASCADE,
 	FOREIGN KEY (carrier)
 		REFERENCES solvent_mix(mix_id)
 		ON UPDATE CASCADE,
-	CHECK (duration_units IN ("second", "minute"))
+	CHECK (duration_units IN ("seconds", "minutes")),
+	CHECK (duration > 0)
 );
 
 create table if not exists sample_classes
@@ -197,8 +202,12 @@ create table if not exists samples
 	sample_class	INTEGER, 			-- foreign key to sample_classes
 	source 			TEXT, 				-- citation for the sample source
 	data_generator	TEXT,				-- generator of data for this sample
+	msconvert_settings INTEGER,			-- settings for the msconvert program used to generate data from this sample
 	FOREIGN KEY (sample_class)
 		REFERENCES sample_classes(id)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (msconver_settings)
+		REFERENCES msconvert_settings(id)
 		ON UPDATE CASCADE
 );
 
@@ -269,7 +278,7 @@ create table if not exists fragments
 	charge 			INTEGER NOT NULL, 	-- charge of specific fragment,derived
 	radical 		INTEGER NOT NULL, 	-- TRUE/FALSE: the fragment contains a radical electron, user submitted
 	smiles	 		TEXT, 				-- smiles structure of fragment ion, can be NULL, user submitted
-	source 			TEXT DEFAULT 'user' NOT NULL, 	-- citation/source for fragment identity, "user" is an option
+	source 			TEXT NOT NULL DEFAULT 'user', 	-- citation/source for fragment identity, "user" is an option
 	CHECK (charge IN (-1, 1)),
 	CHECK (radical IN (0, 1))
 );
@@ -290,11 +299,27 @@ create table if not exists fragment_ms1data_linkage
 		ON UPDATE CASCADE
 );
 
-/* Import default data tables */
+create table if not exists msconvert_settings
+	/*
+		Settings specific to the msconvert program.
+	*/
+(
+	id				INTEGER UNIQUE,
+	mzML			INTEGER NOT NULL DEFAULT 1,	-- TRUE/FALSE: whether to use the mzML format
+	zlib			INTEGER NOT NULL DEFAULT 1,	-- TRUE/FALSE; whether to use the zlib setting
+	inten64			INTEGER NOT NULL DEFAULT 1,	-- TRUE/FALSE; whether to use the inten64 setting
+	filter_peak_pick	TEXT NOT NULL DEFAULT "peakPicking vendor msLevel=1-",	-- peak picking setting
+	filter_threshold	TEXT NOT NULL DEFAULT "threshold absolute 1 most-intense 1-", -- threshold setting
+	UNIQUE(mzML, zlib, inten64, filter_peak_pick, filter_threshold),
+	CHECK (id > 0),								-- ensure id is an unsigned int
+	CHECK (mzML IN (0, 1)),						-- ensure mzML is boolean
+	CHECK (zlib IN (0, 1)),						-- ensure zlib is boolean
+	CHECK (inten64 IN (0, 1))					-- ensure inten64 is boolean
+);
 
-.import --csv --skip 1 data/elements.csv elements
-.import --csv --skip 1 data/isotopes.csv isotopes
-.import --csv --skip 1 data/source_types.csv source_types
+INSERT OR IGNORE INTO msconvert_settings(id) VALUES (1);
+
+/* Create views */
 
 create view if not exists element_isotopes as
 	select e.atomic_number, e.symbol, e.common_name, i.exact_mass, i.abundance
@@ -304,4 +329,10 @@ create view if not exists element_isotopes as
 create view if not exists view_mobile_phase AS
 	select sm.mix_id, s.name as solvent, sm.fraction from solvent_mix sm
 		left join solvents s on s.id = sm.component;
+
+/* Import default data tables */
+
+.import --csv --skip 1 config/data/elements.csv elements
+.import --csv --skip 1 config/data/isotopes.csv isotopes
+.import --csv --skip 1 config/data/source_types.csv source_types
 		

@@ -1,0 +1,5 @@
+﻿id,name,sample_class,source,data_generator
+1,CR001,surface water,colab1,researcher1
+2,CR002,surface water,colab1,researcher2
+3,SD001,sediment,colab1,researcher3
+4,SD002,sediment,colab1,researcher3
