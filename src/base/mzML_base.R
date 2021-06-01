@@ -238,3 +238,12 @@ getprocessingmethods <- function(mzml) {
   }))
   
 }
+
+zipms <- function(ms, zip = "gzip") {
+  ms <- c(t(ms))
+ ms <- writeBin(ms, raw(8), endian = "little")
+ if (zip == "gzip") {
+   ms <- memCompress(ms, type = zip)
+ }
+ base64encode(ms)
+}
