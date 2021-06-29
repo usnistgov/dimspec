@@ -1,0 +1,103 @@
+---
+title: "Peak Gather Example"
+author: "bjp"
+date: "6/29/2021"
+output: pdf_document
+---
+
+# Example of gathering data for DB input
+
+Include all necessary packages:
+
+```{r setup}
+source('src/base/mzML_base.R')
+source('src/methodreportingtool/parse_methodxml.R')
+source('src/gather/table_msdata.R')
+source('src/gather/peak_gather.R')
+source('src/base/peaktable2.R')
+```
+
+## Step 1) Load Method XML data and mzML data
+
+```{r loadfile}
+xmlfile <- 'example/PFAC30PAR_PFCA2_mzML.XML'
+methodxml <- parse_methodxml(xmlfile)
+mzmlfile <- paste(dirname(xmlfile), "/", methodxml$method$sample$filename, sep = "")
+mzml <- mzMLtoR(mzmlfile)
+```
+
+**XML Data**
+
+Sample Info:
+
+```{r sampleinfo, echo=FALSE}
+knitr::kable(cbind(names(methodxml$method$sample), methodxml$method$sample), row.names = FALSE)
+```
+
+Chromatography Info:
+```{r chromatographyinfo, echo=FALSE}
+knitr::kable(cbind(names(methodxml$method$chromatography), methodxml$method$chromatography), row.names = FALSE)
+```
+
+Mass Spectrometry Info:
+
+```{r massspectrometryinfo, echo=FALSE}
+knitr::kable(cbind(names(methodxml$method$massspectrometry), methodxml$method$massspectrometry), row.names = FALSE)
+```
+
+QC Method Info:
+
+```{r qcmethodinfo, echo=FALSE}
+knitr::kable(cbind(names(methodxml$method$qcmethod), methodxml$method$qcmethod), row.names = FALSE)
+```
+
+Peaklist:
+
+```{r peaklist, echo=FALSE}
+knitr::kable(do.call(rbind, lapply(methodxml$peaks, function(x) data.frame(x))), row.names = FALSE)
+```
+
+## Step 2) For each peak in the peak list, gather method data, peak data, and peak-specific MS data.
+
+```{r gather}
+dat <- peak_gather(methodxml, mzml)
+```
+
+Example dataset:
+
+```{r peakdata}
+i <- 2 ## because there were no annotations for peak 1
+dat[[i]]$peak
+```
+**MS1**
+
+```{r ms1plot}
+  ms1_peaktable <- peaktable(dat[[i]]$ms1data$msdata, masserror =  as.numeric(dat[[i]]$method$massspectrometry$msaccuracy))
+  mz <- rowMeans(ms1_peaktable$mass, na.rm = TRUE)
+  int <- rowMeans(ms1_peaktable$int, na.rm = TRUE)
+  ind <- which(mz >= as.numeric(dat[[i]]$peak$mz) - 0.5 & mz <= as.numeric(dat[[i]]$peak$mz) + 4)
+  mz <- mz[ind]
+  int <- int[ind]
+  plot(mz, int, type = "h")
+```
+
+**MS2**
+
+```{r ms2plot}
+  ms2_peaktable <- peaktable(dat[[i]]$ms2data$msdata, masserror =  as.numeric(dat[[i]]$method$massspectrometry$msaccuracy))
+  mz <- rowMeans(ms2_peaktable$mass, na.rm = TRUE)
+  int <- rowMeans(ms2_peaktable$int, na.rm = TRUE)
+  plot(mz, int, type = "h")
+```
+
+**Annotations:**
+
+```{r annotations}
+knitr::kable(dat[[i]]$annotation)
+```
+
+**write file for future reference**
+```{r save}
+saveRDS(dat, 'example/PFAC30PAR_PFCA2_output.RDS')
+```
+
