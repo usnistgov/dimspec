@@ -249,30 +249,33 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
-		SELECT id,
-			name,
+		SELECT c.id, c.name AS compound,
+			ca.alias,
+			car.name as ref_type,
 			CASE 
-				WHEN dtxsid IS NOT NULL AND NOT dtxsid IN ("NA", "")
-					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||dtxsid 
-				WHEN dtxcid IS NOT NULL AND NOT dtxcid IN ("NA", "")
-					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||dtxcid
-				WHEN pubchemid IS NOT NULL AND NOT pubchemid IN ("NA", "")
-					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||pubchemid
-				WHEN casrn IS NOT NULL AND NOT casrn IN ("NA", "")
-					THEN "https://commonchemistry.cas.org/detail?cas_rn="||casrn
-				WHEN inchikey IS NOT NULL AND NOT inchikey IN ("NA", "")
-					THEN "https://www.google.com/search?q="||inchikey
-				WHEN inchi IS NOT NULL AND NOT inchi IN ("NA", "")
-					THEN "https://www.google.com/search?q="||inchi
-				WHEN smiles IS NOT NULL AND NOT smiles IN ("NA", "")
+				WHEN car.name == "DTXSID"
+					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias 
+				WHEN car.name == "DTXCID"
+					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias
+				WHEN car.name == "PUBCHEMID"
+					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias 
+				WHEN car.name == "CASRN"
+					THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias 
+				WHEN car.name == "INCHIKEY"
+					THEN "https://www.google.com/search?q="||ca.alias 
+				WHEN car.name == "INCHI"
+					THEN "https://www.google.com/search?q="||ca.alias 
+				WHEN car.name == "SMILES"
 					THEN "https://www.google.com/search?q=canonical+SMILES+"||
-						REPLACE(smiles, "#", "%23")
-				WHEN obtained_from IS NOT NULL 
-					THEN obtained_from
+						REPLACE(ca.alias , "#", "%23")
+				WHEN c.obtained_from IS NOT NULL 
+					THEN c.obtained_from
 				ELSE
 					"(not available)"
 			END AS link
-			FROM compounds;
+			FROM compounds c
+			INNER JOIN compound_aliases ca ON c.id = ca.compound_id
+			INNER JOIN compound_alias_references car ON ca.reference = car.id;
 	/*magicsplit*/
 
 /* Triggers */
