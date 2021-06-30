@@ -55,9 +55,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		name
 			TEXT NOT NULL,
 			/* name of compound, uncontrolled */
-		inchi
-			TEXT,
-			/* inchi structure of compound, as submitted */
 		obtained_from
 			TEXT NOT NULL,
 			/* DOI/Link of compound structure's source */
@@ -67,12 +64,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		additional
 			TEXT,
 			/* additional information, as submitted */
-		smiles
-			TEXT,
-			/* smiles structure of compound, derived */
-		inchikey
-			TEXT,
-			/* inchikey structure of compound, derived */
 		local_pos
 			INTEGER NOT NULL DEFAULT 0,
 			/* number of atoms with positive charges, derived */
@@ -88,18 +79,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		netcharge
 			INTEGER NOT NULL DEFAULT 0,
 			/* total formal charge of compound, derived */
-		dtxsid
-			TEXT,
-			/* dtxsid identifier */
-		dtxcid
-			TEXT,
-			/* dtxcid identifier */
-		casrn
-			TEXT,
-			/* CAS registry number */
-		pubchemid
-			TEXT,
-			/* PubChem identifier */
 		inspected_by
 			TEXT,
 			/* user inspection id */
@@ -116,7 +95,38 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-	
+
+	CREATE TABLE IF NOT EXISTS compound_aliases
+		/* List of alternate names or identifiers for compounds */
+	(
+		compound_id
+			INTEGER,
+			/* foreign key to compounds */
+		reference
+			INTEGER,
+			/* foreign key to compound_alias_references*/
+		alias
+			TEXT NOT NULL,
+			/* Text name of the alias for a compound */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
+		FOREIGN KEY (reference) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS compound_alias_references
+		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
+	(
+		id
+			INTEGER PRIMARY KEY,
+		name
+			TEXT NOT NULL,
+		/* Check constraints */
+		CHECK (name IN ("INCHI", "INCHIKEY", "DTXSID", "DTXCID", "CASRN", "PUBCHEMID", "SMILES", "other"))
+	);
+	/*magicsplit*/
+
 	CREATE TABLE IF NOT EXISTS compound_categories
 		/* Normalization table for self-hierarchical chemical classes of compounds. */
 	(

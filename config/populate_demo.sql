@@ -16,6 +16,10 @@
 
 delete from compounds;
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
+delete from compound_aliases;
+.import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases
+delete from compound_alias_references;
+.import --csv --skip 1 config/data/demo/compound_alias_references.csv compound_alias_references
 delete from mobile_phases;
 .import --csv --skip 1 config/data/demo/mobile_phases.csv mobile_phases
 delete from ms_descriptions;
