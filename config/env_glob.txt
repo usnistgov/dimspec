@@ -1,0 +1,12 @@
+# Text name to use for this project's database file
+DB_NAME        <- "nist_pfas_nta_dev.sqlite"
+
+# Build file used for the database
+DB_BUILD_FILE  <- "build.sql"
+
+# File containing data from which to populate the database
+DB_DATA        <- "demo_data.sql"
+
+# Environment reference to sqlite3 command line interface, if any. This should
+# be the terminal reference to start sqlite3 on the deployment (e.g. $ sqlite3).
+SQLITE_CLI     <- "sqlite3"

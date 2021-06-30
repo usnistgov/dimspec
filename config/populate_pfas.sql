@@ -34,5 +34,3 @@ delete from solvent_aliases;
 .import --csv --skip 1 config/data/pfas/solvent_aliases.csv solvent_aliases
 delete from solvent_mixes;
 .import --csv --skip 1 config/data/pfas/solvent_mixes.csv solvent_mixes
---delete from vendors;
---.import --csv --skip 1 config/data/norm_vendors.csv norm_vendors

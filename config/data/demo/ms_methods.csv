@@ -1,0 +1,2 @@
+﻿id,ionization,voltage,polarity,ce_value,ce_desc,ms_vendor,has_qc_method,source
+1,ESI,1000,negative,200,normalized,1,0,NIST notebook BP2020

@@ -1,23 +1,340 @@
-#' Returns R session information in case of support needs
-#' 
-#' Several of 
-#' 
-#' @return LIST of the following values: current package version
+#' R session information for support needs
+#'
+#' Several items of interest for this particular project including:
+#' - DB_DATE, DB_VERSION, BUILD_FILE, LAST_DB_SCHEMA, LAST_MODIFIED, DEPENDS_ON,
+#'   and EXCLUSIONS as defined in \code{\link{env.R}}
+#'
+#' @param app_info BOOL scalar on whether to return this application's properties
+#'
+#' @return LIST of values
 #' @export
-#' 
-#' @example 
-#' support_info()
-support_info <- function() {
-  if (!exists("VERSION")) source(list.files(pattern = "env.R", recursive = TRUE))
-  out <- list(
-      pack_version    = VERSION,
+#'
+#' @example support_info()
+support_info <- function(app_info = TRUE) {
+  arg_check <- verify_args(
+    args       = as.list(environment()),
+    conditions = list(list(c("mode", "logical"),
+                           c("length", 1))),
+    from_fn    = "support_info")
+  if (!arg_check$valid) {
+    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  }
+  if (!exists("DB_VERSION")) source(list.files(pattern = "env.R", recursive = TRUE))
+  sys_info <- list(
       system          = sessionInfo(),
       project_dir     = getwd(),
-      last_db_schema  = LAST_DB_SCHEMA,
-      files_available = list.files(full.names = TRUE, recursive  = TRUE),
-      packs_installed = installed.packages()[, 3],
-      packs_active    = (.packages())
+      files_available = sort(list.files(full.names = TRUE, recursive  = TRUE)),
+      packs_installed = sort(installed.packages()[, 3]),
+      packs_active    = sort((.packages()))
   )
+  if (app_info) {
+    app <- list(
+      DB_DATE         = DB_DATE,
+      DB_VERSION      = DB_VERSION,
+      BUILD_FILE      = BUILD_FILE,
+      LAST_DB_SCHEMA  = LAST_DB_SCHEMA,
+      LAST_MODIFIED   = LAST_MODIFIED,
+      DEPENDS_ON      = DEPENDS_ON,
+      EXCLUSIONS      = EXCLUSIONS
+    )
+    out <- c(app, sys_info)
+  } else {
+    out <- sys_info
+  }
+  return(out)
+}
+
+#' Get list of available functions
+#'
+#' Helper function for \code{\link{verify_args()}} that returns all the
+#' currently available functions matching a given prefix. This searches the
+#' entire library associated with the current R install.
+#'
+#' Note: argument \code{use_deprecated} is not currently used but serves as a
+#' placeholder for future development to avoid or include deprecated functions
+#'
+#' @param prefix CHR scalar for the function prefix to search (default "is")
+#' @param use_deprecated BOOL scalar indicating whether or not to include
+#'   functions marked as deprecated (PLACEHOLDER default FALSE)
+#'
+#' @return CHR vector of functions matching \code{prefix}
+#' @export
+#'
+#' @examples
+#' mode_checks()
+mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
+  funcs        <- unlist(lapply(paste0("package:", (.packages())), ls))
+  mode_types   <- grep(paste0("^", prefix, "[\\._]"), funcs, value = TRUE)
+  mode_types   <- mode_types[-grep("<-", mode_types)]
+  mode_types   <- sort(mode_types)
+  return(mode_types)
+}
+
+#' Verify arguments for a function
+#'
+#' This helper function checks arguments against a list of expectations. This
+#' was in part inspired by the excellent \code{testthis} package and shares
+#' concepts with the \code{Checkmate} package. However, this function performs
+#' many of the common checks without additional package dependencies, and can be
+#' inserted into other functions for a project easily with:
+#'
+#' \preformatted{ arg_check <- verify_args( args       = as.list(environment()),
+#' conditions = list( list(c("mode", "logical"), c("length", 1)), list( ... )))
+#' }
+#'
+#' and check the return with
+#'
+#' \preformatted{ if (!arg_check$valid) cat(paste0(arg_check$messages, "\n"))}
+#'
+#' where argument \code{conditions} describes the tests. This comes at the price
+#' of readability as the list items in `\code{conditions} do not have to be
+#' named, but can be to improve clarity. See more details below for argument
+#' \code{conditions} to view which expectations are currently supported.
+#'
+#' As this is a nested list condition check, it can also originate from any
+#' source coercible to a list (e.g. JSON, XML, etc.) and this feature, along
+#' with the return of human-meaningful evaluation strings, is particularly
+#' useful for development of shiny applications. Values from other sources MUST
+#' be coercible to a full list (e.g. if being parsed from JSON, use
+#' \code{jsonlite::fromJSON(simplifyMatrix = FALSE))}
+#' 
+#' If logger is enabled, also provides some additional meaningful feedback.
+#'
+#' @param args LIST of named arguments and their values, typically passed
+#'   directly from a function definition in the form \code{args = list(foo =
+#'   1:2, bar = c("a", "b", "c"))}
+#' @param conditions Nested LIST of conditions and values to check, with one
+#'   list item for each element in \code{args}. \itemize{\item The first element
+#'   of each list should be a character scalar in the supported list. \item The
+#'   second element of each list should be the check values themselves and may
+#'   be of any type.} Multiple expectation conditions can be set for each
+#'   element of \code{args} in the form \itemize{\item \code{conditions =
+#'   list(foo = list(c("mode", "numeric"), c("length", 2)), bar = list(c("mode",
+#'   "character"), c("n<", 5)))}} Currently supported expectations are:\itemize{
+#'   \item \preformatted{"mode"    checks class expectation by applying the
+#'   \code{is.X} or the \code{is_X} family of functions either directly or
+#'   flexibly depending on the value provided to \code{conditions} (e.g.
+#'   c("mode", "character") and c("mode", "is.character") and c("mode",
+#'   "is_character") all work equally well) and will default to the version you
+#'   provide explicitly (e.g. if you wish to prioritize "is_character" over
+#'   "is.character" simply provide "is_character" as the condition. Only those
+#'   modes able to be checked by this family of functions are supported. Run
+#'   function \code{mode_checks()} for a complete sorted list for your current
+#'   configuration.} \item \preformatted{"length"  length of values matches a
+#'   pre-determined exact length, typically a single value expectation (e.g.
+#'   c("length",#'   1))} \item \preformatted{"no_na"   no NA values are
+#'   present} \item \preformatted{"n>"      length of values is greater than a
+#'   given value - "n<" length of values is lesser than a given value} \item
+#'   \preformatted{"n>="     length of values is greater than or equal to a
+#'   given value} \item \preformatted{"n<="     length of values is lesser than
+#'   or equal to a given value} \item \preformatted{">"       numeric or date
+#'   value is greater than a given value} \item \preformatted{"<"       numeric
+#'   or date value is greater than a given value} \item \preformatted{">="
+#'   numeric or date value is greater than or equal to a given value} \item
+#'   \preformatted{"<="      numeric or date value is lesser than or equal to a
+#'   given value} \item \preformatted{"between" numeric or date values are bound
+#'   within an INCLUSIVE range (e.g. c("range", 1:5))} \item
+#'   \preformatted{"choices" provided values are part of a selected list of
+#'   expectations (e.g. \code{c("choices", list(letters[1:3]))})} \item
+#'   \preformatted{"FUN"     apply a function to the value and check that the
+#'   result is valid or that the function can be executed without error; this
+#'   evaluates the check condition using \code{tryCatch} via \code{do.call} and
+#'   so can also accept a full named list of arg values. This is a strict check
+#'   in the sense that a warning will also result in a failed result, passing
+#'   the warning (or error if the function fails) message back to the user, but
+#'   does not halt checks} }
+#' @param from_fn CHR scalar of the function from which this is called, used if
+#'   logger is enabled and ignored if not. (default NULL)
+#'
+#' @return LIST of the resulting values and checks, primarily useful for
+#'   $message
+#' @export
+#'
+#' @examples
+#' \preformatted{
+#' verify_args(args = list(character_length_2 = c("a", "b")),
+#'             conditions = list(character_length_2 = list(c("mode", "character"),
+#'                                                         c("length", 3))
+#' )
+#' verify_args(args = list(boolean = c(TRUE, FALSE, TRUE)),
+#'             conditions = list(list(c("mode", "logical"),
+#'                                    c("length", 1)))
+#' )
+#' verify_args(args = list(foo = c(letters[1:3]),
+#'                         bar = 1:10),
+#'             conditions = list(foo = list(c("mode", "numeric"),
+#'                                          c("n>", 5)),
+#'                               bar = list(c("mode", "logical"),
+#'                                          c("length", 5),
+#'                                          c(">", 10),
+#'                                          c("between", list(100, 200)),
+#'                                          c("choices", list("a", "b")))))
+#' }
+verify_args <- function(args, conditions, from_fn = NULL) {
+  if (is.null(from_fn)) {
+    from_fn <- ""
+  } else {
+    from_fn <- glue(' for function "{from_fn}"')
+  }
+  logger <- "logger" %in% (.packages())
+  if (logger) log_trace('Verifying arguments{from_fn}.')
+  require(glue)
+  if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
+  check_types  <- c("mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
+  supported    <- paste0("'", check_types, "'", collapse = ", ")
+  mode_types   <- mode_checks()
+  out          <- list()
+  out$args     <- args
+  out$checked  <- setNames(conditions, names(args))
+  out$valid    <- TRUE
+  out$results  <- vector("list", length = length(args))
+  out$messages <- vector("character", length = 0L)
+  for (i in 1:length(args)) {
+    arg   <- args[i]
+    needs <- conditions[[i]]
+    out$results[[i]] <- vector("logical", length = length(needs))
+    for(j in 1:length(needs)) {
+      rslt  <- TRUE
+      msg   <- character(0)
+      x     <- needs[[j]]
+      val   <- arg[[1]]
+      type  <- unlist(x[1])
+      check <- unlist(x[2])
+      switch(type,
+             "mode"    = {
+               mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
+               if (length(mode_check) > 0) {
+                 mode_check <- mode_check[1]
+               } else {
+                 mode_check <- check[[1]]
+               }
+               if (length(mode_check) == 1) {
+                 rslt <- do.call(mode_check, list(val))
+                 msg  <- glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
+               } else {
+                 rslt <- FALSE
+                 msg  <- glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
+               }
+             },
+             "length"  = {
+               rslt <- length(val) == as.integer(check)
+               msg  <- glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
+             },
+             "no_na"   = {
+               rslt <- !any(is.na(val))
+               msg  <- glue("Argument '{names(arg)}' includes NA values.")
+             },
+             "n>"      = {
+               rslt <- length(val) > as.integer(check)
+               msg  <- glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
+             },
+             "n<"      = {
+               rslt <- length(val) < as.integer(check)
+               msg  <- glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
+             },
+             "n>="     = {
+               rslt <- length(val) >= as.integer(check)
+               msg  <- glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
+             },
+             "n<="     = {
+               rslt <- length(val) <= as.integer(check)
+               msg  <- glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
+             },
+             ">"       = {
+               if (length(check) == 1) {
+                 rslt <- all(val > check)
+                 msg  <- glue("Argument '{names(arg)}' must be greater than {check}.")
+               } else {
+                 rslt <- FALSE
+                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+               }
+             },
+             "<"       = {
+               if (length(check) == 1) {
+                 rslt <- all(val < check)
+                 msg  <- glue("Argument '{names(arg)}' must be lesser than {check}.")
+               } else {
+                 rslt <- FALSE
+                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+               }
+             },
+             ">="       = {
+               if (length(check) == 1) {
+                 rslt <- all(val >= check)
+                 msg  <- glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
+               } else {
+                 rslt <- FALSE
+                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+               }
+             },
+             "<="       = {
+               if (length(check) == 1) {
+                 rslt <- all(val <= check)
+                 msg  <- glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
+               } else {
+                 rslt <- FALSE
+                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
+               }
+             },
+             "between" = {
+               if (length(check) == 2) {
+                 rslt <- all(val >= check[1] && val <= check[2])
+                 if (is.numeric(val)) {
+                   msg  <- glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
+                 } else {
+                   msg  <- glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
+                 }
+               } else {
+                 if (length(check) < 2) {
+                   len_check <- "less than"
+                 } else {
+                   len_check <- "more than"
+                 }
+                 rslt <- FALSE
+                 msg  <- glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
+               }
+             },
+             "choices" = {
+               rslt <- all(val %in% check)
+               msg  <- glue("Argument '{names(arg)}' was not present in c({paste0(check, collapse = ', ')}).")
+             },
+             "call"    = {
+               rslt <- tryCatch(do.call(check, list(val)),
+                                error   = function(e) e,
+                                warning = function(w) w)
+               val  <- paste0('"', val, '"', collapse = ", ")
+               if ("simpleError" %in% class(rslt)) {
+                 msg  <- glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                 rslt <- FALSE
+               } else if ("simpleWarning" %in% class(rslt)) {
+                 msg  <- glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                 rslt <- FALSE
+               } else {
+                 rslt <- TRUE
+               }
+             },
+             {
+               rslt <- FALSE
+               msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
+             }
+      )
+      out$results[[i]][j]   <- rslt
+      if (!rslt) {
+        out$valid           <- FALSE
+        n_msg <- length(out$messages) + 1
+        out$messages[n_msg] <- msg
+        if (logger) log_warn(msg)
+      }
+    }
+  }
+  if (logger) {
+    if (out$valid) {
+      log_trace('Arguments verified for {from_fn}.')
+    } else {
+      error_appendix <- ifelse(log_threshold() < 300, " See return for details.", "")
+      log_error('Arguments could not be verified{from_fn}.{error_appendix}')
+    }
+  }
   return(out)
 }
 
@@ -37,18 +354,28 @@ support_info <- function() {
 #' @export
 #'
 #' @examples
-rebuild_db <- function(db = DB_NAME, build_from = "build.sql", populate_with = "demo_data.sql", archive = FALSE, sqlite_cli = "sqlite3") {
+rebuild_db <- function(db            = DB_NAME,
+                       build_from    = DB_BUILD_FILE,
+                       populate      = TRUE,
+                       populate_with = DB_DATA,
+                       archive       = FALSE,
+                       sqlite_cli    = SQLITE_CLI) {
   # Argument validation
-  if (length(db) > 1) stop('Only one database name should be supplied to argument "db".')
-  if (!is.character(db)) stop('Argument "db" must be a character scalar.')
-  if (length(build_from) > 1) stop('The base name of a single file should be supplied for argument "build_from".')
-  if (!is.character(build_from)) stop('Argument "build_from" must be a character scalar.')
-  if (length(populate_with) > 1) stop('The base name of a single file should be supplied for argument "populate_with".')
-  if (!is.character(populate_with)) stop('Argument "populate_with" must be a character scalar.')
-  if (length(archive) > 1) stop('Only one value is accepted for argument "archive".')
-  if (!is.logical(archive)) stop('Argument "archive" must be a logical scalar.')
-  if (length(sqlite_cli) > 1) stop('The environment alias for your sqlite3 command line interface (CLI) should be supplied for argument "sqlite_cli". Leave this as the default if you do not have sqlite3 CLI installed.')
-  if (!is.character(sqlite_cli)) stop('Argument "sqlite_cli" must be a character scalar.')
+  arg_check <- verify_args(
+    args       = as.list(environment()),
+    conditions = list(
+      db            = list(c("mode", "character"), c("length", 1)),
+      build_from    = list(c("mode", "character"), c("length", 1)),
+      populate      = list(c("mode", "logical"), c("length", 1)),
+      populate_with = list(c("mode", "character"), c("length", 1)),
+      archive       = list(c("mode", "logical"), c("length", 1)),
+      sqlite_cli    = list(c("mode", "character"), c("length", 1))
+    ),
+    from_fn    = "rebuild_db"
+  )
+  if (!arg_check$valid) {
+    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  }
   # Populate with all data sources
   # -- RSQLite does not allow for the CLI [.DOT] commands
   # -- If sqlite3 CLI is installed, use that by preference
@@ -93,7 +420,7 @@ rebuild_db <- function(db = DB_NAME, build_from = "build.sql", populate_with = "
                              full.names = TRUE,
                              recursive = TRUE)
     header     <- "/\\*\\=+\\n[[:print:][:cntrl:]]+\\n\\=+\\*/"
-    section    <- "/\\* -- [[:print:][:cntrl:]]+ -- \\*/"
+    section    <- "/\\* -+ [[:print:][:cntrl:]]+ \\*/"
     magicsplit <- "/\\*magicsplit\\*/"
     build_statement <- read_file(build_path) %>%
       str_split(magicsplit) %>%
@@ -134,34 +461,40 @@ rebuild_db <- function(db = DB_NAME, build_from = "build.sql", populate_with = "
 #'
 #' @examples
 remove_db <- function(db = DB_NAME, archive = FALSE) {
+  logger <- "logger" %in% (.packages())
   require(tools)
-  log_trace('Checking argument validity...')
-  if (length(db) > 1)       stop('Argument "db" must be a single value.')
-  if (!is.character(db))    stop('Argument "db" must be a character scalar.')
-  if (length(archive) > 1)  stop('Argument "archive" must be a single value.')
-  if (!is.logical(archive)) stop('Argument "archive" must be a logical scalar.')
-  log_trace('All arguments valid')
+  arg_check <- verify_args(
+    args       = as.list(environment()),
+    conditions = list(
+      db      = list(c("mode", "character"), c("length", 1)),
+      archive = list(c("mode", "logical"), c("length", 1))
+    ),
+    from_fn    = "remove_db"
+  )
+  if (!arg_check$valid) {
+    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  }
   # Resolve database file location
-  log_trace('Finding database file "{db}"')
+  if (logger) log_trace('Finding database file "{db}"')
   where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
   if (length(where) > 0) {
     # Ensure no current connection from R
     check <- tryCatch(manage_connection(db = db, disconnect = TRUE))
-    if (class(check) == "try-error") stop("Unable to automatically manage the connection to", db, ".")
+    if (class(check) == "try-error") stop("Unable to automatically stop the connection to", db, ".")
     if (archive) {
       now       <- format(Sys.time(), "%Y%m%d%H%M%S%Z")
       new_fname <- gsub(file_path_sans_ext(db), sprintf("%s_archive_%s", file_path_sans_ext(db), now))
       file.copy(where, new_fname)
-      log_success('Archive created as "{new_fname}"')
+      if (logger) log_success('Archive created as "{new_fname}"')
     }
     result <- tryCatch(file.remove(where))
     if (class(result) == "try-error") {
-      log_error('Database "{db}" could not be removed; another connection is likely open elsewhere.')
+      if (logger) log_error('Database "{db}" could not be removed; another connection is likely open elsewhere.')
     } else {
-      log_success('Database "{db}" removed.')
+      if (logger) log_success('Database "{db}" removed.')
     }
   } else {
-    log_warn('Database "{db}" does not exist in this directory tree.')
+    if (logger) log_warn('Database "{db}" does not exist in this directory tree.')
   }
 }
 
@@ -180,19 +513,55 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #'
 #' @examples
 manage_connection <- function(db = DB_NAME, drv = "SQLiteConnection", disconnect = TRUE) {
+  logger <- "logger" %in% (.packages())
   current_env <- as.list(.GlobalEnv)
   current_env_names <- names(current_env)
   for (env in current_env_names) {
     this_obj <- current_env[[env]]
     if (any(drv %in% class(this_obj))) {
       if (basename(this_obj@dbname) == db) {
-        log_trace('Database "{db}" is currently open.')
+        if (logger) log_trace('Database "{db}" is currently open.')
         if (disconnect) {
-          log_trace('Closing and removing from environment...')
+          if (logger) log_trace('Closing and removing from environment...')
           dbDisconnect(this_obj)
           rm(list = env, pos = ".GlobalEnv")
         }
       }
+    }
+  }
+}
+
+build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
+  # According to the current environment setup, exclude logging to save space
+  if (!exists("DB_LOGGING")) {
+    DB_LOGGING <- FALSE
+  }
+  if (DB_LOGGING) {
+    # Require a connection object
+    require(glue)
+    require(magrittr)
+    if (!exists(connection)) {
+      con <- dbConnect(RSQLite::SQLite(), db)
+    }
+    tables  <- dbListTables(con)
+    tables  <- tables[!tables == log_table_name]
+    log_cols <- dbListFields(con, log_table_name)
+    out <- character(0)
+    for (table in tables) {
+      table_cols <- dbGetQuery(con, glue("PRAGMA table_info({table})")) %>%
+        filter(pk != 1, name != "id") %>%
+        pull(name) %>%
+        paste0(collapse = ", ")
+      out <- c(out,
+               glue(
+                 "CREATE TRIGGER {table}_track_insert",
+                 "  AFTER INSERT ON {table}",
+                 "  BEGIN",
+                 "    INSERT INTO {log_table_name} (affect_type, affects_table, affects_ids, executed_by)",
+                 "    VALUES ('INSERT', '{table}', NEW.id);",
+                 "  END;"
+               )
+      )
     }
   }
 }

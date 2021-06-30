@@ -1,0 +1,2 @@
+id,category,description,affects,effect,affects_ids,executed_by,executed_from,executed_on,new_vals,old_vals
+1,version,0.1 Alpha schema sketch,database,schema,,,3,"			",,
