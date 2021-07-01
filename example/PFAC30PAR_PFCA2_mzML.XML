@@ -53,10 +53,10 @@
 </massspectrometry>
 <qcmethod>
 <qcused>True</qcused>
-<qctype>True</qctype>
-<qctype>True</qctype>
-<qctype>False</qctype>
-<qctype>False</qctype>
+<qctype type = "Mass Analyzer Calibration">True</qctype>
+<qctype type = "External Standard Verification">True</qctype>
+<qctype type = "Internal Standard Verification">False</qctype>
+<qctype type = "Matrix Standard Verification">False</qctype>
 </qcmethod>
 </method>
 <peaks>
