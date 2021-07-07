@@ -28,8 +28,11 @@ peak_gather <- function(methodxml, mzml) {
     if (out[[i]]$method$massspectrometry$ms2exp == "SWATH") {
       ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(out[[i]]$peak$mz) - (as.numeric(out[[i]]$method$massspectrometry$isowidth)/2) & precursors[all_scans] <= as.numeric(out[[i]]$peak$mz) + (as.numeric(out[[i]]$method$massspectrometry$isowidth)/2))]
     }
-    out[[i]]$ms1data <- table_msdata(mzml, ms1scans)
-    out[[i]]$ms2data <- table_msdata(mzml, ms2scans)
+    ms1data <- table_msdata(mzml, ms1scans)
+    ms2data <- table_msdata(mzml, ms2scans)
+    ms1data <- cbind(msn = rep(1, nrow(ms1data)), ms1data)
+    ms2data <- cbind(msn = rep(2, nrow(ms1data)), ms1data)
+    out[[i]]$msdata <- rbind(ms1data, ms2data)
   }
   out
 }
