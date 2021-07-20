@@ -5,7 +5,7 @@ if (!dir.exists("output/aggregate")) {dir.create("output/aggregate")}
 if (!dir.exists("output/extract")) {dir.create("output/extract")}
 if (!dir.exists("output/example")) {dir.create("output/example")}
 
-packs       <- c("XML", "base64enc", "xlsx", "ggplot2", "logger", "tools")
+packs       <- c("XML", "base64enc", "xlsx", "ggplot2", "logger", "tools", "jsonlite")
 
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
@@ -18,7 +18,6 @@ if (length(packs_FALSE) > 0) {
 lapply(packs, library, character.only = TRUE)
 rm(packs, packs_TRUE, packs_FALSE)
 
-sources <- list.files('src', pattern = ".R", full.names = TRUE, recursive = TRUE)
-sources <- sources[-grep(".RDS", sources)]
+sources <- list.files('src', pattern = "\\.R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-which(sources == file.path("src", "compliance.R"))]
 sapply(sources, source)

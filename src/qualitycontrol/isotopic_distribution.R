@@ -19,7 +19,7 @@ isotopic_distribution <- function(elementalformula, exactmasschart, remove.eleme
   iso_max <- lapply(1:length(abund), function(x) sapply(1:nrow(abund[[x]]), function(y) abund[[x]]$n[y]))
   combolist <- lapply(1:length(abund), function(x) {
     if (length(abund[[x]]$n) == 1) {o <- data.frame(abund[[x]]$n[1]); colnames(o) <- paste(elementlist$elements[x], round(abund[[x]]$mass, 0), sep = "")}
-    if (length(abund[[x]]$n) > 1) {o <- expand.grid(lapply(abund[[x]]$n[2:length(abund[[x]]$n)], function(y) 0:abund[[x]]$n[y]));
+    if (length(abund[[x]]$n) > 1) {o <- expand.grid(lapply(abund[[x]]$n[2:length(abund[[x]]$n)], function(y) {if (y == 0) {return(0)}; 0:abund[[x]]$n[y]}));
                                     o <- cbind(abund[[x]]$n[1] - rowSums(o), o)
                                     o <- o[which(o[,1] >= 0),]
                                     colnames(o) <- paste(elementlist$elements[x], round(abund[[x]]$mass, 0), sep = "")
