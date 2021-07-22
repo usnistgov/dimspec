@@ -5,7 +5,7 @@ date: "7/20/2021"
 output: pdf_document
 ---
 
-```{r setup}
+```{r setup, tidy=TRUE, message=FALSE}
 source('src/compliance.R')
 compoundtable <- read.csv('src/gather/pfas_cmpds.csv', header = TRUE, row.names = NULL)
 ```
@@ -14,7 +14,7 @@ compoundtable <- read.csv('src/gather/pfas_cmpds.csv', header = TRUE, row.names 
 
 Set up the directory
 
-```{r dir}
+```{r dir, tidy=TRUE}
 file_dir <- "input"
 all_jsonfile <- list.files(file_dir, ".JSON", full.names = TRUE)
 all_methodjson <- lapply(all_jsonfile, parse_methodjson)
@@ -23,7 +23,7 @@ all_mzml <- sapply(1:length(all_jsonfile), function(x) paste(dirname(all_jsonfil
 
 ## Extract data and copy into JSON
 
-```{r gather}
+```{r gather, tidy=TRUE}
 for (i in 1:length(all_jsonfile)) {
   methodjson <- all_methodjson[[i]]
   mzml <- mzMLtoR(all_mzml[[i]])
@@ -32,7 +32,7 @@ for (i in 1:length(all_jsonfile)) {
     qc <- gather_qc(dat[[j]], exactmasses)
     output <- dat[[j]]
     output$qc <- qc
-    write_json(output, paste("output/NIST_MS/", gsub("\\.", "_", dat[[j]]$sample$filename), "_cmpd", dat[[j]]$compounddata$ID, ".JSON", sep = ""))
+    write_json(output, paste("output/NIST_MS/", gsub("\\.", "_", dat[[j]]$sample$filename), "_cmpd", dat[[j]]$compounddata$ID, ".JSON", sep = ""), auto_unbox = TRUE)
   }
 }
 print("DONE")

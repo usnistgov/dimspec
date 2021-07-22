@@ -1,6 +1,6 @@
 source('src/gather/table_msdata.R')
 
-peak_gather_json <- function(methodjson, mzml, compoundtable) {
+peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), minerror = 0.002) {
   #gathers metadata from methodjson and extracts the MS1 and MS2 data from the mzml
   #crosslists the compound ID's and extract compound data for QC checking
   out <- list()
@@ -36,14 +36,13 @@ peak_gather_json <- function(methodjson, mzml, compoundtable) {
     if (out[[i]]$massspectrometry$ms2exp == "SWATH") {
       ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(out[[i]]$peak$mz) - (as.numeric(out[[i]]$massspectrometry$isowidth)/2) & precursors[all_scans] <= as.numeric(out[[i]]$peak$mz) + (as.numeric(out[[i]]$massspectrometry$isowidth)/2))]
     }
-    ms1data <- table_msdata(mzml, ms1scans)
+    ms1data <- table_msdata(mzml, ms1scans, mz = as.numeric(out[[i]]$peak$mz), zoom = zoom, masserror = as.numeric(out[[i]]$massspectrometry$msaccuracy), minerror = minerror)
     ms2data <- table_msdata(mzml, ms2scans)
     ms1data <- cbind(msn = rep(1, nrow(ms1data)), ms1data)
     ms2data <- cbind(msn = rep(2, nrow(ms2data)), ms2data)
     msdata <- rbind(ms1data, ms2data)
     msdata <- msdata[order(msdata$scantime),]
-    out[[i]]$msdata <- lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], msn = msdata$msn[x], msdata = msdata$msdata[x]))
-    names(out[[i]]$msdata) <- rep("spectrum", length(out[[i]]$msdata))
+    out[[i]]$msdata <- lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], msn = msdata$msn[x], baseion = msdata$baseion[x], baseint = msdata$baseint[x], msdata = msdata$msdata[x]))
   }
   out
 }

@@ -203,6 +203,7 @@ extract.ms <- function(mzml, scans, mz.round = 4) {
   full.ms[,1] <- round(full.ms[,1], digits = mz.round)
   full.ms <- cbind(full.ms[,1], ave(full.ms[,2], full.ms[,1], FUN = sum))
   full.ms <- full.ms[!duplicated(full.ms),]
+  full.ms <- data.frame(mz = full.ms[,1], int = full.ms[,2])
   full.ms
 }
 
