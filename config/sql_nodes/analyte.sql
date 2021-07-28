@@ -121,9 +121,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY,
 		name
-			TEXT NOT NULL,
-		/* Check constraints */
-		CHECK (name IN ("INCHI", "INCHIKEY", "DTXSID", "DTXCID", "CASRN", "PUBCHEMID", "SMILES", "other"))
+			TEXT NOT NULL
 	);
 	/*magicsplit*/
 
@@ -209,16 +207,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY ("generated") REFERENCES norm_fragment_generation_type(id)
 	);
 	/*magicsplit*/
-
-/* Data */
-
-	/* It is recommended that tables be filled from project-specific compound/fragment lists. */
-	
-	INSERT INTO norm_fragment_generation_type
-		/* This normalization table is auto filled as it is highly restrictive. */
-		VALUES
-			(1, "in silico"),
-			(2, "empirical");
 
 /* Views */
 
