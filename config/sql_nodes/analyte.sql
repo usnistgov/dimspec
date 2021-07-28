@@ -185,12 +185,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		smiles
 			TEXT,
 			/* smiles structure of fragment ion, can be NULL, user submitted */
-		inchi
-			TEXT,
-			/* InChI representation of fragment ion, can be NULL, user submitted */
-		inchikey
-			TEXT,
-			/* InChIKey representation of fragment ion, can be NULL, user submitted */
 		/* Constraints */
 		CHECK (charge IN (-1, 1)),
 		CHECK (radical IN (0, 1)),
