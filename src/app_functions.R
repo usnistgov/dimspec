@@ -401,6 +401,7 @@ rebuild_db <- function(db            = DB_NAME,
       str_remove_all("\\./")
     full_call     <- glue('{sqlite_call} {full_call} -cmd .exit')
     log_trace("Issuing shell command {full_call}")
+    if (file.exists(db)) remove_db(db = db, archive = archive)
     shell(full_call)
     log_success('Finished building "{db}"" as specified. Check console for details.')
   } else {
@@ -414,7 +415,7 @@ rebuild_db <- function(db            = DB_NAME,
     }
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
-    remove_db(db = db, archive = archive)
+    if (file.exists(db)) remove_db(db = db, archive = archive)
     # -- Create the build commands in R to pass through RSQLite::SQLite()
     build_path <- list.files(pattern = build_from,
                              full.names = TRUE,
@@ -461,8 +462,6 @@ rebuild_db <- function(db            = DB_NAME,
 #'
 #' @examples
 remove_db <- function(db = DB_NAME, archive = FALSE) {
-  logger <- "logger" %in% (.packages())
-  require(tools)
   arg_check <- verify_args(
     args       = as.list(environment()),
     conditions = list(
@@ -471,6 +470,8 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     ),
     from_fn    = "remove_db"
   )
+  logger <- "logger" %in% (.packages())
+  require(tools)
   if (!arg_check$valid) {
     stop(cat(paste0(arg_check$messages, collapse = "\n")))
   }
@@ -483,7 +484,10 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     if (class(check) == "try-error") stop("Unable to automatically stop the connection to", db, ".")
     if (archive) {
       now       <- format(Sys.time(), "%Y%m%d%H%M%S%Z")
-      new_fname <- gsub(file_path_sans_ext(db), sprintf("%s_archive_%s", file_path_sans_ext(db), now))
+      fname     <- file_path_sans_ext(db)
+      new_fname <- gsub(fname,
+                        sprintf("%s_archive_%s",fname, now),
+                        db)
       file.copy(where, new_fname)
       if (logger) log_success('Archive created as "{new_fname}"')
     }
