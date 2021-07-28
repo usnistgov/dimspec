@@ -1,4 +1,7 @@
-extract.elements <- function(composition.str, remove.elements = c("Na", "K", "Ca")) {
+exactmasses <- readRDS('src/misc/exactmasses.RDS')
+
+
+extract.elements <- function(composition.str, remove.elements = c()) {
 single.elem <- gregexpr("[A-Z]", composition.str)[[1]]
 double.elem <- gregexpr("[A-Z][a-z]", composition.str)[[1]]
 single.elem <- single.elem[! single.elem %in% double.elem]
@@ -55,4 +58,29 @@ addmass <- calculate.monoisotope(elements, exactmasses, adduct)
 masslist <- c(masslist, addmass)
 }
 cbind(list, masslist)
+}
+
+adduct_formula <- function(elementalformula, adduct = "+H") {
+  elist <- extract.elements(elementalformula, remove.elements = c())
+  element <- gsub("\\+", "", gsub("-", "", adduct))
+  change <- unlist(strsplit(adduct, split = ""))[1]
+  if (element %in% elist$elements) {
+    if (change  == "+") {
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] + 1
+    }
+    if (change  == "-") {
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] - 1
+      if (elist$counts[which(elist$elements == element)] == 0) {
+        elist$counts <- elist$counts[-which(elist$elements == element)]
+        elist$elements <- elist$elements[-which(elist$elements == element)]
+      }
+    }
+  }
+  if (!element %in% elist$elements) {
+    if (change == "+") {
+      elist$elements <- c(elist$elements, element)
+      elist$counts <- c(elist$counts, 1)
+    }
+  }
+  paste(sapply(1:length(elist$elements), function(x) paste(elist$elements[x], elist$counts[x], sep = "")), collapse = "")
 }

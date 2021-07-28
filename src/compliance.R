@@ -47,7 +47,7 @@ rm(packs, unload_packs, packs_TRUE, packs_FALSE)
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
-sources <- list.files('src', pattern = ".R", full.names = TRUE, recursive = TRUE)
+sources <- list.files('src', pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 

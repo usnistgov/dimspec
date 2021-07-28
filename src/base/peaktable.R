@@ -89,9 +89,11 @@ mergemass <- function(masses, ints, scans, addms, ind, masserror, minerror) {
   minmass <- min(min(masses) - min(masses)*masserror/(10^6),min(masses) - minerror)
   maxmass <- max(max(masses) + max(masses)*masserror/(10^6),max(masses) + minerror)
   inds <- which(addms[,1] >= minmass & addms[,1] <= maxmass)
-  masses <- c(masses, mean(addms[inds,1]))
-  ints <- c(ints, sum(addms[inds,2]))
-  scans <- c(scans, ind)
+  if (length(inds) > 0) {
+    masses <- c(masses, mean(addms[inds,1], na.rm = TRUE))
+    ints <- c(ints, sum(addms[inds,2], na.rm = TRUE))
+    scans <- c(scans, ind)
+  }
   output <- list(masses = masses, ints = ints, scans = scans)
   output
 }
