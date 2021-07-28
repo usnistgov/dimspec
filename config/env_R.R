@@ -19,12 +19,18 @@ DEPENDS_ON     <- c("base64enc",
                     "logger",
                     "DBI",
                     "RSQLite",
+                    "glue",
                     "stringi",
                     "tidyverse",
                     "dbplyr",
                     "tools",
                     "xlsx",
                     "XML")
+# Also needs ChemmineR, which is only available through Bioconductor
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+  BiocManager::install("ChemmineR")
+}
 
 # Files matching these patterns will be excluded from sourcing.
 EXCLUSIONS     <- c(".RDS",
