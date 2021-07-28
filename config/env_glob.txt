@@ -5,7 +5,7 @@ DB_NAME        <- "nist_pfas_nta_dev.sqlite"
 DB_BUILD_FILE  <- "build.sql"
 
 # File containing data from which to populate the database
-DB_DATA        <- "demo_data.sql"
+DB_DATA        <- "populate_demo.sql"
 
 # Environment reference to sqlite3 command line interface, if any. This should
 # be the terminal reference to start sqlite3 on the deployment (e.g. $ sqlite3).
