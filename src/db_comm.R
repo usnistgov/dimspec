@@ -1,16 +1,19 @@
+# WIP
 db_table_mod <- function(con, type, table, properties) {
   # Argument validation
-  arg_check <- verify_args(
-    args       = as.list(environment()),
-    conditions = list(
-      con        = list(c("length", 1)),
-      type       = list(c("mode", "character"), c("length", 1)),
-      table      = list(c("mode", "character"), c("length", 1)),
-      properties = list(c("mode", "data.frame"))
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        con        = list(c("class", "SQLiteConnection")),
+        type       = list(c("mode", "character"), c("length", 1)),
+        table      = list(c("mode", "character"), c("length", 1)),
+        properties = list(c("mode", "data.frame"))
+      )
     )
-  )
-  if (!arg_check$valid) {
-    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
   }
   type <- arg.match("insert", "update")
   if (!table %in% dbListTables(con)) {
@@ -19,7 +22,7 @@ db_table_mod <- function(con, type, table, properties) {
   needed   <- dbGetQuery(con, glue::glue("PRAGMA table_info({table})"))
   provided <- names(properties)
   if (!all(provided %in% needed)) {
-    stop(glue::glue('Cannot rectify all names in argument "properties" with those needed to add a new compound.
+    stop(glue::glue('Cannot rectify all names in argument "properties" with database headers for table "{table}".
                      Provided {paste0(provided, collapse = ", ")}.
                      Needed {paste0(needed, collapse = ", ")}.'))
   }
@@ -34,17 +37,23 @@ db_table_mod <- function(con, type, table, properties) {
 #' not be directly usable though some effort has been made to remove formatting
 #' characters (e.g. line feeds, tabs, etc) if stringr is available.
 #'
+#' Note that the package `stringr` is required for formatting returns that
+#' include either `get_sql` or `pretty` as TRUE.
+#'
 #' @param con connection object, specifically of class "SQLiteConnection" but
 #'   not enforced
 #' @param table CHR vector name of the table(s) to inspect
 #' @param get_sql BOOL scalar of whether or not to return the schema sql
 #'   (default FALSE)
+#' @param pretty BOOL scalar for whether to return "pretty" SQL that includes
+#'   human readability enhancements; if this is set to TRUE (the default), it is
+#'   recommended that the output is fed through `cat` and, in the case of multiple tables
 #'
 #' @return data.frame object representing the SQL PRAGMA expression
 #' @export
 #'
 #' @examples
-pragma_table_def <- function(con, table, get_sql = FALSE) {
+pragma_table_def <- function(con, table, get_sql = FALSE, pretty = TRUE) {
   require(dplyr)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -53,7 +62,8 @@ pragma_table_def <- function(con, table, get_sql = FALSE) {
       conditions = list(
         con     = list(c("length", 1)),
         table   = list(c("mode", "character"), c("n>=", 1)),
-        get_sql = list(c("mode", "logical"), c("length", 1))
+        get_sql = list(c("mode", "logical"), c("length", 1)),
+        pretty  = list(c("mode", "logical", c("length", 1)))
       ),
       from_fn   = "pragma_table_def"
     )
@@ -80,8 +90,13 @@ pragma_table_def <- function(con, table, get_sql = FALSE) {
       select(table, type, sql)
     if ("stringr" %in% installed.packages()) {
       out$sql <- out$sql %>%
-        stringr::str_replace_all("\n|\t", " ") %>%
         stringr::str_replace_all(" {2,5}", " ")
+        # stringr::str_replace_all("\\s+", " ")
+      if (!pretty) {
+        out$sql <- stringr::str_replace_all(out$sql, "\n|\t", " ")
+      }
+    } else {
+      warning("Package 'stringr' is required for better formatting of SQL returns.")
     }
   } else {
     out <- dplyr::bind_rows(out) %>%
@@ -135,7 +150,7 @@ pragma_table_info <- function(db_conn,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(db_conn, table, all_columns, names_only),
       conditions = list(
         db_conn     = list(c("length", 1)),
         table       = list(c("mode", "character"), c("n>=", 1)),
