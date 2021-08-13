@@ -23,6 +23,7 @@ DEPENDS_ON     <- c("base64enc",
                     "stringi",
                     "tidyverse",
                     "dbplyr",
+                    "jsonlite",
                     "tools",
                     "xlsx",
                     "XML")
