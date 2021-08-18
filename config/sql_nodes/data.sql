@@ -47,9 +47,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		precursor_mz
 			REAL NOT NULL,
 			/* precursor ion mass to charge ratio (constrained to positive numbers) */
-		peak_timestamp
-			TEXT NOT NULL,
-			/* timestamp for the peak (YYYY-MM-DD HH:MM:SS UTC) */
 		charge
 			INTEGER NOT NULL,
 			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
@@ -90,12 +87,17 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		data_generator
 			TEXT NOT NULL,
 			/* generator of data for this sample */
+		generated_on
+		  TEXT NOT NULL,
+		  /* datetime the raw data file was generated in UTC */
 		msconvert_settings_id
 			INTEGER,
 			/* settings for the msconvert program used to generate data from this sample */
 		ms_methods_id
 			INTEGER,
 			/* foreign key to methods */
+		/* Constraints */
+		CHECK (generated_on == strftime("%Y-%m-%d %H:%M:%S", generated_on))
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
@@ -155,7 +157,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 /* Views */
 
 	CREATE VIEW IF NOT EXISTS peak_data AS
-		SELECT p.id AS peak_id, msd.id AS id, p.precursor_mz, msd.scantime, msd.ms_data, msd.contributor
+		SELECT p.id AS peak_id, msd.id AS id, p.precursor_mz, msd.scantime, msd.encoded_data, msd.contributor
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;
 		

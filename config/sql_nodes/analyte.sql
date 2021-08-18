@@ -196,7 +196,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		fragment_id
 			INTEGER NOT NULL,
 			/* foreign key to fragments */
-		"generated"
+		generated_by
 			INTEGER NOT NULL,
 			/* foreign key to norm_fragment_generation_type */
 		citation
@@ -204,7 +204,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* DOI, etc. */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-		FOREIGN KEY ("generated") REFERENCES norm_fragment_generation_type(id)
+		FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id)
 	);
 	/*magicsplit*/
 
