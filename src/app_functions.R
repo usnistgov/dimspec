@@ -340,7 +340,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   }
   if (logger) {
     if (out$valid) {
-      log_trace('Arguments verified for {from_fn}.')
+      log_trace('Arguments verified{from_fn}.')
     } else {
       error_appendix <- ifelse(log_threshold() < 300, " See return for details.", "")
       log_error('Arguments could not be verified{from_fn}.{error_appendix}')
