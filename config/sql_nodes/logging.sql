@@ -34,6 +34,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 		CHECK (name IN ("trigger", "application", "console", "script", "other"))
@@ -45,6 +46,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema"))
@@ -78,6 +80,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		category
 			TEXT NOT NULL,
 			/* categorical grouping of the action */

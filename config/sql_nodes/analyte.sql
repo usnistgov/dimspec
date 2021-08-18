@@ -34,11 +34,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL,
 			/* one of "in silico" or "empirical" */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (name IN ("in silico", "empirical"))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 
@@ -49,6 +51,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		category
 			INTEGER,
 			/* foreign key to compound_categories */
@@ -120,6 +123,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL
 	);
@@ -130,6 +134,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL,
 			/* name of the class */
@@ -165,6 +170,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		mz
 			REAL NOT NULL,
 			/* m/z value for specific fragment, derived */
@@ -183,7 +189,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		smiles
 			TEXT,
 			/* smiles structure of fragment ion, can be NULL, user submitted */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (charge IN (-1, 1)),
 		CHECK (radical IN (0, 1)),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))

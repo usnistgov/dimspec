@@ -32,6 +32,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		acronym
 			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source acronyms */
@@ -46,6 +47,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 			/* IUPAC name for mobile phase norm_solvents */
@@ -62,6 +64,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		abbreviation
 			TEXT NOT NULL,
 			/* (single) letter abbreviation for the source type */
@@ -79,6 +82,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* company name */
@@ -90,6 +94,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		value
 			TEXT NOT NULL
 			/* type of QC reference */
@@ -101,6 +106,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* type of QC method */
@@ -112,6 +118,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* type of the mass analyzer */
@@ -167,6 +174,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		ionization
 			INTEGER,
 			/* ionization mode (ESI, APCI, EI, etc.) */
@@ -218,6 +226,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to ms_methods */

@@ -30,6 +30,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of the sample class */
@@ -41,6 +42,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		sample_id
 			INTEGER NOT NULL,
 			/* foreign key to samples */
@@ -55,11 +57,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* peak retention time start point (constrained to positive numbers) */
 		rt_centroid
 			REAL NOT NULL,
-			/* peak retention time centroid, (derived constrained to positive numbers) */
+			/* peak retention time centroid (derived, constrained to positive numbers) */
 		rt_end
 			REAL NOT NULL,
 			/* peak retention time end point (constrained to positive numbers) */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (precursor_mz > 0),
 		CHECK (charge IN (-1, 1)),
 		CHECK (rt_start > 0),
@@ -71,10 +73,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 	
 	CREATE TABLE IF NOT EXISTS samples
-		/* Samples from which analytical data are derived. What goes into an analytical instrument.	*/
+		/* Samples from which analytical data are derived. What goes into an analytical instrument. */
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		name
 			TEXT NOT NULL,
 			/* user-defined name of the sample */
@@ -96,7 +99,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ms_methods_id
 			INTEGER,
 			/* foreign key to methods */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (generated_on == strftime("%Y-%m-%d %H:%M:%S", generated_on))
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
@@ -110,6 +113,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
+			/* Primary key */
 		peak_id
 			INTEGER NOT NULL,
 			/* foreign key to peaks */
@@ -125,7 +129,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		contributor
 			INTEGER,
 			/* contributor for these data */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (scantime > 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
 		/* Foreign key relationships */
@@ -146,7 +150,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		intensity
 			REAL NOT NULL,
 			/* signal intensity */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (mz > 0),
 		CHECK (intensity >= 0),
 		/* Foreign key relationships */
