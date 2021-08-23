@@ -2,8 +2,14 @@
 
 # Current version of the database and the date it was created (if present)
 DB_DATE        <- file.info(list.files(pattern = DB_NAME, recursive = TRUE))$ctime
-DB_VERSION     <- ifelse(length(DB_DATE) > 0, "0.0.1", NA)
+DB_VERSION     <- "0.0.1"
+DB_VERSION     <- ifelse(length(DB_DATE) > 0, DB_VERSION, NA)
 DB_BUILT       <- !is.na(DB_VERSION)
+
+# Supplemental information about working with this database
+DB_PACKAGE     <- "RSQLite"
+DB_DRIVER      <- "SQLite"
+DB_CLASS       <- "SQLite"
 
 # The last time the main database schema defined in BUILD_FILE was updated
 LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = TRUE))$mtime
