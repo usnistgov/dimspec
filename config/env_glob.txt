@@ -1,3 +1,6 @@
+# Title of this database
+DB_TITLE       = "NIST HRAMS Database for PFAS"
+
 # Text name to use for this project's database file
 DB_NAME        = "nist_pfas_nta_dev.sqlite"
 
