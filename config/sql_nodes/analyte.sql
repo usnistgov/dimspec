@@ -34,7 +34,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL,
 			/* one of "in silico" or "empirical" */
@@ -51,7 +51,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		category
 			INTEGER,
 			/* foreign key to compound_categories */
@@ -107,7 +107,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to compounds */
 		reference
 			INTEGER,
-			/* foreign key to compound_alias_references*/
+			/* foreign key to compound_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
@@ -123,9 +123,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL
+			/* name of the source for the compound alias */
 	);
 	/*magicsplit*/
 
@@ -134,7 +135,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL,
 			/* name of the class */
@@ -145,7 +146,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS compound_fragments
 		/* Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments. */
 	(
@@ -164,13 +165,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS fragments
 		/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		mz
 			REAL NOT NULL,
 			/* m/z value for specific fragment, derived */
@@ -178,8 +179,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL,
 			/* elemental formula for specific fragment, user submitted */
 		description
-			TEXT NOT NULL,
-			/*  */
+			TEXT,
+			/* user-supplied description of the fragment */
 		charge
 			INTEGER NOT NULL,
 			/* charge of specific fragment,derived */
@@ -195,7 +196,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS fragment_sources
 		/* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical). */
 	(
@@ -218,28 +219,48 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
-		SELECT c.id, c.formula AS compound, f.formula AS fragments, f.mz
-			FROM compounds c
-			INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-			INNER JOIN fragments f ON cf.fragment_id = f.id
-			ORDER BY mz ASC;
+		SELECT
+			c.id,
+				/* compounds.id field */
+			c.formula AS compound,
+				/* compounds.formula field */
+			f.formula AS fragments,
+				/* fragments.formula field */
+			f.mz
+				/* fragments.mz field */
+		FROM compounds c
+		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
+		INNER JOIN fragments f ON cf.fragment_id = f.id
+		ORDER BY mz ASC;
 	/*magicsplit*/
-	
+
 	CREATE VIEW IF NOT EXISTS view_fragment_count AS
 		/* Number of fragments associated with compounds. */
-		SELECT c.name, c.formula AS compound, COUNT(f.formula) AS n_fragments
-			FROM compounds c
-			INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-			INNER JOIN fragments f ON cf.fragment_id = f.id
-			GROUP BY compound
-			ORDER BY n_fragments DESC;
+		SELECT
+			c.name,
+				/* compounds.name field */
+			c.formula AS compound,
+				/* compounds.formula field */
+			COUNT(f.formula) AS n_fragments
+				/* distinct number of fragments associated with this compound as the count of associated fragments.formula */
+		FROM compounds c
+		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
+		INNER JOIN fragments f ON cf.fragment_id = f.id
+		GROUP BY compound
+		ORDER BY n_fragments DESC;
 	/*magicsplit*/
-	
+
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
-		SELECT c.id, c.name AS compound,
+		SELECT
+			c.id,
+				/* compound identifier */
+			c.name AS compound,
+				/* compound name */
 			ca.alias,
+				/* compound alias */
 			car.name as ref_type,
+				/* compound alias reference name */
 			CASE 
 				WHEN car.name == "DTXSID"
 					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias 
@@ -261,9 +282,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				ELSE
 					"(not available)"
 			END AS link
-			FROM compounds c
-			INNER JOIN compound_aliases ca ON c.id = ca.compound_id
-			INNER JOIN compound_alias_references car ON ca.reference = car.id;
+				/* URL link to the alias ID source */
+		FROM compounds c
+		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
+		INNER JOIN compound_alias_references car ON ca.reference = car.id;
 	/*magicsplit*/
 
 /* Triggers */

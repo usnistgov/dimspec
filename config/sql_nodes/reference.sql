@@ -39,9 +39,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		common_name
 			TEXT NOT NULL UNIQUE
 			/* periodic table common name (e.g. "Helium") */
+		/* Check constraints */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS isotopes
 		/* Elemental isotope abundance ratios for comparison and deconvolution. */
 	(
@@ -54,7 +56,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		abundance
 			REAL NOT NULL,
 			/* isotopic abundance of exact_mass (e.g. 0.99999866) */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (abundance BETWEEN 0 AND 1),
 		CHECK (exact_mass > 0),
 		/* Foreign key relationships */
@@ -68,11 +70,17 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/* A view of all elemental isotopes and their relative abundances joining reference tables "elements" and "isotopes". */
 	SELECT
 		e.atomic_number,
+			/* elemental atomic number */
 		e.symbol,
+			/* periodic table symbol */
 		cast(round(exact_mass) as int)||symbol as isotope,
+			/* "human readable" isotopic notation */
 		e.common_name AS "element",
+			/* element common name */
 		i.exact_mass,
+			/* element nominal exact mass */
 		i.abundance
+			/* relative "natural" isotopic abundance */
 	FROM isotopes i
 	INNER JOIN elements e ON i.atomic_number = e.atomic_number;
 	/*magicsplit*/

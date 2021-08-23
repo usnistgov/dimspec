@@ -34,25 +34,29 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
+		/* Check constraints */
 		CHECK (name IN ("trigger", "application", "console", "script", "other"))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS norm_log_effect
 		/* Normalization table for logs(effect) */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
+		/* Check constraints */
 		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema"))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS version_history
 		/* Versions of this database and its associated data or application */
 	(
@@ -68,19 +72,19 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		active_as_of
 			TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			/* timestamp for when the action was executed */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (affects IN ("data", "schema", "application")),
 		CHECK (active_as_of == strftime("%Y-%m-%d %H:%M:%S", active_as_of))
-		/* Foreign keys */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS logs
 		/* Placeholder for logs */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		category
 			TEXT NOT NULL,
 			/* categorical grouping of the action */
@@ -98,7 +102,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* table reference name for the table that was changed, not constrained */
 		affects_ids
 			INTEGER,
-			/* id associated with records changed or updated  */
+			/* id associated with records changed or updated */
 		executed_by
 			INTEGER NOT NULL DEFAULT 1,
 			/* foreign key to contributors */
@@ -114,9 +118,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		old_vals
 			TEXT,
 			/* prior values, if any */
-		/* Constraints */
+		/* Check constraints */
 		CHECK (executed_on==strftime("%Y-%m-%d %H:%M:%S", executed_on)),
-		/* Foreign keys */
+		/* Foreign key relationships */
 		FOREIGN KEY (effect) REFERENCES norm_log_effect(id),
 		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id)
 	);
@@ -139,11 +143,24 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			(2, "UPDATE"),
 			(3, "DELETE"),
 			(4, "schema");
-	
+
 /* Views */
 
 	CREATE VIEW IF NOT EXISTS log_summaries AS
-		SELECT l.category, l.description, nle.name AS action, count(l.affects_ids) AS rows_affected, l.affects_table, strftime("%Y-%m-%d", l.executed_on) AS on_day
+		/* Human readable logs */
+		SELECT
+			l.category,
+				/* database action category */
+			l.description,
+				/* database log description */
+			nle.name AS action,
+				/* normalized database action name */
+			count(l.affects_ids) AS rows_affected,
+				/* number of rows affected by this action */
+			l.affects_table,
+				/* table affected by this action */
+			strftime("%Y-%m-%d", l.executed_on) AS on_day
+				/* date on which this action was executed */
 		FROM logs l
 		INNER JOIN norm_log_effect nle ON l.effect = nle.id
 		GROUP BY affects_table, on_day;

@@ -23,11 +23,11 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 /* Tables */
 
 	CREATE TABLE IF NOT EXISTS contributors
-		/* Placeholder for contributors */
+		/* Contact information for individuals contributing data to this database */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		username
 			TEXT NOT NULL UNIQUE,
 			/* verified username */
@@ -48,10 +48,9 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 			/* user's ORCID number, if available */
 		orcid_url
 			TEXT GENERATED ALWAYS AS ("https://orcid.org/" || orcid) VIRTUAL,
-			/* calculated column to provide a link to a user's ORCID id profile */
+			/* generated column to provide a link to a user's ORCID id profile */
 		/* Check constraints */
 		CHECK (orcid GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]')),
-			/* Ensures ORCID follows formatting requirement as of 2021-06-07 */
 		CHECK (length(contact) = length(replace(replace(replace(replace(replace(replace(contact, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
 		/* Foreign key relationships */
 		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
@@ -62,7 +61,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of professional affiliation */
@@ -74,8 +73,11 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Readable version of the contributors table that can be expanded with counts of contributions from various places. */
 		SELECT 
 			c.first_name || " " || c.last_name AS name,
+				/* concatenation of contributors.first_name and .last_name fields */
 			a.name AS affiliation,
+				/* contributor affiliation */
 			c.orcid_url AS ORCID
+				/* contributors.orcid_url field */
 		FROM contributors c
 		JOIN affiliations a
 		ON c.affiliation = a.id

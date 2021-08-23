@@ -30,19 +30,19 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of the sample class */
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS peaks
 		/* Peaks (or features) identified within the results from a sample. */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		sample_id
 			INTEGER NOT NULL,
 			/* foreign key to samples */
@@ -71,13 +71,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS samples
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. */
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		name
 			TEXT NOT NULL,
 			/* user-defined name of the sample */
@@ -113,7 +113,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		id
 			INTEGER PRIMARY KEY,
-			/* Primary key */
+			/* primary key */
 		peak_id
 			INTEGER NOT NULL,
 			/* foreign key to peaks */
@@ -123,9 +123,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		scantime
 			REAL NOT NULL,
 			/* scan time of spectrum */
-		encoded_data
+		measured_mz
 			TEXT NOT NULL,
-			/* locator/actual MS1 fragmentation data */
+			/* mass to charge ratios measured in this spectrum */
+		measured_intensity
+			TEXT NOT NULL,
+			/* intensities associated with measured_mz in a 1:1 relationship. if persisted, may be entered into table ms_spectra */
 		contributor
 			INTEGER,
 			/* contributor for these data */
@@ -137,9 +140,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (contributor) REFERENCES contributors(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-	
+
 	CREATE TABLE IF NOT EXISTS ms_spectra
-		/* Retained mass spectra associated with ms1data. */
+		/* Retained mass spectra associated with ms1data, unencoded from ms_data.measured_mz and .measured_intensity respectively. */
 	(
 		ms_data_id
 			INTEGER NOT NULL,
@@ -161,12 +164,40 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 /* Views */
 
 	CREATE VIEW IF NOT EXISTS peak_data AS
-		SELECT p.id AS peak_id, msd.id AS id, p.precursor_mz, msd.scantime, msd.encoded_data, msd.contributor
+		/* View raw peak data for a specific peak */
+		SELECT
+			p.id AS peak_id,
+				/* internal peak id */
+			msd.id AS id,
+				/* internal id of ms_data */
+			p.precursor_mz,
+				/* peak precursor ion */
+			msd.scantime,
+				/* ms scantime for this spectrum */
+			msd.measured_mz AS m_z,
+				/* mass to charge ratio */
+			msd.measured_intensity AS intensity,
+				/* measured signal intensity */
+			msd.contributor
+				/* contributor for these data */
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;
-		
+
 	CREATE VIEW IF NOT EXISTS peak_spectra AS
-		SELECT ps.peak_id, ps.precursor_mz, ps.scantime, mss.mz, mss.intensity, ps.contributor
+		/* View archived and verified peak spectra for a specific peak */
+		SELECT
+			ps.peak_id,
+				/* internal peak id */
+			ps.precursor_mz,
+				/* peak precursor ion */
+			ps.scantime,
+				/* ms scantime for this spectrum */
+			mss.mz,
+				/* mass to charge ratio */
+			mss.intensity,
+				/* measured signal intensity */
+			ps.contributor
+				/* contributor for these data */
 		FROM peak_data ps
 		INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
 
