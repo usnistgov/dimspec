@@ -14,6 +14,8 @@
 
 /* To build in console, use each of the following as needed. */
 
+delete from norm_source_types;
+.import --csv --skip 1 config/data/norm_source_types.csv norm_source_types
 delete from compounds;
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
 delete from compound_aliases;
@@ -32,6 +34,10 @@ delete from norm_solvents;
 .import --csv --skip 1 config/data/demo/norm_solvents.csv norm_solvents 
 delete from norm_sample_classes;
 .import --csv --skip 1 config/data/demo/norm_sample_classes.csv norm_sample_classes
+delete from affiliations;
+.import --csv --skip 1 config/data/demo/affiliations.csv affiliations
+delete from contributors;
+.import --csv --skip 1 config/data/demo/contributors.csv contributors
 delete from samples;
 .import --csv --skip 1 config/data/demo/samples.csv samples
 delete from solvent_aliases;

@@ -84,10 +84,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		sample_class_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_sample_classes */
-		SOURCE
+		source_citation
 			TEXT,
 			/* citation for the sample source */
-		data_generator
+		sample_contributor
 			TEXT NOT NULL,
 			/* generator of data for this sample */
 		generated_on
@@ -104,6 +104,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
+		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE,
 		FOREIGN KEY (msconvert_settings_id) REFERENCES msconvert_settings(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
@@ -129,15 +130,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		measured_intensity
 			TEXT NOT NULL,
 			/* intensities associated with measured_mz in a 1:1 relationship. if persisted, may be entered into table ms_spectra */
-		contributor
-			INTEGER,
-			/* contributor for these data */
 		/* Check constraints */
 		CHECK (scantime > 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
 		/* Foreign key relationships */
-		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE,
-		FOREIGN KEY (contributor) REFERENCES contributors(id) ON UPDATE CASCADE
+		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -176,10 +173,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* ms scantime for this spectrum */
 			msd.measured_mz AS m_z,
 				/* mass to charge ratio */
-			msd.measured_intensity AS intensity,
+			msd.measured_intensity AS intensity
 				/* measured signal intensity */
-			msd.contributor
-				/* contributor for these data */
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;
 
@@ -194,10 +189,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* ms scantime for this spectrum */
 			mss.mz,
 				/* mass to charge ratio */
-			mss.intensity,
+			mss.intensity
 				/* measured signal intensity */
-			ps.contributor
-				/* contributor for these data */
 		FROM peak_data ps
 		INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
 

@@ -37,6 +37,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
+			/* plain text source for this log entry */
 		/* Check constraints */
 		CHECK (name IN ("trigger", "application", "console", "script", "other"))
 		/* Foreign key relationships */
@@ -51,6 +52,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
+			/* plain text of the type of database action */
 		/* Check constraints */
 		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema"))
 		/* Foreign key relationships */

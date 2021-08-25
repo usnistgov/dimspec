@@ -42,13 +42,13 @@ PRAGMA journal_mode=WAL;
 .read config/sql_nodes/reference_data.SQL 
 /* Method node */
 .read config/sql_nodes/methods.SQL 
-/* Contributors node */
-.read config/sql_nodes/contributors.SQL 
-.read config/sql_nodes/contributors_data.SQL 
 /* Analyte node */
 .read config/sql_nodes/analyte.SQL 
 /* Data node */
 .read config/sql_nodes/data.SQL
+/* Contributors node */
+.read config/sql_nodes/contributors.SQL 
+.read config/sql_nodes/contributors_data.SQL 
 /* Logging node */
 .read config/sql_nodes/logging.SQL
 /* .read config/sql_nodes/auto_logs.SQL */

@@ -14,6 +14,8 @@
 
 /* To build in console, use each of the following as needed. */
 
+delete from norm_source_types;
+.import --csv --skip 1 config/data/norm_source_types.csv norm_source_types
 delete from compounds;
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds
 delete from compound_aliases;
@@ -32,9 +34,14 @@ delete from norm_solvents;
 .import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents 
 delete from norm_sample_classes;
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes
+delete from affiliations;
+.import --csv --skip 1 config/data/pfas/affiliations.csv affiliations
+delete from contributors;
+.import --csv --skip 1 config/data/pfas/contributors.csv contributors
 delete from samples;
 .import --csv --skip 1 config/data/pfas/samples.csv samples
 delete from solvent_aliases;
 .import --csv --skip 1 config/data/pfas/solvent_aliases.csv solvent_aliases
 delete from solvent_mixes;
 .import --csv --skip 1 config/data/pfas/solvent_mixes.csv solvent_mixes
+.read config/data/pfas/methods_data.sql

@@ -44,15 +44,18 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 			INTEGER NOT NULL,
 			/* user's professional affiliation, foreign key to affiliations */
 		orcid
-			TEXT,
+			TEXT DEFAULT 'null',
 			/* user's ORCID number, if available */
-		orcid_url
-			TEXT GENERATED ALWAYS AS ("https://orcid.org/" || orcid) VIRTUAL,
-			/* generated column to provide a link to a user's ORCID id profile */
 		/* Check constraints */
-		CHECK (orcid GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]')),
+		CHECK (orcid
+			GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]')
+			OR (orcid in ('NULL', 'null', 'NA', 'na', ''))
+		)
 		CHECK (length(contact) = length(replace(replace(replace(replace(replace(replace(contact, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
-		/* Foreign key relationships */
+		CHECK (length(first_name) = length(replace(replace(replace(replace(replace(replace(first_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
+		CHECK (length(last_name) = length(replace(replace(replace(replace(replace(replace(last_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
+		CHECK (length(username) = length(replace(replace(replace(replace(replace(replace(username, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
+	/* Foreign key relationships */
 		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
 	); /*magicsplit*/
 
@@ -76,12 +79,17 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 				/* concatenation of contributors.first_name and .last_name fields */
 			a.name AS affiliation,
 				/* contributor affiliation */
-			c.orcid_url AS ORCID
+			("https://orcid.org/" || c.orcid) AS orcid_url,
 				/* contributors.orcid_url field */
+			count(s.sample_contributor) as samples_contributed
+				/* samples provided by this contributor */
 		FROM contributors c
 		JOIN affiliations a
-		ON c.affiliation = a.id
-		WHERE NOT c.id = 1; /*magicsplit*/
+			ON c.affiliation = a.id
+		JOIN samples s
+			ON c.id = s.sample_contributor
+		WHERE NOT c.id = 1
+		GROUP BY c.id; /*magicsplit*/
 
 /* Triggers */
 		
@@ -90,9 +98,19 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		AFTER INSERT ON contributors
 		WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
 	BEGIN
-		INSERT OR IGNORE INTO affiliations (name)
+		INSERT INTO affiliations (name)
 			VALUES (NEW.affiliation);
 		UPDATE OR IGNORE contributors
 			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
+			WHERE ROWID = NEW.ROWID;
+	END; /*magicsplit*/
+	
+	CREATE TRIGGER IF NOT EXISTS ensure_null_orcid
+		/* When creating a new contributor, ensure allowed nullable ORCID values are stored as NULL. */
+		AFTER INSERT ON contributors
+		WHEN NEW.orcid in ("NA", "", "NULL", "null", "na")
+	BEGIN
+		UPDATE contributors 
+			SET orcid = NULL
 			WHERE ROWID = NEW.ROWID;
 	END; /*magicsplit*/
