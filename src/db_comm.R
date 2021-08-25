@@ -644,7 +644,7 @@ tidy_comments <- function(obj) {
   return(out)
 }
 
-data_dictionary <- function(conn_obj, output_format = "list") {
+data_dictionary <- function(conn_obj) {
   # logger <- "logger" %in% (.packages())
   logger <- FALSE
   tabls <- dbListTables(con)
@@ -670,18 +670,22 @@ data_dictionary <- function(conn_obj, output_format = "list") {
     out[[tabl]] <- tmp
   }
   if (length(failures) > 0) {
-    cat(sprintf("\n\nDictionary was not available for %s: %s",
+    has_failures <- TRUE
+    cat(sprintf("\nDictionary was not available for %s: %s\n",
                 ifelse(length(failures) > 1, "tables", "table"),
                 format_list_of_names(failures)),
         "\n")
   } else {
+    has_failures <- FALSE
     failures <- "Dictionary available for all tables."
   }
-  out <- list(failures = failures, dictionary = out)
+  attr(out, "has_failures") <- has_failures
+  attr(out, "failures")     <- failures
+  # out <- list(has_failures = has_failures, failures = failures, dictionary = out)
   return(out)
 }
 
-save_data_dictionary <- function(conn_obj, output_format = "json", output_file = NULL) {
+save_data_dictionary <- function(conn_obj, output_format = "json", output_file = NULL, overwrite_existing = TRUE) {
   logger <- "logger" %in% (.packages())
   output_format <- match.arg(tolower(output_format),
                              c("json", "csv", "data.frame", "list"))
@@ -696,6 +700,9 @@ save_data_dictionary <- function(conn_obj, output_format = "json", output_file =
                     DB_VERSION,
                     f_ext)
   i <- 0
+  if (all(file.exists(f_name), overwrite_existing)) {
+    file.remove(f_name)
+  }
   while (file.exists(f_name)) {
     i <- i + 1
     f_name <- str_replace(f_name,
@@ -708,11 +715,19 @@ save_data_dictionary <- function(conn_obj, output_format = "json", output_file =
                                   f_ext)
     )
   }
-  out <- data_dictionary(conn_obj, output_format)[[2]]
+  out <- data_dictionary(conn_obj)
   if (logger) {
     log_warn('No file name provided to "output_file", saving as "{f_name}"')
   } else {
     cat(sprintf('No file name provided to "output_file", saving as "%s"\n', f_name))
+  }
+  if (attr(out, "has_failures")) {
+    if (logger) {
+      log_error('This dictionary failed on tables {format_list_of_names(out$failures)}')
+    } else {
+      stop(sprintf('This dictionary failed on tables %s',
+                   format_list_of_names(out$failures)))
+    }
   }
   switch(output_format,
          "json"       = out %>%
