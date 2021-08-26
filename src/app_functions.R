@@ -178,6 +178,7 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("choices", list("a", "b")))))
 #' }
 verify_args <- function(args, conditions, from_fn = NULL) {
+  names(args) <- names(conditions)
   if (is.null(from_fn)) {
     from_fn <- ""
   } else {
@@ -190,12 +191,16 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
   mode_types   <- mode_checks()
-  out          <- list()
-  out$args     <- args
-  out$checked  <- setNames(conditions, names(args))
-  out$valid    <- TRUE
-  out$results  <- vector("list", length = length(args))
-  out$messages <- vector("character", length = 0L)
+  out          <- list(
+    valid    = TRUE,
+    args     = args,
+    checked  = conditions,
+    results  = vector("list", length = length(args)),
+    messages = vector("character", length = 0L)
+  )
+  names(out$args)    <- names(conditions)
+  names(out$checked) <- names(conditions)
+  names(out$results) <- names(conditions)
   for (i in 1:length(args)) {
     arg   <- args[i]
     needs <- conditions[[i]]
