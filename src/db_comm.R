@@ -80,14 +80,14 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
   out <- lapply(db_table,
                 function(x) {
                   tmp <- dbGetQuery(con, sprintf(func, x))
-                  tmp$db_table <- x
+                  tmp$table_name <- x
                   return(tmp)
                 }
   )
   # Shape up the return
   if (get_sql) {
     out <- dplyr::bind_rows(out) %>%
-      select(db_table, type, sql)
+      select(table_name, type, sql)
     if ("stringr" %in% installed.packages()) {
       if (!pretty) {
         out$sql <- stringr::str_replace_all(out$sql, "\n|\t", " ")
@@ -99,7 +99,7 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
     }
   } else {
     out <- dplyr::bind_rows(out) %>%
-      select(cid, db_table, name:pk)
+      select(cid, table_name, name:pk)
   }
   # Return data frame object representing SQLite db_table schema(s)
   return(out)
@@ -119,7 +119,7 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #'
 #' @param db_conn connection object, specifically of class "SQLiteConnection"
 #'   but not strictly enforced
-#' @param table CHR vector name of the table(s) to inspect
+#' @param db_table CHR vector name of the table(s) to inspect
 #' @param condition CHR vector matching specific checks, must be one of
 #'   c("required", "has_default", "is_PK") for constraints where a field must
 #'   not be null, has a default value defined, and is a primary key field,
@@ -142,7 +142,7 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #'
 #' @examples
 pragma_table_info <- function(db_conn,
-                              table,
+                              db_table,
                               condition   = NULL,
                               name_like   = NULL,
                               data_type   = NULL,
@@ -151,7 +151,7 @@ pragma_table_info <- function(db_conn,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(db_conn, table, names_only),
+      args       = list(db_conn, db_table, names_only),
       conditions = list(
         db_conn     = list(c("length", 1)),
         table       = list(c("mode", "character"), c("n>=", 1)),
@@ -164,13 +164,13 @@ pragma_table_info <- function(db_conn,
     }
   }
   # Ensure table exists
-  tables_exist <- table %in% dbListTables(db_conn)
+  tables_exist <- db_table %in% dbListTables(db_conn)
   if (!all(tables_exist)) {
     warning(sprintf('No table named "%s" was found in this schema.', table[!tables_exist]))
-    table <- table[tables_exist]
+    db_table <- db_table[tables_exist]
   }
   # Get table properties
-  out <- pragma_table_def(db_conn, table, get_sql = FALSE)
+  out <- pragma_table_def(db_conn, db_table, get_sql = FALSE)
   # Set up condition checks
   valid_conditions <- c("required", "has_default", "is_PK")
   if (!is.null(condition)) {
@@ -193,12 +193,12 @@ pragma_table_info <- function(db_conn,
     any()
   # Get comments if any
   if (include_comments) {
-    tmp <- pragma_table_def(db_conn, table, get_sql = TRUE) %>%
+    tmp <- pragma_table_def(db_conn, db_table, get_sql = TRUE) %>%
       tidy_comments() %>%
       bind_rows()
     out <- out %>%
       bind_cols(tmp) %>%
-      relocate(table_comment, .after = db_table)
+      relocate(table_comment, .after = table_name)
   }
   # Do condition checks
   if (!is.null(condition)) {
@@ -580,54 +580,6 @@ read_in_json <- function(package, is_file = TRUE) {
   tmp <- fromJSON(package)
 }
 
-add_sample <- function() {
-  
-}
-
-add_peak <- function() {
-  
-}
-
-add_compound <- function() {
-  
-}
-
-add_contributor <- function(con) {
-  con <- verify_connection()
-}
-
-add_method <- function() {
-  
-}
-
-add_qc_method <- function() {
-  
-}
-
-add_mobile_phase <- function() {
-  # Modify table "mobile_phases" 
-}
-
-add_solvent <- function() {
-  # Modify table "norm_solvents" if solvent does not have an id. Looks up
-  # solvent by common aliases in "solvent_aliases" first to prevent duplication.
-}
-
-add_solvent_mix <- function() {
-  # Modify table "solvent_mixes" if a mix id does not have an id. These are
-  # combinations of solvents in particular ratios (e.g. 10% methanol in water).
-  # These ids are used in column "mobile_phases.carrier"
-}
-
-add_ms_data <- function() {
-  
-}
-
-get_id <- function(table, column, value) {
-  
-}
-
-
 tidy_comments <- function(obj) {
   comments <- obj$sql %>%
     str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
@@ -645,9 +597,9 @@ tidy_comments <- function(obj) {
 }
 
 data_dictionary <- function(conn_obj) {
-  # logger <- "logger" %in% (.packages())
-  logger <- FALSE
+  logger <- "logger" %in% (.packages())
   tabls <- dbListTables(con)
+  tabls <- tabls[-grep("sqlite_", tabls)]
   out <- vector('list', length(tabls))
   names(out) <- tabls
   failures <- character(0)
