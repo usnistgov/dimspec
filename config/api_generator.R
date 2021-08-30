@@ -235,6 +235,8 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #'   all match criteria (default FALSE)
 #' @param get_all_columns LGL scalar of whether to return all columns; will be
 #'   set to TRUE automatically if no column names are provided (default FALSE)
+#' @param execute LGL scalar of whether or not to immediately execute the build
+#'   query statement (default TRUE)
 #'
 #' @return CHR scalar of the constructed query
 #' @export
@@ -251,7 +253,8 @@ build_db_action <- function(con,
                             group_by        = NULL,
                             order_by        = NULL,
                             distinct        = FALSE,
-                            get_all_columns = FALSE) {
+                            get_all_columns = FALSE,
+                            execute         = TRUE) {
   # Argument validation
   action       <- toupper(action)
   table_name   <- tolower(table_name)
@@ -332,14 +335,14 @@ build_db_action <- function(con,
     action,
     "INSERT" = paste0("(",
                       lapply(values,
-                      function(x) {
-                        lapply(x,
-                               function(x) {
-                                 dbQuoteLiteral(con, x)
-                               }) %>%
-                          unlist() %>%
-                          paste0(collapse = ", ")
-                      }),
+                             function(x) {
+                               lapply(x,
+                                      function(x) {
+                                        dbQuoteLiteral(con, x)
+                                      }) %>%
+                                 unlist() %>%
+                                 paste0(collapse = ", ")
+                             }),
                       ")",
                       collapse = ", "),
     "UPDATE" = paste0(lapply(names(values),
@@ -348,7 +351,8 @@ build_db_action <- function(con,
                                 dbQuoteIdentifier(con, x),
                                 dbQuoteLiteral(con, values[[x]]))
                       }),
-                      collapse = ", ")
+                      collapse = ", "),
+    ""
   )
   query <- str_replace(query, "\\?values", values_formatted)
   
@@ -423,6 +427,15 @@ build_db_action <- function(con,
       }
     }
   }
-  
-  return(query)
+ 
+  if (execute) {
+    if (grepl("^SELECT", query)) {
+      tmp <- dbGetQuery(con, query)
+    } else {
+      tmp <- dbSendStatement(con, query)
+    }
+    return(tmp)
+  } else {
+    return(query)
+  }
 }
