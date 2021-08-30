@@ -104,7 +104,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
 			WHERE ROWID = NEW.ROWID;
 	END; /*magicsplit*/
-	
+
 	CREATE TRIGGER IF NOT EXISTS ensure_null_orcid
 		/* When creating a new contributor, ensure allowed nullable ORCID values are stored as NULL. */
 		AFTER INSERT ON contributors
@@ -114,3 +114,15 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 			SET orcid = NULL
 			WHERE ROWID = NEW.ROWID;
 	END; /*magicsplit*/
+
+	CREATE TRIGGER IF NOT EXISTS affiliation_update
+		/* When updating a contributor's affiliation with an affiliation that does not currently exist, add the affiliation and update the id appropriately, but still allow for direct use of affiliations(id). */
+		AFTER UPDATE ON contributors
+		WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
+	BEGIN
+		INSERT OR IGNORE INTO affiliations (name)
+			VALUES (NEW.affiliation);
+		UPDATE contributors
+			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
+			WHERE ROWID = NEW.ROWID;
+	END;
