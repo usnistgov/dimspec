@@ -22,10 +22,10 @@ invisible(
 # _Verify required directory presence ------------------------------------------
 if (!dir.exists("input")) {dir.create("input")}
 if (!dir.exists("output")) {dir.create("output")}
-if (!dir.exists("output/gather")) {dir.create("output/gather")}
-if (!dir.exists("output/aggregate")) {dir.create("output/aggregate")}
-if (!dir.exists("output/extract")) {dir.create("output/extract")}
-if (!dir.exists("output/example")) {dir.create("output/example")}
+if (!dir.exists(file.path("output", "gather"))) {dir.create(file.path("output", "gather"))}
+if (!dir.exists(file.path("output", "aggregate"))) {dir.create(file.path("output", "aggregate"))}
+if (!dir.exists(file.path("output", "extract"))) {dir.create(file.path("output", "extract"))}
+if (!dir.exists(file.path("output", "example"))) {dir.create(file.path("output", "example"))}
 
 # _Set operational env variables -----------------------------------------------
 source(file.path("config", "env_glob.txt"))
@@ -62,6 +62,12 @@ log_ns <- list(db       = "db_transaction",
                build    = "db_build",
                internal = "internal_function",
                app      = "app_function")
+
+# _Build database if it doesn't exist ------------------------------------------
+if (!DB_BUILT) {
+  build_db(connect = INIT_CONNECT)
+  source(file.path("config", "env_R.R"))
+}
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)

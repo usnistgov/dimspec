@@ -1,10 +1,22 @@
 # Environment variables specific to R.
 
 # Current version of the database and the date it was created (if present)
-DB_DATE        <- file.info(list.files(pattern = DB_NAME, recursive = TRUE))$ctime
-DB_VERSION     <- "0.0.1"
-DB_VERSION     <- ifelse(length(DB_DATE) > 0, DB_VERSION, NA)
-DB_BUILT       <- !is.na(DB_VERSION)
+DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME),
+                                       recursive = TRUE))$ctime
+DB_BUILT       <- length(DB_DATE) > 0
+# Releases will be coded by:
+#   - First position: major version (e.g. schema changes)
+#   - Second position: data changes (e.g. new compounds)
+#   - Third position: application tooling changes (e.g. new tools)
+#   - Fourth position: creation date
+DB_RELEASE     <- "0.0.0"
+DB_VERSION     <- sprintf("%s.%s",
+                          DB_RELEASE,
+                          ifelse(DB_BUILT,
+                                 format(DB_DATE, "%Y%m%d"),
+                                 NA)
+)
+INIT_CONNECT   <- TRUE
 
 # Supplemental information about working with this database
 DB_PACKAGE     <- "RSQLite"
