@@ -26,7 +26,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Contact information for individuals contributing data to this database */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		username
 			TEXT NOT NULL UNIQUE,
@@ -63,7 +63,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Normalization table for user affiliations */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -79,10 +79,12 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 				/* concatenation of contributors.first_name and .last_name fields */
 			a.name AS affiliation,
 				/* contributor affiliation */
+			c.contact,
+				/* contributor contact information */
 			("https://orcid.org/" || c.orcid) AS orcid_url,
-				/* contributors.orcid_url field */
+				/* contributors.orcid as a hyperlink to their ORCID page */
 			count(s.sample_contributor) as samples_contributed
-				/* samples provided by this contributor */
+				/* number of samples provided by this contributor */
 		FROM contributors c
 		JOIN affiliations a
 			ON c.affiliation = a.id
@@ -108,7 +110,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 	CREATE TRIGGER IF NOT EXISTS ensure_null_orcid
 		/* When creating a new contributor, ensure allowed nullable ORCID values are stored as NULL. */
 		AFTER INSERT ON contributors
-		WHEN NEW.orcid in ("NA", "", "NULL", "null", "na")
+		WHEN NEW.orcid IN ("NA", "", "NULL", "null", "na")
 	BEGIN
 		UPDATE contributors 
 			SET orcid = NULL
@@ -125,4 +127,4 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		UPDATE contributors
 			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
 			WHERE ROWID = NEW.ROWID;
-	END;
+	END; /*magicsplit*/

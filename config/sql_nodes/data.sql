@@ -29,7 +29,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table linking to samples to hold controlled vocabulary. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -41,7 +41,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Peaks (or features) identified within the results from a sample. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		sample_id
 			INTEGER NOT NULL,
@@ -73,10 +73,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 
 	CREATE TABLE IF NOT EXISTS samples
-		/* Samples from which analytical data are derived. What goes into an analytical instrument. */
+		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -93,7 +93,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		generated_on
 		  TEXT NOT NULL,
 		  /* datetime the raw data file was generated in UTC */
-		msconvert_settings_id
+		software_conversion_settings_id
 			INTEGER,
 			/* settings for the msconvert program used to generate data from this sample */
 		ms_methods_id
@@ -104,8 +104,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE,
-		FOREIGN KEY (msconvert_settings_id) REFERENCES msconvert_settings(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (software_conversion_settings_id) REFERENCES conversion_software_linkage(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -113,7 +113,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		peak_id
 			INTEGER NOT NULL,

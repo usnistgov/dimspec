@@ -31,7 +31,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for mass spectrometer ionization source types */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		acronym
 			TEXT NOT NULL UNIQUE,
@@ -48,7 +48,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Mobile phase solvent list: controlled. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -66,7 +66,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		abbreviation
 			TEXT NOT NULL,
@@ -86,7 +86,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization TABLE holding commercial instrument vendor information. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -100,7 +100,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for quality control reference types. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		value
 			TEXT NOT NULL
@@ -114,7 +114,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for quality control types. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -128,11 +128,25 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for mass spectrometer types. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* type of the mass analyzer */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS solvent_mix_collections
+		/* An intermediary identification table linking mobile_phases and solvent_mixes */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* short hand name of the mixture */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -146,7 +160,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to methods */
 		carrier
 			INTEGER NOT NULL,
-			/* foreign key to solvent_mixes */
+			/* informal foreign key to solvent_mixes */
 		additive
 			TEXT,
 			/* buffer/salt/acid addition to mobile phase */
@@ -161,7 +175,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (duration > 0),
 		/* Foreign key relationships */
 		FOREIGN KEY (methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (carrier) REFERENCES solvent_mixes(mix_id) ON UPDATE CASCADE
+		FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -178,7 +192,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		UNIQUE(ms_methods_id, ms_types_id),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 
@@ -186,7 +200,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Mass spectrometer method settings. */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		ionization
 			INTEGER,
@@ -216,22 +230,40 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (polarity IN ('negative', 'positive', 'negative/positive')),
 		CHECK (has_qc_method IN (0, 1)),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_vendor) REFERENCES norm_vendors(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_vendor) REFERENCES norm_vendors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
 
-	CREATE TABLE IF NOT EXISTS msconvert_settings
-		/* Settings specific to the msconvert program. Automatically populated by calls to insert to view_msconvert_settings */
+	CREATE TABLE IF NOT EXISTS conversion_software_linkage
+		/* Linkage table keeping conversion software setting id groupings in line. These IDs are used to link tables conversion_software_settings and samples. This must be incremented prior to adding new rows in conversion_software_settings, and the new ID used in both conversion_software_settings(id) and samples(software_conversion_settings_id). */
 	(
-		setting
-			TEXT,
-			/* settings file expression */
 		id
-			INTEGER
+			INTEGER PRIMARY KEY AUTOINCREMENT
 			/* automatically populated with each call to keep settings together */
 		/* Check constraints */
 		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS conversion_software_settings
+		/* Settings specific to the software package used to preprocess raw data. */
+	(
+		linkage_id
+			INTEGER,
+			/* foreign key to msconvert_settings_linkage */
+		software_name
+			TEXT NOT NULL DEFAULT "msconvert",
+			/* name of the software used to convert data */
+		setting_name
+			TEXT NOT NULL,
+			/* name of the software setting */
+		setting_value
+			TEXT NOT NULL,
+			/* value of the software setting */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (linkage_id) REFERENCES conversion_software_linkage(id)
 	);
 	/*magicsplit*/
 
@@ -239,7 +271,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* References to quality control (QC) methods used to vet experimental results */
 	(
 		id
-			INTEGER PRIMARY KEY,
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		ms_methods_id
 			INTEGER NOT NULL,
@@ -256,8 +288,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id),
-		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id)
+		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
 
@@ -272,7 +304,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* human meaningful name(s) associated with a solvent */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE
+		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
 
@@ -281,7 +313,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		mix_id
 			INTEGER NOT NULL,
-			/* mixture identifier to gather discrete components */
+			/* mixture identifier to gather discrete components; foreign key to solvent_mix_collections */
 		component
 			INTEGER NOT NULL,
 			/* foreign key to solvent_fractions */
@@ -291,6 +323,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
+		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
@@ -325,4 +358,55 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN norm_solvents s ON s.id = sm.component;
 	/*magicsplit*/
 
+	CREATE VIEW IF NOT EXISTS view_method AS
+		/* View mass spectrometer information and method settings */
+		SELECT
+			nv.name,
+			/* Vendor name */
+			REPLACE(GROUP_CONCAT(nmt.name), ",", " ") AS detector,
+			/* Mass spectrometer type */
+			msm.polarity,
+			/* Polarity setting */
+			ni.acronym,
+			/* Ionization type */
+			msm.voltage AS "Voltage (V)",
+			/* Ionization energy in volts */
+			msm.ce_value AS "Collision Energy (eV)",
+			/* Collision energy in electron volts */
+			msm.ce_desc AS "Collision Energy Description"
+			/* Collision energy description */
+		FROM ms_methods msm 
+		JOIN norm_ionization ni ON msm.ionization = ni.id
+		JOIN norm_vendors nv ON msm.ms_vendor = nv.id
+		JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
+		JOIN norm_ms_types nmt ON msd.ms_types_id = nmt.id
+		GROUP BY msm.id;
+	/*magicsplit*/
+
 /* Triggers */
+
+	CREATE TRIGGER IF NOT EXISTS ms_methods_vendors
+		/* When adding a record to ms_methods, ensure the value for ms_vendor matches its normalization table. */
+		AFTER INSERT ON ms_methods
+		WHEN NEW.ms_vendor NOT IN (SELECT id FROM norm_vendors)
+	BEGIN
+		INSERT INTO norm_vendors (name)
+			VALUES (NEW.ms_vendor);
+		UPDATE ms_methods
+			SET ms_vendor = (SELECT id FROM norm_vendors WHERE name = NEW.ms_vendor)
+			WHERE ROWID = NEW.ROWID;
+	END;
+	/*magicsplit*/
+
+	CREATE TRIGGER IF NOT EXISTS insert_ms_descriptions
+		/* When adding a record to ms_descriptions tying an ms_methods record to a mass spectrometer type, ensure the value matches its normalization table. */
+		AFTER INSERT ON ms_descriptions
+		WHEN NEW.ms_types_id NOT IN (SELECT id FROM norm_ms_types)
+	BEGIN
+		INSERT INTO norm_ms_types (name)
+			VALUES (NEW.ms_types_id);
+		UPDATE ms_descriptions
+			SET ms_types_id = (SELECT id FROM norm_ms_types WHERE name = NEW.ms_types_id)
+			WHERE ROWID = NEW.ROWID;
+	END;
+	/*magicsplit*/
