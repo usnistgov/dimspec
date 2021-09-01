@@ -1,33 +1,3 @@
-# WIP
-db_table_mod <- function(con, type, table, properties) {
-  # Argument validation
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = as.list(environment()),
-      conditions = list(
-        con        = list(c("class", "SQLiteConnection")),
-        type       = list(c("mode", "character"), c("length", 1)),
-        table      = list(c("mode", "character"), c("length", 1)),
-        properties = list(c("mode", "data.frame"))
-      )
-    )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
-  }
-  type <- arg.match("insert", "update")
-  if (!table %in% dbListTables(con)) {
-    stop(glue::glue('Table "{table}" does not exist.'))
-  }
-  needed   <- dbGetQuery(con, glue::glue("PRAGMA table_info({table})"))
-  provided <- names(properties)
-  if (!all(provided %in% needed)) {
-    stop(glue::glue('Cannot rectify all names in argument "properties" with database headers for table "{table}".
-                     Provided {paste0(provided, collapse = ", ")}.
-                     Needed {paste0(needed, collapse = ", ")}.'))
-  }
-}
-
 #' Get table definition from SQLite
 #'
 #' Given a database connection (`con`). Get more information about the
@@ -123,19 +93,20 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #' @param condition CHR vector matching specific checks, must be one of
 #'   c("required", "has_default", "is_PK") for constraints where a field must
 #'   not be null, has a default value defined, and is a primary key field,
-#'   respectively.
+#'   respectively. (default: NULL)
 #' @param name_like CHR vector of character patterns to match against column
 #'   names via grep. If length > 1, will be collapsed to a basic OR regex (e.g.
 #'   c("a", "b") becomes "a|b"). As regex, abbreviations and wildcards will
-#'   typically work, but care should be used in that case.
+#'   typically work, but care should be used in that case. (default: NULL)
 #' @param data_type CHR vector of character patterns to match against column
-#'   data types via grep. If length > 1 will be collapsed to a basic OR regex
+#'   data types via grep. If length > 1 will be collapsed to a basic "OR" regex
 #'   (e.g. c("int", "real") becomes "int|real"). As regex, abbreviations and
 #'   wildcards will typically work, but care should be used in that case.
+#'   (default: NULL)
 #' @param include_comments LGL scalar of whether to include comments in the
-#'   return data frame
+#'   return data frame (default: FALSE)
 #' @param names_only LGL scalar of whether to include names meeting defined
-#'   criteria as a vector return value
+#'   criteria as a vector return value  (default: FALSE)
 #'
 #' @return
 #' @export
@@ -143,19 +114,20 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #' @examples
 pragma_table_info <- function(db_conn,
                               db_table,
-                              condition   = NULL,
-                              name_like   = NULL,
-                              data_type   = NULL,
+                              condition        = NULL,
+                              name_like        = NULL,
+                              data_type        = NULL,
                               include_comments = FALSE,
-                              names_only  = FALSE) {
+                              names_only       = FALSE) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(db_conn, db_table, names_only),
+      args       = list(db_conn, db_table, include_comments, names_only),
       conditions = list(
-        db_conn     = list(c("length", 1)),
-        table       = list(c("mode", "character"), c("n>=", 1)),
-        names_only  = list(c("mode", "logical"), c("length", 1))
+        db_conn          = list(c("length", 1)),
+        table            = list(c("mode", "character"), c("n>=", 1)),
+        include_comments = list(c("mode", "logical"), c("length", 1)),
+        names_only       = list(c("mode", "logical"), c("length", 1))
       ),
       from_fn   = "pragma_table_info"
     )
@@ -240,18 +212,21 @@ pragma_table_info <- function(db_conn,
 #' method may not be universally applicable to certain compute environments or
 #' may require elevated permissions.
 #'
-#' @param db CHR scalar of the database name
-#' @param build_from CHR scalar of a SQL build script to use (default
-#'   "build.sql")
-#' @param populate_with CHR scalar for which data to include in the build; valid
-#'   choices are "demo" and "pfas" (default "demo")
-#' @param archive BOOL scalar of whether to create an archive of the current
+#' @param db CHR scalar of the database name (default: session value DB_NAME)
+#' @param build_from CHR scalar of a SQL build script to use (default: session
+#'   value DB_BUILD_FILE)
+#' @param populate LGL scalar of whether to populate with data from the file in
+#'   `populate_with` (default: TRUE)
+#' @param populate_with CHR scalar for the populate script (e.g.
+#'   "populate_demo.sql") to during after the build is complete; (default:
+#'   session value DB_DATA); ignored if `populate = FALSE`
+#' @param archive LGL scalar of whether to create an archive of the current
 #'   database (if it exists) matching the name supplied in argument `db`
-#'   (default FALSE), passed to [`remove_db()`]
+#'   (default: FALSE), passed to [`remove_db()`]
 #' @param sqlite_cli CHR scalar to use to look for installed sqlite3 CLI tools
-#'   in the current system environment (default "sqlite3")
-#' @param connect BOOL scalar of whether or not to connect to the rebuilt
-#'   database in the global environment as object `con`` (default FALSE)
+#'   in the current system environment (default: session value SQLITE_CLI)
+#' @param connect LGL scalar of whether or not to connect to the rebuilt
+#'   database in the global environment as object `con`` (default: FALSE)
 #'
 #' @return None, check console for details
 #' @export
@@ -364,11 +339,11 @@ build_db <- function(db            = DB_NAME,
 #' requested database prior to rebuild; this is created in the same directory as
 #' the found database and appends
 #'
-#' @param db CHR scalar name of the database to build, defaults to the name
-#'   supplied in config/env.R
-#' @param archive BOOL scalar of whether to create an archive of the current
+#' @param db CHR scalar name of the database to build (default: session value
+#'   DB_NAME)
+#' @param archive LGL scalar of whether to create an archive of the current
 #'   database (if it exists) matching the name supplied in argument `db`
-#'   (default FALSE)
+#'   (default: FALSE)
 #'
 #' @return None, check console for details
 #' @export
@@ -420,26 +395,32 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 
 #' Check for, and optionally remove, a database connection object
 #'
+#' This function seeks to abstract connection management objects to a degree. It
+#' seeks to streamline the process of connecting and disconnecting existing
+#' connections as defined by function parameters. This release has not been
+#' tested extensively drivers other than SQLite.
+#'
 #' @param db CHR scalar name of the database to check, defaults to the name
-#'   supplied in config/env.R (default session variable DB_NAME)
+#'   supplied in config/env.R (default: session variable DB_NAME)
 #' @param drv_pack CHR scalar of the package used to connect to this database
-#'   (default session variable DB_DRIVER)
+#'   (default: session variable DB_DRIVER)
 #' @param conn_class CHR vector of connection object classes to check against.
 #'   Note this may depend heavily on connection packages and must be present in
 #'   the class names of the driver used. (default session variable DB_CLASS)
 #' @param conn_name CHR scalar of the R environment object name to use for this
-#'   connection (default "con")
+#'   connection (default: "con")
 #' @param is_local LGL scalar indicating whether or not the referenced database
 #'   is a local file, if not it will be treated as though it is either a DSN or
 #'   a database name on your host server, connecting as otherwise defined
 #' @param rm_objects LGL scalar indicating whether or not to remove objects
 #'   identifiably connected to the database from the current environment. This
-#'   is particularly useful
+#'   is particularly useful if there are outstanding connections that need to be
+#'   closed (default: TRUE)
 #' @param reconnect LGL scalar indicating whether or not to connect if a
-#'   connection does not exist (default TRUE); if both this and `disconnect` are
-#'   true, it will first be disconnected
+#'   connection does not exist; if both this and `disconnect` are true, it will
+#'   first be disconnected before reconnecting. (default: TRUE)
 #' @param disconnect LGL scalar indicating whether or not to terminate and
-#'   remove the connection from the current global environment (default TRUE)
+#'   remove the connection from the current global environment (default: TRUE)
 #' @param ... named list of any other connection parameters required for your
 #'   database driver (e.g. postgres username/password)
 #'
