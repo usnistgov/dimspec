@@ -2,7 +2,7 @@
 Description:	Build a database sketch to hold results for non-targeted analysis high-resolution 
 				accurate-mass mass spectrometry (NTA-HRAM-MS) experiments.
 Status:			Development version
-LastUpdate:		2021-06-03
+LastUpdate:		2021-09-01
 Support:		For information or support, contact the development team at
 					- NIST PFAS Program	PFAS@nist.gov
 					- Jared M. Ragland	jared.ragland@nist.gov	*author
