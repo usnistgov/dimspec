@@ -1,0 +1,6 @@
+id,software_name,setting_name,setting_value
+1,msconvert,mzML,1
+1,msconvert,zlib,1
+1,msconvert,inten64,1
+1,msconvert,filter,peakPicking vendor msLevel=1-
+1,msconvert,filter,threshold absolute 1 most-intense 1-

@@ -1,5 +1,5 @@
-﻿id,name,sample_class,source,data_generator
-1,CR001,surface water,colab1,researcher1
-2,CR002,surface water,colab1,researcher2
-3,SD001,sediment,colab1,researcher3
-4,SD002,sediment,colab1,researcher3
+﻿id,name,sample_class,source,data_generator,generated_on,software_conversion_settings_id,ms_methods_id
+1,CR001,4,colab1,2,2021-08-18 14:47:15 UTC,1,1
+2,CR002,4,colab1,3,2021-08-18 14:47:15 UTC,1,1
+3,SD001,5,colab1,6,2021-08-18 14:47:15 UTC,1,1
+4,SD002,5,colab1,6,2021-08-18 14:47:15 UTC,1,1

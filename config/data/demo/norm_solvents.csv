@@ -1,0 +1,8 @@
+id,name,tech
+1,Acetonitrile,LC
+2,Methanol,LC
+3,Water,LC
+4,Isopropanol,LC
+5,Propan-1-ol,LC
+6,Helium,GC
+7,Hydrogen,GC
