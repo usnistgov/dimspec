@@ -188,10 +188,13 @@ extract.ms <- function(mzml, scans, mz.round = 4) {
   full.ms <- NULL
   for (j in scans) {
     x.ms <- cbind(mzml$mzML$run$spectrumList[[j]]$masses, mzml$mzML$run$spectrumList[[j]]$intensities)
+    if (length(x.ms) > 0) {
+    x.ms <- matrix(x.ms, ncol = 2)
+    if (x.ms[1,1] != 0 & x.ms[1,2] != 0) {
     x.ms[,1] <- round(x.ms[,1], digits = mz.round)
     x.ms <- cbind(x.ms[,1], ave(x.ms[,2], x.ms[,1], FUN = sum))
     x.ms <- x.ms[!duplicated(x.ms),]
-    x.ms
+    x.ms <- matrix(x.ms, ncol = 2)
     if (j == scans[1]) {
       full.ms <- x.ms
     }
@@ -199,10 +202,13 @@ extract.ms <- function(mzml, scans, mz.round = 4) {
       int.ms <- merge(full.ms, x.ms, by = 1, all = TRUE)
       full.ms <- cbind(int.ms[,1], rowSums(int.ms[,2:3], na.rm = TRUE))
     }
+    }
+    }
   }
+  if (x.ms[1,1] == 0 & x.ms[1,2] == 0) {return(data.frame(mz = 0, int = 0))}
   full.ms[,1] <- round(full.ms[,1], digits = mz.round)
   full.ms <- cbind(full.ms[,1], ave(full.ms[,2], full.ms[,1], FUN = sum))
-  full.ms <- full.ms[!duplicated(full.ms),]
+  full.ms <- matrix(full.ms[!duplicated(full.ms),], ncol = 2)
   full.ms <- data.frame(mz = full.ms[,1], int = full.ms[,2])
   full.ms
 }

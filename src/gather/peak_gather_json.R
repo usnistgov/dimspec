@@ -15,7 +15,9 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
   precursors <- sapply(scans, getprecursor, mzml = mzml)
   for (i in 1:length(methodjson$peaks)) {
     out[[i]] <- list()
+    out[[i]]$msconvertsettings <- get_msconvert_data(mzml)
     out[[i]]$sample <- methodjson$sample
+    out[[i]]$sample$starttime <- mzml$mzML$run$.attrs["startTimeStamp"]
     out[[i]]$chromatography <- methodjson$chromatography
     out[[i]]$massspectrometry <- methodjson$massspectrometry
     out[[i]]$qcmethod <- methodjson$qcmethod
@@ -42,7 +44,7 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     ms2data <- cbind(msn = rep(2, nrow(ms2data)), ms2data)
     msdata <- rbind(ms1data, ms2data)
     msdata <- msdata[order(msdata$scantime),]
-    out[[i]]$msdata <- lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], msn = msdata$msn[x], baseion = msdata$baseion[x], baseint = msdata$baseint[x], msdata = msdata$msdata[x]))
+    out[[i]]$msdata <- do.call(rbind, lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], msn = msdata$msn[x], baseion = msdata$baseion[x], baseint = msdata$baseint[x], masses = msdata$masses[x], intensities = msdata$intensities[x])))
   }
   out
 }
