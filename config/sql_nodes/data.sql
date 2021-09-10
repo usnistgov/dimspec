@@ -101,7 +101,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (precursor_mz > 0),
 		CHECK (charge IN (-1, 1)),
-		CHECK (rt_start > 0),
+		CHECK (rt_start >= 0),
 		CHECK (rt_centroid > 0),
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
@@ -124,6 +124,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		scantime
 			REAL NOT NULL,
 			/* scan time of spectrum */
+		base_ion
+			REAL,
+			/* measured mass to charge ratio of the precursor ion, if 'null' the requested precursor was not found at this scantime */
+		base_int
+			REAL NOT NULL,
+			/* measured intensity of the base_ion, if 0 the requested precursor was not found at this scantime */
 		measured_mz
 			TEXT NOT NULL,
 			/* mass to charge ratios measured in this spectrum */
@@ -131,7 +137,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL,
 			/* intensities associated with measured_mz in a 1:1 relationship. if persisted, may be entered into table ms_spectra */
 		/* Check constraints */
-		CHECK (scantime > 0),
+		CHECK (scantime >= 0),
+		CHECK (base_int >= 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE
@@ -169,12 +176,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* internal id of ms_data */
 			p.precursor_mz,
 				/* peak precursor ion */
+			msd.base_int,
+				/* measured mass of precursor_mz */
 			msd.scantime,
 				/* ms scantime for this spectrum */
 			msd.measured_mz AS m_z,
-				/* mass to charge ratio */
+				/* mass to charge ratios */
 			msd.measured_intensity AS intensity
-				/* measured signal intensity */
+				/* measured signal intensities */
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;
 
