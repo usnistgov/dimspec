@@ -441,6 +441,27 @@ manage_connection <- function(db          = DB_NAME,
                               reconnect   = TRUE,
                               disconnect  = TRUE,
                               ...) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect),
+      conditions = list(
+        db         = list(c("mode", "character"), c("length", 1)),
+        drv_pack   = list(c("mode", "character"), c("length", 1)),
+        drv        = list(c("mode", "character"), c("length", 1)),
+        conn_class = list(c("mode", "character"), c("length", 1)),
+        conn_name  = list(c("mode", "character"), c("length", 1)),
+        is_local   = list(c("mode", "logical"), c("length", 1)),
+        rm_objects = list(c("mode", "logical"), c("length", 1)),
+        reconnect  = list(c("mode", "logical"), c("length", 1)),
+        disconnect = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn    = "manage_connection"
+    )
+    logger <- "logger" %in% (.packages())
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
   require(drv_pack, character.only = TRUE)
   logger           <- "logger" %in% (.packages())
   global_env       <- as.list(.GlobalEnv)
@@ -518,6 +539,7 @@ manage_connection <- function(db          = DB_NAME,
   }
 }
 
+# WIP early sketch
 build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
   # According to the current environment setup, exclude logging to save space
   if (!exists("DB_LOGGING")) {
@@ -553,14 +575,20 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
   }
 }
 
-db_bulk_load <- function(target, target_type) {
-  
-}
-
-read_in_json <- function(package, is_file = TRUE) {
-  tmp <- fromJSON(package)
-}
-
+#' Tidy up table and field comments
+#'
+#' Creates more human-readable outputs after extracting the raw SQL used to
+#' build entities and parsing out the comments as identified with the /* ... */
+#' multi-line comment flag pair. Single line comments are not extracted. The
+#' first comment is assumed to be the table comment. See examples in the
+#' `config/sql_nodes` directory.
+#'
+#' @param obj result of calling [pragma_table_def] with `get_sql` = TRUE
+#'
+#' @return LIST of length equal to `obj` containing extracted comments
+#' @export
+#'
+#' @examples
 tidy_comments <- function(obj) {
   comments <- obj$sql %>%
     str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
@@ -577,6 +605,19 @@ tidy_comments <- function(obj) {
   return(out)
 }
 
+#' Create a data dictionary
+#'
+#' Get a list of tables and their defined columns with properties, including
+#' comments, suitable as a data dictionary from a connection object amenable to
+#' [odbc::dbListTables]. This function relies on [pragma_table_info].
+#'
+#' @param conn_obj connection object
+#'
+#' @return LIST of length equal to the number of tables in `con` with attributes
+#'   identifying which tables, if any, failed to render into the dictionary.
+#' @export
+#'
+#' @examples
 data_dictionary <- function(conn_obj) {
   logger <- "logger" %in% (.packages())
   tabls <- dbListTables(con)
@@ -614,24 +655,64 @@ data_dictionary <- function(conn_obj) {
   }
   attr(out, "has_failures") <- has_failures
   attr(out, "failures")     <- failures
-  # out <- list(has_failures = has_failures, failures = failures, dictionary = out)
   return(out)
 }
 
-save_data_dictionary <- function(conn_obj, output_format = "json", output_file = NULL, overwrite_existing = TRUE) {
+#' Save the current data dictionary to disk
+#'
+#' Use [data_dictionary] and save the output to a local file. If `output_format`
+#' is one of "data.frame" or "list", the resulting file will be saved as an RDS.
+#' Parameter `output_file` will be used during the save process; relative paths
+#' are fine and will be identified by the current working directory.
+#'
+#' @param conn_obj connection object
+#' @param output_format CHR scalar, one of (capitalization insensitive) "json",
+#'   "csv", "data.frame", or "list" (default "json")
+#' @param output_file CHR scalar indicating where to save the resulting file; an
+#'   appropriate file name will be constructed if left NULL (default: NULL)
+#' @param overwrite_existing LGL scalar indicating whether to overwrite an
+#'   existing file whose name matches that determined from `output_file`
+#'   (default: TRUE); file names will be appended with "(x)" sequentially if
+#'   this is FALSE and a file with matching name exists.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+save_data_dictionary <- function(conn_obj,
+                                 output_format      = "json",
+                                 output_file        = NULL,
+                                 overwrite_existing = TRUE) {
+  # Argument validation
+  arg_check <- verify_args(
+    args       = list(output_format, overwrite_existing),
+    conditions = list(
+      output_format      = list(c("mode", "character"), c("length", 1)),
+      overwrite_existing = list(c("mode", "logical"), c("length", 1))
+    ),
+    from_fn    = "build_db"
+  )
+  if (!arg_check$valid) {
+    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  }
   logger <- "logger" %in% (.packages())
-  output_format <- match.arg(tolower(output_format),
+  output_format <- tolower(output_format)
+  output_format <- match.arg(output_format,
                              c("json", "csv", "data.frame", "list"))
   if (!output_format %in% c("json", "csv")) {
     f_ext <- "RDS"
   } else {
     f_ext <- output_format
   }
-  f_name <- sprintf("%s/%s_%s_data_dictionary.%s",
-                    getwd(),
-                    DB_TITLE,
-                    DB_VERSION,
-                    f_ext)
+  if (is.null(output_file)) {
+    f_name <- sprintf("%s/%s_%s_data_dictionary.%s",
+                      getwd(),
+                      DB_TITLE,
+                      DB_VERSION,
+                      f_ext)
+  } else {
+    f_name <- output_file
+  }
   i <- 0
   if (all(file.exists(f_name), overwrite_existing)) {
     file.remove(f_name)
@@ -649,10 +730,12 @@ save_data_dictionary <- function(conn_obj, output_format = "json", output_file =
     )
   }
   out <- data_dictionary(conn_obj)
-  if (logger) {
-    log_warn('No file name provided to "output_file", saving as "{f_name}"')
-  } else {
-    cat(sprintf('No file name provided to "output_file", saving as "%s"\n', f_name))
+  if (is.null(output_file)) {
+    if (logger) {
+      log_warn('No file name provided to "output_file", saving as "{f_name}"')
+    } else {
+      cat(sprintf('No file name provided to "output_file", saving as "%s"\n', f_name))
+    }
   }
   if (attr(out, "has_failures")) {
     if (logger) {
@@ -675,4 +758,69 @@ save_data_dictionary <- function(conn_obj, output_format = "json", output_file =
          "list"       = out %>%
            write_rds(f_name)
   )
+}
+
+#' Create a simple entity relationship map
+#'
+#' This will poll the database connection and create an entity relationship map
+#' as a list directly from defined SQL statements used to build the table or
+#' view. For each table object it returns a list of length three containing the
+#' entity names that the table (1) `references` (i.e. has a foreign key to), (2)
+#' is `referenced_by` (i.e. is a foreign key for), and (3) views where it is
+#' `used_in_view`. These are names. This is intended for use as a mapping
+#' shortcut when ER Diagrams are unavailable, or for quick reference within a
+#' project, similarly to a dictionary relationship reference.
+#'
+#' SQL is generated from [pragma_table_def] with argument `get_sql` = TRUE and
+#' ignores entities whose names start with "sqlite".
+#'
+#' @param conn connection object, specifically of class "SQLiteConnection" but
+#'   not strictly enforced
+#'
+#' @return nested LIST object
+#' @export
+#'
+#' @examples
+er_map <- function(conn = con) {
+  build_statements <- pragma_table_def(conn, dbListTables(conn), get_sql = TRUE)
+  build_statements <- build_statements[-grep("^sqlite", build_statements$table_name), ]
+  n_tables <- nrow(build_statements)
+  t_names  <- build_statements$table_name
+  er_mask  <- matrix(rep(0, n_tables ^2), nrow = n_tables)
+  rownames(er_mask) <- t_names
+  colnames(er_mask) <- t_names
+  view_mask <- er_mask
+  refs     <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
+    lapply(str_remove_all, "REFERENCES ")
+  used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
+    lapply(str_remove_all, "(JOIN|FROM) ")
+  for (i in 1:n_tables) {
+    z <- which(t_names %in% refs[[i]])
+    if (length(z) > 0) {
+      er_mask[i, z] <- 1
+    }
+    z <- which(t_names %in% used_in[[i]])
+    if (length(z) > 0) {
+      view_mask[z, i] <- 1
+    }
+  }
+  er_map   <- vector("list", n_tables) %>%
+    setNames(t_names)
+  for (i in 1:n_tables) {
+    er_map[[i]] <- list(
+      references    = t_names[as.logical(er_mask[i, ])],
+      referenced_by = t_names[as.logical(er_mask[, i])],
+      used_in_view  = t_names[as.logical(view_mask[i, ])]
+    )
+  }
+  return(er_map)
+}
+
+
+associated_scan <- function(df, scan_time) {
+  scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
+  df$scantime[
+    which(all(df$scantime < scan_time,
+            df$msn == scan_msn))
+  ]
 }
