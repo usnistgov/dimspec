@@ -204,9 +204,8 @@ tidy_spectra <- function(target,
   # Argument validation ----
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_unzip, from_JSON),
       conditions = list(
-        target = list(c("mode", "character"), c("length", 1)),
         is_file = list(c("mode", "logical"), c("length", 1)),
         is_format = list(c("mode", "character"), c("length", 1)),
         spectra_set = list(c("mode", "character"), c("length", 1)),
