@@ -8,14 +8,14 @@ unload_packs <- c(
 )
 invisible(
   lapply(unload_packs, function(pkgs)
-         function(pkgs) {
-    detach(
-      paste0('package:', pkgs),
-      character.only = T,
-      unload = T,
-      force = T
-    )
-  })
+    function(pkgs) {
+      detach(
+        paste0('package:', pkgs),
+        character.only = T,
+        unload = T,
+        force = T
+      )
+    })
 )
 
 # Ensure compliant environment -------------------------------------------------
@@ -71,3 +71,4 @@ if (!DB_BUILT) {
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)
+
