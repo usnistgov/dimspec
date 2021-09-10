@@ -46,6 +46,43 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 
+	CREATE TABLE IF NOT EXISTS norm_source_types
+		/* Validation list of source types to be used in the compounds TABLE. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		abbreviation
+			TEXT NOT NULL,
+			/* (single) letter abbreviation for the source type */
+		st_type
+			TEXT NOT NULL,
+			/* full name of the source type */
+		definition
+			TEXT NOT NULL
+			/* definition of the source type */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS compound_categories
+		/* Normalization table for self-hierarchical chemical classes of compounds. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL,
+			/* name of the class */
+		subclass_of
+			INTEGER,
+			/* self referential to compound_categories */
+		/* Foreign key relationships */
+		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
+	);
+	/*magicsplit*/
+
 	CREATE TABLE IF NOT EXISTS compounds
 		/* Controlled list of chemical compounds with attributable analytical data. */
 	(
@@ -63,7 +100,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* DOI/Link of compound structure's source */
 		source_type
 			INTEGER NOT NULL,
-			/* one-letter character indicating type of source */
+			/* foreign key to norm_source_types */
 		additional
 			TEXT,
 			/* additional information, as submitted */
@@ -99,6 +136,18 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 
+	CREATE TABLE IF NOT EXISTS compound_alias_references
+		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL
+			/* name of the source for the compound alias */
+	);
+	/*magicsplit*/
+
 	CREATE TABLE IF NOT EXISTS compound_aliases
 		/* List of alternate names or identifiers for compounds */
 	(
@@ -115,35 +164,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
 		FOREIGN KEY (reference) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
-	);
-	/*magicsplit*/
-
-	CREATE TABLE IF NOT EXISTS compound_alias_references
-		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL
-			/* name of the source for the compound alias */
-	);
-	/*magicsplit*/
-
-	CREATE TABLE IF NOT EXISTS compound_categories
-		/* Normalization table for self-hierarchical chemical classes of compounds. */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL,
-			/* name of the class */
-		subclass_of
-			INTEGER,
-			/* self referential to compound_categories */
-		/* Foreign key relationships */
-		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
 	);
 	/*magicsplit*/
 

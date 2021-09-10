@@ -37,41 +37,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 
-	CREATE TABLE IF NOT EXISTS peaks
-		/* Peaks (or features) identified within the results from a sample. */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		sample_id
-			INTEGER NOT NULL,
-			/* foreign key to samples */
-		precursor_mz
-			REAL NOT NULL,
-			/* precursor ion mass to charge ratio (constrained to positive numbers) */
-		charge
-			INTEGER NOT NULL,
-			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
-		rt_start
-			REAL NOT NULL,
-			/* peak retention time start point (constrained to positive numbers) */
-		rt_centroid
-			REAL NOT NULL,
-			/* peak retention time centroid (derived, constrained to positive numbers) */
-		rt_end
-			REAL NOT NULL,
-			/* peak retention time end point (constrained to positive numbers) */
-		/* Check constraints */
-		CHECK (precursor_mz > 0),
-		CHECK (charge IN (-1, 1)),
-		CHECK (rt_start > 0),
-		CHECK (rt_centroid > 0),
-		CHECK (rt_end > 0),
-		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
-	);
-	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS samples
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
@@ -106,6 +71,41 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
 		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (software_conversion_settings_id) REFERENCES conversion_software_linkage(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS peaks
+		/* Peaks (or features) identified within the results from a sample. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		sample_id
+			INTEGER NOT NULL,
+			/* foreign key to samples */
+		precursor_mz
+			REAL NOT NULL,
+			/* precursor ion mass to charge ratio (constrained to positive numbers) */
+		charge
+			INTEGER NOT NULL,
+			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
+		rt_start
+			REAL NOT NULL,
+			/* peak retention time start point (constrained to positive numbers) */
+		rt_centroid
+			REAL NOT NULL,
+			/* peak retention time centroid (derived, constrained to positive numbers) */
+		rt_end
+			REAL NOT NULL,
+			/* peak retention time end point (constrained to positive numbers) */
+		/* Check constraints */
+		CHECK (precursor_mz > 0),
+		CHECK (charge IN (-1, 1)),
+		CHECK (rt_start > 0),
+		CHECK (rt_centroid > 0),
+		CHECK (rt_end > 0),
+		/* Foreign key relationships */
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 

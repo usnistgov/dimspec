@@ -60,7 +60,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 	); /*magicsplit*/
 
 	CREATE TABLE IF NOT EXISTS affiliations
-		/* Normalization table for user affiliations */
+		/* Normalization table for contributor.affiliation */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,

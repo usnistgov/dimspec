@@ -62,26 +62,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 
-	CREATE TABLE IF NOT EXISTS norm_source_types
-		/* Validation list of source types to be used in the compounds TABLE. */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		abbreviation
-			TEXT NOT NULL,
-			/* (single) letter abbreviation for the source type */
-		st_type
-			TEXT NOT NULL,
-			/* full name of the source type */
-		definition
-			TEXT NOT NULL
-			/* definition of the source type */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_vendors
 		/* Normalization TABLE holding commercial instrument vendor information. */
 	(
@@ -102,7 +82,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		value
+		name
 			TEXT NOT NULL
 			/* type of QC reference */
 		/* Check constraints */
