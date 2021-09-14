@@ -539,7 +539,7 @@ manage_connection <- function(db          = DB_NAME,
   }
 }
 
-# WIP early sketch
+# TODO early sketch for construction of automatic logging triggers
 build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
   # According to the current environment setup, exclude logging to save space
   if (!exists("DB_LOGGING")) {
@@ -792,6 +792,8 @@ er_map <- function(conn = con) {
   view_mask <- er_mask
   refs     <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
     lapply(str_remove_all, "REFERENCES ")
+  er_type  <- str_extract_all(build_statements$sql, "CREATE (TABLE|VIEW)") %>%
+    lapply(str_remove_all, "CREATE ")
   used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
     lapply(str_remove_all, "(JOIN|FROM) ")
   for (i in 1:n_tables) {
@@ -808,7 +810,12 @@ er_map <- function(conn = con) {
     setNames(t_names)
   for (i in 1:n_tables) {
     er_map[[i]] <- list(
-      references    = t_names[as.logical(er_mask[i, ])],
+      object_type   = er_type[[i]],
+      references    = if (er_type[[i]] == "TABLE") {
+        t_names[as.logical(er_mask[i, ])]
+      } else {
+        names(which(unlist(map(map(tmp, function(x) x$used_in_view == names(er_map)[i]), any))))
+      },
       referenced_by = t_names[as.logical(er_mask[, i])],
       used_in_view  = t_names[as.logical(view_mask[i, ])]
     )
@@ -816,7 +823,7 @@ er_map <- function(conn = con) {
   return(er_map)
 }
 
-
+# TODO - abstract the appropriate ms_n - 1 scan to associate with ms_data
 associated_scan <- function(df, scan_time) {
   scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
   df$scantime[
