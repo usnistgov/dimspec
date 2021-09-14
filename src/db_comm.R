@@ -820,6 +820,13 @@ er_map <- function(conn = con) {
       used_in_view  = t_names[as.logical(view_mask[i, ])]
     )
   }
+  er_map$can_add_direct <- names(
+    er_map[
+      unlist(map(tmp, function(x) all(
+        x$object_type == "TABLE",
+        length(x$references) == 0)))
+    ]
+  )
   return(er_map)
 }
 
