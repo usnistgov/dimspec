@@ -790,14 +790,16 @@ er_map <- function(conn = con) {
   rownames(er_mask) <- t_names
   colnames(er_mask) <- t_names
   view_mask <- er_mask
+  er_type  <- str_extract_all(build_statements$sql, "CREATE [:word:]+") %>%
+    lapply(str_remove_all, "CREATE ")
+  tables_and_views <- which(unlist(er_type) %in% c("TABLE", "VIEW"))
+  build_statements <- build_statements[tables_and_views, ]
   refs     <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
     lapply(str_remove_all, "REFERENCES ")
-  er_type  <- str_extract_all(build_statements$sql, "CREATE (TABLE|VIEW)") %>%
-    lapply(str_remove_all, "CREATE ")
   used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
     lapply(str_remove_all, "(JOIN|FROM) ")
   for (i in 1:n_tables) {
-    z <- which(t_names %in% refs[[i]])
+    z <- which(t_names %in% c(refs[[i]], used_in[[i]]))
     if (length(z) > 0) {
       er_mask[i, z] <- 1
     }
@@ -811,22 +813,27 @@ er_map <- function(conn = con) {
   for (i in 1:n_tables) {
     er_map[[i]] <- list(
       object_type   = er_type[[i]],
-      references    = if (er_type[[i]] == "TABLE") {
-        t_names[as.logical(er_mask[i, ])]
-      } else {
-        names(which(unlist(map(map(tmp, function(x) x$used_in_view == names(er_map)[i]), any))))
-      },
+      references    = t_names[as.logical(er_mask[i, ])],
       referenced_by = t_names[as.logical(er_mask[, i])],
       used_in_view  = t_names[as.logical(view_mask[i, ])]
     )
   }
-  er_map$can_add_direct <- names(
+  direct_add <- names(
     er_map[
-      unlist(map(tmp, function(x) all(
+      unlist(map(er_map, function(x) all(
         x$object_type == "TABLE",
         length(x$references) == 0)))
     ]
   )
+  dependent_add <- names(
+    er_map[
+      unlist(map(er_map, function(x) all(
+        x$object_type == "TABLE",
+        length(x$references) > 0)))
+    ]
+  )
+  er_map$tables_without_dependency <- direct_add
+  er_map$tables_with_normalization_dependency <- dependent_add
   return(er_map)
 }
 
