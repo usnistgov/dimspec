@@ -3,7 +3,7 @@ queries <- list(
   INSERT = "INSERT INTO ?table_name (?column_names) VALUES ?values",
   UPDATE = "UPDATE ?table_name SET ?values",
   SELECT = "SELECT ?column_names FROM ?table_name",
-  GET_ID = "SELECT id FROM ?table_name",
+  GET_ID = "SELECT `id` FROM ?table_name",
   DELETE = "DELETE FROM ?table_name"
 )
 
@@ -304,33 +304,42 @@ build_db_action <- function(con,
   if (is.null(column_names)) {
     get_all_columns <- TRUE
   } else {
-    check_fields <- c(column_names, names(match_criteria), group_by, names(order_by)) %>%
+    check_fields <- c(column_names, names(match_criteria), group_by, names(order_by), names(values)) %>%
       tolower()
     if (!is_ansi) {
         validate_column_names(con = con, table_names = table_name, column_names = check_fields)
     }
   }
   
+  # Check that values is formatted properly as a nested list
+  if (!is.null(values)) {
+    if (!is.list(values[1])) {
+      values <- list(values)
+    }
+    value_names <- names(values[[1]])
+  } else {
+    value_names <- NULL
+  }
+  
   if (get_all_columns) {
     if (action == "INSERT") {
-      query <- gsub("\\(\\?column_names\\) ", "", query)
+      req_names <- dbListFields(con, table_name)
+      if (length(value_names) == length(req_names)) {
+        query <- gsub("\\(\\?column_names\\) ", "", query)
+      }
     } else {
       query <- gsub("\\?column_names", "*", query)
     }
   }
   
-  # Safely escape column names
-  query <- str_replace(query,
-                       "\\?column_names",
-                       paste0(lapply(column_names,
-                                     function(x) {
-                                       dbQuoteIdentifier(con, x)
-                                     }),
-                              collapse = ", "
-                       )
-  )
-  
   # Safely escape values
+  if (all(!is.null(value_names))) {
+    if (all.equal(length(value_names),
+                  max(sapply(values, length)),
+                  min(sapply(values, length)))) {
+      column_names <- value_names
+    }
+  }
   values_formatted <- switch(
     action,
     "INSERT" = paste0("(",
@@ -350,15 +359,30 @@ build_db_action <- function(con,
                       ")",
                       collapse = ", "),
     "UPDATE" = paste0(lapply(names(values),
-                      function(x) {
-                        sprintf("%s = %s",
-                                dbQuoteIdentifier(con, x),
-                                dbQuoteLiteral(con, values[[x]]))
-                      }),
+                             function(x) {
+                               sprintf("%s = %s",
+                                       dbQuoteIdentifier(con, x),
+                                       dbQuoteLiteral(con, values[[x]]))
+                             }),
                       collapse = ", "),
     ""
   )
   query <- str_replace(query, "\\?values", values_formatted)
+  
+  # Safely escape column names
+  if (length(column_names) > 0) {
+    query <- str_replace(query,
+                         "\\?column_names",
+                         paste0(lapply(column_names,
+                                       function(x) {
+                                         dbQuoteIdentifier(con, x)
+                                       }),
+                                collapse = ", "
+                         )
+    )
+  } else {
+    query <- str_remove(query, "\\(\\?column_names\\) ")
+  }
   
   # Safely escape table names
   query <- str_replace(query,
@@ -437,6 +461,7 @@ build_db_action <- function(con,
       tmp <- dbGetQuery(con, query)
     } else {
       tmp <- dbSendStatement(con, query)
+      dbClearResult(tmp)
     }
     return(tmp)
   } else {
