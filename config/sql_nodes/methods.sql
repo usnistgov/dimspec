@@ -221,6 +221,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT
 			/* automatically populated with each call to keep settings together */
+		ts
+			REAL NOT NULL DEFAULT -999
+			/* timestamp to ensure referential integrity during import, -999 indicates that settings were not provided */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -233,11 +236,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER,
 			/* foreign key to msconvert_settings_linkage */
 		software_name
-			TEXT NOT NULL DEFAULT "msconvert",
+			TEXT NOT NULL DEFAULT "pwiz",
 			/* name of the software used to convert data */
 		setting_name
-			TEXT NOT NULL,
-			/* name of the software setting */
+			TEXT,
+			/* name of the software setting, primarily for search purposes */
 		setting_value
 			TEXT NOT NULL,
 			/* value of the software setting */
