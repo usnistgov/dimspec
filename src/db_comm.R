@@ -799,7 +799,7 @@ er_map <- function(conn = con) {
   used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
     lapply(str_remove_all, "(JOIN|FROM) ")
   for (i in 1:n_tables) {
-    z <- which(t_names %in% c(refs[[i]], used_in[[i]]))
+    z <- which(t_names %in% refs[[i]])
     if (length(z) > 0) {
       er_mask[i, z] <- 1
     }
@@ -812,10 +812,14 @@ er_map <- function(conn = con) {
     setNames(t_names)
   for (i in 1:n_tables) {
     er_map[[i]] <- list(
-      object_type   = er_type[[i]],
-      references    = t_names[as.logical(er_mask[i, ])],
-      referenced_by = t_names[as.logical(er_mask[, i])],
-      used_in_view  = t_names[as.logical(view_mask[i, ])]
+      object_type  = er_type[[i]],
+      references   = if (er_type[[i]] == "TABLE") {
+          t_names[as.logical(er_mask[i, ])]
+        } else {
+          t_names[as.logical(view_mask[, i])]
+        },
+      normalizes   = t_names[as.logical(er_mask[, i])],
+      used_in_view = t_names[as.logical(view_mask[i, ])]
     )
   }
   direct_add <- names(
@@ -832,8 +836,12 @@ er_map <- function(conn = con) {
         length(x$references) > 0)))
     ]
   )
+  all_tables <- sort(c(direct_add, dependent_add))
+  all_views  <- names(er_map)[!names(er_map) %in% all_tables]
   er_map$tables_without_dependency <- direct_add
   er_map$tables_with_normalization_dependency <- dependent_add
+  er_map$is_table <- all_tables
+  er_map$is_view  <- all_views
   return(er_map)
 }
 
