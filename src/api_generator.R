@@ -338,7 +338,11 @@ build_db_action <- function(con,
                              function(x) {
                                lapply(x,
                                       function(x) {
-                                        dbQuoteLiteral(con, x)
+                                        if (tolower(x) == 'null') {
+                                          'null'
+                                        } else {
+                                          dbQuoteLiteral(con, x)
+                                        }
                                       }) %>%
                                  unlist() %>%
                                  paste0(collapse = ", ")
