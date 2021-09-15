@@ -19,7 +19,7 @@ table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerr
                             if (length(ms) == 0) {return(NULL)};
                             data.frame(scan = x, 
                                        scantime = gettime(mzml, x),
-                                       baseion = repl_nan(mean(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),1], na.rm = TRUE), repl = 0),
+                                       baseion = mean(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),1], na.rm = TRUE),
                                        baseint = sum(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),2], na.rm = TRUE),
                                        masses = paste(ms[,1], collapse = " "),
                                        intensities = paste(ms[,2], collapse = " "))}))
@@ -28,7 +28,7 @@ table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerr
   out
 }
 
-repl_nan <- function(x, repl ="NULL") {
+repl_nan <- function(x, repl =NULL) {
   if (is.nan(x)) {return(repl)}
   if (!is.nan(x)) {return(x)}
 }
