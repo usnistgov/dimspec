@@ -21,7 +21,6 @@ DELETE FROM mobile_phases;
 DELETE FROM norm_solvents;
 DELETE FROM samples;
 DELETE FROM norm_sample_classes;
-DELETE FROM norm_ms_types;
 DELETE FROM ms_methods;
 DELETE FROM ms_descriptions;
 .read config/populate_common.sql
@@ -34,7 +33,6 @@ DELETE FROM conversion_software_linkage;
 DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/norm_solvents.csv norm_solvents
 .import --csv --skip 1 config/data/demo/norm_sample_classes.csv norm_sample_classes
-.import --csv --skip 1 config/data/demo/norm_ms_types.csv norm_ms_types
 .import --csv --skip 1 config/data/demo/ms_methods.csv ms_methods
 .import --csv --skip 1 config/data/demo/ms_descriptions.csv ms_descriptions
 .import --csv --skip 1 config/data/demo/affiliations.csv affiliations

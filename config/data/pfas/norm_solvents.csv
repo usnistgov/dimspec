@@ -1,8 +1,19 @@
-id,name,tech
-1,Acetonitrile,LC
-2,Methanol,LC
-3,Water,LC
-4,Isopropanol,LC
-5,Propan-1-ol,LC
-6,Helium,GC
-7,Hydrogen,GC
+id,name
+0,None
+1,Acetonitrile
+2,Methanol
+3,Water
+4,Isopropanol
+5,Propanol
+6,Helium
+7,Hydrogen
+8,Ethanol
+9,Methylene Chloride
+10,Chloroform
+11,Hexane
+12,Ammonium Acetate
+13,Ammonium Formate
+14,Ammonium Hydroxide
+15,Formic Acid
+16,Acetic Acid
+17,Trifluoroacetic Acid

@@ -2,20 +2,25 @@
 # _Remove environment variables ------------------------------------------------
 rm(list = ls())
 # _Unload non-core packages ----------------------------------------------------
-unload_packs <- c(
+#     Note this does not reliably remove namespaces.
+unload_packs <- unique(c(
+  if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
   names(sessionInfo()$loadedOnly),
   names(sessionInfo()$otherPkgs)
-)
+))
 invisible(
-  lapply(unload_packs, function(pkgs)
-    function(pkgs) {
-      detach(
-        paste0('package:', pkgs),
-        character.only = T,
-        unload = T,
-        force = T
-      )
-    })
+  lapply(unload_packs,
+         function(x) {
+           this_pack <- paste('package', x, sep = ":")
+           if (this_pack %in% search()) {
+             detach(
+               name = this_pack,
+               character.only = TRUE,
+               unload = TRUE,
+               force = TRUE
+             )
+           }
+         })
 )
 
 # Ensure compliant environment -------------------------------------------------

@@ -27,7 +27,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				
 ====================================================================================================*/
 
-/* Normalization Tables */
+/* Tables */
 
 	CREATE TABLE IF NOT EXISTS norm_fragment_generation_type
 		/* Normalization table for fragmenet generation source type */
@@ -43,8 +43,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
-/* Tables */
 
 	CREATE TABLE IF NOT EXISTS norm_source_types
 		/* Validation list of source types to be used in the compounds TABLE. */
@@ -66,6 +64,19 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 
+	CREATE TABLE IF NOT EXISTS norm_ion_states
+		/*  */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/*  */
+		ion_state
+			TEXT NOT NULL UNIQUE
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
 	CREATE TABLE IF NOT EXISTS compound_categories
 		/* Normalization table for self-hierarchical chemical classes of compounds. */
 	(
@@ -78,6 +89,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		subclass_of
 			INTEGER,
 			/* self referential to compound_categories */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
 	);
@@ -119,6 +131,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		netcharge
 			INTEGER NOT NULL DEFAULT 0,
 			/* total formal charge of compound, derived */
+		ion_state
+			INTEGER NOT NULL,
+			/* foreign key to norm_ion_states */
 		inspected_by
 			TEXT,
 			/* user inspection id */
@@ -132,7 +147,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE
+		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -145,6 +161,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		name
 			TEXT NOT NULL
 			/* name of the source for the compound alias */
+		/* Check constraints */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 
@@ -154,7 +172,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
-		reference
+		alias_type
 			INTEGER,
 			/* foreign key to compound_alias_references */
 		alias
@@ -163,7 +181,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
-		FOREIGN KEY (reference) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (alias_type) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -179,6 +197,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		fragment_id
 			INTEGER NOT NULL,
 			/* foreign key to fragments */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id),
 		FOREIGN KEY (compound_id) REFERENCES compounds(id),
@@ -214,6 +233,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (charge IN (-1, 1)),
 		CHECK (radical IN (0, 1)),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 
@@ -229,6 +249,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		citation
 			TEXT NOT NULL,
 			/* DOI, etc. */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id),
 		FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id)
@@ -277,10 +298,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* compound identifier */
 			c.name AS compound,
 				/* compound name */
-			ca.alias,
-				/* compound alias */
 			car.name as ref_type,
 				/* compound alias reference name */
+			ca.alias,
+				/* compound alias */
 			CASE 
 				WHEN car.name == "DTXSID"
 					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias 
@@ -305,7 +326,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* URL link to the alias ID source */
 		FROM compounds c
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
-		INNER JOIN compound_alias_references car ON ca.reference = car.id;
+		INNER JOIN compound_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
 
 /* Triggers */

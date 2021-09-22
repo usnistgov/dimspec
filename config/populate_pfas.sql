@@ -21,11 +21,11 @@ DELETE FROM mobile_phases;
 DELETE FROM norm_solvents;
 DELETE FROM samples;
 DELETE FROM norm_sample_classes;
-DELETE FROM norm_ms_types;
 DELETE FROM ms_methods;
 DELETE FROM ms_descriptions;
 .read config/populate_common.sql
 .read config/sql_nodes/contributors_data.sql
+DELETE FROM chromatography_descriptions;
 DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_alias_references;
@@ -34,9 +34,9 @@ DELETE FROM conversion_software_linkage;
 DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes
-.import --csv --skip 1 config/data/pfas/norm_ms_types.csv norm_ms_types
 .import --csv --skip 1 config/data/pfas/ms_methods.csv ms_methods
 .import --csv --skip 1 config/data/pfas/ms_descriptions.csv ms_descriptions
+.import --csv --skip 1 config/data/pfas/chromatography_descriptions.csv chromatography_descriptions
 .import --csv --skip 1 config/data/pfas/affiliations.csv affiliations
 .import --csv --skip 1 config/data/pfas/contributors.csv contributors
 .import --csv --skip 1 config/data/pfas/solvent_mix_collections.csv solvent_mix_collections

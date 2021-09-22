@@ -1,4 +1,5 @@
 id,name
+0,none
 1,ThermoFisher Scientific
 2,Agilent Technologies
 3,Waters Corporation
@@ -6,3 +7,8 @@ id,name
 5,SCIEX
 6,Bruker Corporation
 7,LECO Corporation
+8,Dionex
+9,Higgins Analytical
+10,Phenomenex
+11,Restek Corporation
+12,YMC

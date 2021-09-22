@@ -25,8 +25,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 
-	/* - Normalization Tables */
-
 	CREATE TABLE IF NOT EXISTS norm_ionization
 		/* Normalization table for mass spectrometer ionization source types */
 	(
@@ -51,19 +49,15 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE,
+			TEXT NOT NULL UNIQUE
 			/* IUPAC name for mobile phase norm_solvents */
-		tech
-			TEXT NOT NULL,
-			/* controlled vocabulary for separation system, one of "GC" or "LC" */
 		/* Check constraints */
-		CHECK (tech IN ("GC", "LC"))
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 
 	CREATE TABLE IF NOT EXISTS norm_vendors
-		/* Normalization TABLE holding commercial instrument vendor information. */
+		/* Normalization table holding commercial instrument vendor information. */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +77,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL
+			TEXT NOT NULL UNIQUE
 			/* type of QC reference */
 		/* Check constraints */
 		/* Foreign key relationships */
@@ -103,6 +97,68 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS norm_ce_desc
+		/* Normalization table for collision energy description. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* type of CE */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS norm_ce_units
+		/* Normalization table for collision energy units. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* collision energy units */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS norm_ms2_types
+		/* Normalization table for data acquisition in MS2+ experiments. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		abbreviation
+			TEXT NOT NULL UNIQUE,
+			/* acquisition mode abbreviation */
+		name
+			TEXT NOT NULL UNIQUE
+			/* acquisition mode name */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS norm_ionization_units
+		/* Normalization table for ionization energy units. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		abbreviation
+			TEXT NOT NULL UNIQUE,
+			/* collision energy units abbreviation */
+		name
+			TEXT NOT NULL UNIQUE
+			/* collision energy units */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	
 	CREATE TABLE IF NOT EXISTS norm_ms_types
 		/* Normalization table for mass spectrometer types. */
@@ -111,8 +167,88 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* type of the mass analyzer */
+		abbreviation
+			TEXT NOT NULL UNIQUE
+			/* common abbreviation for the mass spectrometer type */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	
+	CREATE TABLE IF NOT EXISTS norm_fragmentation_types
+		/* Normalization table for fragmentation type. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		abbreviation
+			TEXT NOT NULL UNIQUE,
+			/* common abbreviation for the fragmentation type */
+		name
+			TEXT NOT NULL UNIQUE
+			/* type of fragmentation */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	
+	CREATE TABLE IF NOT EXISTS norm_polarity_types
+		/* Normalization table for ionization polarity. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE,
+			/* type of the polarity, controlled vocabular */
+		/* Check constraints */
+		CHECK (name IN ('negative', 'positive', 'negative/positive'))
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	
+	CREATE TABLE IF NOT EXISTS norm_chromatography_types
+		/* Normalization table for chromatography types. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE,
+			/* type of chromatography */
+		abbreviation
+			TEXT NOT NULL UNIQUE
+			/* common abbreviation for chromatographic type (e.g. LC, GC) */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	
+	CREATE TABLE IF NOT EXISTS norm_column_chemistries
+		/* Normalization table for chromatographic column type. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* column chemistry used */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS norm_column_positions
+		/* Normalization table for chromatographic column position */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* column position name */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -160,7 +296,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 
 	CREATE TABLE IF NOT EXISTS ms_descriptions
-		/* Full description of all mass spectrometer types used for a given entry in the ms_methods TABLE. */
+		/* Full description of all mass spectrometer types used for a given entry in ms_methods. */
 	(
 		ms_methods_id
 			INTEGER NOT NULL,
@@ -168,13 +304,45 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ms_types_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_ms_types */
+		vendor_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_vendors */
 		/* Check constraints */
-		UNIQUE(ms_methods_id, ms_types_id),
+		UNIQUE(ms_methods_id, ms_types_id, vendor_id),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
+
+	CREATE TABLE IF NOT EXISTS chromatography_descriptions
+		/* Full description of all chromatography types used for a given entry in ms_methods. */
+	(
+		ms_methods_id
+			INTEGER NOT NULL,
+			/* foreign key to ms_methods */
+		chromatography_types_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_ms_types */
+		column_chemistry_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_column_chemistries */
+		column_position_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_column_positions */
+		vendor_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_vendors */
+		/* Check constraints */
+		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id),
+		/* Foreign key relationships */
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
+		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
 
 	CREATE TABLE IF NOT EXISTS ms_methods
 		/* Mass spectrometer method settings. */
@@ -184,34 +352,47 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		ionization
 			INTEGER,
-			/* ionization mode (ESI, APCI, EI, etc.) */
+			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */
 		voltage
 			REAL,
 			/* ionization voltage/Current (depending on mode) */
+		voltage_units
+			INTEGER,
+			/* foreign key to norm_voltage_units */
 		polarity
-			TEXT,
-			/* ionization polarity (negative, positive, or negative/positive) */
+			INTEGER NOT NULL,
+			/* ionization polarity (negative, positive, or negative/positive); foreign key to norm_polarity */
 		ce_value
 			TEXT,
 			/* value for collision energy, normally a number but can be a range */
 		ce_desc
-			TEXT,
-			/* description/context of the collision energy value (normalized, stepped, range, etc.) */
-		ms_vendor
+			INTEGER NOT NULL,
+			/* description/context of the collision energy value (normalized, stepped, range, etc.); foreign key to norm_ce_desc */
+		ce_units
+			INTEGER NOT NULL,
+			/* collision energy units; foreign key to norm_ce_units */
+		fragmentation
+			INTEGER NOT NULL,
+			/* fragmentation type; foreign key to norm_fragmentation_types */
+		ms2_type
 			INTEGER,
-			/* vendor of the mass spectrometer; FOREIGN KEY to norm_vendors */
+			/* type of data acquisition for MS2 experiment; foreign key to norm_ms2_type */
 		has_qc_method
 			INTEGER NOT NULL, 
-			/* (0, 1) boolean: does the experiment have a QC method in place */
+			/* constrained to (0, 1) boolean: does the experiment have a QC method in place */
 		citation
 			TEXT,
 			/* citation for the experimental method */
 		/* Check constraints */
-		CHECK (polarity IN ('negative', 'positive', 'negative/positive')),
 		CHECK (has_qc_method IN (0, 1)),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_vendor) REFERENCES norm_vendors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE,
+		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE,
+		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
+		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ms2_type) REFERENCES norm_ms2_types(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -219,7 +400,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Linkage table keeping conversion software setting id groupings in line. These IDs are used to link tables conversion_software_settings and samples. This must be incremented prior to adding new rows in conversion_software_settings, and the new ID used in both conversion_software_settings(id) and samples(software_conversion_settings_id). */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT
+			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* automatically populated with each call to keep settings together */
 		ts
 			REAL NOT NULL DEFAULT -999
@@ -235,12 +416,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		linkage_id
 			INTEGER,
 			/* foreign key to msconvert_settings_linkage */
-		software_name
-			TEXT NOT NULL DEFAULT "pwiz",
-			/* name of the software used to convert data */
-		setting_name
-			TEXT,
-			/* name of the software setting, primarily for search purposes */
 		setting_value
 			TEXT NOT NULL,
 			/* value of the software setting */
@@ -260,10 +435,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL,
 			/* foreign key to ms_methods */
 		name
-			INTEGER,
+			INTEGER NOT NULL,
 			/* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */
 		reference
-			INTEGER,
+			INTEGER NOT NULL,
 			/* the category of the QC method; controlled vocabulary must be one of "SOP (Internal)", "SOP (External/Published)", or "Manuscript" */
 		reference_text
 			TEXT,
@@ -322,10 +497,25 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		SELECT
 			msd.ms_methods_id,
 				/* mass spec method id */
+			ms.abbreviation,
+				/* mass spec abbreviation */
 			ms.name
 				/* mass spectrometer type used in this method */
 		FROM ms_descriptions msd
 		INNER JOIN norm_ms_types ms ON ms.id = msd.ms_types_id;
+	/*magicsplit*/
+
+	CREATE VIEW IF NOT EXISTS view_chromatography_types AS
+		/* View all chromatography types in methods */
+		SELECT
+			cd.ms_methods_id,
+				/* mass spec method id */
+			nct.abbreviation,
+				/* chromatographic type abbreviation */
+			nct.name
+				/* chromatographic type used in this method */
+		FROM chromatography_descriptions cd
+		INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
 	/*magicsplit*/
 
 	CREATE VIEW IF NOT EXISTS view_mobile_phase AS
@@ -341,55 +531,80 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN norm_solvents s ON s.id = sm.component;
 	/*magicsplit*/
 
+	CREATE VIEW IF NOT EXISTS view_detectors AS
+		/* Convenience view to build view_method_as by providing a single character string for detectors used in this method */
+		SELECT
+			msd.ms_methods_id,
+				/* ms_descriptions id */
+			REPLACE(group_concat(name), ",", " ") AS "detectors"
+				/* concatenated list of detectors */
+		FROM
+			ms_descriptions msd
+			JOIN norm_ms_types nmt ON msd.ms_types_id = nmt.id
+		GROUP BY msd.ms_methods_id;
+	/*magicsplit*/
+
+	CREATE VIEW IF NOT EXISTS view_column_chemistries AS
+		/* Convenience view to build view_method_as by providing a single character string for column chemistries used in this method */
+		SELECT 
+			cd.ms_methods_id,
+				/* ms_descriptions id */
+			REPLACE(group_concat(DISTINCT(ncc.name || " " || ncp.name || " column")), ",", ' with ') AS "columns"
+				/* concatenated list of column chemistries used */
+		FROM
+			chromatography_descriptions cd
+			JOIN norm_column_positions ncp ON cd.column_position_id = ncp.id 
+			JOIN norm_column_chemistries ncc ON cd.column_chemistry_id = ncc.id
+		GROUP BY cd.ms_methods_id;
+	/*magicsplit*/
+	
+	CREATE VIEW IF NOT EXISTS view_separation_types AS
+		/* Convenience view to build view_method_as by providing a single character string for chromatography type */
+		SELECT
+			cd.ms_methods_id,
+				/* chromatography_descriptions id */
+			REPLACE(GROUP_CONCAT(DISTINCT(ct.abbreviation)), ",", " x ") AS "chrom_type"
+		FROM 
+			chromatography_descriptions cd 
+		JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id
+		GROUP BY cd.ms_methods_id;
+
 	CREATE VIEW IF NOT EXISTS view_method AS
 		/* View mass spectrometer information and method settings */
 		SELECT
-			nv.name,
+			nv.name AS "Vendor",
 			/* Vendor name */
-			REPLACE(GROUP_CONCAT(nmt.name), ",", " ") AS detector,
+			vd.detectors AS "Detector",
 			/* Mass spectrometer type */
-			msm.polarity,
+			vst.chrom_type AS "Column Type",
+			/* Chromatographic separation type name */
+			nft.name AS "Fragmentation_type"
+			/* Mass spectrometer fragmentation type */
+			vcc.columns AS "Columns",
+			/* Chromatographic columns used in this method */ 
+			pt.name AS "Polarity",
 			/* Polarity setting */
-			ni.acronym,
+			ni.acronym AS "Ionization",
 			/* Ionization type */
-			msm.voltage AS "Voltage (V)",
-			/* Ionization energy in volts */
-			msm.ce_value AS "Collision Energy (eV)",
+			msm.voltage || " " || nvu.name AS "Voltage",
+			/* Ionization energy */
+			msm.ce_value|| " " || ncu.name  AS "Collision Energy",
 			/* Collision energy in electron volts */
+			
 			msm.ce_desc AS "Collision Energy Description"
 			/* Collision energy description */
 		FROM ms_methods msm 
-		JOIN norm_ionization ni ON msm.ionization = ni.id
-		JOIN norm_vendors nv ON msm.ms_vendor = nv.id
-		JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
-		JOIN norm_ms_types nmt ON msd.ms_types_id = nmt.id
+		LEFT JOIN norm_ionization ni ON msm.ionization = ni.id
+		LEFT JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
+		LEFT JOIN norm_vendors nv ON msd.vendor_id = nv.id
+		LEFT JOIN view_detectors vd ON msm.id = vd.ms_methods_id
+		LEFT JOIN norm_polarity_types pt ON pt.id = msm.polarity
+		LEFT JOIN chromatography_descriptions cd ON msm.id = cd.ms_methods_id
+		LEFT JOIN view_separation_types vst ON msm.id = vst.ms_methods_id
+		LEFT JOIN view_column_chemistries vcc ON msm.id = vcc.ms_methods_id
+		LEFT JOIN norm_voltage_units nvu ON msm.id = nvu.ms_methods_id
+		LEFT JOIN norm_ce_units ncu ON msm.id = ncu.ms_methods_id
+		LEFT JOIN norm_fragmentation_types nft ON msm.id = nft.ms_methods_id
 		GROUP BY msm.id;
 	/*magicsplit*/
-
 /* Triggers */
-
-	CREATE TRIGGER IF NOT EXISTS ms_methods_vendors
-		/* When adding a record to ms_methods, ensure the value for ms_vendor matches its normalization table. */
-		AFTER INSERT ON ms_methods
-		WHEN NEW.ms_vendor NOT IN (SELECT id FROM norm_vendors)
-	BEGIN
-		INSERT INTO norm_vendors (name)
-			VALUES (NEW.ms_vendor);
-		UPDATE ms_methods
-			SET ms_vendor = (SELECT id FROM norm_vendors WHERE name = NEW.ms_vendor)
-			WHERE ROWID = NEW.ROWID;
-	END;
-	/*magicsplit*/
-
-	CREATE TRIGGER IF NOT EXISTS insert_ms_descriptions
-		/* When adding a record to ms_descriptions tying an ms_methods record to a mass spectrometer type, ensure the value matches its normalization table. */
-		AFTER INSERT ON ms_descriptions
-		WHEN NEW.ms_types_id NOT IN (SELECT id FROM norm_ms_types)
-	BEGIN
-		INSERT INTO norm_ms_types (name)
-			VALUES (NEW.ms_types_id);
-		UPDATE ms_descriptions
-			SET ms_types_id = (SELECT id FROM norm_ms_types WHERE name = NEW.ms_types_id)
-			WHERE ROWID = NEW.ROWID;
-	END;
-	/*magicsplit*/
