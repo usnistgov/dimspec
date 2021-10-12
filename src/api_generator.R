@@ -237,6 +237,8 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #'   set to TRUE automatically if no column names are provided (default FALSE)
 #' @param execute LGL scalar of whether or not to immediately execute the build
 #'   query statement (default TRUE)
+#' @param single_column_as_vector LGL scalar of whether to return results as a
+#'   vector if they consist of only a single column (default TRUE)
 #'
 #' @return CHR scalar of the constructed query
 #' @export
@@ -254,7 +256,8 @@ build_db_action <- function(con,
                             order_by        = NULL,
                             distinct        = FALSE,
                             get_all_columns = FALSE,
-                            execute         = TRUE) {
+                            execute         = TRUE,
+                            single_column_as_vector = TRUE) {
   # Argument validation
   action       <- toupper(action)
   table_name   <- tolower(table_name)
@@ -459,6 +462,7 @@ build_db_action <- function(con,
   if (execute) {
     if (grepl("^SELECT", query)) {
       tmp <- dbGetQuery(con, query)
+      if (all(ncol(tmp) == 1, single_column_as_vector)) tmp <- tmp[, 1]
     } else {
       tmp <- dbSendStatement(con, query)
       dbClearResult(tmp)
