@@ -1,9 +1,11 @@
-id,name
-1,CASRN
-2,DTXCID
-3,DTXSID
-4,INCHI
-5,INCHIKEY
-6,PUBCHEMID
-7,SMILES
-8,NIST Suspect List
+id,name,description,reference
+1,CASRN,Chemical Abstracts Service Registry Number,https://www.cas.org/support/documentation/chemical-substances/cas-rn-verified-partner-program
+2,DTXCID,EPA CompTox Chemicals Dashboard Chemical ID,https://comptox.epa.gov/dashboard
+3,DTXSID,EPA CompTox Chemicals Dashboard Substance ID,https://comptox.epa.gov/dashboard
+4,INCHI,IUPAC International Chemical Identifier notation,https://iupac.org/who-we-are/divisions/division-details/inchi/
+5,INCHIKEY,SHA-256 hash of the InChI identifier,http://inchi.info/inchikey_overview_en.html
+6,PUBCHEMID,PubChem Database ID,https://pubchem.ncbi.nlm.nih.gov/
+7,SMILES,Simplified Molecular Input Line Entry System notation,https://archive.epa.gov/med/med_archive_03/web/html/smiles.html
+8,ACRONYM,Acronyms for the chemical,NA
+9,NIST Suspect List,Identifying number in the NIST Suspect List,https://data.nist.gov/od/id/mds2-2387
+10,XICLISTID,ID number for the original XIC List,https://data.nist.gov/od/id/mds2-2387

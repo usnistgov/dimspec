@@ -159,8 +159,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL
+			TEXT NOT NULL,
 			/* name of the source for the compound alias */
+		description
+			TEXT NOT NULL,
+			/* text describing the reference name/acronym */
+		reference
+			TEXT NOT NULL
+			/* reference URL for the alias */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -304,24 +310,24 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* compound alias */
 			CASE 
 				WHEN car.name == "DTXSID"
-					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias 
+					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias
 				WHEN car.name == "DTXCID"
 					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias
 				WHEN car.name == "PUBCHEMID"
-					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias 
+					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias
 				WHEN car.name == "CASRN"
-					THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias 
+					THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias
 				WHEN car.name == "INCHIKEY"
-					THEN "https://www.google.com/search?q="||ca.alias 
+					THEN "https://www.google.com/search?q=INCHIKEY+"||ca.alias
 				WHEN car.name == "INCHI"
-					THEN "https://www.google.com/search?q="||ca.alias 
+					THEN "https://www.google.com/search?q="||ca.alias
 				WHEN car.name == "SMILES"
 					THEN "https://www.google.com/search?q=canonical+SMILES+"||
 						REPLACE(ca.alias , "#", "%23")
 				WHEN c.obtained_from IS NOT NULL 
 					THEN c.obtained_from
 				ELSE
-					"(not available)"
+					"https://www.google.com/search?q="||ca.alias
 			END AS link
 				/* URL link to the alias ID source */
 		FROM compounds c

@@ -14,6 +14,8 @@
 
 DELETE FROM norm_ionization;
 .import --csv --skip 1 config/data/norm_ionization.csv norm_ionization
+DELETE FROM norm_ionization_units;
+.import --csv --skip 1 config/data/norm_ionization_units.csv norm_ionization_units
 DELETE FROM norm_source_types;
 .import --csv --skip 1 config/data/norm_source_types.csv norm_source_types
 DELETE FROM norm_ms_types;

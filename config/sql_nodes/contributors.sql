@@ -100,10 +100,10 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		AFTER INSERT ON contributors
 		WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
 	BEGIN
-		INSERT INTO affiliations (name)
+		INSERT OR IGNORE INTO affiliations (name)
 			VALUES (NEW.affiliation);
 		UPDATE OR IGNORE contributors
-			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
+			SET affiliation = (SELECT id FROM affiliations WHERE UPPER(name) = UPPER(NEW.affiliation))
 			WHERE ROWID = NEW.ROWID;
 	END; /*magicsplit*/
 

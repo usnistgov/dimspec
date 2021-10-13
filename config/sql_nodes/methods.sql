@@ -151,10 +151,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		abbreviation
 			TEXT NOT NULL UNIQUE,
-			/* collision energy units abbreviation */
+			/* ionization energy units abbreviation */
 		name
 			TEXT NOT NULL UNIQUE
-			/* collision energy units */
+			/* ionization energy units */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -172,6 +172,23 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		abbreviation
 			TEXT NOT NULL UNIQUE
 			/* common abbreviation for the mass spectrometer type */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	
+	CREATE TABLE IF NOT EXISTS norm_ms2_types
+		/* Normalization table for types of ms_n experiments. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		abbreviation
+			TEXT NOT NULL UNIQUE,
+			/* common abbreviation for the mass spectrometer type */
+		name
+			TEXT NOT NULL UNIQUE
+			/* type of the mass analyzer */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -355,28 +372,28 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */
 		voltage
 			REAL,
-			/* ionization voltage/Current (depending on mode) */
+			/* ionization voltage/current (depending on mode) */
 		voltage_units
 			INTEGER,
-			/* foreign key to norm_voltage_units */
+			/* foreign key to norm_ionization_units */
 		polarity
 			INTEGER NOT NULL,
 			/* ionization polarity (negative, positive, or negative/positive); foreign key to norm_polarity */
 		ce_value
 			TEXT,
 			/* value for collision energy, normally a number but can be a range */
-		ce_desc
-			INTEGER NOT NULL,
-			/* description/context of the collision energy value (normalized, stepped, range, etc.); foreign key to norm_ce_desc */
 		ce_units
 			INTEGER NOT NULL,
 			/* collision energy units; foreign key to norm_ce_units */
+		ce_desc
+			INTEGER NOT NULL,
+			/* description/context of the collision energy value (normalized, stepped, range, etc.); foreign key to norm_ce_desc */
 		fragmentation
 			INTEGER NOT NULL,
 			/* fragmentation type; foreign key to norm_fragmentation_types */
 		ms2_type
 			INTEGER,
-			/* type of data acquisition for MS2 experiment; foreign key to norm_ms2_type */
+			/* type of data acquisition for MS2 experiment; foreign key to norm_ms2_types */
 		has_qc_method
 			INTEGER NOT NULL, 
 			/* constrained to (0, 1) boolean: does the experiment have a QC method in place */
@@ -387,7 +404,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (has_qc_method IN (0, 1)),
 		/* Foreign key relationships */
 		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE,
-		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE,
+		FOREIGN KEY (voltage_units) REFERENCES norm_ionization_units(id) ON UPDATE CASCADE,
 		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
@@ -563,35 +580,45 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		SELECT
 			cd.ms_methods_id,
 				/* chromatography_descriptions id */
+			REPLACE(GROUP_CONCAT(DISTINCT(nv.name)), ",", " x ") AS "chrom_vendor",
+				/* chromatography system vendor */
 			REPLACE(GROUP_CONCAT(DISTINCT(ct.abbreviation)), ",", " x ") AS "chrom_type"
+				/* chromatography type (e.g. LC, GC, etc.) */
 		FROM 
 			chromatography_descriptions cd 
-		JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id
+		LEFT JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id
+		LEFT JOIN norm_vendors nv ON cd.vendor_id = nv.id
 		GROUP BY cd.ms_methods_id;
+	/*magicsplit*/
 
 	CREATE VIEW IF NOT EXISTS view_method AS
 		/* View mass spectrometer information and method settings */
 		SELECT
-			nv.name AS "Vendor",
-			/* Vendor name */
-			vd.detectors AS "Detector",
-			/* Mass spectrometer type */
-			vst.chrom_type AS "Column Type",
+			msm.id,
+			/* Method id */
+			vst.chrom_vendor AS "chromatography_system_vendor",
+			/* Chromatograhic system vendor */
+			vst.chrom_type AS "chromatographic_type",
 			/* Chromatographic separation type name */
-			nft.name AS "Fragmentation_type"
-			/* Mass spectrometer fragmentation type */
-			vcc.columns AS "Columns",
+			nv.name AS "mass_spectrometer_vendor",
+			/* Vendor name */
+			vd.detectors AS "detector",
+			/* Mass spectrometer type */
+			vcc.columns AS "columns",
 			/* Chromatographic columns used in this method */ 
-			pt.name AS "Polarity",
+			nft.abbreviation AS "fragmentation_abbreviation",
+			/* Mass spectrometer fragmentation type abbreviation */
+			nft.name AS "fragmentation_name",
+			/* Mass spectrometer fragmentation type */
+			pt.name AS "polarity",
 			/* Polarity setting */
-			ni.acronym AS "Ionization",
+			ni.acronym AS "ionization",
 			/* Ionization type */
-			msm.voltage || " " || nvu.name AS "Voltage",
+			msm.voltage || " " || niu.name AS "voltage",
 			/* Ionization energy */
-			msm.ce_value|| " " || ncu.name  AS "Collision Energy",
+			msm.ce_value|| " " || niu.name  AS "collision_energy",
 			/* Collision energy in electron volts */
-			
-			msm.ce_desc AS "Collision Energy Description"
+			ncd.name AS "collision_energy_description"
 			/* Collision energy description */
 		FROM ms_methods msm 
 		LEFT JOIN norm_ionization ni ON msm.ionization = ni.id
@@ -602,9 +629,37 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		LEFT JOIN chromatography_descriptions cd ON msm.id = cd.ms_methods_id
 		LEFT JOIN view_separation_types vst ON msm.id = vst.ms_methods_id
 		LEFT JOIN view_column_chemistries vcc ON msm.id = vcc.ms_methods_id
-		LEFT JOIN norm_voltage_units nvu ON msm.id = nvu.ms_methods_id
-		LEFT JOIN norm_ce_units ncu ON msm.id = ncu.ms_methods_id
-		LEFT JOIN norm_fragmentation_types nft ON msm.id = nft.ms_methods_id
+		LEFT JOIN norm_ionization_units niu ON msm.voltage_units = niu.id
+		LEFT JOIN norm_ce_units ncu ON msm.ce_units = ncu.id
+		LEFT JOIN norm_fragmentation_types nft ON msm.fragmentation = nft.id
+		LEFT JOIN norm_ce_desc ncd ON msm.ce_desc = ncd.id
 		GROUP BY msm.id;
+	/*magicsplit*/
+
+	CREATE VIEW IF NOT EXISTS view_method_narrative AS
+		SELECT
+			id AS "Method ID",
+			"Measured by " ||
+			chromatographic_type ||
+				" (" || chromatography_system_vendor || ") " || 
+			detector ||
+				" MS (" || mass_spectrometer_vendor || "), separated by " ||
+			columns ||
+				" in " ||
+			polarity ||
+				" " ||
+			ionization ||
+				" mode at " ||
+			voltage ||
+				" and " ||
+			collision_energy_description ||
+				" fragmentation by " ||
+			fragmentation_abbreviation ||
+				" (" || fragmentation_name || ")" ||
+				" at " ||
+			collision_energy ||
+				"."
+				AS "Narrative"
+		FROM view_method;
 	/*magicsplit*/
 /* Triggers */
