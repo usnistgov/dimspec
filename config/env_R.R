@@ -31,6 +31,7 @@ LAST_MODIFIED  <- max(file.info(list.files(recursive = TRUE))$mtime)
 
 # Set logger threshold.
 LOG_THRESHOLD  <- "INFO"
+LOGGING_ON     <- TRUE
 
 # These are the packages on which the project depends and must be loaded.
 DEPENDS_ON     <- c("base64enc",
@@ -46,6 +47,7 @@ DEPENDS_ON     <- c("base64enc",
                     "tools",
                     "xlsx",
                     "XML")
+
 # Also needs ChemmineR, which is only available through Bioconductor
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
