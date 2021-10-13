@@ -853,3 +853,197 @@ associated_scan <- function(df, scan_time) {
             df$msn == scan_msn))
   ]
 }
+
+verify_contributor <- function(contributor_text, conn = con, ...) {
+  # Check contributor - do not check for internal id number
+  # Prefer username
+  db_contributors  <- tbl(conn, "contributors")
+  contributor_properties <- list(...)
+  possible_matches <- db_contributors %>%
+    filter(username %in% contributor_text |
+             contact %in% contributor_text |
+             first_name %in% contributor_text |
+             last_name %in% contributor_text
+    ) %>%
+    collect()
+  contributor_exists <- nrow(possible_matches) > 0
+  if (!contributor_exists) {
+    if (LOGGING_ON) {
+      log_warn("No contributor matching '{contributor_text}' was located.")
+    } else {
+      cat(sprintf("No contributor matching '%s' was located.", contributor_text))
+    }
+    if (interactive()) {
+      do.call(add_contributor, contributor_properties)
+    } else {
+      needed <- dbListFields(conn, "contributors")
+      needed <- needed[needed != "id"]
+      properties_present <- needed %in% names(contributor_properties)
+      if (all(properties_present)) {
+        do.call(add_contributor, contributor_properties)
+      } else {
+        stop(sprintf("Unable to automatically add contributor. Please provide contributor properties for %s as arguments to this function.",
+                     format_list_of_names(needed[!properties_present])))
+      }
+    }
+  } else {
+    if (nrow(possible_matches) == 1) {
+      return(possible_matches$id[1])
+    } else {
+      cat("Multiple contributors found. Please select one to continue.")
+      possibles <- possible_matches %>%
+        left_join(tbl(conn, "affiliations") %>% collect(),
+                  by = c("affiliation" = "id")) %>%
+        select(-affiliation) %>%
+        rename("affiliation" = "name") %>%
+        mutate(Contributor = sprintf("%s - %s %s (%s)",
+                                     affiliation,
+                                     first_name,
+                                     last_name,
+                                     contact))
+      verified_match <- select.list(choices = c("(New)", possibles$Contributor))
+      if (verified_match == "(New)") {
+        # cat("New contributors must be added manually at this time.")
+        make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
+        if (make_new == "Yes") {
+          id <- add_contributor(db_contributors)
+          return(id)
+        } else {
+          return("Create a contributor manually to proceed.")
+        }
+      } else {
+        return(possible_matches$id[which(possibles$Contributor == verified_match)])
+      }
+    }
+  }
+}
+
+#' Add a contributor programmatically or interactively
+#'
+#' @param conn connection object (default: con)
+#' @param username CHR scalar of the desired username (default "")
+#' @param contact CHR scalar of the contributor's contact point (default "")
+#' @param first_name CHR scalar of the contributor's first name (default "")
+#' @param last_name CHR scalar of the contributor's last name (default "")
+#' @param affiliation CHR scalar of the contributor's affiliation (default "")
+#' @param orcid CHR scalar of the contributor's ORCID (default ""), which must
+#'   match the valid ORCID pattern of four sets of four alphanumeric characters
+#'   separated by dashes (e.g. "1111-2222-3333-4444")
+#'
+#' @return
+#' @export
+#'
+#' @examples
+add_contributor <- function(conn = con,
+                            username = "",
+                            contact = "",
+                            first_name = "",
+                            last_name = "",
+                            affiliation = "",
+                            orcid = "") {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        conn        = list(c("length", 1)),
+        username    = list(c("mode", "character"), c("length", 1)),
+        contact     = list(c("mode", "character"), c("length", 1)),
+        first_name  = list(c("mode", "character"), c("length", 1)),
+        last_name   = list(c("mode", "character"), c("length", 1)),
+        affiliation = list(c("mode", "character"), c("length", 1)),
+        orcid       = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn    = "add_contributor"
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  if (interactive()) {
+    while (username == "")    username    <- readline("Username, required: ")
+    while (username %in% build_db_action(conn,
+                                         action       = "SELECT",
+                                         column_names = "username",
+                                         table_name   = "contributors")) {
+      cat("That username is already taken. Please select another.")
+      username <- readline("Username: ")
+    }
+    while (contact == "")     contact     <- readline("Contact (email preferred, required): ")
+    while (first_name == "")  first_name  <- readline("First Name (required): ")
+    while (last_name == "")   last_name   <- readline("Last Name (required): ")
+    while (affiliation == "") affiliation <- readline("Affiliation (required): ")
+    existing_affiliations <- build_db_action(conn,
+                                             action       = "SELECT",
+                                             column_names = c("id", "name"),
+                                             table_name   = "affiliations")
+    existing_affiliations <- bind_rows(existing_affiliations,
+                                       mutate(existing_affiliations, name = toupper(name)))
+    if (toupper(affiliation) %in% existing_affliations$name) {
+      affiliation <- existing_affiliations$id[which(existing_affiliations$name == toupper(affiliation))]
+    }
+    if (orcid == "")       orcid       <- readline("ORCID (XXXX-XXXX-XXXX-XXXX) (optional but strongly encouraged): ")
+    # This regex is not right
+    while (all(!grepl("[[:alnum:]{4}-]{3}[[:alnum:]]{4}", orcid),
+               nchar(orcid) > 1)) {
+      cat(orcid)
+      orcid <- readline("Valid ORCIDs must be of the pattern XXXX-XXXX-XXXX-XXXX. Leave blank to skip.\nORCID (optional but strongly encouraged): ")
+    }
+  } else {
+    if (any(username == "", contact == "", first_name == "", last_name == "", affiliation == "")) {
+      
+    }
+  }
+  if (orcid == "") orcid <- "null"
+  build_db_action(conn, "INSERT", "contributors",
+                  values = c(username    = username,
+                             contact     = contact,
+                             first_name  = first_name,
+                             last_name   = last_name,
+                             affiliation = affiliation,
+                             orcid       = orcid))
+  return(build_db_action(conn, "GET_ID", "contributors", match_criteria = list(username = username)))
+}
+
+#' Check for a value in a database table
+#'
+#' This convenience function simply checks whether a value exists in the
+#' distinct values of a given column. Only one column may be searched at a time;
+#' serialize it in other code to check multiple columns. It leverages the
+#' flexibility of [build_db_action] to do the searching. The `values` parameter
+#' will be fed directly and can accept the nested list structure defined in
+#' [clause_where] for exclusions and like clauses.
+#'
+#' @param values CHR vector of the values to search
+#' @param db_table CHR scalar of the database table to search
+#' @param db_column CHR scalar of the column to search
+#' @param conn connection object (default: con)
+#'
+#' @return LIST of length 1-2 containing "exists" as a LGL scalar for whether
+#'   the values were found, and "values" containing the result of the database
+#'   call, a data.frame object containing matching rows or NULL if exists ==
+#'   FALSE.
+#' @export
+#'
+#' @examples
+#'
+#' ## Not run:
+#' con <- dbConnect(RSQLite::SQLite(), ":memory:")
+#' alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
+#' dplyr::copy_to(con, alphabet)
+#' check_for_value("A", "alphabet", "upper", con)
+#' check_for_value("A", "alphabet", "lower", con)
+#' check_for_value(letters[1:10], "alphabet", "lower", con)
+#'
+#' ## End(Not run)
+check_for_value <- function(values, db_table, db_column, conn = con) {
+  existing_values <- build_db_action(con            = conn,
+                                     action         = "SELECT",
+                                     table_name     = db_table,
+                                     match_criteria = setNames(list(values), db_column),
+                                     distinct       = TRUE)
+  found <- nrow(existing_values) > 0
+  out   <- list(exists = found,
+                values = if (found) existing_values else NULL)
+  return(out)
+}
