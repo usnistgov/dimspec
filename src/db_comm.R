@@ -10,8 +10,8 @@
 #' Note that the package `stringr` is required for formatting returns that
 #' include either `get_sql` or `pretty` as TRUE.
 #'
-#' @param con connection object
 #' @param db_table CHR vector name of the table(s) to inspect
+#' @param con connection object (default: con)
 #' @param get_sql BOOL scalar of whether or not to return the schema sql
 #'   (default FALSE)
 #' @param pretty BOOL scalar for whether to return "pretty" SQL that includes
@@ -23,15 +23,15 @@
 #' @export
 #'
 #' @examples
-pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
+pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRUE) {
   require(dplyr)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        con      = list(c("length", 1)),
         db_table = list(c("mode", "character"), c("n>=", 1)),
+        conn      = list(c("length", 1)),
         get_sql  = list(c("mode", "logical"), c("length", 1)),
         pretty   = list(c("mode", "logical", c("length", 1)))
       ),
@@ -49,7 +49,7 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
   # Basic return
   out <- lapply(db_table,
                 function(x) {
-                  tmp <- dbGetQuery(con, sprintf(func, x))
+                  tmp <- dbGetQuery(conn, sprintf(func, x))
                   tmp$table_name <- x
                   return(tmp)
                 }
@@ -87,9 +87,8 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #' SQLite connection, especially for application (e.g. `shiny` development) by
 #' allowing for programmatic inspection of datbase columns by name and property.
 #'
-#' @param db_conn connection object, specifically of class "SQLiteConnection"
-#'   but not strictly enforced
 #' @param db_table CHR vector name of the table(s) to inspect
+#' @param db_conn connection object (default: con)
 #' @param condition CHR vector matching specific checks, must be one of
 #'   c("required", "has_default", "is_PK") for constraints where a field must
 #'   not be null, has a default value defined, and is a primary key field,
@@ -112,8 +111,8 @@ pragma_table_def <- function(con, db_table, get_sql = FALSE, pretty = TRUE) {
 #' @export
 #'
 #' @examples
-pragma_table_info <- function(db_conn,
-                              db_table,
+pragma_table_info <- function(db_table,
+                              db_conn          = con,
                               condition        = NULL,
                               name_like        = NULL,
                               data_type        = NULL,
@@ -122,10 +121,10 @@ pragma_table_info <- function(db_conn,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(db_conn, db_table, include_comments, names_only),
+      args       = list(db_table, db_conn, include_comments, names_only),
       conditions = list(
+        db_table         = list(c("mode", "character"), c("n>=", 1)),
         db_conn          = list(c("length", 1)),
-        table            = list(c("mode", "character"), c("n>=", 1)),
         include_comments = list(c("mode", "logical"), c("length", 1)),
         names_only       = list(c("mode", "logical"), c("length", 1))
       ),
@@ -142,7 +141,7 @@ pragma_table_info <- function(db_conn,
     db_table <- db_table[tables_exist]
   }
   # Get table properties
-  out <- pragma_table_def(db_conn, db_table, get_sql = FALSE)
+  out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
   # Set up condition checks
   valid_conditions <- c("required", "has_default", "is_PK")
   if (!is.null(condition)) {
@@ -165,7 +164,7 @@ pragma_table_info <- function(db_conn,
     any()
   # Get comments if any
   if (include_comments) {
-    tmp <- pragma_table_def(db_conn, db_table, get_sql = TRUE) %>%
+    tmp <- pragma_table_def(db_table, db_conn, get_sql = TRUE) %>%
       tidy_comments() %>%
       bind_rows()
     out <- out %>%
@@ -592,7 +591,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 tidy_comments <- function(obj) {
   comments <- obj$sql %>%
     str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
-    str_extract_all("/\\* [[:alnum:][:punct:] ]+ \\*/") %>%
+    str_extract_all("/\\* [[:alnum:][:punct:]\\[\\]\\+ ]+ \\*/") %>%
     lapply(str_remove_all, "/\\* | \\*/")
   table_comments <- lapply(comments, function(x) x[1])
   field_comments <- lapply(comments, function(x) x[-1])
@@ -611,14 +610,14 @@ tidy_comments <- function(obj) {
 #' comments, suitable as a data dictionary from a connection object amenable to
 #' [odbc::dbListTables]. This function relies on [pragma_table_info].
 #'
-#' @param conn_obj connection object
+#' @param conn_obj connection object (default:con)
 #'
 #' @return LIST of length equal to the number of tables in `con` with attributes
 #'   identifying which tables, if any, failed to render into the dictionary.
 #' @export
 #'
 #' @examples
-data_dictionary <- function(conn_obj) {
+data_dictionary <- function(conn_obj = con) {
   logger <- "logger" %in% (.packages())
   tabls <- dbListTables(con)
   tabls <- tabls[-grep("sqlite_", tabls)]
@@ -626,7 +625,9 @@ data_dictionary <- function(conn_obj) {
   names(out) <- tabls
   failures <- character(0)
   for (tabl in tabls) {
-    tmp <- try(pragma_table_info(con, tabl, include_comments = TRUE))
+    tmp <- try(pragma_table_info(db_table = tabl,
+                                 db_conn = con,
+                                 include_comments = TRUE))
     if (class(tmp) == "try-error") {
       if (logger) {
         log_warn('Dictionary failure on table "{tabl}"')
@@ -665,7 +666,7 @@ data_dictionary <- function(conn_obj) {
 #' Parameter `output_file` will be used during the save process; relative paths
 #' are fine and will be identified by the current working directory.
 #'
-#' @param conn_obj connection object
+#' @param conn_obj connection object (default: con)
 #' @param output_format CHR scalar, one of (capitalization insensitive) "json",
 #'   "csv", "data.frame", or "list" (default "json")
 #' @param output_file CHR scalar indicating where to save the resulting file; an
@@ -679,7 +680,7 @@ data_dictionary <- function(conn_obj) {
 #' @export
 #'
 #' @examples
-save_data_dictionary <- function(conn_obj,
+save_data_dictionary <- function(conn_obj           = con,
                                  output_format      = "json",
                                  output_file        = NULL,
                                  overwrite_existing = TRUE) {
