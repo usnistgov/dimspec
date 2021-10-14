@@ -202,10 +202,11 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 
 #' Build a basic escaped SQL query
 #'
-#' @param con existing connection object (e.g. of class "SQLiteConnection")
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
 #' @param table_name CHR scalar of the table name to which this query applies
+#' @param conn existing connection object (e.g. of class "SQLiteConnection")
+#'   (default: con)
 #' @param column_names CHR vector of column names to include (default NULL)
 #' @param values LIST of CHR vectors with values to INSERT or UPDATE (default
 #'   NULL)
@@ -244,9 +245,9 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #' @export
 #'
 #' @examples
-build_db_action <- function(con,
-                            action,
+build_db_action <- function(action,
                             table_name,
+                            conn            = con,
                             column_names    = NULL,
                             values          = NULL,
                             match_criteria  = NULL,
@@ -262,10 +263,10 @@ build_db_action <- function(con,
   action       <- toupper(action)
   table_name   <- tolower(table_name)
   and_or       <- toupper(and_or)
-  is_ansi      <- identical(con, ANSI())
+  is_ansi      <- identical(conn, ANSI())
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(action, table_name, and_or, distinct, get_all_columns),
+      args       = list(action, table_name, conn, and_or, distinct, get_all_columns),
       conditions = list(
         action          = list(c("choices", list(toupper(names(queries)))),
                                c("mode", "character")),
@@ -273,10 +274,11 @@ build_db_action <- function(con,
           list(c("mode", "character"),
                c("length", 1))
         } else {
-          list(c("choices", list(dbListTables(con))),
+          list(c("choices", list(dbListTables(conn))),
                c("mode", "character"),
                c("length", 1))
         },
+        conn            = list(c("length", 1)),
         and_or          = list(c("choices", list(c("AND", "OR"))),
                                c("mode", "character"),
                                c("length", 1)),
@@ -295,7 +297,7 @@ build_db_action <- function(con,
     }
   }
   if (!is_ansi) {
-    validate_tables(con, table_name)
+    validate_tables(conn, table_name)
   }
   
   query <- queries[[action]]
@@ -310,7 +312,7 @@ build_db_action <- function(con,
     check_fields <- c(column_names, names(match_criteria), group_by, names(order_by), names(values)) %>%
       tolower()
     if (!is_ansi) {
-        validate_column_names(con = con, table_names = table_name, column_names = check_fields)
+        validate_column_names(con = conn, table_names = table_name, column_names = check_fields)
     }
   }
   
@@ -326,7 +328,7 @@ build_db_action <- function(con,
   
   if (get_all_columns) {
     if (action == "INSERT") {
-      req_names <- dbListFields(con, table_name)
+      req_names <- dbListFields(conn, table_name)
       if (length(value_names) == length(req_names)) {
         query <- gsub("\\(\\?column_names\\) ", "", query)
       }
@@ -353,7 +355,7 @@ build_db_action <- function(con,
                                         if (tolower(x) == 'null') {
                                           'null'
                                         } else {
-                                          dbQuoteLiteral(con, x)
+                                          dbQuoteLiteral(conn, x)
                                         }
                                       }) %>%
                                  unlist() %>%
@@ -364,8 +366,8 @@ build_db_action <- function(con,
     "UPDATE" = paste0(lapply(names(values),
                              function(x) {
                                sprintf("%s = %s",
-                                       dbQuoteIdentifier(con, x),
-                                       dbQuoteLiteral(con, values[[x]]))
+                                       dbQuoteIdentifier(conn, x),
+                                       dbQuoteLiteral(conn, values[[x]]))
                              }),
                       collapse = ", "),
     ""
@@ -378,7 +380,7 @@ build_db_action <- function(con,
                          "\\?column_names",
                          paste0(lapply(column_names,
                                        function(x) {
-                                         dbQuoteIdentifier(con, x)
+                                         dbQuoteIdentifier(conn, x)
                                        }),
                                 collapse = ", "
                          )
@@ -390,13 +392,13 @@ build_db_action <- function(con,
   # Safely escape table names
   query <- str_replace(query,
                        "\\?table_name",
-                       dbQuoteIdentifier(con, table_name)
+                       dbQuoteIdentifier(conn, table_name)
   )
   
   # Safely escape where clauses
   if (all(!is.null(match_criteria), action != "INSERT")) {
     query <- paste(query, "WHERE",
-                   clause_where(con            = con,
+                   clause_where(con            = conn,
                                 table_names    = table_name,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
@@ -412,13 +414,13 @@ build_db_action <- function(con,
       if (any(length(limit) == 0, length(limit) > 1)) {
         stop('Exactly one value must be provided for the "limit" parameter.')
       } else {
-        query <- paste(query, "LIMIT", dbQuoteLiteral(con, used_args$limit))
+        query <- paste(query, "LIMIT", dbQuoteLiteral(conn, used_args$limit))
       }
     }
     
     # Safely escape group by clause
     if (!is.null(group_by)) {
-      query <- paste(query, "GROUP BY", dbQuoteIdentifier(con, group_by))
+      query <- paste(query, "GROUP BY", dbQuoteIdentifier(conn, group_by))
     }
     
     # Safely escape order by clause
@@ -426,7 +428,7 @@ build_db_action <- function(con,
       ordering <- paste0(
         lapply(names(order_by),
                function(x) {
-                 paste0(dbQuoteIdentifier(con, x),
+                 paste0(dbQuoteIdentifier(conn, x),
                         " ",
                         order_by[[x]])
                }),
@@ -439,7 +441,7 @@ build_db_action <- function(con,
   
   if (action == "DELETE") {
     select_version <- str_replace(query, "^DELETE FROM", "SELECT * FROM")
-    rows_affected <- nrow(dbGetQuery(con, select_version))
+    rows_affected <- nrow(dbGetQuery(conn, select_version))
     cat(sprintf("Your constructed action\n'%s'\n%s\n\n",
                 query,
                 ifelse(rows_affected > 0,
@@ -451,7 +453,7 @@ build_db_action <- function(con,
       confirm <- select.list(choices   = c("CONFIRM", "abort"),
                              preselect = "abort",
                              multiple  = FALSE,
-                             title     = "Please confirm.")
+                             title     = "Please connfirm.")
       if (!confirm == "CONFIRM") {
         cat("Query construction aborted.\n")
         query <- NA
@@ -461,10 +463,10 @@ build_db_action <- function(con,
  
   if (execute) {
     if (grepl("^SELECT", query)) {
-      tmp <- dbGetQuery(con, query)
+      tmp <- dbGetQuery(conn, query)
       if (all(ncol(tmp) == 1, single_column_as_vector)) tmp <- tmp[, 1]
     } else {
-      tmp <- dbSendStatement(con, query)
+      tmp <- dbSendStatement(conn, query)
       dbClearResult(tmp)
     }
     return(tmp)
