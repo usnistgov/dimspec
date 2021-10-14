@@ -126,23 +126,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 
-	CREATE TABLE IF NOT EXISTS norm_ms2_types
-		/* Normalization table for data acquisition in MS2+ experiments. */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		abbreviation
-			TEXT NOT NULL UNIQUE,
-			/* acquisition mode abbreviation */
-		name
-			TEXT NOT NULL UNIQUE
-			/* acquisition mode name */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_ionization_units
 		/* Normalization table for ionization energy units. */
 	(
@@ -177,7 +160,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	);
 	/*magicsplit*/
 	
-	CREATE TABLE IF NOT EXISTS norm_ms2_types
+	CREATE TABLE IF NOT EXISTS norm_ms_n_types
 		/* Normalization table for types of ms_n experiments. */
 	(
 		id
@@ -393,7 +376,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* fragmentation type; foreign key to norm_fragmentation_types */
 		ms2_type
 			INTEGER,
-			/* type of data acquisition for MS2 experiment; foreign key to norm_ms2_types */
+			/* type of data acquisition for MS2 experiment; foreign key to norm_ms_n_types */
 		has_qc_method
 			INTEGER NOT NULL, 
 			/* constrained to (0, 1) boolean: does the experiment have a QC method in place */
@@ -409,7 +392,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
 		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms2_type) REFERENCES norm_ms2_types(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 
@@ -637,8 +620,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 
 	CREATE VIEW IF NOT EXISTS view_method_narrative AS
+	  /* Collapses the contents of view_method into a single narrative string by ID */
 		SELECT
 			id AS "Method ID",
+			/* primary key */
 			"Measured by " ||
 			chromatographic_type ||
 				" (" || chromatography_system_vendor || ") " || 
@@ -660,6 +645,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			collision_energy ||
 				"."
 				AS "Narrative"
+			/* narrative string collapsed into readable form from view_method */
 		FROM view_method;
 	/*magicsplit*/
 /* Triggers */

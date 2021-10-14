@@ -65,13 +65,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 
 	CREATE TABLE IF NOT EXISTS norm_ion_states
-		/*  */
+		/* Normalization table for the measured ion state as comared with the molecular ion. */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/*  */
+			/* primary key */
 		ion_state
 			TEXT NOT NULL UNIQUE
+			/* state of the found ion with common mass spectrometric adjuncts/losses/charge */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -133,7 +134,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* total formal charge of compound, derived */
 		ion_state
 			INTEGER NOT NULL,
-			/* foreign key to norm_ion_states */
+			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
 		inspected_by
 			TEXT,
 			/* user inspection id */

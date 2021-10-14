@@ -26,8 +26,8 @@ DELETE FROM norm_polarity_types;
 .import --csv --skip 1 config/data/norm_polarity_types.csv norm_polarity_types
 DELETE FROM norm_fragmentation_types;
 .import --csv --skip 1 config/data/norm_fragmentation_types.csv norm_fragmentation_types
-DELETE FROM norm_ms2_types;
-.import --csv --skip 1 config/data/norm_ms2_types.csv norm_ms2_types
+DELETE FROM norm_ms_n_types;
+.import --csv --skip 1 config/data/norm_ms_n_types.csv norm_ms_n_types
 DELETE FROM norm_column_chemistries;
 .import --csv --skip 1 config/data/norm_column_chemistries.csv norm_column_chemistries
 DELETE FROM norm_column_positions;
