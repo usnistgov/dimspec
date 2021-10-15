@@ -23,14 +23,6 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 ====================================================================================================*/
 
 DELETE FROM contributors;
-/*magicsplit*/
 DELETE FROM affiliations;
-/*magicsplit*/
-INSERT OR IGNORE INTO affiliations
-	VALUES (1, "system");
-/*magicsplit*/
-INSERT OR IGNORE INTO contributors
-		(id, username, affiliation)
-	VALUES (1, "sys", 1);
-/*magicsplit*/
-
+INSERT OR IGNORE INTO affiliations VALUES (1, "system");
+INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);

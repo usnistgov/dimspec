@@ -6,6 +6,7 @@ DB_NAME        = "nist_pfas_nta_dev.sqlite"
 
 # Build file used for the database
 DB_BUILD_FILE  = "build.sql"
+DB_BUILD_FULL  = "build_full.sql"
 
 # File containing data from which to populate the database
 DB_DATA        = "populate_pfas.sql"

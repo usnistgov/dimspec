@@ -24,7 +24,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 ====================================================================================================*/
 
 /* Tables */
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_ionization
 		/* Normalization table for mass spectrometer ionization source types */
 	(
@@ -41,7 +41,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_solvents
 		/* Mobile phase solvent list: controlled. */
 	(
@@ -55,7 +54,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_vendors
 		/* Normalization table holding commercial instrument vendor information. */
 	(
@@ -69,7 +67,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_qc_methods_reference
 		/* Normalization table for quality control reference types. */
 	(
@@ -83,7 +80,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_qc_methods_name
 		/* Normalization table for quality control types. */
 	(
@@ -97,7 +93,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_ce_desc
 		/* Normalization table for collision energy description. */
 	(
@@ -111,7 +106,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_ce_units
 		/* Normalization table for collision energy units. */
 	(
@@ -125,7 +119,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_ionization_units
 		/* Normalization table for ionization energy units. */
 	(
@@ -142,7 +135,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_ms_types
 		/* Normalization table for mass spectrometer types. */
 	(
@@ -159,7 +151,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_ms_n_types
 		/* Normalization table for types of ms_n experiments. */
 	(
@@ -176,7 +167,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_fragmentation_types
 		/* Normalization table for fragmentation type. */
 	(
@@ -193,7 +183,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_polarity_types
 		/* Normalization table for ionization polarity. */
 	(
@@ -208,7 +197,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_chromatography_types
 		/* Normalization table for chromatography types. */
 	(
@@ -225,7 +213,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	
 	CREATE TABLE IF NOT EXISTS norm_column_chemistries
 		/* Normalization table for chromatographic column type. */
 	(
@@ -239,7 +226,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_column_positions
 		/* Normalization table for chromatographic column position */
 	(
@@ -253,7 +239,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS solvent_mix_collections
 		/* An intermediary identification table linking mobile_phases and solvent_mixes */
 	(
@@ -267,7 +252,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS mobile_phases
 		/* Description of mobile phases used during a chromatographic separation. */
 	(
@@ -294,7 +278,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS ms_descriptions
 		/* Full description of all mass spectrometer types used for a given entry in ms_methods. */
 	(
@@ -315,7 +298,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS chromatography_descriptions
 		/* Full description of all chromatography types used for a given entry in ms_methods. */
 	(
@@ -343,7 +325,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_methods
 		/* Mass spectrometer method settings. */
 	(
@@ -395,7 +377,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS conversion_software_linkage
 		/* Linkage table keeping conversion software setting id groupings in line. These IDs are used to link tables conversion_software_settings and samples. This must be incremented prior to adding new rows in conversion_software_settings, and the new ID used in both conversion_software_settings(id) and samples(software_conversion_settings_id). */
 	(
@@ -409,7 +390,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS conversion_software_settings
 		/* Settings specific to the software package used to preprocess raw data. */
 	(
@@ -424,7 +404,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (linkage_id) REFERENCES conversion_software_linkage(id)
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS qc_methods
 		/* References to quality control (QC) methods used to vet experimental results */
 	(
@@ -450,7 +429,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS solvent_aliases
 		/* List of common aliases for each entry in TABLE norm_solvents */
 	(
@@ -465,7 +443,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS solvent_mixes
 		/* Mobile phase solvent mixture for a given elution method */
 	(
@@ -485,13 +462,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 /* Data */
-
+	/*magicsplit*/
 	/* Normalization tables should be populated as appropriate for the project. Examples are given in "config/data" directory and may be imported from there or by running "config/demo_data.sql" */
-
+	/*magicsplit*/
 /* Views */
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_mass_analyzers AS
 		/* View all mass analyzers used in methods */
 		SELECT
@@ -504,7 +480,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM ms_descriptions msd
 		INNER JOIN norm_ms_types ms ON ms.id = msd.ms_types_id;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_chromatography_types AS
 		/* View all chromatography types in methods */
 		SELECT
@@ -517,7 +492,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM chromatography_descriptions cd
 		INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_mobile_phase AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
@@ -530,7 +504,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM solvent_mixes sm
 		INNER JOIN norm_solvents s ON s.id = sm.component;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_detectors AS
 		/* Convenience view to build view_method_as by providing a single character string for detectors used in this method */
 		SELECT
@@ -543,7 +516,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			JOIN norm_ms_types nmt ON msd.ms_types_id = nmt.id
 		GROUP BY msd.ms_methods_id;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_column_chemistries AS
 		/* Convenience view to build view_method_as by providing a single character string for column chemistries used in this method */
 		SELECT 
@@ -557,7 +529,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			JOIN norm_column_chemistries ncc ON cd.column_chemistry_id = ncc.id
 		GROUP BY cd.ms_methods_id;
 	/*magicsplit*/
-	
 	CREATE VIEW IF NOT EXISTS view_separation_types AS
 		/* Convenience view to build view_method_as by providing a single character string for chromatography type */
 		SELECT
@@ -573,7 +544,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		LEFT JOIN norm_vendors nv ON cd.vendor_id = nv.id
 		GROUP BY cd.ms_methods_id;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_method AS
 		/* View mass spectrometer information and method settings */
 		SELECT
@@ -618,7 +588,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		LEFT JOIN norm_ce_desc ncd ON msm.ce_desc = ncd.id
 		GROUP BY msm.id;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_method_narrative AS
 	  /* Collapses the contents of view_method into a single narrative string by ID */
 		SELECT
@@ -649,3 +618,5 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM view_method;
 	/*magicsplit*/
 /* Triggers */
+	/*magicsplit*/
+	/* none */

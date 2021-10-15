@@ -24,7 +24,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 ====================================================================================================*/
 
 /* Tables */
-	
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_sample_classes
 		/* Normalization table linking to samples to hold controlled vocabulary. */
 	(
@@ -36,7 +36,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* name of the sample class */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS samples
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
@@ -73,7 +72,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (software_conversion_settings_id) REFERENCES conversion_software_linkage(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS peaks
 		/* Peaks (or features) identified within the results from a sample. */
 	(
@@ -108,7 +106,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS ms_data
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(
@@ -144,7 +141,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS ms_spectra
 		/* Retained mass spectra associated with ms1data, unencoded from ms_data.measured_mz and .measured_intensity respectively. */
 	(
@@ -164,9 +160,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id)
 	);
 	/*magicsplit*/
-
 /* Views */
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS peak_data AS
 		/* View raw peak data for a specific peak */
 		SELECT
@@ -186,7 +181,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* measured signal intensities */
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS peak_spectra AS
 		/* View archived and verified peak spectra for a specific peak */
 		SELECT
@@ -202,5 +197,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* measured signal intensity */
 		FROM peak_data ps
 		INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
-
+	/*magicsplit*/
 /* Triggers */
+	/*magicsplit*/
+	/* none */

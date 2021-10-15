@@ -28,7 +28,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 ====================================================================================================*/
 
 /* Tables */
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_fragment_generation_type
 		/* Normalization table for fragmenet generation source type */
 	(
@@ -43,7 +43,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_source_types
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
@@ -63,7 +62,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_ion_states
 		/* Normalization table for the measured ion state as comared with the molecular ion. */
 	(
@@ -77,7 +75,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_categories
 		/* Normalization table for self-hierarchical chemical classes of compounds. */
 	(
@@ -95,7 +92,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compounds
 		/* Controlled list of chemical compounds with attributable analytical data. */
 	(
@@ -152,7 +148,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_alias_references
 		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
 	(
@@ -172,7 +167,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_aliases
 		/* List of alternate names or identifiers for compounds */
 	(
@@ -191,7 +185,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (alias_type) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_fragments
 		/* Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments. */
 	(
@@ -211,7 +204,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS fragments
 		/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
 	(
@@ -243,7 +235,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS fragment_sources
 		/* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical). */
 	(
@@ -262,9 +253,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id)
 	);
 	/*magicsplit*/
-
 /* Views */
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
 		SELECT
@@ -281,7 +271,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN fragments f ON cf.fragment_id = f.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_fragment_count AS
 		/* Number of fragments associated with compounds. */
 		SELECT
@@ -297,7 +286,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
 		SELECT
@@ -335,5 +323,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
 		INNER JOIN compound_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
-
 /* Triggers */
+	/*magicsplit*/
+	/* none */

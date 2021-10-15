@@ -11,7 +11,7 @@
 #' include either `get_sql` or `pretty` as TRUE.
 #'
 #' @param db_table CHR vector name of the table(s) to inspect
-#' @param con connection object (default: con)
+#' @param conn connection object (default: con)
 #' @param get_sql BOOL scalar of whether or not to return the schema sql
 #'   (default FALSE)
 #' @param pretty BOOL scalar for whether to return "pretty" SQL that includes
@@ -31,7 +31,7 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
       args       = as.list(environment()),
       conditions = list(
         db_table = list(c("mode", "character"), c("n>=", 1)),
-        conn      = list(c("length", 1)),
+        conn     = list(c("length", 1)),
         get_sql  = list(c("mode", "logical"), c("length", 1)),
         pretty   = list(c("mode", "logical", c("length", 1)))
       ),
@@ -159,7 +159,7 @@ pragma_table_info <- function(db_table,
   out_check <- integer(0)
   # Limit column outputs?
   limit <- lapply(c(condition, name_like, data_type),
-                      function(x) !is.null(x)) %>%
+                  function(x) !is.null(x)) %>%
     unlist() %>%
     any()
   # Get comments if any
@@ -212,8 +212,8 @@ pragma_table_info <- function(db_table,
 #' may require elevated permissions.
 #'
 #' @param db CHR scalar of the database name (default: session value DB_NAME)
-#' @param build_from CHR scalar of a SQL build script to use (default: session
-#'   value DB_BUILD_FILE)
+#' @param build_from CHR scalar of a SQL build script to use (default:
+#'   environment value DB_BUILD_FILE)
 #' @param populate LGL scalar of whether to populate with data from the file in
 #'   `populate_with` (default: TRUE)
 #' @param populate_with CHR scalar for the populate script (e.g.
@@ -255,17 +255,19 @@ build_db <- function(db            = DB_NAME,
   if (!arg_check$valid) {
     stop(cat(paste0(arg_check$messages, collapse = "\n")))
   }
+  manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
+  build_file    <- list.files(pattern = build_from,
+                              full.names = TRUE,
+                              recursive = TRUE)
   # Populate with all data sources
   # -- RSQLite does not allow for the CLI [.DOT] commands
   # -- If sqlite3 CLI is installed, use that by preference
   sqlite_available <- length(Sys.which(sqlite_cli) > 1)
-  # Do it the short way
-  manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
+  # Do it the short way (with CLI)
   if (sqlite_available) {
     log_trace('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...')
     require(glue)
     sqlite_call   <- glue('{sqlite_cli} {db}')
-    build_file    <- list.files(pattern = build_from, full.names = TRUE, recursive = TRUE)
     if (!file.exists(build_file)) {
       stop(glue('Cannot locate file "{build_file}" in this directory.'))
     }
@@ -287,7 +289,7 @@ build_db <- function(db            = DB_NAME,
     log_trace("Issuing shell command {full_call}")
     if (file.exists(db)) remove_db(db = db, archive = archive)
     shell(full_call)
-    log_success('Finished building "{db}"" as specified. Check console for details.')
+    log_success('Finished attempted build of "{db}" as specified. Check console for any failure details.')
   } else {
     # Do it the long way
     log_trace('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...')
@@ -301,20 +303,10 @@ build_db <- function(db            = DB_NAME,
     # -- Remove the existing database
     if (file.exists(db)) remove_db(db = db, archive = archive)
     # -- Create the build commands in R to pass through RSQLite::SQLite()
-    build_path <- list.files(pattern = build_from,
+    build_path <- list.files(pattern = build_file,
                              full.names = TRUE,
                              recursive = TRUE)
-    header     <- "/\\*\\=+\\n[[:print:][:cntrl:]]+\\n\\=+\\*/"
-    section    <- "/\\* -+ [[:print:][:cntrl:]]+ \\*/"
-    magicsplit <- "/\\*magicsplit\\*/"
-    build_statement <- read_file(build_path) %>%
-      str_split(magicsplit) %>%
-      .[[1]] %>%
-      str_remove_all(header) %>%
-      str_remove_all(section) %>%
-      str_remove_all("^\\n\\n") %>%
-      str_replace_all("\\n\\t", " ") %>%
-      str_squish()
+    build_statement <- create_fallback_build(build_path)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
     con <- dbConnect(RSQLite::SQLite(), db)
@@ -505,7 +497,7 @@ manage_connection <- function(db          = DB_NAME,
           connected <- dbIsValid(this_obj)
         }
       }
-          if (logger) log_trace('Closing and removing "{env}"...')
+      if (logger) log_trace('Closing and removing "{env}"...')
       if (all(rm_objects, disconnect, !connection == "")) {
         rm(list = env, pos = ".GlobalEnv")
       }
@@ -815,10 +807,10 @@ er_map <- function(conn = con) {
     er_map[[i]] <- list(
       object_type  = er_type[[i]],
       references   = if (er_type[[i]] == "TABLE") {
-          t_names[as.logical(er_mask[i, ])]
-        } else {
-          t_names[as.logical(view_mask[, i])]
-        },
+        t_names[as.logical(er_mask[i, ])]
+      } else {
+        t_names[as.logical(view_mask[, i])]
+      },
       normalizes   = t_names[as.logical(er_mask[, i])],
       used_in_view = t_names[as.logical(view_mask[i, ])]
     )
@@ -851,7 +843,7 @@ associated_scan <- function(df, scan_time) {
   scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
   df$scantime[
     which(all(df$scantime < scan_time,
-            df$msn == scan_msn))
+              df$msn == scan_msn))
   ]
 }
 
@@ -1047,4 +1039,193 @@ check_for_value <- function(values, db_table, db_column, conn = con) {
   out   <- list(exists = found,
                 values = if (found) existing_values else NULL)
   return(out)
+}
+
+sqlite_parse_build <- function(sql_statements) {
+  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
+  if (logger_active) log_trace('Parsing "{sql_statements}" for build commands.')
+  magicsplit <- "/\\*magicsplit\\*/"
+  header     <- "/\\*\\=+\\r*\\n[[:print:][:cntrl:]]+\\r*\\n\\=+\\*/"
+  section    <- "/\\* -* [[:print:][:cntrl:]]+ -* \\*/"
+  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
+  to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
+  out        <- sql_statements %>%
+    str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
+    str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
+    str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
+    str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
+    str_split(magicsplit) %>%
+    .[[1]] %>%
+    str_remove_all(to_remove) %>%
+    str_replace_all("\\n{2,10}", "\n") %>%
+    str_replace_all(" {2,10}", " ") %>%
+    str_split("\\n") %>%
+    lapply(str_squish) %>%
+    lapply(function(x) x[! x %in% c("", " ")])
+  out        <- out[unlist(lapply(out, length)) > 0]
+  return(out)
+}
+
+sqlite_parse_import <- function(build_statements) {
+  regex_import  <- ".import (--[[:alnum:]]+)? "
+  regex_skip    <- "(--skip [[:number:]]+) ?"
+  regex_prefix  <- paste0(c(regex_import, regex_skip), collapse = "?")
+  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
+  if (logger_active) log_trace('Parsing "{build_statements}" for import modification.')
+  out           <- lapply(build_statements,
+                          function(x) {
+                            if (grepl("\\.import", x)) {
+                              data_type <- str_extract(x, regex_import) %>%
+                                str_remove(".import( --)?") %>%
+                                str_squish()
+                              if (data_type == "") {
+                                if (logger_active) {
+                                  log_warn('No data type identified. Assuming a ".csv" extension.')
+                                } else {
+                                  warning('No data type identified. Assuming a ".csv" extension.')
+                                }
+                                data_type <- "csv"
+                              }
+                              skip_rows <- str_extract(x, regex_skip) %>%
+                                str_remove("--skip ") %>%
+                                str_squish()
+                              skip_rows <- try(as.numeric(skip_rows))
+                              if (class(skip_rows) == 'try-error') {
+                                if (logger_active) {
+                                  log_warn('Could not convert "{skip_rows}" to numeric in "{x}".')
+                                } else {
+                                  warning(sprintf('Could not convert "%s" to numeric in "%s".',
+                                                  skip_rows, x))
+                                }
+                                return(x)
+                              }
+                              tmp <- str_remove(x, regex_prefix) %>%
+                                str_split(" ") %>%
+                                .[[1]]
+                              if (length(tmp) != 2) {
+                                if (logger_active) {
+                                  log_warn('Could not parse "{x}" to identify both a target file and database target table.')
+                                } else {
+                                  warning(sprintf('Could not parse "%s" to identify both a target file and database target table.',
+                                                  x))
+                                }
+                                return(x)
+                              }
+                              data_file <- tmp[1]
+                              if (file.exists(data_file)) {
+                                if ("readr" %in% installed.packages()) {
+                                  require(readr)
+                                  read_func <- sprintf("read_%s", data_type)
+                                } else {
+                                  read_func <- sprintf("read.%s", data_type)
+                                }
+                                if (exists(read_func)) {
+                                  read_data <- invisible(
+                                    do.call(read_func,
+                                            list(data_file))
+                                  )
+                                } else {
+                                  if (logger_active) {
+                                    log_warn('Cannot read file "{data_file}". Function "{read_func}" is not available.')
+                                  } else {
+                                    warning(sprintf('Cannot read file "%s". Function "%s" is not available.',
+                                                    data_file,
+                                                    read_func))
+                                  }
+                                  return(x)
+                                }
+                              } else {
+                                if (logger_active) {
+                                  log_warn('Could not find file "{data_file}".')
+                                } else {
+                                  warning(sprintf('Could not find file %s.',
+                                                  x))
+                                }
+                                return(x)
+                              }
+                              target    <- tmp[2]
+                              insert_values <- sprintf('("%s")',
+                                                       read_data %>%
+                                                         unite(col = "statement", sep = '", "') %>%
+                                                         pull(statement) %>%
+                                                         paste0(collapse = '"), ("')
+                              )
+                              insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
+                                                          target,
+                                                          insert_values)
+                              return(insert_statement)
+                            } else {
+                              return(x)
+                            }
+                          })
+  return(out)
+}
+
+create_fallback_build <- function(build_file    = NULL,
+                                  populate_with = NULL,
+                                  populate      = TRUE,
+                                  driver        = "SQLite") {
+  if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
+  if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
+  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
+  has_import <- FALSE
+  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
+  build_file <- list.files(pattern = build_file,
+                           full.names = TRUE,
+                           recursive = TRUE)
+  outfile <- gsub(".sql", "_full.sql", build_file)
+  build   <- read_file(build_file) %>%
+    sqlite_parse_build()
+  
+  if (populate) {
+    populate_file <- list.files(pattern = populate_with,
+                                full.names = TRUE,
+                                recursive = TRUE)
+    populate <- read_file(populate_file) %>%
+      sqlite_parse_build()
+    build <- c(build, populate)
+  }
+  # Make SQL build statements
+  build   <- unlist(build) %>%
+    as.list()
+  index_read   <- grep("^.read", build)
+  temp_read    <- lapply(build[index_read],
+                         function(x) {
+                           node_file <- str_remove(x, ".read ")
+                           read_file(node_file) %>%
+                             sqlite_parse_build()
+                         })
+  source_read  <- str_remove(unlist(build[index_read]), ".read ")
+  names(temp_read) <- source_read %>%
+    basename() %>%
+    file_path_sans_ext()
+  for (i in 1:length(temp_read)) {
+    source_comment <- sprintf("/* Sourced from ./%s */", source_read[i])
+    temp_read[[i]] <- c(source_comment, temp_read[[i]])
+  }
+  build[index_read] <- temp_read %>%
+    lapply(function(x) {
+      lapply(x, function(y) {
+        paste0(y, collapse = " ")
+      })
+    })
+  build <- unlist(build) %>% as.list()
+  index_import <- grep("^.import", build)
+  temp_import  <- lapply(build[index_import],
+                         function(x) {
+                           if (grepl(comments, x)) return(x)
+                           lapply(x, sqlite_parse_import)
+                         }
+  ) %>% unlist()
+  check <- build
+  build[index_import] <- temp_import
+  build <- unlist(build) %>%
+    paste0(collapse = "\n")
+  write_file(build, outfile)
+  if (logger_active) {
+    log_info('Fallback build file created as "{outfile}".')
+  } else {
+    cat(sprintf('Fallback build file created as "%s".',
+                outfile))
+  }
 }

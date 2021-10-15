@@ -1,938 +1,193 @@
-/*====================================================================================================
-Description:	Build a database sketch to hold results for non-targeted analysis high-resolution 
-				accurate-mass mass spectrometry (NTA-HRAM-MS) experiments.
-Status:			Development version
-LastUpdate:		2021-06-03
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/build.sql
-				
-				Note that build files are mostly located in the "config" directory and local 
-				paths will need to be referenced appropriately, which may require modifications 
-				to this script. This mostly applies to the commands in this introductory 
-				section and at the end of this script file where default tables are populated.
-				
-				This will create the schema on your local machine for local population.
-				Example data (a full demonstration version will be provided in the future) can 
-				be read in with
-				
-					.read config/demo_data.sql
-					
-				See the build history after build with
-					
-					SELECT * from view_history;
-					
-====================================================================================================*/
-
 PRAGMA journal_mode=WAL;
-
-/* - Create tables */
-/* -- Reference node begins */
-
-CREATE TABLE IF NOT EXISTS elements
-	/* Normalization list of periodic table elements 1-118. */
-(
-	atomic_number
-		INTEGER PRIMARY KEY,
-		/* periodic table atomic number (e.g. 2) */
-	symbol
-		TEXT NOT NULL UNIQUE,
-		/* periodic table symbol (e.g. "He") */
-	common_name
-		TEXT NOT NULL UNIQUE
-		/* periodic table common name (e.g. "Helium") */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS isotopes
-	/* Elemental isotope abundance ratios for comparison and deconvolution. */
-(
-	atomic_number
-		INTEGER NOT NULL,
-		/* periodic TABLE atomic number (e.g. 2) */
-	exact_mass
-		REAL NOT NULL,
-		/* exact atomic mass (e.g. 4.00260325413) */
-	abundance
-		REAL NOT NULL,
-		/* isotopic abundance of exact_mass (e.g. 0.99999866) */
-	/* Constraints */
-	CHECK (abundance BETWEEN 0 AND 1),
-	CHECK (exact_mass > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-/* --- Normalization tables */
-
-CREATE TABLE IF NOT EXISTS norm_ionization
-	/* Normalization table for mass spectrometer ionization source types */
-(
-	id
-		INTEGER PRIMARY KEY,
-	acronym
-		TEXT NOT NULL UNIQUE,
-		/* validation list of ionization source acronyms */
-	name
-		TEXT NOT NULL UNIQUE
-		/* validation list of ionization source names */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_fragment_generation_type
-	/* Normalization table for fragmenet generation source type */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL,
-		/* one of "in silico" or "empirical" */
-	/* Constraints */
-	CHECK (name IN ("in silico", "empirical"))
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_log_execution_from
-	/* Normalization table for log(executed_from) */
-(
-	id
-		INTEGER PRIMARY KEY,
-	value
-		TEXT NOT NULL UNIQUE,
-	CHECK (value IN ("trigger", "application", "console", "other"))
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_ms_types
-	/* Normalization table for mass spectrometer types. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE
-		/* type of the mass analyzer */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_qc_methods_reference
-	/* Normalization table for quality control reference types. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	value
-		TEXT NOT NULL
-		/* type of QC reference */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_qc_methods_name
-	/* Normalization table for quality control types. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE
-		/* type of QC method */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_sample_classes
-	/* Normalization TABLE linking to samples to hold controlled vocabulary. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE
-		/* name of the sample class */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_solvents
-	/* Mobile phase solvent list: controlled. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE,
-		/* IUPAC name for mobile phase norm_solvents */
-	tech
-		TEXT NOT NULL,
-		/* controlled vocabulary for separation system, one of "GC" or "LC" */
-	/* Constraints */
-	CHECK (tech IN ("GC", "LC"))
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_source_types
-	/* Validation list of source types to be used in the compounds TABLE. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	abbreviation
-		TEXT NOT NULL,
-		/* (single) letter abbreviation for the source type */
-	st_type
-		TEXT NOT NULL,
-		/* full name of the source type */
-	definition
-		TEXT NOT NULL
-		/* definition of the source type */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS norm_vendors
-	/* Normalization TABLE holding commercial instrument vendor information. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE
-		/* company name */
-);
-/*magicsplit*/
-
-/* -- Reference node ends */
-
-/* -- Analyte node begins */
-
-CREATE TABLE IF NOT EXISTS compounds
-	/* Controlled list of chemical compounds with attributable analytical data. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	category
-		INTEGER,
-		/* foreign key to compound_categories */
-	name
-		TEXT NOT NULL,
-		/* name of compound, uncontrolled */
-	inchi
-		TEXT,
-		/* inchi structure of compound, as submitted */
-	obtained_from
-		TEXT NOT NULL,
-		/* DOI/Link of compound structure's source */
-	source_type
-		INTEGER NOT NULL,
-		/* one-letter character indicating type of source */
-	additional
-		TEXT,
-		/* additional information, as submitted */
-	smiles
-		TEXT,
-		/* smiles structure of compound, derived */
-	inchikey
-		TEXT,
-		/* inchikey structure of compound, derived */
-	local_pos
-		INTEGER NOT NULL DEFAULT 0,
-		/* number of atoms with positive charges, derived */
-	local_neg
-		INTEGER NOT NULL DEFAULT 0,
-		/* number of atoms with negative charges, derived */
-	formula
-		TEXT NOT NULL,
-		/* elemental formula, derived */
-	fixedmass
-		REAL NOT NULL,
-		/* exact mass of compound, derived */
-	netcharge
-		INTEGER NOT NULL DEFAULT 0,
-		/* total formal charge of compound, derived */
-	dtxsid
-		TEXT,
-		/* dtxsid identifier */
-	dtxcid
-		TEXT,
-		/* dtxcid identifier */
-	casrn
-		TEXT,
-		/* CAS registry number */
-	pubchemid
-		TEXT,
-		/* PubChem identifier */
-	inspectedby
-		TEXT,
-		/* user inspection id */
-	inspectedon
-		TEXT,
-		/* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */
-	/* Check constraints */
-	CHECK (local_pos >= 0),
-	CHECK (local_neg >= 0),
-	CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
-	/* Foreign key relationships */
-	FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
-	FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS compound_categories
-	/* Chemical class category of compounds. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL,
-		/* name of the class */
-	subclass_of
-		INTEGER,
-		/* self referential to compound_categories */
-	/* Foreign key relationships */
-	FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS compound_fragments
-	/* Linkage TABLE to tie compounds to their confirmed and annotated fragments. */
-(
-	peak_id
-		INTEGER NOT NULL,
-		/* foreign key to peaks */
-	compound_id
-		INTEGER NOT NULL,
-		/* foreign key to compounds */
-	fragment_id
-		INTEGER NOT NULL,
-		/* foreign key to fragments */
-	/* Foreign key relationships */
-	FOREIGN KEY (peak_id) REFERENCES peaks(id),
-	FOREIGN KEY (compound_id) REFERENCES compounds(id),
-	FOREIGN KEY (fragment_id) REFERENCES fragments(id)
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS fragments
-	/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	mz
-		REAL NOT NULL,
-		/* m/z value for specific fragment, derived */
-	formula
-		TEXT NOT NULL,
-		/* elemental formula for specific fragment, user submitted */
-	description
-		TEXT NOT NULL,
-		/*  */
-	charge
-		INTEGER NOT NULL,
-		/* charge of specific fragment,derived */
-	radical
-		TEXT,
-		/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
-	smiles
-		TEXT,
-		/* smiles structure of fragment ion, can be NULL, user submitted */
-	inchi
-		TEXT,
-		/* InChI representation of fragment ion, can be NULL, user submitted */
-	inchikey
-		TEXT,
-		/* InChIKey representation of fragment ion, can be NULL, user submitted */
-	/* Constraints */
-	CHECK (charge IN (-1, 1)),
-	CHECK (radical IN (0, 1)),
-	CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS fragment_sources
-	/* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical) */
-(
-	fragment_id
-		INTEGER NOT NULL,
-		/* foreign key to fragments */
-	generated_from
-		INTEGER NOT NULL,
-		/* foreign key to norm_fragment_generation_type */
-	citation
-		TEXT NOT NULL,
-		/* DOI, etc. */
-	/* Foreign key relationships */
-	FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-	FOREIGN KEY (generated_from) REFERENCES norm_fragment_generation_type(id)
-);
-/*magicsplit*/
-
-/* -- Analyte node ends */
-
-/* -- Logging node begins */
-
-CREATE TABLE IF NOT EXISTS version_history
-	/* Versions of this database and its associated data or application */
-(
-	version
-		REAL NOT NULL,
-		/* version number */
-	affects
-		TEXT NOT NULL,
-		/* which aspect is affected, constrained to one of "data", "schema", or "application" */
-	description
-		TEXT NOT NULL,
-		/* plain text description of the change */
-	active_date
-		TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		/* timestamp for when the action was executed */
-	/* Constraints */
-	CHECK (affects IN ("data", "schema", "application")),
-	CHECK (active_date==strftime("%Y-%m-%d %H:%M:%S", active_date))
-	/* Foreign keys */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS log
-	/* Placeholder for logs */
-(
-	id
-		INTEGER PRIMARY KEY,
-	category
-		TEXT NOT NULL,
-		/* categorical grouping of the action */
-	description
-		TEXT,
-		/* plain text description if any */
-	effect
-		TEXT NOT NULL,
-		/* type of database update, constraint list as one of "INSERT" "UPDATE", "DELETE", or "schema" */
-	affects_table
-		TEXT NOT NULL,
-		/* table reference name for the table that was changed */
-	affects_ids
-		INTEGER,
-		/* id associated with records changed or updated  */
-	executed_by
-		INTEGER NOT NULL DEFAULT 1,
-		/* foreign key to contributors */
-	executed_from
-		INTEGER NOT NULL DEFAULT 3,
-		/* constraint list as one of "trigger", "application", "console", or "other" */
-	executed_on
-		TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		/* timestamp for when the action was executed */
-	new_vals
-		TEXT,
-		/* new values, if any */
-	old_vals
-		TEXT,
-		/* prior values, if any */
-	/* Constraints */
-	CHECK (executed_on==strftime("%Y-%m-%d %H:%M:%S", executed_on)),
-	CHECK (effect IN ("INSERT", "UPDATE", "DELETE", "schema")),
-	/* Foreign keys */
-	FOREIGN KEY (executed_from) REFERENCES norm_log_execution_from(id)
-);
-/*magicsplit*/
-
-/* -- Logging node ends */
-
-/* -- Persons node begins */
-
-CREATE TABLE IF NOT EXISTS contributors
-	/* Placeholder for contributors */
-(
-	id
-		INTEGER PRIMARY KEY,
-	first_name
-		TEXT NOT NULL,
-		/* user's preferred first name */
-	last_name
-		TEXT NOT NULL,
-		/* user's preferred last name */
-	affiliation
-		INTEGER NOT NULL,
-		/* user's professional affiliation (see table affiliations) */
-	orcid
-		TEXT,
-		/* user's ORCID number, if available */
-	orcid_url
-		TEXT GENERATED ALWAYS AS ("https://orcid.org/" || orcid) VIRTUAL,
-		/* calculated column to provide a link to a user's ORCID id profile */
-	/* Constraints */
-	CHECK (orcid GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]')),
-		/* Ensures ORCID follows formatting requirement as of 2021-06-07
-	/* Foreign key relationships */
-	FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
-);
-
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS affiliations
-	/* Normalization table for user affiliations */
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL UNIQUE
-		/* name of professional affiliation */
-);
-
-/*magicsplit*/
-
-/* -- Persons node ends */
-
-/* -- Method node begins */
-
-CREATE TABLE IF NOT EXISTS mobile_phases
-	/* Description of mobile phases used during a chromatographic separation. */
-(
-	methods_id
-		INTEGER NOT NULL,
-		/* foreign key to methods */
-	carrier
-		INTEGER NOT NULL,
-		/* foreign key to solvent_mixes */
-	additive
-		TEXT,
-		/* buffer/salt/acid addition to mobile phase */
-	duration
-		REAL,
-		/* time duration mobile phase was applied */
-	duration_units
-		TEXT DEFAULT "minutes",
-		/* time duration units, constrained to one of "second" or "minutes" */
-	/* Constraints */
-	CHECK (duration_units IN ("seconds", "minutes")),
-	CHECK (duration > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-	FOREIGN KEY (carrier) REFERENCES solvent_mixes(mix_id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS ms_descriptions
-	/* Full description of all mass spectrometer types used for a given entry in the ms_methods TABLE. */
-(
-	ms_methods_id
-		INTEGER NOT NULL,
-		/* foreign key to ms_methods */
-	ms_types_id
-		INTEGER NOT NULL,
-		/* foreign key to norm_ms_types */
-	/* Constraints */
-	UNIQUE(ms_methods_id, ms_types_id),
-	/* Foreign key relationships */
-	FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-	FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS ms_methods
-	/* Mass spectrometer method settings. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	ionization
-		INTEGER,
-		/* ionization mode (ESI, APCI, EI, etc.) */
-	voltage
-		REAL,
-		/* ionization voltage/Current (depending on mode) */
-	polarity
-		TEXT,
-		/* ionization polarity (negative, positive, or negative/positive) */
-	ce_value
-		TEXT,
-		/* value for collision energy, normally a number but can be a range */
-	ce_desc
-		TEXT,
-		/* description/context of the collision energy value (normalized, stepped, range, etc.) */
-	ms_vendor
-		INTEGER,
-		/* vendor of the mass spectrometer; FOREIGN KEY to norm_vendors */
-	has_qc_method
-		INTEGER NOT NULL, 
-		/* (0, 1) boolean: does the experiment have a QC method in place */
-	citation
-		TEXT,
-		/* citation for the experimental method */
-	/* Constraints */
-	CHECK (polarity IN ('negative', 'positive', 'negative/positive')),
-	CHECK (has_qc_method IN (0, 1)),
-	/* Foreign key relationships */
-	FOREIGN KEY (ms_vendor) REFERENCES norm_vendors(id) ON UPDATE CASCADE,
-	FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS msconvert_settings
-	/* Settings specific to the msconvert program. Automatically populated by calls to insert to view_msconvert_settings */
-(
-	setting
-		TEXT,
-		/* settings file expression */
-	id
-		INTEGER
-		/* automatically populated with each call to keep settings together */
-	/* Constraints */
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS qc_methods
-	/* References to quality control (QC) methods used to vet experimental results */
-(
-	id
-		INTEGER PRIMARY KEY,
-	ms_methods_id
-		INTEGER NOT NULL,
-		/* foreign key to ms_methods */
-	name
-		INTEGER,
-		/* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */
-	reference
-		INTEGER,
-		/* the category of the QC method; controlled vocabulary must be one of "SOP (Internal)", "SOP (External/Published)", or "Manuscript" */
-	reference_text
-		TEXT,
-		/* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */
-	/* Constraints */
-	/* Foreign key relationships */
-	FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-	FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id),
-	FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id)
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS solvent_aliases
-	/* List of common aliases for each entry in TABLE norm_solvents	*/
-(
-	solvent_id
-		INTEGER NOT NULL,
-		/* foreign key to norm_solvents */
-	alias
-		TEXT NOT NULL UNIQUE,
-		/* human meaningful name(s) associated with a solvent */
-	/* Foreign key relationships */
-	FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS solvent_mixes
-	/*	Mobile phase solvent mixture for a given elution method	*/
-(
-	mix_id
-		INTEGER NOT NULL,
-		/* mixture identifier to gather discrete components */
-	component
-		INTEGER NOT NULL,
-		/* foreign key to solvent_fractions */
-	fraction
-		REAL NOT NULL,
-		/* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */
-	/* Foreign key relationships */
-	FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE,
-	CHECK (fraction BETWEEN 0 AND 1)
-);
-/*magicsplit*/
-
-/* -- Method node ends */
-
-/* -- Data node begins */
-
-CREATE TABLE IF NOT EXISTS ms1data
-	/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	peak_id
-		INTEGER NOT NULL,
-		/* foreign key to peaks */
-	scantime
-		REAL NOT NULL,
-		/* scan time of spectrum */
-	ms1_data
-		TEXT NOT NULL,
-		/* locator/actual MS1 fragmentation data */
-	contributor
-		INTEGER,
-		/* contributor for these data */
-	/* Constraints */
-	CHECK (scantime > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE,
-	FOREIGN KEY (contributor) REFERENCES contributors(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS ms1_spectra
-	/* Retained mass spectra associated with ms1data. */
-(
-	ms1data_id
-		INTEGER NOT NULL,
-		/* foreign key to ms1data */
-	mz
-		REAL NOT NULL,
-		/* mass to charge ratio */
-	intensity
-		REAL NOT NULL,
-		/* signal intensity */
-	/* Constraints */
-	CHECK (mz > 0),
-	CHECK (intensity > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (ms1data_id) REFERENCES ms1data(id)
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS ms2data
-	/* Mass spectral data associated with ms2data for a given peak. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	peak_id
-		INTEGER NOT NULL,
-		/* foreign key to peaks */
-	scantime
-		REAL NOT NULL,
-		/* scan time of spectrum */
-	ms2_data
-		TEXT NOT NULL,
-		/* NIST INTERNAL REFERENCE locator for raw MS2 fragmentation data */
-	contributor
-		INTEGER,
-		/* contributor for these data */
-	/* Constraints */
-	CHECK (scantime > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE,
-	FOREIGN KEY (contributor) REFERENCES contributors(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS ms2_spectra
-	/* Retained mass spectra associated with ms2data. */
-(
-	ms2data_id
-		INTEGER NOT NULL,
-		/* foreign key to ms2data */
-	mz
-		REAL NOT NULL,
-		/* mass to charge ratio */
-	intensity
-		REAL NOT NULL,
-		/* signal intensity */
-	/* Constraints */
-	CHECK (mz > 0),
-	CHECK (intensity > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (ms2data_id) REFERENCES ms2data(id)
-);
-/*magicsplit*/
-
-/* -- Data node ends */
-
-CREATE TABLE IF NOT EXISTS peaks
-	/* Peaks (or features) identified within the results from a sample. */
-(
-	id
-		INTEGER PRIMARY KEY,
-	sample_id
-		INTEGER NOT NULL,
-		/* foreign key to samples */
-	measured_mz1
-		REAL NOT NULL,
-		/* precursor ion mass to charge ratio (constrained to positive numbers) */
-	peak_timestamp
-		TEXT NOT NULL,
-		/* timestamp for the peak (YYYY-MM-DD HH:MM:SS UTC) */
-	charge
-		INTEGER NOT NULL,
-		/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
-	rt_start
-		REAL NOT NULL,
-		/* peak retention time start point (constrained to positive numbers) */
-	rt_center
-		REAL NOT NULL,
-		/* peak retention time centroid, (derived constrained to positive numbers) */
-	rt_end
-		REAL NOT NULL,
-		/* peak retention time end point (constrained to positive numbers) */
-	/* Constraints */
-	CHECK (measured_mz1 > 0),
-	CHECK (charge IN (-1, 1)),
-	CHECK (rt_start > 0),
-	CHECK (rt_center > 0),
-	CHECK (rt_end > 0),
-	/* Foreign key relationships */
-	FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-CREATE TABLE IF NOT EXISTS samples
-	/* Samples from which analytical data are derived. What goes into an analytical instrument.	*/
-(
-	id
-		INTEGER PRIMARY KEY,
-	name
-		TEXT NOT NULL,
-		/* user-defined name of the sample */
-	sample_class_id
-		INTEGER NOT NULL,
-		/* foreign key to norm_sample_classes */
-	SOURCE
-		TEXT,
-		/* citation for the sample source */
-	data_generator
-		TEXT NOT NULL,
-		/* generator of data for this sample */
-	msconvert_settings_id
-		INTEGER,
-		/* settings for the msconvert program used to generate data from this sample */
-	ms_methods_id
-		INTEGER,
-		/* foreign key to methods */
-	/* Foreign key relationships */
-	FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
-	FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-	FOREIGN KEY (msconvert_settings_id) REFERENCES msconvert_settings(id) ON UPDATE CASCADE
-);
-/*magicsplit*/
-
-/* - Create views */
-
-CREATE VIEW IF NOT EXISTS view_element_isotopes AS
-	SELECT e.atomic_number, e.symbol, e.common_name AS element, i.exact_mass, i.abundance
-		FROM isotopes i
-		INNER JOIN elements e ON i.atomic_number = e.atomic_number;
-/*magicsplit*/
-
-CREATE VIEW IF NOT EXISTS view_mass_analyzers AS
-	SELECT msd.ms_methods_id, ms.name
-		FROM ms_descriptions msd
-		INNER JOIN norm_ms_types ms ON ms.id = msd.ms_types_id;
-/*magicsplit*/
-
-CREATE VIEW IF NOT EXISTS view_mobile_phase AS
-	SELECT sm.mix_id, s.name AS solvent, sm.fraction
-		FROM solvent_mixes sm
-		INNER JOIN norm_solvents s ON s.id = sm.component;
-/*magicsplit*/
-
-CREATE VIEW IF NOT EXISTS view_compound_fragments AS
-	SELECT c.id, c.formula AS compound, f.formula AS fragments, f.mz
-		FROM compounds c
-		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN fragments f ON cf.fragment_id = f.id
-		ORDER BY mz ASC;
-/*magicsplit*/
-
-CREATE VIEW IF NOT EXISTS view_fragment_count AS
-	SELECT c.name, c.formula AS compound, COUNT(f.formula) AS n_fragments
-		FROM compounds c
-		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN fragments f ON cf.fragment_id = f.id
-		GROUP BY compound
-		ORDER BY n_fragments DESC;
-/*magicsplit*/
-	
-CREATE VIEW IF NOT EXISTS view_contributors AS
-	/* Readable version of the contributors table that can be expanded with
-	 * counts of contributions from various places. */
-	SELECT 
-		c.first_name || " " || c.last_name AS name,
-		a.name AS affiliation,
-		c.orcid_url AS ORCID
-	FROM contributors c
-	JOIN affiliations a
-	ON c.affiliation = a.id;
-/*magicsplit*/
-
-CREATE VIEW IF NOT EXISTS compound_url AS
-	/* Combine information from the compounds table to form a URL link to the resource */
-	SELECT id,
-		name,
-		CASE 
-			WHEN dtxsid IS NOT NULL AND NOT dtxsid IN ("NA", "")
-				THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||dtxsid 
-			WHEN dtxcid IS NOT NULL AND NOT dtxcid IN ("NA", "")
-				THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||dtxcid
-			WHEN pubchemid IS NOT NULL AND NOT pubchemid IN ("NA", "")
-				THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||pubchemid
-			WHEN casrn IS NOT NULL AND NOT casrn IN ("NA", "")
-				THEN "https://commonchemistry.cas.org/detail?cas_rn="||casrn
-			WHEN inchikey IS NOT NULL AND NOT inchikey IN ("NA", "")
-				THEN "https://www.google.com/search?q="||inchikey
-			WHEN inchi IS NOT NULL AND NOT inchi IN ("NA", "")
-				THEN "https://www.google.com/search?q="||inchi
-			WHEN smiles IS NOT NULL AND NOT smiles IN ("NA", "")
-				THEN "https://www.google.com/search?q=canonical+SMILES+"||
-					REPLACE(smiles, "#", "%23")
-			WHEN obtained_from IS NOT NULL 
-				THEN obtained_from
-			ELSE
-				"(not available)"
-		END AS link
-		FROM compounds;
-/*magicsplit*/
-
-/* - Triggers */
-	
-CREATE TRIGGER IF NOT EXISTS new_contributor
-	/* When creating a new contributor, redirect to allow using affiliations(name) 
-	 * instead of affiliations(id), but still allow for direct use of 
-	 * affiliations(id). */
-	AFTER INSERT ON contributors
-	WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
-BEGIN
-	INSERT OR IGNORE INTO affiliations (name)
-		VALUES (NEW.affiliation);
-	UPDATE OR IGNORE contributors
-		SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
-		WHERE ROWID = NEW.ROWID;
-END;
-/*magicsplit*/
-
-/* - Insert any required limited data. */
-
-INSERT OR IGNORE INTO affiliations VALUES(1, "system");
-/*magicsplit*/
-
-INSERT OR IGNORE INTO contributors (id, first_name, last_name, affiliation) VALUES(1, "auto", "log", 1);
-/*magicsplit*/
-
-/* - Import standard data tables */
-
-.import --csv --skip 1 config/data/elements.csv elements
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/isotopes.csv isotopes
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_fragment_generation_type.csv norm_fragment_generation_type
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_ionization.csv norm_ionization
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_source_types.csv norm_source_types
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_vendors.csv norm_vendors
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_log_execution_from.csv norm_log_execution_from
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_qc_methods_reference.csv norm_qc_methods_reference
-
-/*magicsplit*/
-
-.import --csv --skip 1 config/data/norm_qc_methods_name.csv norm_qc_methods_name
-
-/*magicsplit*/
+/* Reference node */
+/* Sourced from ./config/sql_nodes/reference.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS elements /* Normalization list of periodic table elements 1-118. */ ( atomic_number INTEGER PRIMARY KEY AUTOINCREMENT, /* periodic table atomic number (e.g. 2) */ symbol TEXT NOT NULL UNIQUE, /* periodic table symbol (e.g. "He") */ common_name TEXT NOT NULL UNIQUE /* periodic table common name (e.g. "Helium") */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS isotopes /* Elemental isotope abundance ratios for comparison and deconvolution. */ ( atomic_number INTEGER NOT NULL, /* periodic TABLE atomic number (e.g. 2) */ exact_mass REAL NOT NULL, /* exact atomic mass (e.g. 4.00260325413) */ abundance REAL NOT NULL, /* isotopic abundance of exact_mass (e.g. 0.99999866) */ /* Check constraints */ CHECK (abundance BETWEEN 0 AND 1), CHECK (exact_mass > 0), /* Foreign key relationships */ FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE );
+/* Views */
+CREATE VIEW IF NOT EXISTS view_element_isotopes AS /* A view of all elemental isotopes and their relative abundances joining reference tables "elements" and "isotopes". */ SELECT e.atomic_number, /* elemental atomic number */ e.symbol, /* periodic table symbol */ cast(round(exact_mass) as int)||symbol as isotope, /* "human readable" isotopic notation */ e.common_name AS "element", /* element common name */ i.exact_mass, /* element nominal exact mass */ i.abundance /* relative "natural" isotopic abundance */ FROM isotopes i INNER JOIN elements e ON i.atomic_number = e.atomic_number;
+/* Triggers */
+/* none */
+/* Sourced from ./config/sql_nodes/reference_data.SQL */
+DELETE FROM elements;
+INSERT INTO `elements` VALUES ("1", "H", "Hydrogen"), ("2", "He", "Helium"), ("3", "Li", "Lithium"), ("4", "Be", "Beryllium"), ("5", "B", "Boron"), ("6", "C", "Carbon"), ("7", "N", "Nitrogen"), ("8", "O", "Oxygen"), ("9", "F", "Fluorine"), ("10", "Ne", "Neon"), ("11", "Na", "Sodium"), ("12", "Mg", "Magnesium"), ("13", "Al", "Aluminium"), ("14", "Si", "Silicon"), ("15", "P", "Phosphorus"), ("16", "S", "Sulfur"), ("17", "Cl", "Chlorine"), ("18", "Ar", "Argon"), ("19", "K", "Potassium"), ("20", "Ca", "Calcium"), ("21", "Sc", "Scandium"), ("22", "Ti", "Titanium"), ("23", "V", "Vanadium"), ("24", "Cr", "Chromium"), ("25", "Mn", "Manganese"), ("26", "Fe", "Iron"), ("27", "Co", "Cobalt"), ("28", "Ni", "Nickel"), ("29", "Cu", "Copper"), ("30", "Zn", "Zinc"), ("31", "Ga", "Gallium"), ("32", "Ge", "Germanium"), ("33", "As", "Arsenic"), ("34", "Se", "Selenium"), ("35", "Br", "Bromine"), ("36", "Kr", "Krypton"), ("37", "Rb", "Rubidium"), ("38", "Sr", "Strontium"), ("39", "Y", "Yttrium"), ("40", "Zr", "Zirconium"), ("41", "Nb", "Niobium"), ("42", "Mo", "Molybdenum"), ("43", "Tc", "Technetium"), ("44", "Ru", "Ruthenium"), ("45", "Rh", "Rhodium"), ("46", "Pd", "Palladium"), ("47", "Ag", "Silver"), ("48", "Cd", "Cadmium"), ("49", "In", "Indium"), ("50", "Sn", "Tin"), ("51", "Sb", "Antimony"), ("52", "Te", "Tellurium"), ("53", "I", "Iodine"), ("54", "Xe", "Xenon"), ("55", "Cs", "Caesium"), ("56", "Ba", "Barium"), ("57", "La", "Lanthanum"), ("58", "Ce", "Cerium"), ("59", "Pr", "Praseodymium"), ("60", "Nd", "Neodymium"), ("61", "Pm", "Promethium"), ("62", "Sm", "Samarium"), ("63", "Eu", "Europium"), ("64", "Gd", "Gadolinium"), ("65", "Tb", "Terbium"), ("66", "Dy", "Dysprosium"), ("67", "Ho", "Holmium"), ("68", "Er", "Erbium"), ("69", "Tm", "Thulium"), ("70", "Yb", "Ytterbium"), ("71", "Lu", "Lutetium"), ("72", "Hf", "Hafnium"), ("73", "Ta", "Tantalum"), ("74", "W", "Tungsten"), ("75", "Re", "Rhenium"), ("76", "Os", "Osmium"), ("77", "Ir", "Iridium"), ("78", "Pt", "Platinum"), ("79", "Au", "Gold"), ("80", "Hg", "Mercury"), ("81", "Tl", "Thallium"), ("82", "Pb", "Lead"), ("83", "Bi", "Bismuth"), ("84", "Po", "Polonium"), ("85", "At", "Astatine"), ("86", "Rn", "Radon"), ("87", "Fr", "Francium"), ("88", "Ra", "Radium"), ("89", "Ac", "Actinium"), ("90", "Th", "Thorium"), ("91", "Pa", "Protactinium"), ("92", "U", "Uranium"), ("93", "Np", "Neptunium"), ("94", "Pu", "Plutonium"), ("95", "Am", "Americium"), ("96", "Cm", "Curium"), ("97", "Bk", "Berkelium"), ("98", "Cf", "Californium"), ("99", "Es", "Einsteinium"), ("100", "Fm", "Fermium"), ("101", "Md", "Mendelevium"), ("102", "No", "Nobelium"), ("103", "Lr", "Lawrencium"), ("104", "Rf", "Rutherfordium"), ("105", "Db", "Dubnium"), ("106", "Sg", "Seaborgium"), ("107", "Bh", "Bohrium"), ("108", "Hs", "Hassium"), ("109", "Mt", "Meitnerium"), ("110", "Ds", "Darmstadtium"), ("111", "Rg", "Roentgenium"), ("112", "Cn", "Copernicium"), ("113", "Nh", "Nihonium"), ("114", "Fl", "Flerovium"), ("115", "Mc", "Moscovium"), ("116", "Lv", "Livermorium"), ("117", "Ts", "Tennessine"), ("118", "Og", "Oganesson");
+DELETE FROM isotopes;
+INSERT INTO `isotopes` VALUES ("1", "1.007825032", "0.999885"), ("1", "2.014101778", "0.000115"), ("2", "4.002603254", "0.99999866"), ("2", "3.01602932", "1.34e-06"), ("3", "7.016003437", "0.9241"), ("3", "6.015122887", "0.0759"), ("4", "9.012183065", "1"), ("5", "11.00930536", "0.801"), ("5", "10.01293695", "0.199"), ("6", "12", "0.9893"), ("6", "13.00335484", "0.0107"), ("7", "14.003074", "0.99636"), ("7", "15.0001089", "0.00364"), ("8", "15.99491462", "0.99757"), ("8", "17.99915961", "0.00205"), ("8", "16.99913176", "0.00038"), ("9", "18.99840316", "1"), ("10", "19.99244018", "0.9048"), ("10", "21.99138511", "0.0925"), ("10", "20.99384669", "0.0027"), ("11", "22.98976928", "1"), ("12", "23.9850417", "0.7899"), ("12", "25.98259297", "0.1101"), ("12", "24.98583698", "0.1"), ("13", "26.98153853", "1"), ("14", "27.97692653", "0.92223"), ("14", "28.97649466", "0.04685"), ("14", "29.97377014", "0.03092"), ("15", "30.973762", "1"), ("16", "31.97207117", "0.9499"), ("16", "33.967867", "0.0425"), ("16", "32.97145891", "0.0075"), ("16", "35.96708071", "1e-04"), ("17", "34.96885268", "0.7576"), ("17", "36.9659026", "0.2424"), ("18", "39.96238312", "0.996035"), ("18", "35.96754511", "0.003336"), ("18", "37.96273211", "0.000629"), ("19", "38.96370649", "0.932581"), ("19", "40.96182526", "0.067302"), ("19", "39.96399817", "0.000117"), ("20", "39.96259086", "0.96941"), ("20", "43.95548156", "0.02086"), ("20", "41.95861783", "0.00647"), ("20", "47.95252276", "0.00187"), ("20", "42.95876644", "0.00135"), ("20", "45.953689", "4e-05"), ("21", "44.95590828", "1"), ("22", "47.94794198", "0.7372"), ("22", "45.95262772", "0.0825"), ("22", "46.95175879", "0.0744"), ("22", "48.94786568", "0.0541"), ("22", "49.94478689", "0.0518"), ("23", "50.94395704", "0.9975"), ("23", "49.94715601", "0.0025"), ("24", "51.94050623", "0.83789"), ("24", "52.94064815", "0.09501"), ("24", "49.94604183", "0.04345"), ("24", "53.93887916", "0.02365"), ("25", "54.93804391", "1"), ("26", "55.93493633", "0.91754"), ("26", "53.93960899", "0.05845"), ("26", "56.93539284", "0.02119"), ("26", "57.93327443", "0.00282"), ("27", "58.93319429", "1"), ("28", "57.93534241", "0.68077"), ("28", "59.93078588", "0.26223"), ("28", "61.92834537", "0.036346"), ("28", "60.93105557", "0.011399"), ("28", "63.92796682", "0.009255"), ("29", "62.92959772", "0.6915"), ("29", "64.9277897", "0.3085"), ("30", "63.92914201", "0.4917"), ("30", "65.92603381", "0.2773"), ("30", "67.92484455", "0.1845"), ("30", "66.92712775", "0.0404"), ("30", "69.9253192", "0.0061"), ("31", "68.9255735", "0.60108"), ("31", "70.92470258", "0.39892"), ("32", "73.92117776", "0.365"), ("32", "71.92207583", "0.2745"), ("32", "69.92424875", "0.2057"), ("32", "72.92345896", "0.0775"), ("32", "75.92140273", "0.0773"), ("33", "74.92159457", "1"), ("34", "79.9165218", "0.4961"), ("34", "77.91730928", "0.2377"), ("34", "75.9192137", "0.0937"), ("34", "81.9166995", "0.0873"), ("34", "76.91991415", "0.0763"), ("34", "73.92247593", "0.0089"), ("35", "78.9183376", "0.5069"), ("35", "80.9162897", "0.4931"), ("36", "83.91149773", "0.56987"), ("36", "85.91061063", "0.17279"), ("36", "81.91348273", "0.11593"), ("36", "82.91412716", "0.115"), ("36", "79.91637808", "0.02286"), ("36", "77.92036494", "0.00355"), ("37", "84.91178974", "0.7217"), ("37", "86.90918053", "0.2783"), ("38", "87.9056125", "0.8258"), ("38", "85.9092606", "0.0986"), ("38", "86.9088775", "0.07"), ("38", "83.9134191", "0.0056"), ("39", "88.9058403", "1"), ("40", "89.9046977", "0.5145"), ("40", "93.9063108", "0.1738"), ("40", "91.9050347", "0.1715"), ("40", "90.9056396", "0.1122"), ("40", "95.9082714", "0.028"), ("41", "92.906373", "1"), ("42", "97.90540482", "0.2439"), ("42", "95.90467612", "0.1667"), ("42", "94.90583877", "0.1584"), ("42", "91.90680796", "0.1453"), ("42", "99.9074718", "0.0982"), ("42", "96.90601812", "0.096"), ("42", "93.9050849", "0.0915"), ("44", "101.9043441", "0.3155"), ("44", "103.9054275", "0.1862"), ("44", "100.9055769", "0.1706"), ("44", "98.9059341", "0.1276"), ("44", "99.9042143", "0.126"), ("44", "95.90759025", "0.0554"), ("44", "97.9052868", "0.0187"), ("45", "102.905498", "1"), ("46", "105.9034804", "0.2733"), ("46", "107.9038916", "0.2646"), ("46", "104.9050796", "0.2233"), ("46", "109.9051722", "0.1172"), ("46", "103.9040305", "0.1114"), ("46", "101.9056022", "0.0102"), ("47", "106.9050916", "0.51839"), ("47", "108.9047553", "0.48161"), ("48", "113.9033651", "0.2873"), ("48", "111.9027629", "0.2413"), ("48", "110.9041829", "0.128"), ("48", "109.9030066", "0.1249"), ("48", "112.9044081", "0.1222"), ("48", "115.9047632", "0.0749"), ("48", "105.9064599", "0.0125"), ("48", "107.9041834", "0.0089"), ("49", "114.9038788", "0.9571"), ("49", "112.9040618", "0.0429"), ("50", "119.9022016", "0.3258"), ("50", "117.9016066", "0.2422"), ("50", "115.9017428", "0.1454"), ("50", "118.9033112", "0.0859"), ("50", "116.902954", "0.0768"), ("50", "123.9052766", "0.0579"), ("50", "121.9034438", "0.0463"), ("50", "111.9048239", "0.0097"), ("50", "113.9027827", "0.0066"), ("50", "114.9033447", "0.0034"), ("51", "120.903812", "0.5721"), ("51", "122.9042132", "0.4279"), ("52", "129.9062227", "0.3408"), ("52", "127.9044613", "0.3174"), ("52", "125.9033109", "0.1884"), ("52", "124.9044299", "0.0707"), ("52", "123.9028171", "0.0474"), ("52", "121.9030435", "0.0255"), ("52", "122.9042698", "0.0089"), ("52", "119.9040593", "9e-04"), ("53", "126.9044719", "1"), ("54", "131.9041551", "0.269086"), ("54", "128.9047809", "0.264006"), ("54", "130.9050841", "0.212324"), ("54", "133.9053947", "0.104357"), ("54", "135.9072145", "0.088573"), ("54", "129.9035093", "0.04071"), ("54", "127.903531", "0.019102"), ("54", "123.905892", "0.000952"), ("54", "125.9042983", "0.00089"), ("55", "132.905452", "1"), ("56", "137.905247", "0.71698"), ("56", "136.9058271", "0.11232"), ("56", "135.9045757", "0.07854"), ("56", "134.9056884", "0.06592"), ("56", "133.9045082", "0.02417"), ("56", "129.9063207", "0.00106"), ("56", "131.9050611", "0.00101"), ("57", "138.9063563", "0.9991119"), ("57", "137.9071149", "0.000888"), ("58", "139.9054431", "0.8845"), ("58", "141.9092504", "0.11114"), ("58", "137.905991", "0.00251"), ("58", "135.9071292", "0.00185"), ("59", "140.9076576", "1"), ("60", "141.907729", "0.27152"), ("60", "143.910093", "0.23798"), ("60", "145.9131226", "0.17189"), ("60", "142.90982", "0.12174"), ("60", "144.9125793", "0.08293"), ("60", "147.9168993", "0.05756"), ("60", "149.9209022", "0.05638"), ("62", "151.9197397", "0.2675"), ("62", "153.9222169", "0.2275"), ("62", "146.9149044", "0.1499"), ("62", "148.9171921", "0.1382"), ("62", "147.9148292", "0.1124"), ("62", "149.9172829", "0.0738"), ("62", "143.9120065", "0.0307"), ("63", "152.921238", "0.5219"), ("63", "150.9198578", "0.4781"), ("64", "157.9241123", "0.2484"), ("64", "159.9270624", "0.2186"), ("64", "155.9221312", "0.2047"), ("64", "156.9239686", "0.1565"), ("64", "154.9226305", "0.148"), ("64", "153.9208741", "0.0218"), ("64", "151.9197995", "0.002"), ("65", "158.9253547", "1"), ("66", "163.9291819", "0.2826"), ("66", "161.9268056", "0.25475"), ("66", "162.9287383", "0.24896"), ("66", "160.9269405", "0.18889"), ("66", "159.9252046", "0.02329"), ("66", "157.9244159", "0.00095"), ("66", "155.9242847", "0.00056"), ("67", "164.9303288", "1"), ("68", "165.9302995", "0.33503"), ("68", "167.9323767", "0.26978"), ("68", "166.9320546", "0.22869"), ("68", "169.9354702", "0.1491"), ("68", "163.9292088", "0.01601"), ("68", "161.9287884", "0.00139"), ("69", "168.9342179", "1"), ("70", "173.9388664", "0.32026"), ("70", "171.9363859", "0.2168"), ("70", "172.9382151", "0.16103"), ("70", "170.9363302", "0.1409"), ("70", "175.9425764", "0.12996"), ("70", "169.9347664", "0.02982"), ("70", "167.9338896", "0.00123"), ("71", "174.9407752", "0.97401"), ("71", "175.9426897", "0.02599"), ("72", "179.946557", "0.3508"), ("72", "177.9437058", "0.2728"), ("72", "176.9432277", "0.186"), ("72", "178.9458232", "0.1362"), ("72", "175.9414076", "0.0526"), ("72", "173.9400461", "0.0016"), ("73", "180.9479958", "0.9998799"), ("73", "179.9474648", "0.00012"), ("74", "183.9509309", "0.3064"), ("74", "185.9543628", "0.2843"), ("74", "181.9482039", "0.265"), ("74", "182.9502228", "0.1431"), ("74", "179.9467108", "0.0012"), ("75", "186.9557501", "0.626"), ("75", "184.9529545", "0.374"), ("76", "191.961477", "0.4078"), ("76", "189.9584437", "0.2626"), ("76", "188.9581442", "0.1615"), ("76", "187.9558352", "0.1324"), ("76", "186.9557474", "0.0196"), ("76", "185.953835", "0.0159"), ("76", "183.9524885", "2e-04"), ("77", "192.9629216", "0.627"), ("77", "190.9605893", "0.373"), ("78", "194.9647917", "0.3378"), ("78", "193.9626809", "0.3286"), ("78", "195.9649521", "0.2521"), ("78", "197.9678949", "0.07356"), ("78", "191.9610387", "0.00782"), ("78", "189.9599297", "0.00012"), ("79", "196.9665688", "1"), ("80", "201.9706434", "0.2986"), ("80", "199.9683266", "0.231"), ("80", "198.9682806", "0.1687"), ("80", "200.9703028", "0.1318"), ("80", "197.9667686", "0.0997"), ("80", "203.973494", "0.0687"), ("80", "195.9658326", "0.0015"), ("81", "204.9744278", "0.7048"), ("81", "202.9723446", "0.2952"), ("82", "207.9766525", "0.524"), ("82", "205.9744657", "0.241"), ("82", "206.9758973", "0.221"), ("82", "203.973044", "0.014"), ("83", "208.9803991", "1"), ("90", "232.0380558", "1"), ("91", "231.0358842", "1"), ("92", "238.0507884", "0.992742"), ("92", "235.0439301", "0.007204"), ("92", "234.0409523", "5.4e-05");
+/* Method node */
+/* Sourced from ./config/sql_nodes/methods.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS norm_ionization /* Normalization table for mass spectrometer ionization source types */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ acronym TEXT NOT NULL UNIQUE, /* validation list of ionization source acronyms */ name TEXT NOT NULL UNIQUE /* validation list of ionization source names */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_solvents /* Mobile phase solvent list: controlled. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* IUPAC name for mobile phase norm_solvents */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_vendors /* Normalization table holding commercial instrument vendor information. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* company name */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_qc_methods_reference /* Normalization table for quality control reference types. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* type of QC reference */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_qc_methods_name /* Normalization table for quality control types. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* type of QC method */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ce_desc /* Normalization table for collision energy description. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* type of CE */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ce_units /* Normalization table for collision energy units. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* collision energy units */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ionization_units /* Normalization table for ionization energy units. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ abbreviation TEXT NOT NULL UNIQUE, /* ionization energy units abbreviation */ name TEXT NOT NULL UNIQUE /* ionization energy units */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ms_types /* Normalization table for mass spectrometer types. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE, /* type of the mass analyzer */ abbreviation TEXT NOT NULL UNIQUE /* common abbreviation for the mass spectrometer type */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ms_n_types /* Normalization table for types of ms_n experiments. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ abbreviation TEXT NOT NULL UNIQUE, /* common abbreviation for the mass spectrometer type */ name TEXT NOT NULL UNIQUE /* type of the mass analyzer */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_fragmentation_types /* Normalization table for fragmentation type. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ abbreviation TEXT NOT NULL UNIQUE, /* common abbreviation for the fragmentation type */ name TEXT NOT NULL UNIQUE /* type of fragmentation */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_polarity_types /* Normalization table for ionization polarity. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE, /* type of the polarity, controlled vocabular */ /* Check constraints */ CHECK (name IN ('negative', 'positive', 'negative/positive')) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_chromatography_types /* Normalization table for chromatography types. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE, /* type of chromatography */ abbreviation TEXT NOT NULL UNIQUE /* common abbreviation for chromatographic type (e.g. LC, GC) */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_column_chemistries /* Normalization table for chromatographic column type. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* column chemistry used */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_column_positions /* Normalization table for chromatographic column position */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* column position name */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS solvent_mix_collections /* An intermediary identification table linking mobile_phases and solvent_mixes */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* short hand name of the mixture */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS mobile_phases /* Description of mobile phases used during a chromatographic separation. */ ( methods_id INTEGER NOT NULL, /* foreign key to methods */ carrier INTEGER NOT NULL, /* informal foreign key to solvent_mixes */ additive TEXT, /* buffer/salt/acid addition to mobile phase */ duration REAL, /* time duration mobile phase was applied */ duration_units TEXT DEFAULT "minutes", /* time duration units, constrained to one of "second" or "minutes" */ /* Check constraints */ CHECK (duration_units IN ("seconds", "minutes")), CHECK (duration > 0), /* Foreign key relationships */ FOREIGN KEY (methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE, FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS ms_descriptions /* Full description of all mass spectrometer types used for a given entry in ms_methods. */ ( ms_methods_id INTEGER NOT NULL, /* foreign key to ms_methods */ ms_types_id INTEGER NOT NULL, /* foreign key to norm_ms_types */ vendor_id INTEGER NOT NULL, /* foreign key to norm_vendors */ /* Check constraints */ UNIQUE(ms_methods_id, ms_types_id, vendor_id), /* Foreign key relationships */ FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE );
+CREATE TABLE IF NOT EXISTS chromatography_descriptions /* Full description of all chromatography types used for a given entry in ms_methods. */ ( ms_methods_id INTEGER NOT NULL, /* foreign key to ms_methods */ chromatography_types_id INTEGER NOT NULL, /* foreign key to norm_ms_types */ column_chemistry_id INTEGER NOT NULL, /* foreign key to norm_column_chemistries */ column_position_id INTEGER NOT NULL, /* foreign key to norm_column_positions */ vendor_id INTEGER NOT NULL, /* foreign key to norm_vendors */ /* Check constraints */ UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id), /* Foreign key relationships */ FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE, FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE CASCADE FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE );
+CREATE TABLE IF NOT EXISTS ms_methods /* Mass spectrometer method settings. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ ionization INTEGER, /* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */ voltage REAL, /* ionization voltage/current (depending on mode) */ voltage_units INTEGER, /* foreign key to norm_ionization_units */ polarity INTEGER NOT NULL, /* ionization polarity (negative, positive, or negative/positive); foreign key to norm_polarity */ ce_value TEXT, /* value for collision energy, normally a number but can be a range */ ce_units INTEGER NOT NULL, /* collision energy units; foreign key to norm_ce_units */ ce_desc INTEGER NOT NULL, /* description/context of the collision energy value (normalized, stepped, range, etc.); foreign key to norm_ce_desc */ fragmentation INTEGER NOT NULL, /* fragmentation type; foreign key to norm_fragmentation_types */ ms2_type INTEGER, /* type of data acquisition for MS2 experiment; foreign key to norm_ms_n_types */ has_qc_method INTEGER NOT NULL, /* constrained to (0, 1) boolean: does the experiment have a QC method in place */ citation TEXT, /* citation for the experimental method */ /* Check constraints */ CHECK (has_qc_method IN (0, 1)), /* Foreign key relationships */ FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE, FOREIGN KEY (voltage_units) REFERENCES norm_ionization_units(id) ON UPDATE CASCADE, FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE, FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE, FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE, FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE, FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS conversion_software_linkage /* Linkage table keeping conversion software setting id groupings in line. These IDs are used to link tables conversion_software_settings and samples. This must be incremented prior to adding new rows in conversion_software_settings, and the new ID used in both conversion_software_settings(id) and samples(software_conversion_settings_id). */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* automatically populated with each call to keep settings together */ ts REAL NOT NULL DEFAULT -999 /* timestamp to ensure referential integrity during import, -999 indicates that settings were not provided */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS conversion_software_settings /* Settings specific to the software package used to preprocess raw data. */ ( linkage_id INTEGER, /* foreign key to msconvert_settings_linkage */ setting_value TEXT NOT NULL, /* value of the software setting */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (linkage_id) REFERENCES conversion_software_linkage(id) );
+CREATE TABLE IF NOT EXISTS qc_methods /* References to quality control (QC) methods used to vet experimental results */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ ms_methods_id INTEGER NOT NULL, /* foreign key to ms_methods */ name INTEGER NOT NULL, /* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */ reference INTEGER NOT NULL, /* the category of the QC method; controlled vocabulary must be one of "SOP (Internal)", "SOP (External/Published)", or "Manuscript" */ reference_text TEXT, /* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE, FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED, FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED );
+CREATE TABLE IF NOT EXISTS solvent_aliases /* List of common aliases for each entry in TABLE norm_solvents */ ( solvent_id INTEGER NOT NULL, /* foreign key to norm_solvents */ alias TEXT NOT NULL UNIQUE, /* human meaningful name(s) associated with a solvent */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED );
+CREATE TABLE IF NOT EXISTS solvent_mixes /* Mobile phase solvent mixture for a given elution method */ ( mix_id INTEGER NOT NULL, /* mixture identifier to gather discrete components; foreign key to solvent_mix_collections */ component INTEGER NOT NULL, /* foreign key to solvent_fractions */ fraction REAL NOT NULL, /* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */ /* Check constraints */ CHECK (fraction BETWEEN 0 AND 1), /* Foreign key relationships */ FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE );
+/* Data */
+/* Normalization tables should be populated as appropriate for the project. Examples are given in "config/data" directory and may be imported from there or by running "config/demo_data.sql" */
+/* Views */
+CREATE VIEW IF NOT EXISTS view_mass_analyzers AS /* View all mass analyzers used in methods */ SELECT msd.ms_methods_id, /* mass spec method id */ ms.abbreviation, /* mass spec abbreviation */ ms.name /* mass spectrometer type used in this method */ FROM ms_descriptions msd INNER JOIN norm_ms_types ms ON ms.id = msd.ms_types_id;
+CREATE VIEW IF NOT EXISTS view_chromatography_types AS /* View all chromatography types in methods */ SELECT cd.ms_methods_id, /* mass spec method id */ nct.abbreviation, /* chromatographic type abbreviation */ nct.name /* chromatographic type used in this method */ FROM chromatography_descriptions cd INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
+CREATE VIEW IF NOT EXISTS view_mobile_phase AS /* View complete mobile phase used in a mixture */ SELECT sm.mix_id, /* solvent mix id */ s.name AS solvent, /* solvent name */ sm.fraction /* solvent fraction in this mix */ FROM solvent_mixes sm INNER JOIN norm_solvents s ON s.id = sm.component;
+CREATE VIEW IF NOT EXISTS view_detectors AS /* Convenience view to build view_method_as by providing a single character string for detectors used in this method */ SELECT msd.ms_methods_id, /* ms_descriptions id */ REPLACE(group_concat(name), ",", " ") AS "detectors" /* concatenated list of detectors */ FROM ms_descriptions msd JOIN norm_ms_types nmt ON msd.ms_types_id = nmt.id GROUP BY msd.ms_methods_id;
+CREATE VIEW IF NOT EXISTS view_column_chemistries AS /* Convenience view to build view_method_as by providing a single character string for column chemistries used in this method */ SELECT cd.ms_methods_id, /* ms_descriptions id */ REPLACE(group_concat(DISTINCT(ncc.name || " " || ncp.name || " column")), ",", ' with ') AS "columns" /* concatenated list of column chemistries used */ FROM chromatography_descriptions cd JOIN norm_column_positions ncp ON cd.column_position_id = ncp.id JOIN norm_column_chemistries ncc ON cd.column_chemistry_id = ncc.id GROUP BY cd.ms_methods_id;
+CREATE VIEW IF NOT EXISTS view_separation_types AS /* Convenience view to build view_method_as by providing a single character string for chromatography type */ SELECT cd.ms_methods_id, /* chromatography_descriptions id */ REPLACE(GROUP_CONCAT(DISTINCT(nv.name)), ",", " x ") AS "chrom_vendor", /* chromatography system vendor */ REPLACE(GROUP_CONCAT(DISTINCT(ct.abbreviation)), ",", " x ") AS "chrom_type" /* chromatography type (e.g. LC, GC, etc.) */ FROM chromatography_descriptions cd LEFT JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id LEFT JOIN norm_vendors nv ON cd.vendor_id = nv.id GROUP BY cd.ms_methods_id;
+CREATE VIEW IF NOT EXISTS view_method AS /* View mass spectrometer information and method settings */ SELECT msm.id, /* Method id */ vst.chrom_vendor AS "chromatography_system_vendor", /* Chromatograhic system vendor */ vst.chrom_type AS "chromatographic_type", /* Chromatographic separation type name */ nv.name AS "mass_spectrometer_vendor", /* Vendor name */ vd.detectors AS "detector", /* Mass spectrometer type */ vcc.columns AS "columns", /* Chromatographic columns used in this method */ nft.abbreviation AS "fragmentation_abbreviation", /* Mass spectrometer fragmentation type abbreviation */ nft.name AS "fragmentation_name", /* Mass spectrometer fragmentation type */ pt.name AS "polarity", /* Polarity setting */ ni.acronym AS "ionization", /* Ionization type */ msm.voltage || " " || niu.name AS "voltage", /* Ionization energy */ msm.ce_value|| " " || niu.name AS "collision_energy", /* Collision energy in electron volts */ ncd.name AS "collision_energy_description" /* Collision energy description */ FROM ms_methods msm LEFT JOIN norm_ionization ni ON msm.ionization = ni.id LEFT JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id LEFT JOIN norm_vendors nv ON msd.vendor_id = nv.id LEFT JOIN view_detectors vd ON msm.id = vd.ms_methods_id LEFT JOIN norm_polarity_types pt ON pt.id = msm.polarity LEFT JOIN chromatography_descriptions cd ON msm.id = cd.ms_methods_id LEFT JOIN view_separation_types vst ON msm.id = vst.ms_methods_id LEFT JOIN view_column_chemistries vcc ON msm.id = vcc.ms_methods_id LEFT JOIN norm_ionization_units niu ON msm.voltage_units = niu.id LEFT JOIN norm_ce_units ncu ON msm.ce_units = ncu.id LEFT JOIN norm_fragmentation_types nft ON msm.fragmentation = nft.id LEFT JOIN norm_ce_desc ncd ON msm.ce_desc = ncd.id GROUP BY msm.id;
+CREATE VIEW IF NOT EXISTS view_method_narrative AS /* Collapses the contents of view_method into a single narrative string by ID */ SELECT id AS "Method ID", /* primary key */ "Measured by " || chromatographic_type || " (" || chromatography_system_vendor || ") " || detector || " MS (" || mass_spectrometer_vendor || "), separated by " || columns || " in " || polarity || " " || ionization || " mode at " || voltage || " and " || collision_energy_description || " fragmentation by " || fragmentation_abbreviation || " (" || fragmentation_name || ")" || " at " || collision_energy || "." AS "Narrative" /* narrative string collapsed into readable form from view_method */ FROM view_method;
+/* Triggers */
+/* none */
+/* Analyte node */
+/* Sourced from ./config/sql_nodes/analyte.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS norm_fragment_generation_type /* Normalization table for fragmenet generation source type */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL, /* one of "in silico" or "empirical" */ /* Check constraints */ CHECK (name IN ("in silico", "empirical")) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_source_types /* Validation list of source types to be used in the compounds TABLE. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ abbreviation TEXT NOT NULL, /* (single) letter abbreviation for the source type */ st_type TEXT NOT NULL, /* full name of the source type */ definition TEXT NOT NULL /* definition of the source type */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_ion_states /* Normalization table for the measured ion state as comared with the molecular ion. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ ion_state TEXT NOT NULL UNIQUE /* state of the found ion with common mass spectrometric adjuncts/losses/charge */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS compound_categories /* Normalization table for self-hierarchical chemical classes of compounds. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL, /* name of the class */ subclass_of INTEGER, /* self referential to compound_categories */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (subclass_of) REFERENCES compound_categories(id) );
+CREATE TABLE IF NOT EXISTS compounds /* Controlled list of chemical compounds with attributable analytical data. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ category INTEGER, /* foreign key to compound_categories */ name TEXT NOT NULL, /* name of compound, uncontrolled */ obtained_from TEXT NOT NULL, /* DOI/Link of compound structure's source */ source_type INTEGER NOT NULL, /* foreign key to norm_source_types */ additional TEXT, /* additional information, as submitted */ local_pos INTEGER NOT NULL DEFAULT 0, /* number of atoms with positive charges, derived */ local_neg INTEGER NOT NULL DEFAULT 0, /* number of atoms with negative charges, derived */ formula TEXT NOT NULL, /* elemental formula, derived */ fixedmass REAL NOT NULL, /* exact mass of compound, derived */ netcharge INTEGER NOT NULL DEFAULT 0, /* total formal charge of compound, derived */ ion_state INTEGER NOT NULL, /* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */ inspected_by TEXT, /* user inspection id */ inspected_on TEXT, /* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */ /* Check constraints */ CHECK (local_pos >= 0), CHECK (local_neg >= 0), CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')), CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)), /* Foreign key relationships */ FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE, FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE, FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS compound_alias_references /* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL, /* name of the source for the compound alias */ description TEXT NOT NULL, /* text describing the reference name/acronym */ reference TEXT NOT NULL /* reference URL for the alias */ /* Check constraints */ /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS compound_aliases /* List of alternate names or identifiers for compounds */ ( compound_id INTEGER, /* foreign key to compounds */ alias_type INTEGER, /* foreign key to compound_alias_references */ alias TEXT NOT NULL, /* Text name of the alias for a compound */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE, FOREIGN KEY (alias_type) REFERENCES compound_alias_references(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS compound_fragments /* Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments. */ ( peak_id INTEGER NOT NULL, /* foreign key to peaks */ compound_id INTEGER NOT NULL, /* foreign key to compounds */ fragment_id INTEGER NOT NULL, /* foreign key to fragments */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (peak_id) REFERENCES peaks(id), FOREIGN KEY (compound_id) REFERENCES compounds(id), FOREIGN KEY (fragment_id) REFERENCES fragments(id) );
+CREATE TABLE IF NOT EXISTS fragments /* Potential annotated fragment ions that are attributed to one or more mass spectra. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ mz REAL NOT NULL, /* m/z value for specific fragment, derived */ formula TEXT NOT NULL, /* elemental formula for specific fragment, user submitted */ description TEXT, /* user-supplied description of the fragment */ charge INTEGER NOT NULL, /* charge of specific fragment,derived */ radical TEXT, /* TRUE/FALSE: the fragment contains a radical electron, user submitted */ smiles TEXT, /* smiles structure of fragment ion, can be NULL, user submitted */ /* Check constraints */ CHECK (charge IN (-1, 1)), CHECK (radical IN (0, 1)), CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS fragment_sources /* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical). */ ( fragment_id INTEGER NOT NULL, /* foreign key to fragments */ generated_by INTEGER NOT NULL, /* foreign key to norm_fragment_generation_type */ citation TEXT NOT NULL, /* DOI, etc. */ /* Check constraints */ /* Foreign key relationships */ FOREIGN KEY (fragment_id) REFERENCES fragments(id), FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id) );
+/* Views */
+CREATE VIEW IF NOT EXISTS view_compound_fragments AS /* Fragments associated with compounds. */ SELECT c.id, /* compounds.id field */ c.formula AS compound, /* compounds.formula field */ f.formula AS fragments, /* fragments.formula field */ f.mz /* fragments.mz field */ FROM compounds c INNER JOIN compound_fragments cf ON c.id = cf.compound_id INNER JOIN fragments f ON cf.fragment_id = f.id ORDER BY mz ASC;
+CREATE VIEW IF NOT EXISTS view_fragment_count AS /* Number of fragments associated with compounds. */ SELECT c.name, /* compounds.name field */ c.formula AS compound, /* compounds.formula field */ COUNT(f.formula) AS n_fragments /* distinct number of fragments associated with this compound as the count of associated fragments.formula */ FROM compounds c INNER JOIN compound_fragments cf ON c.id = cf.compound_id INNER JOIN fragments f ON cf.fragment_id = f.id GROUP BY compound ORDER BY n_fragments DESC;
+CREATE VIEW IF NOT EXISTS compound_url AS /* Combine information from the compounds table to form a URL link to the resource. */ SELECT c.id, /* compound identifier */ c.name AS compound, /* compound name */ car.name as ref_type, /* compound alias reference name */ ca.alias, /* compound alias */ CASE WHEN car.name == "DTXSID" THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias WHEN car.name == "DTXCID" THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias WHEN car.name == "PUBCHEMID" THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias WHEN car.name == "CASRN" THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias WHEN car.name == "INCHIKEY" THEN "https://www.google.com/search?q=INCHIKEY+"||ca.alias WHEN car.name == "INCHI" THEN "https://www.google.com/search?q="||ca.alias WHEN car.name == "SMILES" THEN "https://www.google.com/search?q=canonical+SMILES+"|| REPLACE(ca.alias , "#", "%23") WHEN c.obtained_from IS NOT NULL THEN c.obtained_from ELSE "https://www.google.com/search?q="||ca.alias END AS link /* URL link to the alias ID source */ FROM compounds c INNER JOIN compound_aliases ca ON c.id = ca.compound_id INNER JOIN compound_alias_references car ON ca.alias_type = car.id;
+/* Triggers */
+/* none */
+/* Data node */
+/* Sourced from ./config/sql_nodes/data.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS norm_sample_classes /* Normalization table linking to samples to hold controlled vocabulary. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* name of the sample class */ );
+CREATE TABLE IF NOT EXISTS samples /* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL, /* user-defined name of the sample */ sample_class_id INTEGER NOT NULL, /* foreign key to norm_sample_classes */ source_citation TEXT, /* citation for the sample source */ sample_contributor TEXT NOT NULL, /* generator of data for this sample */ generated_on TEXT NOT NULL, /* datetime the raw data file was generated in UTC */ software_conversion_settings_id INTEGER, /* settings for the msconvert program used to generate data from this sample */ ms_methods_id INTEGER, /* foreign key to methods */ /* Check constraints */ CHECK (generated_on == strftime("%Y-%m-%d %H:%M:%S", generated_on)) /* Foreign key relationships */ FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE, FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE, FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (software_conversion_settings_id) REFERENCES conversion_software_linkage(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS peaks /* Peaks (or features) identified within the results from a sample. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ sample_id INTEGER NOT NULL, /* foreign key to samples */ precursor_mz REAL NOT NULL, /* precursor ion mass to charge ratio (constrained to positive numbers) */ charge INTEGER NOT NULL, /* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */ rt_start REAL NOT NULL, /* peak retention time start point (constrained to positive numbers) */ rt_centroid REAL NOT NULL, /* peak retention time centroid (derived, constrained to positive numbers) */ rt_end REAL NOT NULL, /* peak retention time end point (constrained to positive numbers) */ /* Check constraints */ CHECK (precursor_mz > 0), CHECK (charge IN (-1, 1)), CHECK (rt_start >= 0), CHECK (rt_centroid > 0), CHECK (rt_end > 0), /* Foreign key relationships */ FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS ms_data /* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ peak_id INTEGER NOT NULL, /* foreign key to peaks */ ms_n INTEGER NOT NULL, /* MS type, 1...n */ scantime REAL NOT NULL, /* scan time of spectrum */ base_ion REAL, /* measured mass to charge ratio of the precursor ion, if 'null' the requested precursor was not found at this scantime */ base_int REAL NOT NULL, /* measured intensity of the base_ion, if 0 the requested precursor was not found at this scantime */ measured_mz TEXT NOT NULL, /* mass to charge ratios measured in this spectrum */ measured_intensity TEXT NOT NULL, /* intensities associated with measured_mz in a 1:1 relationship. if persisted, may be entered into table ms_spectra */ /* Check constraints */ CHECK (scantime >= 0), CHECK (base_int >= 0), CHECK (ms_n > 0 AND ms_n < 9), /* Foreign key relationships */ FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS ms_spectra /* Retained mass spectra associated with ms1data, unencoded from ms_data.measured_mz and .measured_intensity respectively. */ ( ms_data_id INTEGER NOT NULL, /* foreign key to ms1data */ mz REAL NOT NULL, /* mass to charge ratio */ intensity REAL NOT NULL, /* signal intensity */ /* Check constraints */ CHECK (mz > 0), CHECK (intensity >= 0), /* Foreign key relationships */ FOREIGN KEY (ms_data_id) REFERENCES ms_data(id) );
+/* Views */
+CREATE VIEW IF NOT EXISTS peak_data AS /* View raw peak data for a specific peak */ SELECT p.id AS peak_id, /* internal peak id */ msd.id AS id, /* internal id of ms_data */ p.precursor_mz, /* peak precursor ion */ msd.base_int, /* measured mass of precursor_mz */ msd.scantime, /* ms scantime for this spectrum */ msd.measured_mz AS m_z, /* mass to charge ratios */ msd.measured_intensity AS intensity /* measured signal intensities */ FROM ms_data msd INNER JOIN peaks p ON msd.peak_id = p.id;
+CREATE VIEW IF NOT EXISTS peak_spectra AS /* View archived and verified peak spectra for a specific peak */ SELECT ps.peak_id, /* internal peak id */ ps.precursor_mz, /* peak precursor ion */ ps.scantime, /* ms scantime for this spectrum */ mss.mz, /* mass to charge ratio */ mss.intensity /* measured signal intensity */ FROM peak_data ps INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
+/* Triggers */
+/* none */
+/* Contributors node */
+/* Sourced from ./config/sql_nodes/contributors.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS contributors /* Contact information for individuals contributing data to this database */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ username TEXT NOT NULL UNIQUE, /* verified username */ contact TEXT, /* contact information, preferred as an email address, but is not restricted */ first_name TEXT, /* user's preferred first name */ last_name TEXT, /* user's preferred last name */ affiliation INTEGER NOT NULL, /* user's professional affiliation, foreign key to affiliations */ orcid TEXT DEFAULT 'null', /* user's ORCID number, if available */ /* Check constraints */ CHECK (orcid GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]') OR (orcid in ('NULL', 'null', 'NA', 'na', '')) ) CHECK (length(contact) = length(replace(replace(replace(replace(replace(replace(contact, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))), CHECK (length(first_name) = length(replace(replace(replace(replace(replace(replace(first_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))), CHECK (length(last_name) = length(replace(replace(replace(replace(replace(replace(last_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))), CHECK (length(username) = length(replace(replace(replace(replace(replace(replace(username, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))), /* Foreign key relationships */ FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE );
+CREATE TABLE IF NOT EXISTS affiliations /* Normalization table for contributor.affiliation */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE /* name of professional affiliation */ );
+/* Views */
+CREATE VIEW IF NOT EXISTS view_contributors AS /* Readable version of the contributors table that can be expanded with counts of contributions from various places. */ SELECT c.first_name || " " || c.last_name AS name, /* concatenation of contributors.first_name and .last_name fields */ a.name AS affiliation, /* contributor affiliation */ c.contact, /* contributor contact information */ ("https://orcid.org/" || c.orcid) AS orcid_url, /* contributors.orcid as a hyperlink to their ORCID page */ count(s.sample_contributor) as samples_contributed /* number of samples provided by this contributor */ FROM contributors c JOIN affiliations a ON c.affiliation = a.id JOIN samples s ON c.id = s.sample_contributor WHERE NOT c.id = 1 GROUP BY c.id;
+/* Triggers */
+CREATE TRIGGER IF NOT EXISTS new_contributor /* When creating a new contributor, redirect to allow using affiliations(name) instead of affiliations(id), but still allow for direct use of affiliations(id). */ AFTER INSERT ON contributors WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations) BEGIN INSERT OR IGNORE INTO affiliations (name) VALUES (NEW.affiliation); UPDATE OR IGNORE contributors SET affiliation = (SELECT id FROM affiliations WHERE UPPER(name) = UPPER(NEW.affiliation)) WHERE ROWID = NEW.ROWID; END;
+CREATE TRIGGER IF NOT EXISTS ensure_null_orcid /* When creating a new contributor, ensure allowed nullable ORCID values are stored as NULL. */ AFTER INSERT ON contributors WHEN NEW.orcid IN ("NA", "", "NULL", "null", "na") BEGIN UPDATE contributors SET orcid = NULL WHERE ROWID = NEW.ROWID; END;
+CREATE TRIGGER IF NOT EXISTS affiliation_update /* When updating a contributor's affiliation with an affiliation that does not currently exist, add the affiliation and update the id appropriately, but still allow for direct use of affiliations(id). */ AFTER UPDATE ON contributors WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations) BEGIN INSERT OR IGNORE INTO affiliations (name) VALUES (NEW.affiliation); UPDATE contributors SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation) WHERE ROWID = NEW.ROWID; END;
+/* Sourced from ./config/sql_nodes/contributors_data.SQL */
+DELETE FROM contributors;
+DELETE FROM affiliations;
+INSERT OR IGNORE INTO affiliations VALUES (1, "system");
+INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);
+/* Logging node */
+/* Sourced from ./config/sql_nodes/logging.SQL */
+/* Tables */
+CREATE TABLE IF NOT EXISTS norm_log_executed_from /* Normalization table for logs(executed_from) */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE, /* plain text source for this log entry */ /* Check constraints */ CHECK (name IN ("trigger", "application", "console", "script", "other")) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS norm_log_effect /* Normalization table for logs(effect) */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ name TEXT NOT NULL UNIQUE, /* plain text of the type of database action */ /* Check constraints */ CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema")) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS version_history /* Versions of this database and its associated data or application */ ( version REAL NOT NULL, /* version number */ affects TEXT NOT NULL, /* which aspect is affected, constrained to one of "data", "schema", or "application" */ description TEXT NOT NULL, /* plain text description of the change */ active_as_of TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, /* timestamp for when the action was executed */ /* Check constraints */ CHECK (affects IN ("data", "schema", "application")), CHECK (active_as_of == strftime("%Y-%m-%d %H:%M:%S", active_as_of)) /* Foreign key relationships */ );
+CREATE TABLE IF NOT EXISTS logs /* Placeholder for logs */ ( id INTEGER PRIMARY KEY AUTOINCREMENT, /* primary key */ category TEXT NOT NULL, /* categorical grouping of the action */ bundle INTEGER NOT NULL, /* bundle id for bulk actions */ description TEXT, /* plain text description if any */ effect INTEGER NOT NULL, /* foreign key to norm_log_effect as the type of database update */ affects_table TEXT NOT NULL, /* table reference name for the table that was changed, not constrained */ affects_ids INTEGER, /* id associated with records changed or updated */ executed_by INTEGER NOT NULL DEFAULT 1, /* foreign key to contributors */ executed_from INTEGER NOT NULL DEFAULT 1, /* constraint list as one of "console", "script", "trigger", "application", or "other" */ executed_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, /* timestamp for when the action was executed */ new_vals TEXT, /* new values, if any */ old_vals TEXT, /* prior values, if any */ /* Check constraints */ CHECK (executed_on==strftime("%Y-%m-%d %H:%M:%S", executed_on)), /* Foreign key relationships */ FOREIGN KEY (effect) REFERENCES norm_log_effect(id), FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id) );
+/* Data */
+INSERT OR IGNORE INTO norm_log_executed_from VALUES (1, "console"), (2, "script"), (3, "trigger"), (4, "application"), (5, "other");
+INSERT OR IGNORE INTO norm_log_effect VALUES (1, "INSERT"), (2, "UPDATE"), (3, "DELETE"), (4, "schema");
+/* Views */
+CREATE VIEW IF NOT EXISTS log_summaries AS /* Human readable logs */ SELECT l.category, /* database action category */ l.description, /* database log description */ nle.name AS action, /* normalized database action name */ count(l.affects_ids) AS rows_affected, /* number of rows affected by this action */ l.affects_table, /* table affected by this action */ strftime("%Y-%m-%d", l.executed_on) AS on_day /* date on which this action was executed */ FROM logs l INNER JOIN norm_log_effect nle ON l.effect = nle.id GROUP BY affects_table, on_day;
+/* Triggers */
+/* none */
+/* .read config/sql_nodes/auto_logs.SQL */
+PRAGMA foreign_keys=on;
+/* To build in console, use each of the following as needed. */
+DELETE FROM solvent_mixes;
+DELETE FROM solvent_mix_collections;
+DELETE FROM solvent_aliases;
+DELETE FROM mobile_phases;
+DELETE FROM norm_solvents;
+DELETE FROM samples;
+DELETE FROM norm_sample_classes;
+DELETE FROM ms_methods;
+DELETE FROM ms_descriptions;
+/* Sourced from ./config/populate_common.sql */
+DELETE FROM norm_ionization;
+INSERT INTO `norm_ionization` VALUES ("1", "APCI", "atmospheric pressure chemical ionization"), ("2", "APPI", "atmospheric pressure photoionization"), ("3", "CI", "chemical ionization"), ("4", "EI", "electron impact ionization"), ("5", "ESI", "electrospray ionization"), ("6", "FAB", "fast atom bombardment"), ("7", "MALDI", "matrix assisted laser desorption ionization"), ("8", "NCI", "negative chemical ionization");
+DELETE FROM norm_ionization_units;
+INSERT INTO `norm_ionization_units` VALUES ("1", "volts", "V"), ("2", "kilovolts", "kV"), ("3", "amperes", "A"), ("4", "micro amperes", "uA"), ("5", "electron volts", "eV");
+DELETE FROM norm_source_types;
+INSERT INTO `norm_source_types` VALUES ("1", "C", "Curated", "Compound structure, name, and other properties have been evaluated through a documented process for a database or library."), ("2", "E", "Empirical", "Structure has been measured and derived empirically through a peer-reviewed process."), ("3", "I", "Inferred", "Structure that is a homolog (differing in CF2 chain lengths) of an empirically-derived structure, but has not been observed empirically."), ("4", "S", "In Silico", "Structure has been predicted through documented in silico processes, but has not been observed empirically."), ("5", "D", "Documented", "Structure has been reported in documentation (e.g., patent, safety data sheet), but has not been observed empirically."), ("6", "L", "Limited", "Limited information to support structure, only a formula exists");
+DELETE FROM norm_ms_types;
+INSERT INTO `norm_ms_types` VALUES ("0", "None", "None"), ("1", "quadrupole", "Quad"), ("2", "magnetic sector", "MagSec"), ("3", "linear ion trap", "LIT"), ("4", "time-of-flight", "TOF"), ("5", "orbitrap", "Orbi"), ("6", "fourier transform ion cyclotron resonance", "FT-ICR"), ("7", "triple quadrupole", "QQQ");
+DELETE FROM norm_chromatography_types;
+INSERT INTO `norm_chromatography_types` VALUES ("0", "None", "None"), ("1", "Liquid Chromatography", "LC"), ("2", "Gas Chromatography", "GC"), ("3", "Capillary Electrophoresis", "CE");
+DELETE FROM norm_polarity_types;
+INSERT INTO `norm_polarity_types` VALUES ("1", "negative"), ("2", "positive"), ("3", "negative/positive");
+DELETE FROM norm_fragmentation_types;
+INSERT INTO `norm_fragmentation_types` VALUES ("1", "HCD", "higher energy collision-induced dissociation"), ("2", "CID", "collision-induced dissociation"), ("3", "ECD", "electron capture dissociation"), ("4", "ETC", "electron transfer dissociation"), ("5", "PQD", "pulsed Q collision-induced dissociation"), ("6", "ETciD", "hybrid ETC and CID"), ("7", "EThcD", "hybrid ETC and HCD"), ("8", "ISF", "in-source fragmentation");
+DELETE FROM norm_ms_n_types;
+INSERT INTO `norm_ms_n_types` VALUES ("0", "none", "none"), ("1", "DDA", "data dependent acquisition"), ("2", "SWATH", "sequential windowed acquisition of all theoretical fragment ion mass spectra"), ("3", "DIA", "data independent acquisition"), ("4", "HRM", "SWATH synonym for Orbitrap mass analyzers");
+DELETE FROM norm_column_chemistries;
+INSERT INTO `norm_column_chemistries` VALUES ("1", "octadecyl (C18)"), ("2", "octyl (C8)"), ("3", "pentafluorophenyl (PFP)"), ("4", "biphenyl"), ("5", "mixed-phase"), ("6", "silica"), ("7", "diol"), ("8", "pentadiol"), ("9", "silica (no ligands)");
+DELETE FROM norm_column_positions;
+INSERT INTO `norm_column_positions` VALUES ("0", "none"), ("1", "guard"), ("2", "analytical");
+DELETE FROM norm_vendors;
+INSERT INTO `norm_vendors` VALUES ("0", "none"), ("1", "ThermoFisher Scientific"), ("2", "Agilent Technologies"), ("3", "Waters Corporation"), ("4", "Shimadzu Corporation"), ("5", "SCIEX"), ("6", "Bruker Corporation"), ("7", "LECO Corporation"), ("8", "Dionex"), ("9", "Higgins Analytical"), ("10", "Phenomenex"), ("11", "Restek Corporation"), ("12", "YMC");
+DELETE FROM norm_ce_desc;
+INSERT INTO `norm_ce_desc` VALUES ("1", "stepped"), ("2", "fixed"), ("3", "range");
+DELETE FROM norm_ce_units;
+INSERT INTO `norm_ce_units` VALUES ("1", "V"), ("2", "normalized");
+DELETE FROM norm_qc_methods_name;
+INSERT INTO `norm_qc_methods_name` VALUES ("0", "none"), ("1", "Mass Analyzer Calibration"), ("2", "External Standard Verification"), ("3", "Internal Standard Verification"), ("4", "Matrix Standard Verification"), ("9999", "other");
+DELETE FROM norm_qc_methods_reference;
+INSERT INTO `norm_qc_methods_reference` VALUES ("0", "none"), ("1", "SOP (Internal)"), ("2", "SOP (External/Published)"), ("3", "Manuscript"), ("9999", "other");
+DELETE FROM norm_ion_states;
+INSERT INTO `norm_ion_states` VALUES ("1", "[M]+"), ("2", "[M+H]+"), ("3", "[M+Na]+"), ("4", "[M+K]+"), ("5", "[M+NH4]+"), ("6", "[M-H2O+H]+"), ("7", "[M]-"), ("8", "[M-H]-"), ("9", "[M-FCO2H]-"), ("10", "[2M-H]-");
+/* Sourced from ./config/sql_nodes/contributors_data.sql */
+DELETE FROM contributors;
+DELETE FROM affiliations;
+INSERT OR IGNORE INTO affiliations VALUES (1, "system");
+INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);
+DELETE FROM chromatography_descriptions;
+DELETE FROM compounds;
+DELETE FROM compound_categories;
+DELETE FROM compound_alias_references;
+DELETE FROM compound_aliases;
+DELETE FROM conversion_software_linkage;
+DELETE FROM conversion_software_settings;
+INSERT INTO `norm_solvents` VALUES ("0", "None"), ("1", "Acetonitrile"), ("2", "Methanol"), ("3", "Water"), ("4", "Isopropanol"), ("5", "Propanol"), ("6", "Helium"), ("7", "Hydrogen"), ("8", "Ethanol"), ("9", "Methylene Chloride"), ("10", "Chloroform"), ("11", "Hexane"), ("12", "Ammonium Acetate"), ("13", "Ammonium Formate"), ("14", "Ammonium Hydroxide"), ("15", "Formic Acid"), ("16", "Acetic Acid"), ("17", "Trifluoroacetic Acid");
+INSERT INTO `norm_sample_classes` VALUES ("1", "analytical standard"), ("2", "aqueous film-forming foam (AFFF)"), ("3", "solution reference material"), ("4", "groundwater / surface water"), ("5", "soil/sediment"), ("6", "matrix reference material"), ("7", "drinking water"), ("8", "commercial formulation"), ("9", "landfill leachate"), ("10", "industrial effluent"), ("11", "non-human biological material"), ("12", "human biological material"), ("13", "food"), ("14", "textile"), ("15", "other");
+INSERT INTO `ms_methods` VALUES ("1", "5", "1000", "2", "1", "200", "1", "1", "1", "1", "0", "NIST notebook BP2020"), ("2", "5", "1000", "2", "2", "200", "2", "2", "2", "1", "0", "NIST notebook BP2020");
+INSERT INTO `ms_descriptions` VALUES ("1", "1", "1"), ("1", "5", "2"), ("2", "2", "2"), ("2", "3", "4");
+INSERT INTO `chromatography_descriptions` VALUES ("1", "1", "2", "1", "5"), ("1", "1", "1", "2", "5"), ("2", "2", "3", "1", "4"), ("2", "2", "4", "2", "4");
+INSERT INTO `affiliations` VALUES ("2", "NIST");
+INSERT INTO `contributors` VALUES ("2", "nistpfas", "pfas@nist.gov", "PFAS", "Program", "2", "NA"), ("3", "bjp", "benjamin.place@nist.gov", "Benjamin", "Place", "2", "0000-0003-0953-5215"), ("4", "jmr", "jared.ragland@nist.gov", "Jared", "Ragland", "2", "0000-0002-8055-2432"), ("5", "jlr", "jessical.reiner@nist.gov", "Jessica", "Reiner", "2", "0000-0002-1419-6062"), ("6", "ktp", "katherine.peter@nist.gov", "Katherine", "Peter", "2", "0000-0001-7379-265X"), ("7", "aer", "alix.robel@nist.gov", "Alix", "Rodawa", "2", "0000-0002-2650-0981");
+INSERT INTO `solvent_mix_collections` VALUES ("1", "example solvent mixture");
+INSERT INTO `mobile_phases` VALUES ("1", "1", "NA", "60", "minutes");
+INSERT INTO `solvent_aliases` VALUES ("1", "Acetonitrile"), ("1", "ACN"), ("1", "C2H3N"), ("1", "CH3CN"), ("1", "cyanomethane"), ("1", "methyl cyanide"), ("1", "InChI=1S/C2H3N/c1-2-3/h1H3"), ("1", "WEVYAHXRMPXWCK-UHFFFAOYSA-N"), ("1", "75-05-8"), ("2", "CH3OH"), ("2", "MeOH"), ("2", "Methanol"), ("2", "MethOH"), ("2", "methyl alcohol"), ("2", "InChI=1S/CH4O/c1-2/h2H,1H3"), ("2", "OKKJLVBELUTLKV-UHFFFAOYSA-N"), ("2", "67-56-1"), ("2", "CH4O"), ("3", "H2O"), ("3", "Water"), ("3", "InChI=1S/H2O/h1H2"), ("3", "XLYOFNOQVPJJNP-UHFFFAOYSA-N"), ("3", "7732-18-5"), ("4", "C3H8O"), ("4", "iso"), ("4", "IsoOH"), ("4", "Isopropanol"), ("4", "Isopropyl Alcohol"), ("4", "rubbing alcohol"), ("4", "InChI=1S/C3H8O/c1-3(2)4/h3-4H,1-2H3"), ("4", "KFZMGEQAYNKOFK-UHFFFAOYSA-N"), ("4", "67-63-0"), ("5", "Propan-1-ol"), ("5", "propanol"), ("5", "InChI=1S/C3H8O/c1-2-3-4/h4H,2-3H2,1H3"), ("5", "BDERNNFJNOPAEC-UHFFFAOYSA-N"), ("5", "71-23-8"), ("5", "1-propanol"), ("6", "He"), ("6", "helium"), ("6", "InChI=1S/He"), ("6", "SWQJXJOGLNCZEY-UHFFFAOYSA-N"), ("7", "H2"), ("7", "hydrogen"), ("7", "InChI=1S/H2/h1H"), ("7", "UFHFLCQGNIYNRP-UHFFFAOYSA-N"), ("7", "1333-74-0"), ("8", "ethanol"), ("8", "EtOh"), ("8", "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3"), ("8", "LFQSCWFLJHTTHZ-UHFFFAOYSA-N"), ("8", "64-17-5"), ("9", "DCM"), ("9", "dichloromethane"), ("9", "MeCl"), ("9", "Methylene Chloride"), ("9", "CH2CL2"), ("9", "InChI=1S/CH2Cl2/c2-1-3/h1H2"), ("9", "YMWUJEATGCHHMB-UHFFFAOYSA-N"), ("9", "75-09-2"), ("10", "Chloroform"), ("10", "trichloromethane"), ("10", "CHCL3"), ("10", "InChI=1S/CHCl3/c2-1(3)4/h1H"), ("10", "HEDRZPFGACZZDS-UHFFFAOYSA-N"), ("10", "67-66-3"), ("11", "C6H14"), ("11", "hexane"), ("11", "n-hexane"), ("11", "InChI=1S/C6H14/c1-3-5-6-4-2/h3-6H2,1-2H3"), ("11", "VLKZOEOYAKHREP-UHFFFAOYSA-N"), ("11", "110-54-3"), ("12", "acetic acid ammonium salt"), ("12", "acetic acid, ammonium salt"), ("12", "Ammonium Acetate"), ("12", "InChI=1S/C2H4O2.H3N/c1-2(3)4;/h1H3,(H,3,4);1H3"), ("12", "USFZMSVCRYTOJT-UHFFFAOYSA-N"), ("12", "631-61-8"), ("12", "C2H4O2H3N"), ("12", "C2H7NO2"), ("13", "Ammonium Formate"), ("13", "CH5NO2"), ("13", "formic acid ammonium salt"), ("13", "formic acid, ammonium salt"), ("13", "HCOONH4"), ("14", "ammonium aqueous"), ("14", "Ammonium Hydroxide"), ("14", "ammonium hydroxide solution"), ("14", "H5NO"), ("14", "NH4OH"), ("15", "aminic acid"), ("15", "CH2O2"), ("15", "Formic Acid"), ("15", "formylic acid"), ("15", "HCOOH"), ("15", "InChI=1S/CH2O2/c2-1-3/h1H,(H,2,3)"), ("15", "BDAGIHXWWSANSR-UHFFFAOYSA-N"), ("15", "64-18-6"), ("15", "methanoic acid"), ("16", "Acetic Acid"), ("16", "acetic acid, glacial"), ("16", "C2H4O2"), ("16", "CH3COOH"), ("16", "ethanoic acid"), ("16", "ethylic acid"), ("16", "glacial acetic acid"), ("16", "InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)"), ("16", "QTBSBXVTEAMEQO-UHFFFAOYSA-N"), ("16", "64-19-7"), ("17", "C2HF3O2"), ("17", "CF3COOH"), ("17", "perfluoroacetic acid"), ("17", "Trifluoroacetic Acid"), ("17", "trifluoroethanoic acid"), ("17", "InChI=1S/C2HF3O2/c3-2(4,5)1(6)7/h(H,6,7)"), ("17", "DTQVDTLACAAQTR-UHFFFAOYSA-N"), ("17", "76-05-1");
+INSERT INTO `solvent_mixes` VALUES ("1", "1", "0.9"), ("1", "3", "0.1");
+INSERT INTO `compound_categories` VALUES ("0", "all", "0"), ("1", "emerging organic contaminants", "0"), ("2", "PFAS", "1");
+INSERT INTO `compounds` VALUES ("1", "2", "1H-Perfluoro-3,3-bis(trifluoromethyl)hexyne", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8HF13", "343.9870669", "0", "1", "NA", "NA"), ("2", "2", "Bis(heneicosafluorodecyl)phosphinic acid", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C20H9F34O2P", "957.9797256", "0", "1", "NA", "NA"), ("3", "2", "Tris(2-(perfluorododecyl)ethyl)phosphate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C42H12F75O4P", "2035.927562", "0", "1", "NA", "NA"), ("4", "2", "2-Chloro-2-propenoic acid 3,3,4,4,5,5,6,6,6-nonafluorohexyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H6ClF9O2", "351.9912611", "0", "1", "NA", "NA"), ("5", "2", "Bicyclo[2.2.1]hept-2-ene, 5,5,6-trifluoro-6-(heptafluoropropoxy)-", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H6F10O", "332.025897", "0", "1", "NA", "NA"), ("6", "2", "3,3,4-Trifluoro-4-(heptafluoropropoxy)tricyclo[4.2.1.0~2,5~]non-7-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H8F10O", "358.0415471", "0", "1", "NA", "NA"), ("7", "2", "5-(Nonafluorobutyl)bicyclo[2.2.1]hept-2-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H9F9", "312.0560543", "0", "1", "NA", "NA"), ("8", "2", "3-(Heptafluorobutyryl)camphor", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H15F7O2", "348.0960273", "0", "1", "NA", "NA"), ("9", "2", "Perfluorobutylsulfonamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C4H2F9NO2S", "298.9662533", "0", "1", "NA", "NA"), ("10", "2", "N-(3,4-Dichlorophenyl)-2,2,3,3,4,4,4-heptafluorobutanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4Cl2F7NO", "356.9558166", "0", "1", "NA", "NA"), ("11", "2", "N-(3,5-Dichlorophenyl)-2,2,3,3,4,4,4-heptafluorobutanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4Cl2F7NO", "356.9558166", "0", "1", "NA", "NA"), ("12", "2", "2-Propenoic acid, 2-methyl-, 2-[[[[5-[[[2-[ethyl[(heptadecafluorooctyl)sulfonyl]amino]ethoxy]carbonyl]amino]-2-methylphenyl]amino]carbonyl]oxy]propyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C28H28F17N3O8S", "889.1325656", "0", "1", "NA", "NA"), ("13", "2", "2-Propenoic acid, 2-methyl-, 2-[[[[5-[[[2-[ethyl[(pentadecafluoroheptyl)sulfonyl]amino]ethoxy]carbonyl]amino]-2-methylphenyl]amino]carbonyl]oxy]propyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C27H28F15N3O8S", "839.1357592", "0", "1", "NA", "NA"), ("14", "2", "2-Propenoic acid, 2-methyl-, 2-[[[[5-[[[2-[ethyl[(tridecafluorohexyl)sulfonyl]amino]ethoxy]carbonyl]amino]-2-methylphenyl]amino]carbonyl]oxy]propyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C26H28F13N3O8S", "789.1389527", "0", "1", "NA", "NA"), ("15", "2", "2-Propenoic acid, 2-methyl-, 2-[[[[5-[[[2-[ethyl[(undecafluoropentyl)sulfonyl]amino]ethoxy]carbonyl]amino]-2-methylphenyl]amino]carbonyl]oxy]propyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C25H28F11N3O8S", "739.1421463", "0", "1", "NA", "NA"), ("16", "2", "2-Propenoic acid, 2-methyl-, 2-[[[[5-[[[2-[ethyl[(nonafluorobutyl)sulfonyl]amino]ethoxy]carbonyl]amino]-2-methylphenyl]amino]carbonyl]oxy]propyl ester", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C24H28F9N3O8S", "689.1453398", "0", "1", "NA", "NA"), ("17", "2", "(2-Carboxylatoethyl)dimethyl(((perfluorododecyl)-2-hydroxypropyl)amino)propylammonium", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C23H23F25N2O3", "850.1309481", "0", "1", "NA", "NA"), ("18", "2", "Bis(1,1,2,2,3,3,4,4,4-nonafluoro-1-butanesulfonyl)imide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8HF18NO4S2", "580.9059575", "0", "1", "NA", "NA"), ("19", "2", "3,3,4,4,5,5,6,6,6-nonafluoro-1-nitrohex-1-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H2F9NO2", "290.9941823", "0", "1", "NA", "NA"), ("20", "2", "1,2,4-Trifluoro-3,5-bis(1,1,1,2,3,3,3-heptafluoropropan-2-yl)-6-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12F17NO2", "512.965758", "0", "1", "NA", "NA"), ("21", "2", "1,4-Dichloro-2-(1,1,2,3,3,3-hexafluoropropoxy)-5-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H3Cl2F6NO3", "356.9394176", "0", "1", "NA", "NA"), ("22", "2", "1,2,4,5-Tetrafluoro-3-(1,1,1,2,3,3,3-heptafluoropropan-2-yl)-6-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9F11NO2", "362.9753387", "0", "1", "NA", "NA"), ("23", "2", "1H,2H,2H-perfluorooctanal (2,4-dinitrophenyl)hydrazone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H7F13N4O4", "542.0259716", "0", "1", "NA", "NA"), ("24", "2", "2,2,3,3,4,4,5,5,5-Nonafluoropentyl 2,5,7-trinitro-9-oxo-9H-fluorene-4-carboxylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H6F9N3O9", "590.9960328", "0", "1", "NA", "NA"), ("25", "2", "1-(1,1,1,2,3,3,3-Heptafluoropropan-2-yl)-3,5-dinitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H3F7N2O4", "335.9981041", "0", "1", "NA", "NA"), ("26", "2", "1-Nitro-3-(undecafluoropentyl)benzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H4F11NO2", "391.0066388", "0", "1", "NA", "NA"), ("27", "2", "1-Nitro-3-(nonafluorobutyl)benzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F9NO2", "341.0098323", "0", "1", "NA", "NA"), ("28", "2", "Butanamide, N-(2-bromo-4-nitrophenyl)-2,2,3,3,4,4,4-heptafluoro-", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4BrF7N2O3", "411.9293516", "0", "1", "NA", "NA"), ("29", "2", "3-Nitrophenyl heptafluorobutanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F7NO4", "335.0028551", "0", "1", "NA", "NA"), ("30", "2", "2,2,3,3,4,4,4-Heptafluoro-1-(4-nitrophenyl)butan-1-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F7NO3", "319.0079405", "0", "1", "NA", "NA"), ("31", "2", "1-(1,1,1,2,3,3,3-Heptafluoropropan-2-yl)-4-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H4F7NO2", "291.0130259", "0", "1", "NA", "NA"), ("32", "2", "1-Nitro-4-(nonafluorobutyl)benzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F9NO2", "341.0098323", "0", "1", "NA", "NA"), ("33", "2", "1-(Heptafluoropropyl)-4-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H4F7NO2", "291.0130259", "0", "1", "NA", "NA"), ("34", "2", "[N(E),S(S)]-N-(4-nitrophenyl)methyleneperfluorobutanesulfinamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H5F9N2O3S", "415.987717", "0", "1", "NA", "NA"), ("35", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9-Heptadecafluoro-N-(4-nitrophenyl)nonanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H5F17N2O3", "584.0028718", "0", "1", "NA", "NA"), ("36", "2", "2,2,3,3,4,4,5,5,6,6,7,7,7-Tridecafluoro-N-(4-nitrophenyl)heptanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H5F13N2O3", "484.0092589", "0", "1", "NA", "NA"), ("37", "2", "2,2,3,3,4,4,5,5,5-Nonafluoro-N-(4-nitrophenyl)pentanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H5F9N2O3", "384.015646", "0", "1", "NA", "NA"), ("38", "2", "N-(4-Nitrophenyl)perfluorobutanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H5F7N2O3", "334.0188396", "0", "1", "NA", "NA"), ("39", "2", "N-(2,4-Dinitrophenyl)-2,3,3,3-tetrafluoro-2-(heptafluoropropoxy)propanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H4F11N3O6", "494.9924453", "0", "1", "NA", "NA"), ("40", "2", "4-Nitrophenyl heptafluorobutanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F7NO4", "335.0028551", "0", "1", "NA", "NA"), ("41", "2", "1-Nitro-4-[(2,2,3,3,4,4,5,5,6,6,6-undecafluorohexyl)oxy]benzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H6F11NO3", "421.0172035", "0", "1", "NA", "NA"), ("42", "2", "1-(2,2,3,3,4,4,4-Heptafluorobutoxy)-4-nitrobenzene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H6F7NO3", "321.0235906", "0", "1", "NA", "NA"), ("43", "2", "2-(Heptafluoropropyl)-6-nitro-1H-benzimidazole", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H4F7N3O2", "331.0191739", "0", "1", "NA", "NA"), ("44", "2", "3,3,4,4,5,5,6,6,6-Nonafluoro-1-nitrohex-1-en-2-amine", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H3F9N2O2", "306.0050813", "0", "1", "NA", "NA"), ("45", "2", "1,1,1,2,2,3,3-heptafluoro-5-nitro-4-(nitromethyl)pentane", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H5F7N2O4", "302.0137542", "0", "1", "NA", "NA"), ("46", "2", "3,3,4,4,5,5,6,6,6-Nonafluorohexyl nitrate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H4F9NO3", "309.004747", "0", "1", "NA", "NA"), ("47", "2", "3-[2,2,3,3,4,4-Hexafluoro-4-(heptafluoropropoxy)butanamido]-N,N-dimethylpropan-1-amine N-oxide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H13F13N2O3", "480.0718591", "0", "1", "NA", "NA"), ("48", "2", "3-[(Perfluorobutane-1-sulfonyl)amino]-N,N-dimethylpropan-1-amine N-oxide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H13F9N2O3S", "400.0503173", "0", "1", "NA", "NA"), ("49", "2", "1-Propanaminium, 3-[[4-[(heptadecafluorononyl)oxy]benzoyl]amino]-N,N,N-trimethyl- (9CI)", "https://comptox.epa.gov/dashboard", "1", "NA", "1", "0", "C22H22F17N2O2", "669.1404341", "1", "1", "NA", "NA"), ("50", "2", "Perfluorononane sulfonamido ammonium iodide", "https://comptox.epa.gov/dashboard", "1", "NA", "1", "0", "C15H16F19N2OS", "633.0674467", "1", "1", "NA", "NA"), ("51", "2", "N-(2-Carboxyethyl)-3-[(perfluoro-1-oxononyl)amino]-N,N-dimethyl-1-propanaminium", "https://comptox.epa.gov/dashboard", "1", "NA", "1", "0", "C17H18F17N2O3", "621.1040486", "1", "1", "NA", "NA"), ("52", "2", "1,1,1,3,3,4,4,4-Octafluoro-2-(trifluoromethyl)butan-2-yl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H5F11O2", "354.0113898", "0", "1", "NA", "NA"), ("53", "2", "1,1,1,3,3,3-Hexafluoro-2-(trifluoromethyl)propan-2-yl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H5F9O2", "304.0145834", "0", "1", "NA", "NA"), ("54", "2", "1,1,1,2,3,3,3-Heptafluoropropan-2-yl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H5F7O2", "254.0177769", "0", "1", "NA", "NA"), ("55", "2", "Pentadecafluoroheptyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H5F15O2", "454.0050027", "0", "1", "NA", "NA"), ("56", "2", "Undecafluoropentyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H5F11O2", "354.0113898", "0", "1", "NA", "NA"), ("57", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11-Icosafluoroundecyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H8F20O2", "600.0204939", "0", "1", "NA", "NA"), ("58", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,21-Hentetracontafluorohenicosyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C25H7F41O2", "1117.979136", "0", "1", "NA", "NA"), ("59", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-Henicosafluoroundecyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H7F21O2", "618.0110721", "0", "1", "NA", "NA"), ("60", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,10-nonadecafluorodecyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H7F19O2", "568.0142656", "0", "1", "NA", "NA"), ("61", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9-Heptadecafluorononyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H7F17O2", "518.0174592", "0", "1", "NA", "NA"), ("62", "2", "1H,1H,9H-perfluorononyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H8F16O2", "500.026881", "0", "1", "NA", "NA"), ("63", "2", "2,2,3,3,4,4,5,5,6,6,7,7,8,8,8-Pentadecafluorooctyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7F15O2", "468.0206528", "0", "1", "NA", "NA"), ("64", "2", "(Perfluorohexyl)methyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H7F13O2", "418.0238463", "0", "1", "NA", "NA"), ("65", "2", "(6H-Perfluorohexyl)methyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H8F12O2", "400.0332681", "0", "1", "NA", "NA"), ("66", "2", "2,2,3,3,4,4,5,5,6,6,6-Undecafluorohexyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H7F11O2", "368.0270399", "0", "1", "NA", "NA"), ("67", "2", "2,2,3,3,4,4,5,5,5-Nonafluoropentyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H7F9O2", "318.0302334", "0", "1", "NA", "NA"), ("68", "2", "1H,1H,5H-Perfluoropentyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H8F8O2", "300.0396553", "0", "1", "NA", "NA"), ("69", "2", "2,2,3,3,4,4,4-Heptafluorobutyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H7F7O2", "268.033427", "0", "1", "NA", "NA"), ("70", "2", "1H,1H,3H-Perfluorobutyl 2-methylacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H8F6O2", "250.0428488", "0", "1", "NA", "NA"), ("71", "2", "4,4,5,5,6,7,7,7-Octafluoro-2-hydroxy-6-(trifluoromethyl)heptyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H11F11O3", "412.0532546", "0", "1", "NA", "NA"), ("72", "2", "3-(Perfluoro-5-methylhexyl)-2-hydroxypropyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H11F15O3", "512.0468675", "0", "1", "NA", "NA"), ("73", "2", "(Perfluoro-7-methyloctyl)-2-hydroxypropyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C16H11F19O3", "612.0404804", "0", "1", "NA", "NA"), ("74", "2", "4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-Heptadecafluoro-2-hydroxyundecyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H11F17O3", "562.043674", "0", "1", "NA", "NA"), ("75", "2", "4,4,5,5,6,6,7,7,8,8,9,9,9-Tridecafluoro-2-hydroxynonyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H11F13O3", "462.0500611", "0", "1", "NA", "NA"), ("76", "2", "4,4,5,5,6,6,7,7,7-Nonafluoro-2-hydroxyheptyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H11F9O3", "362.0564482", "0", "1", "NA", "NA"), ("77", "2", "(Perfluorocyclohexyl)methyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H7F11O2", "380.0270399", "0", "1", "NA", "NA"), ("78", "2", "2-(Perfluoro-3-methylbutyl)ethyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H9F11O2", "382.0426899", "0", "1", "NA", "NA"), ("79", "2", "3,3,4,4,5,5,6,6,7,7-Decafluorooctyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H12F10O2", "378.0677618", "0", "1", "NA", "NA"), ("80", "2", "(Perfluoro-5-methylhexyl)ethyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H9F15O2", "482.0363028", "0", "1", "NA", "NA"), ("81", "2", "3,3,4,4,5,5,6,6,7,7,8,8,9,10,10,10-Hexadecafluoro-9-(trifluoromethyl)decyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H9F19O2", "582.0299157", "0", "1", "NA", "NA"), ("82", "2", "(Perfluoro-9-methyldecyl)ethyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C17H9F23O2", "682.0235286", "0", "1", "NA", "NA"), ("83", "2", "(Perfluoro-11-methyldodecyl)ethyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H9F27O2", "782.0171415", "0", "1", "NA", "NA"), ("84", "2", "((Perfluoro-13-methyltetradecyl)ethyl) methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C21H9F31O2", "882.0107543", "0", "1", "NA", "NA"), ("85", "2", "(Perfluoro-15-methylhexadecyl)ethyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C23H9F35O2", "982.0043672", "0", "1", "NA", "NA"), ("86", "2", "1,H,1H,2H,2H-perfluoroeicosyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C24H9F37O2", "1032.001174", "0", "1", "NA", "NA"), ("87", "2", "(Perfluorohexadecyl)ethyl 2-methyl-2-propenoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C22H9F33O2", "932.0075608", "0", "1", "NA", "NA"), ("88", "2", "(Perfluorotetradecyl)ethyl 2-methyl-2-propenoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C20H9F29O2", "832.0139479", "0", "1", "NA", "NA"), ("89", "2", "(Perfluorododecyl)ethyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C18H9F25O2", "732.020335", "0", "1", "NA", "NA"), ("90", "2", "10:2 Fluorotelomer methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C16H9F21O2", "632.0267221", "0", "1", "NA", "NA"), ("91", "2", "8:2 Fluorotelomer methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H9F17O2", "532.0331093", "0", "1", "NA", "NA"), ("92", "2", "6:2 Fluorotelomer methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H9F13O2", "432.0394964", "0", "1", "NA", "NA"), ("93", "2", "1H,1H,2H,2H-Perfluorohexyl methacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H9F9O2", "332.0458835", "0", "1", "NA", "NA"), ("94", "2", "3,3,4,4,5,5,5-Heptafluoropentyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H9F7O2", "282.0490771", "0", "1", "NA", "NA"), ("95", "2", "4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-Heptadecafluoroundecyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H11F17O2", "546.0487593", "0", "1", "NA", "NA"), ("96", "2", "4,4,5,5,6,6,7,7,8,8,9,9,9-Tridecafluorononyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H11F13O2", "446.0551465", "0", "1", "NA", "NA"), ("97", "2", "4,4,5,5,6,6,7,7,7-Nonafluoroheptyl 2-methylprop-2-enoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H11F9O2", "346.0615336", "0", "1", "NA", "NA"), ("98", "2", "2-[(2-Methylprop-2-enoyl)oxy]ethyl heptafluorobutanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H9F7O4", "326.0389063", "0", "1", "NA", "NA"), ("99", "2", "S-((Perfluoro-5-methylhexyl)ethyl)-2-methylpropenethioate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H9F15OS", "498.0134592", "0", "1", "NA", "NA"), ("100", "2", "S-((Perfluoro-7-(methyl)octyl)ethyl) thiomethacrylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C15H9F19OS", "598.0070721", "0", "1", "NA", "NA"), ("101", "2", "S-((Perfluoro-9-methyldecyl)ethyl) 2-methyl-2-propenethioate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C17H9F23OS", "698.000685", "0", "1", "NA", "NA"), ("102", "2", "3-[(1,1,1,2,3,3,3-Heptafluoropropan-2-yl)oxy]-2-methylprop-1-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H7F7O", "240.0385124", "0", "1", "NA", "NA"), ("103", "2", "N-[(4-Bromophenyl)(perfluorobutyl)-ÃŽÂ»4-sulfanylidene]acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7BrF9NOS", "462.9288009", "0", "1", "NA", "NA"), ("104", "2", "N-[(Perfluorobutyl)phenyl-lambda4-sulfanylidene]acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H8F9NOS", "385.0182889", "0", "1", "NA", "NA"), ("105", "2", "3-Acetyl-5,5,6,6,7,7,8,8,8-nonafluorooctane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H7F9O3", "346.0251481", "0", "1", "NA", "NA"), ("106", "2", "3,3,4,4,5,5,6,6,7,7,8,8,9,9,9-Pentadecafluorononan-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H3F15O", "411.994438", "0", "1", "NA", "NA"), ("107", "2", "3,3,4,4,5,5,6,6,7,7,8,8,8-Tridecafluorooctan-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H3F13O", "361.9976316", "0", "1", "NA", "NA"), ("108", "2", "Methyl perfluoropentyl ketone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H3F11O", "312.0008251", "0", "1", "NA", "NA"), ("109", "2", "Methyl perfluorobutyl ketone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H3F9O", "262.0040187", "0", "1", "NA", "NA"), ("110", "2", "Methyl heptafluoropropylketone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C5H3F7O", "212.0072123", "0", "1", "NA", "NA"), ("111", "2", "3,4,5,5,6,6,7,7,8,8,9,9,10,10,10-Pentadecafluorodec-3-en-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H3F15O", "423.994438", "0", "1", "NA", "NA"), ("112", "2", "(3Z)-4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-Hexadecafluoroundec-3-en-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H4F16O", "456.0006663", "0", "1", "NA", "NA"), ("113", "2", "1-[4-(1,1,1,2,3,3,3-Heptafluoropropan-2-yl)phenyl]ethan-1-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H7F7O", "288.0385124", "0", "1", "NA", "NA"), ("114", "2", "1-[4-(Heptafluoropropyl)-1H-pyrrol-3-yl]ethan-1-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H6F7NO", "277.0337614", "0", "1", "NA", "NA"), ("115", "2", "4-Amino-5,5,6,6,7,7,7-heptafluorohept-3-en-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H6F7NO", "253.0337614", "0", "1", "NA", "NA"), ("116", "2", "5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,12-Heptadecafluorododecane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H5F17O2", "504.0018091", "0", "1", "NA", "NA"), ("117", "2", "(Perfluoroheptanoyl)acetone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H5F13O2", "404.0081963", "0", "1", "NA", "NA"), ("118", "2", "5,5,6,6,7,7,8,8,9,9,9-Undecafluorononane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H5F11O2", "354.0113898", "0", "1", "NA", "NA"), ("119", "2", "(Perfluoro-1-butyl)butane-1,3-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H5F9O2", "304.0145834", "0", "1", "NA", "NA"), ("120", "2", "5,5,6,6,7,7,7-heptafluoroheptane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H5F7O2", "254.0177769", "0", "1", "NA", "NA"), ("121", "2", "5,6,6,6-Tetrafluoro-5-(heptafluoropropoxy)hexane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H5F11O3", "370.0063044", "0", "1", "NA", "NA"), ("122", "2", "4,4,5,5,6,6,7,7,8,8,9,9,9-tridecafluorononan-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H5F13O", "376.0132816", "0", "1", "NA", "NA"), ("123", "2", "4,4,5,5,6,6,7,7,7-Nonafluoroheptan-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H5F9O", "276.0196688", "0", "1", "NA", "NA"), ("124", "2", "3-(Perfluoropropyl)-2-propanone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H5F7O", "226.0228623", "0", "1", "NA", "NA"), ("125", "2", "32-(Perfluoro-9-methyldecyl)-2,5,8,11,14,17,20,23,26,29-decaoxodotriacontan-31-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C43H45F23O11", "1174.259461", "0", "1", "NA", "NA"), ("126", "2", "5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,12-Heptadecafluorododecan-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7F17O", "490.0225446", "0", "1", "NA", "NA"), ("127", "2", "4-(Perfluorobutyl)-2-butanone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H7F9O", "290.0353188", "0", "1", "NA", "NA"), ("128", "2", "Pyrifluquinazon", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H15F7N4O2", "464.1083233", "0", "1", "NA", "NA"), ("129", "2", "1-[3-Methylidene-4-(2,2,3,3,4,4,5,5,5-nonafluoropentyl)pyrrolidin-1-yl]ethan-1-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H12F9NO", "357.077518", "0", "1", "NA", "NA"), ("130", "2", "1-Acetyl-3,5-bis(perfluorohexyl)pyrazole", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C17H4F26N2O", "745.9908465", "0", "1", "NA", "NA"), ("131", "2", "N,N'-(5-{[1,1,1,4,5,5,5-Heptafluoro-3-(1,1,1,2,3,3,3-heptafluoropropan-2-yl)-4-(trifluoromethyl)pent-2-en-2-yl]oxy}-1,3-phenylene)diacetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H11F17N2O3", "638.049822", "0", "1", "NA", "NA"), ("132", "2", "N-[4-(Heptafluoropropyl)phenyl]acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H8F7NO", "303.0494114", "0", "1", "NA", "NA"), ("133", "2", "4-Acetamidophenyl nonafluorobutane-1-sulfonate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H8F9NO4S", "433.0030327", "0", "1", "NA", "NA"), ("134", "2", "4-Acetamido-3-chlorophenyl nonafluorobutane-1-sulfonate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7ClF9NO4S", "466.9640604", "0", "1", "NA", "NA"), ("135", "2", "N-[8-(Heptafluoropropyl)-9H-purin-6-yl]acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H6F7N5O", "345.0460574", "0", "1", "NA", "NA"), ("136", "2", "N-[5-(Heptafluoropropyl)-1,3,4-thiadiazol-2-yl]acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H4F7N3OS", "310.9963303", "0", "1", "NA", "NA"), ("137", "2", "N-{4-[(1,1,2,2,3,3,4,4,4-Nonafluorobutane-1-sulfonyl)amino]benzene-1-sulfonyl}acetamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H9F9N2O5S2", "495.9809174", "0", "1", "NA", "NA"), ("138", "2", "Iodine, bis(acetato-ÃŽÂ²O)[4-(3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,10-heptadecafluorodecyl)phenyl]- (9CI)", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C20H14F17IO4", "767.9665367", "0", "1", "NA", "NA"), ("139", "2", "4,4,5,5,6,6,6-Heptafluorohex-1-en-2-yl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H7F7O2", "268.033427", "0", "1", "NA", "NA"), ("140", "2", "4-Chloro-2-(2-chloro-4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-heptadecafluoroundecyl)phenyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H11Cl2F17O2", "663.9864647", "0", "1", "NA", "NA"), ("141", "2", "5-Chloro-2-(2-chloro-4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-heptadecafluoroundecyl)phenyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H11Cl2F17O2", "663.9864647", "0", "1", "NA", "NA"), ("142", "2", "3,4,6-Trichloro-2-(2-chloro-4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11-heptadecafluoroundecyl)phenyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H9Cl4F17O2", "731.90852", "0", "1", "NA", "NA"), ("143", "2", "2,2,3,3,4,4,4-Heptafluorobutyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H5F7O2", "242.0177769", "0", "1", "NA", "NA"), ("144", "2", "3-(Perfluoropropyl)-2-iodopropanol acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H8F7IO2", "395.945725", "0", "1", "NA", "NA"), ("145", "2", "[3,4,6-triacetyloxy-5-(1,1,2,2,3,3,4,4,4-nonafluorobutylsulfonyloxy)oxan-2-yl]methyl Acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C18H19F9O12S", "630.045351", "0", "1", "NA", "NA"), ("146", "2", "1H,1H,2H,2H-Perfluorodecyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7F17O2", "506.0174592", "0", "1", "NA", "NA"), ("147", "2", "1H,1H,2H,2H-Perfluorooctyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H7F13O2", "406.0238463", "0", "1", "NA", "NA"), ("148", "2", "3,3,4,4,5,5,6,6,6-Nonafluorohexyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H7F9O2", "306.0302334", "0", "1", "NA", "NA"), ("149", "2", "3,3,4,4,5,5,5-Heptafluoropentyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H7F7O2", "256.033427", "0", "1", "NA", "NA"), ("150", "2", "(Perfluorooctyl)propyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H9F17O2", "520.0331093", "0", "1", "NA", "NA"), ("151", "2", "4,4,5,5,6,6,6-Heptafluorohexyl acetate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H9F7O2", "270.0490771", "0", "1", "NA", "NA"), ("152", "2", "S-[3,4,4,4-Tetrafluoro-3-(trifluoromethyl)butyl] ethanethioate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H7F7OS", "272.0105834", "0", "1", "NA", "NA"), ("153", "2", "S-(3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,10-Heptadecafluorodecyl) ethanethioate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H7F17OS", "521.9946156", "0", "1", "NA", "NA"), ("154", "2", "S-(3,3,4,4,5,5,6,6,7,7,8,8,8-Tridecafluorooctyl) ethanethioate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H7F13OS", "422.0010027", "0", "1", "NA", "NA"), ("155", "2", "2-Bromo-3-(bromomethyl)-4,4,5,5,6,6,6-heptafluorohexan-3-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H7Br2F7O", "397.8751866", "0", "1", "NA", "NA"), ("156", "2", "2-Methyl-2-trifluoromethylperfluoropentane", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H3F13", "334.002717", "0", "1", "NA", "NA"), ("157", "2", "3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,10-Heptadecafluoro-2-methyldecanoic acid", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H5F17O2", "492.0018091", "0", "1", "NA", "NA"), ("158", "2", "1,1,1,2,2,3,3,4,4,5,5,6,6-Tridecafluoro-7-methyl-7-nitrooctane", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H6F13NO2", "407.0190953", "0", "1", "NA", "NA"), ("159", "2", "6-Amino-1,1,1,2,2,3,3-heptafluoro-7,7-dimethyloct-5-en-4-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H12F7NO", "295.0807115", "0", "1", "NA", "NA"), ("160", "2", "6,6,7,7,8,8,8-Heptafluoro-2,2-dimethyl-3,4,5-octanetrione 4-(4-nitrophenyl)hydrazone", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C16H14F7N3O4", "445.0872535", "0", "1", "NA", "NA"), ("161", "2", "6,6,7,7,8,8,9,9,9-Nonafluoro-2,2-dimethylnon-4-en-3-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H11F9O", "330.066619", "0", "1", "NA", "NA"), ("162", "2", "1,1-Difluoro-5,5-dimethyl-1-(trifluoromethoxy)hexane-2,4-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H11F5O3", "262.0628353", "0", "1", "NA", "NA"), ("163", "2", "1,1,1,2,2,3,3,4,4-Nonafluoro-6-iodo-7,7-dimethyloctane", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H12F9I", "429.9840024", "0", "1", "NA", "NA"), ("164", "2", "Phenol, 2,2'-[(1R,2R)-1,2-cyclohexanediylbis[(E)-nitrilomethylidyne]]bis[6-(1,1-dimethylethyl)-4-(heptadecafluorooctyl)-", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C44H36F34N2O2", "1270.223388", "0", "1", "NA", "NA"), ("165", "2", "5-(4-tert-Butylphenyl)-N-(2,2,3,3,4,4,4-heptafluorobutyl)-1,2-oxazole-3-carboxamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C18H17F7N2O2", "426.1178253", "0", "1", "NA", "NA"), ("166", "2", "5-tert-Butyl-7-(heptafluoropropyl)-2-phenylpyrazolo[1,5-a]pyrimidine", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C19H16F7N3", "419.1232451", "0", "1", "NA", "NA"), ("167", "2", "(1Z,4Z,9Z,12E)-2,10-Di-tert-butyl-4,12-bis(heptafluoropropyl)-1,5,9,13-tetraazacyclohexadeca-1,4,9,12-tetraene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C26H34F14N4", "668.2559922", "0", "1", "NA", "NA"), ("168", "2", "1,1,1,2,2,3,3,4-Octafluoro-7,7-dimethyloct-4-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H12F8", "284.0811261", "0", "1", "NA", "NA"), ("169", "2", "N-tert-Butyl-2,2,3,3,4,4,4-heptafluorobutanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H10F7NO", "269.0650615", "0", "1", "NA", "NA"), ("170", "2", "tert-Butyl heptafluorobutanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H9F7O2", "270.0490771", "0", "1", "NA", "NA"), ("171", "2", "tert-Butyl (4,4,5,5,6,6,7,7,7-nonafluoro-2-iodoheptyl)carbamate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H15F9INO2", "503.0003807", "0", "1", "NA", "NA"), ("172", "2", "tert-Butyl heptafluorobutaneperoxoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H9F7O3", "286.0439917", "0", "1", "NA", "NA"), ("173", "2", "1,1,1,2,2,3,3,4-Octafluoro-7-methyl-7-nitrooct-4-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H9F8NO2", "315.0505543", "0", "1", "NA", "NA"), ("174", "2", "(2-Perfluorooctylethyl)isopropoxycarbonyloxyiminophenylacetonitrile", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C22H15F17N2O3", "678.0811221", "0", "1", "NA", "NA"), ("175", "2", "N-(2,2,3,3,4,4,4-Heptafluorobutanoyl)-2-methylalanine", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H8F7NO3", "299.0392407", "0", "1", "NA", "NA"), ("176", "2", "5,5,6,6,7,7,8,8,8-Nonafluoro-2-methyloct-3-yn-2-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H7F9O", "302.0353188", "0", "1", "NA", "NA"), ("177", "2", "3,3,4,4,5,5,6,6,7,7,8,8,9,9,9-Pentadecafluoro-2-methylnonan-2-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H7F15O", "428.0257381", "0", "1", "NA", "NA"), ("178", "2", "2-Perfluoropropyl-2-propanol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C6H7F7O", "228.0385124", "0", "1", "NA", "NA"), ("179", "2", "5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,12-Heptadecafluoro-2-methyldodecan-2-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C13H11F17O", "506.0538447", "0", "1", "NA", "NA"), ("180", "2", "5,5,6,6,7,7,8,8,9,9,10,10,10-Tridecafluoro-2-methyldecan-2-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H11F13O", "406.0602318", "0", "1", "NA", "NA"), ("181", "2", "5,5,6,6,7,7,8,8,8-Nonafluoro-2-methyloctan-2-ol", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H11F9O", "306.066619", "0", "1", "NA", "NA"), ("182", "2", "6-(1-Methylethylidene)-5-(triphenylphosphoranylidene)-(perfluoro)-nonan-4-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C30H21F14OP", "694.110647", "0", "1", "NA", "NA"), ("183", "2", "7,7,8,8,9,9,9-Heptafluoro-2-methylnon-2-ene-4,6-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C10H9F7O2", "294.0490771", "0", "1", "NA", "NA"), ("184", "2", "5,6,6,7,7,8,8,8-Octafluoro-2-methylocta-2,4-diene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H8F8", "268.049826", "0", "1", "NA", "NA"), ("185", "2", "5,5,6,6,7,7,8,8,8-Nonafluoro-2-methyloct-2-ene", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H9F9", "288.0560543", "0", "1", "NA", "NA"), ("186", "2", "2-Methylprop-1-en-1-yl nonafluorobutane-1-sulfonate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H7F9O3S", "353.9972191", "0", "1", "NA", "NA"), ("187", "2", "1,1,1,2-Tetrafluoro-4-methyl-2-(trifluoromethyl)pentan-3-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C7H7F7O", "240.0385124", "0", "1", "NA", "NA"), ("188", "2", "6,6,7,7,8,8,8-Heptafluoro-2-methylocta-3,5-dione", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H9F7O2", "282.0490771", "0", "1", "NA", "NA"), ("189", "2", "3,3,4,4,5,5,6,6,7,7,8,8,8-tridecafluorooctyl 2-methylpropanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H11F13O2", "434.0551465", "0", "1", "NA", "NA"), ("190", "2", "N-[(2S)-2-Amino-3-methylbutyl]-1,1,2,2,3,3,4,4,4-nonafluorobutane-1-sulfonamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C9H13F9N2O2S", "384.0554026", "0", "1", "NA", "NA"), ("191", "2", "3,3,4,4,5,5,6,6,6-Nonafluorohexyl 2,2-difluoro-3-hydroxy-4-methylpentanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H13F11O3", "414.0689047", "0", "1", "NA", "NA"), ("192", "2", "(4S,5R)-4-(Propan-2-yl)-5-(3,3,4,4,5,5,6,6,7,7,8,8,8-tridecafluorooctyl)-1,3-oxazolidin-2-one", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H14F13NO2", "475.0816955", "0", "1", "NA", "NA"), ("193", "2", "1-(1,3-Dimethylbutoxy)-2-(perfluorohexyl)ethane", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H17F13O", "448.107182", "0", "1", "NA", "NA"), ("194", "2", "(3ÃŽÂ²,5ÃŽÂ±)-Cholestan-3-ol 2,3,3,4,4,5,5,6,6,7,7,8,8,8-tetradecafluorooctanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C35H48F14O2", "766.3430759", "0", "1", "NA", "NA"), ("195", "2", "3-Methylbutyl heptadecafluorononanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C14H11F17O2", "534.0487593", "0", "1", "NA", "NA"), ("196", "2", "3-Methylbutyl 2,3,3,3-tetrafluoro-2-(heptafluoropropoxy)propanoate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C11H11F11O3", "400.0532546", "0", "1", "NA", "NA"), ("197", "2", "Diisopentyl 2-[(2,2,3,3,4,4,4-heptafluorobutanoyl)amino]succinate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C18H26F7NO5", "469.1699205", "0", "1", "NA", "NA"), ("198", "2", "2,2,3,3,4,4,4-Heptafluoro-N,N-bis(2-methylpropyl)butanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C12H18F7NO", "325.1276617", "0", "1", "NA", "NA"), ("199", "2", "2,2,3,3,4,4,4-Heptafluoro-N-(2-methylpropyl)butanamide", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C8H10F7NO", "269.0650615", "0", "1", "NA", "NA"), ("200", "2", "Tris(2-methylpropyl) 3-(2,2,3,3,4,4,4-heptafluorobutanamido)propane-1,1,3-tricarboxylate", "https://comptox.epa.gov/dashboard", "1", "NA", "0", "0", "C22H32F7NO7", "555.2066999", "0", "1", "NA", "NA");
+INSERT INTO `compound_alias_references` VALUES ("1", "CASRN", "Chemical Abstracts Service Registry Number", "https://www.cas.org/support/documentation/chemical-substances/cas-rn-verified-partner-program"), ("2", "DTXCID", "EPA CompTox Chemicals Dashboard Chemical ID", "https://comptox.epa.gov/dashboard"), ("3", "DTXSID", "EPA CompTox Chemicals Dashboard Substance ID", "https://comptox.epa.gov/dashboard"), ("4", "INCHI", "IUPAC International Chemical Identifier notation", "https://iupac.org/who-we-are/divisions/division-details/inchi/"), ("5", "INCHIKEY", "SHA-256 hash of the InChI identifier", "http://inchi.info/inchikey_overview_en.html"), ("6", "PUBCHEMID", "PubChem Database ID", "https://pubchem.ncbi.nlm.nih.gov/"), ("7", "SMILES", "Simplified Molecular Input Line Entry System notation", "https://archive.epa.gov/med/med_archive_03/web/html/smiles.html"), ("8", "ACRONYM", "Acronyms for the chemical", "NA"), ("9", "NIST Suspect List", "Identifying number in the NIST Suspect List", "https://data.nist.gov/od/id/mds2-2387"), ("10", "XICLISTID", "ID number for the original XIC List", "https://data.nist.gov/od/id/mds2-2387");
+INSERT INTO `compound_aliases` VALUES ("1", "4", "InChI=1S/C8HF13/c1-2-3(6(13,14)15,7(16,17)18)4(9,10)5(11,12)8(19,20)21/h1H"), ("1", "5", "UEYXJPFQJDFMGD-UHFFFAOYSA-N"), ("1", "7", "C#CC(C(C(C(F)(F)F)(F)F)(F)F)(C(F)(F)F)C(F)(F)F"), ("1", "3", "DTXSID60893374"), ("1", "2", "DTXCID801323380"), ("1", "1", "261503-44-0"), ("2", "4", "InChI=1S/C20H9F34O2P/c21-5(22,7(25,26)9(29,30)11(33,34)13(37,38)15(41,42)17(45,46)19(49,50)51)1-3-57(55,56)4-2-6(23,24)8(27,28)10(31,32)12(35,36)14(39,40)16(43,44)18(47,48)20(52,53)54/h1-4H2,(H,55,56)"), ("2", "5", "DEENCVDXCNHHAM-UHFFFAOYSA-N"), ("2", "7", "C(CP(=O)(CCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("2", "3", "DTXSID70881308"), ("2", "2", "DTXCID801022566"), ("2", "1", "52299-27-1"), ("3", "4", "InChI=1S/C42H12F75O4P/c43-7(44,10(49,50)13(55,56)16(61,62)19(67,68)22(73,74)25(79,80)28(85,86)31(91,92)34(97,98)37(103,104)40(109,110)111)1-4-119-122(118,120-5-2-8(45,46)11(51,52)14(57,58)17(63,64)20(69,70)23(75,76)26(81,82)29(87,88)32(93,94)35(99,100)38(105,106)41(112,113)114)121-6-3-9(47,48)12(53,54)15(59,60)18(65,66)21(71,72)24(77,78)27(83,84)30(89,90)33(95,96)36(101,102)39(107,108)42(115,116)117/h1-6H2"), ("3", "5", "JKDZBIHMORMGRL-UHFFFAOYSA-N"), ("3", "7", "C(COP(=O)(OCCC(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)OCCC(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("3", "3", "DTXSID50893500"), ("3", "2", "DTXCID901323614"), ("3", "1", "393098-42-5"), ("4", "4", "InChI=1S/C9H6ClF9O2/c1-4(10)5(20)21-3-2-6(11,12)7(13,14)8(15,16)9(17,18)19/h1-3H2"), ("4", "5", "CVMPVWSYSNATQO-UHFFFAOYSA-N"), ("4", "7", "C=C(C(=O)OCCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)Cl"), ("4", "3", "DTXSID10893405"), ("4", "2", "DTXCID501323412"), ("4", "1", "701909-41-3"), ("5", "4", "InChI=1S/C10H6F10O/c11-6(12)4-1-2-5(3-4)7(6,13)21-10(19,20)8(14,15)9(16,17)18/h1-2,4-5H,3H2"), ("5", "5", "JZEKVGIWHZEUSP-UHFFFAOYSA-N"), ("5", "7", "C1=CC2CC1C(C2(F)OC(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("5", "3", "DTXSID40338359"), ("5", "2", "DTXCID50289444"), ("5", "1", "154717-36-9"), ("6", "4", "InChI=1S/C12H8F10O/c13-8(14)6-4-1-2-5(3-4)7(6)9(8,15)23-12(21,22)10(16,17)11(18,19)20/h1-2,4-7H,3H2"), ("6", "5", "NGEYGRCDNBGSKG-UHFFFAOYSA-N"), ("6", "7", "C1=CC2CC1C1C2C(C1(F)F)(F)OC(C(C(F)(F)F)(F)F)(F)F"), ("6", "3", "DTXSID00610941"), ("6", "2", "DTXCID50561696"), ("6", "1", "262617-19-6"), ("7", "4", "InChI=1S/C11H9F9/c12-8(13,7-4-5-1-2-6(7)3-5)9(14,15)10(16,17)11(18,19)20/h1-2,5-7H,3-4H2"), ("7", "5", "QAIOQFZLAKMXNK-UHFFFAOYSA-N"), ("7", "7", "C1=CC2CC1CC2C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("7", "3", "DTXSID60554473"), ("7", "2", "DTXCID90505256"), ("7", "1", "118777-97-2"), ("8", "4", "InChI=1S/C14H15F7O2/c1-10(2)6-4-5-11(10,3)8(22)7(6)9(23)12(15,16)13(17,18)14(19,20)21/h6-7H,4-5H2,1-3H3"), ("8", "5", "PEWOESYEGLBLNR-UHFFFAOYSA-N"), ("8", "7", "CC1(C)C2CCC1(C)C(=O)C2C(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("9", "4", "InChI=1S/C4H2F9NO2S/c5-1(6,3(9,10)11)2(7,8)4(12,13)17(14,15)16/h(H2,14,15,16)"), ("9", "5", "FUVKFLJWBHVMHX-UHFFFAOYSA-N"), ("9", "7", "C(C(C(F)(F)S(=O)(=O)N)(F)F)(C(F)(F)F)(F)F"), ("9", "3", "DTXSID30880251"), ("9", "2", "DTXCID101021836"), ("9", "1", "30334-69-1"), ("10", "4", "InChI=1S/C10H4Cl2F7NO/c11-5-2-1-4(3-6(5)12)20-7(21)8(13,14)9(15,16)10(17,18)19/h1-3H,(H,20,21)"), ("10", "5", "INMDAGXEYRBPRG-UHFFFAOYSA-N"), ("10", "7", "c1cc(c(cc1N=C(C(C(C(F)(F)F)(F)F)(F)F)O)Cl)Cl"), ("10", "3", "DTXSID20881333"), ("10", "2", "DTXCID501022581"), ("10", "1", "106376-37-8"), ("11", "4", "InChI=1S/C10H4Cl2F7NO/c11-4-1-5(12)3-6(2-4)20-7(21)8(13,14)9(15,16)10(17,18)19/h1-3H,(H,20,21)"), ("11", "5", "WGNKYUWDFZMCGQ-UHFFFAOYSA-N"), ("11", "7", "c1c(cc(cc1Cl)N=C(C(C(C(F)(F)F)(F)F)(F)F)O)Cl"), ("11", "3", "DTXSID80881334"), ("11", "2", "DTXCID201022582"), ("11", "1", "106376-38-9"), ("12", "4", "InChI=1S/C28H28F17N3O8S/c1-6-48(9-10-54-19(50)46-16-8-7-14(4)17(11-16)47-20(51)56-15(5)12-55-18(49)13(2)3)57(52,53)28(44,45)26(39,40)24(35,36)22(31,32)21(29,30)23(33,34)25(37,38)27(41,42)43/h7-8,11,15H,2,6,9-10,12H2,1,3-5H3,(H,46,50)(H,47,51)"), ("12", "5", "WUGSPVXFVQZHFC-UHFFFAOYSA-N"), ("12", "7", "CCN(CCOC(=Nc1ccc(C)c(c1)N=C(O)OC(C)COC(=O)C(=C)C)O)S(=O)(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("12", "3", "DTXSID30880599"), ("12", "2", "DTXCID001021976"), ("12", "1", "68298-72-6"), ("13", "4", "InChI=1S/C27H28F15N3O8S/c1-6-45(54(49,50)27(41,42)25(36,37)23(32,33)21(28,29)22(30,31)24(34,35)26(38,39)40)9-10-51-19(47)43-16-8-7-14(4)17(11-16)44-20(48)53-15(5)12-52-18(46)13(2)3/h7-8,11,15H,2,6,9-10,12H2,1,3-5H3,(H,43,47)(H,44,48)"), ("13", "5", "RPJIZRHOCVMSSZ-UHFFFAOYSA-N"), ("13", "7", "CCN(CCOC(=Nc1ccc(C)c(c1)N=C(O)OC(C)COC(=O)C(=C)C)O)S(=O)(=O)C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("13", "3", "DTXSID40880601"), ("13", "2", "DTXCID701021977"), ("13", "1", "68298-73-7"), ("14", "4", "InChI=1S/C26H28F13N3O8S/c1-6-42(51(46,47)26(38,39)24(33,34)22(29,30)21(27,28)23(31,32)25(35,36)37)9-10-48-19(44)40-16-8-7-14(4)17(11-16)41-20(45)50-15(5)12-49-18(43)13(2)3/h7-8,11,15H,2,6,9-10,12H2,1,3-5H3,(H,40,44)(H,41,45)"), ("14", "5", "XCLCXQRFYCAXDN-UHFFFAOYSA-N"), ("14", "7", "CCN(CCOC(=Nc1ccc(C)c(c1)N=C(O)OC(C)COC(=O)C(=C)C)O)S(=O)(=O)C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("14", "3", "DTXSID20880604"), ("14", "2", "DTXCID101021979"), ("14", "1", "68298-74-8"), ("15", "4", "InChI=1S/C25H28F11N3O8S/c1-6-39(48(43,44)25(35,36)23(30,31)21(26,27)22(28,29)24(32,33)34)9-10-45-19(41)37-16-8-7-14(4)17(11-16)38-20(42)47-15(5)12-46-18(40)13(2)3/h7-8,11,15H,2,6,9-10,12H2,1,3-5H3,(H,37,41)(H,38,42)"), ("15", "5", "OBPWLOPGKWGMTO-UHFFFAOYSA-N"), ("15", "7", "CCN(CCOC(=Nc1ccc(C)c(c1)N=C(O)OC(C)COC(=O)C(=C)C)O)S(=O)(=O)C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("15", "3", "DTXSID80880605"), ("15", "2", "DTXCID401021980"), ("15", "1", "68298-75-9"), ("16", "4", "InChI=1S/C24H28F9N3O8S/c1-6-36(45(40,41)24(32,33)22(27,28)21(25,26)23(29,30)31)9-10-42-19(38)34-16-8-7-14(4)17(11-16)35-20(39)44-15(5)12-43-18(37)13(2)3/h7-8,11,15H,2,6,9-10,12H2,1,3-5H3,(H,34,38)(H,35,39)"), ("16", "5", "ZNHAMOMCVOBRLM-UHFFFAOYSA-N"), ("16", "7", "CCN(CCOC(=Nc1ccc(C)c(c1)N=C(O)OC(C)COC(=O)C(=C)C)O)S(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("16", "3", "DTXSID40880606"), ("16", "2", "DTXCID101021981"), ("16", "1", "68298-76-0"), ("17", "4", "InChI=1S/C23H23F25N2O3/c1-2-50(7-4-11(52)53)6-3-5-49-9-10(51)8-12(24,25)13(26,27)14(28,29)15(30,31)16(32,33)17(34,35)18(36,37)19(38,39)20(40,41)21(42,43)22(44,45)23(46,47)48/h10,49,51H,2-9H2,1H3,(H,52,53)"), ("17", "5", "ZPJOKRFOGKCNBA-UHFFFAOYSA-N"), ("17", "7", "CCN(CCCNCC(CC(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)CCC(=O)O"), ("17", "3", "DTXSID80881016"), ("17", "2", "DTXCID601022334"), ("17", "1", "93776-12-6"), ("18", "4", "InChI=1S/C8HF18NO4S2/c9-1(10,5(17,18)19)3(13,14)7(23,24)32(28,29)27-33(30,31)8(25,26)4(15,16)2(11,12)6(20,21)22/h27H"), ("18", "5", "KZJUHXVCAHXJLR-UHFFFAOYSA-N"), ("18", "7", "C(C(C(F)(F)S(=O)(=O)NS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(C(F)(F)F)(F)F"), ("18", "3", "DTXSID60880426"), ("18", "2", "DTXCID301005006"), ("18", "1", "39847-39-7"), ("19", "4", "InChI=1S/C6H2F9NO2/c7-3(8,1-2-16(17)18)4(9,10)5(11,12)6(13,14)15/h1-2H"), ("19", "5", "BODFJDZXURKORU-UHFFFAOYSA-N"), ("19", "7", "C(=CN(=O)=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("19", "3", "DTXSID50379713"), ("19", "2", "DTXCID60330739"), ("19", "1", "306935-66-0"), ("20", "4", "InChI=1S/C12F17NO2/c13-3-1(7(16,9(18,19)20)10(21,22)23)4(14)5(15)6(30(31)32)2(3)8(17,11(24,25)26)12(27,28)29"), ("20", "5", "PVICYOGEJBAIKN-UHFFFAOYSA-N"), ("20", "7", "c1(c(c(c(c(c1F)F)N(=O)=O)C(C(F)(F)F)(C(F)(F)F)F)F)C(C(F)(F)F)(C(F)(F)F)F"), ("20", "3", "DTXSID20896407"), ("20", "2", "DTXCID801325900"), ("20", "1", "20017-51-0"), ("21", "4", "InChI=1S/C9H3Cl2F6NO3/c10-3-2-6(4(11)1-5(3)18(19)20)21-9(16,17)7(12)8(13,14)15/h1-2,7H"), ("21", "5", "WDTRKHSHZIJORU-UHFFFAOYSA-N"), ("21", "7", "c1c(c(cc(c1N(=O)=O)Cl)OC(C(C(F)(F)F)F)(F)F)Cl"), ("21", "3", "DTXSID60591520"), ("21", "2", "DTXCID10542284"), ("21", "1", "130841-23-5"), ("22", "4", "InChI=1S/C9F11NO2/c10-2-1(7(14,8(15,16)17)9(18,19)20)3(11)5(13)6(4(2)12)21(22)23"), ("22", "5", "AIMRZXIGISGIMY-UHFFFAOYSA-N"), ("22", "7", "c1(c(c(c(c(c1F)F)N(=O)=O)F)F)C(C(F)(F)F)(C(F)(F)F)F"), ("22", "3", "DTXSID40896383"), ("22", "2", "DTXCID701325876"), ("22", "1", "20017-50-9"), ("23", "4", "InChI=1S/C14H7F13N4O4/c15-9(16,10(17,18)11(19,20)12(21,22)13(23,24)14(25,26)27)3-4-28-29-7-2-1-6(30(32)33)5-8(7)31(34)35/h1-2,5H,3-4H2"), ("23", "5", "UBMXHZGJQACURD-UHFFFAOYSA-N"), ("23", "7", "c1cc(c(cc1N(=O)=O)N(=O)=O)N=NCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("24", "4", "InChI=1S/C19H6F9N3O9/c20-16(21,17(22,23)18(24,25)19(26,27)28)5-40-15(33)10-3-6(29(34)35)1-8-12(10)13-9(14(8)32)2-7(30(36)37)4-11(13)31(38)39/h1-4H,5H2"), ("24", "5", "WWFIKWYKKMDAQB-UHFFFAOYSA-N"), ("24", "7", "c1c(cc(c2c1C(=O)c1cc(cc(c21)N(=O)=O)N(=O)=O)C(=O)OCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("24", "3", "DTXSID40896282"), ("24", "2", "DTXCID501325775"), ("24", "1", "253605-71-9"), ("25", "4", "InChI=1S/C9H3F7N2O4/c10-7(8(11,12)13,9(14,15)16)4-1-5(17(19)20)3-6(2-4)18(21)22/h1-3H"), ("25", "5", "DKVGVNPCZVNONQ-UHFFFAOYSA-N"), ("25", "7", "c1c(cc(cc1N(=O)=O)N(=O)=O)C(C(F)(F)F)(C(F)(F)F)F"), ("25", "3", "DTXSID80698666"), ("25", "2", "DTXCID20649415"), ("25", "1", "24813-57-8"), ("26", "4", "InChI=1S/C11H4F11NO2/c12-7(13,5-2-1-3-6(4-5)23(24)25)8(14,15)9(16,17)10(18,19)11(20,21)22/h1-4H"), ("26", "5", "UKBIKHOGARYBLY-UHFFFAOYSA-N"), ("26", "7", "c1cc(cc(c1)N(=O)=O)C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("26", "3", "DTXSID10895969"), ("26", "2", "DTXCID001325463"), ("26", "1", "1463530-16-6"), ("27", "4", "InChI=1S/C10H4F9NO2/c11-7(12,5-2-1-3-6(4-5)20(21)22)8(13,14)9(15,16)10(17,18)19/h1-4H"), ("27", "5", "XSVUTHPDIIPLTQ-UHFFFAOYSA-N"), ("27", "7", "c1cc(cc(c1)N(=O)=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("27", "3", "DTXSID90895922"), ("27", "2", "DTXCID801325417"), ("27", "1", "2398-76-7"), ("28", "4", "InChI=1S/C10H4BrF7N2O3/c11-5-3-4(20(22)23)1-2-6(5)19-7(21)8(12,13)9(14,15)10(16,17)18/h1-3H,(H,19,21)"), ("28", "5", "LQYYVICTYPJDDJ-UHFFFAOYSA-N"), ("28", "7", "c1cc(c(cc1N(=O)=O)Br)N=C(C(C(C(F)(F)F)(F)F)(F)F)O"), ("28", "3", "DTXSID5073797"), ("28", "2", "DTXCID4033213"), ("28", "1", "111189-67-4"), ("29", "4", "InChI=1S/C10H4F7NO4/c11-8(12,9(13,14)10(15,16)17)7(19)22-6-3-1-2-5(4-6)18(20)21/h1-4H"), ("29", "5", "AVFHBJSMSJZVFE-UHFFFAOYSA-N"), ("29", "7", "c1cc(cc(c1)OC(=O)C(C(C(F)(F)F)(F)F)(F)F)N(=O)=O"), ("29", "3", "DTXSID30850994"), ("29", "2", "DTXCID40801735"), ("29", "1", "52512-15-9"), ("30", "4", "InChI=1S/C10H4F7NO3/c11-8(12,9(13,14)10(15,16)17)7(19)5-1-3-6(4-2-5)18(20)21/h1-4H"), ("30", "5", "ZRKXYIFJBYTAAB-UHFFFAOYSA-N"), ("30", "7", "c1cc(ccc1C(=O)C(C(C(F)(F)F)(F)F)(F)F)N(=O)=O"), ("30", "3", "DTXSID60895979"), ("30", "2", "DTXCID601325473"), ("30", "1", "144459-62-1"), ("31", "4", "InChI=1S/C9H4F7NO2/c10-7(8(11,12)13,9(14,15)16)5-1-3-6(4-2-5)17(18)19/h1-4H"), ("31", "5", "ZNSFRNFHEGRVFR-UHFFFAOYSA-N"), ("31", "7", "c1cc(ccc1C(C(F)(F)F)(C(F)(F)F)F)N(=O)=O"), ("31", "3", "DTXSID70896336"), ("31", "2", "DTXCID801325829"), ("31", "1", "2396-14-7"), ("32", "4", "InChI=1S/C10H4F9NO2/c11-7(12,5-1-3-6(4-2-5)20(21)22)8(13,14)9(15,16)10(17,18)19/h1-4H"), ("32", "5", "VGHCHTBEJCZDFH-UHFFFAOYSA-N"), ("32", "7", "c1cc(ccc1C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("32", "3", "DTXSID90895725"), ("32", "2", "DTXCID701325238"), ("32", "1", "196932-95-3"), ("33", "4", "InChI=1S/C9H4F7NO2/c10-7(11,8(12,13)9(14,15)16)5-1-3-6(4-2-5)17(18)19/h1-4H"), ("33", "5", "AUJMMOWFPBJGCY-UHFFFAOYSA-N"), ("33", "7", "c1cc(ccc1C(C(C(F)(F)F)(F)F)(F)F)N(=O)=O"), ("33", "3", "DTXSID60895595"), ("33", "2", "DTXCID401325110"), ("33", "1", "1300746-85-3"), ("34", "4", "InChI=1S/C11H5F9N2O3S/c12-8(13,10(16,17)18)9(14,15)11(19,20)26(25)21-5-6-1-3-7(4-2-6)22(23)24/h1-5H"), ("34", "5", "GYLVKWUPZMTHBJ-UHFFFAOYSA-N"), ("34", "7", "c1cc(ccc1C=NS(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("35", "4", "InChI=1S/C15H5F17N2O3/c16-8(17,7(35)33-5-1-3-6(4-2-5)34(36)37)9(18,19)10(20,21)11(22,23)12(24,25)13(26,27)14(28,29)15(30,31)32/h1-4H,(H,33,35)"), ("35", "5", "CUOUHXHRFRMHRU-UHFFFAOYSA-N"), ("35", "7", "c1cc(ccc1NC(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("35", "3", "DTXSID10896214"), ("35", "2", "DTXCID701325707"), ("35", "1", "164796-46-7"), ("36", "4", "InChI=1S/C13H5F13N2O3/c14-8(15,7(29)27-5-1-3-6(4-2-5)28(30)31)9(16,17)10(18,19)11(20,21)12(22,23)13(24,25)26/h1-4H,(H,27,29)"), ("36", "5", "ZVYZWOLDZMWXAQ-UHFFFAOYSA-N"), ("36", "7", "c1cc(ccc1NC(=O)C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("36", "3", "DTXSID00896208"), ("36", "2", "DTXCID501325701"), ("36", "1", "164796-44-5"), ("37", "4", "InChI=1S/C11H5F9N2O3/c12-8(13,9(14,15)10(16,17)11(18,19)20)7(23)21-5-1-3-6(4-2-5)22(24)25/h1-4H,(H,21,23)"), ("37", "5", "ODCGSXFIHQYHBY-UHFFFAOYSA-N"), ("37", "7", "c1cc(ccc1NC(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("37", "3", "DTXSID90896171"), ("37", "2", "DTXCID701325664"), ("37", "1", "150333-62-3"), ("38", "4", "InChI=1S/C10H5F7N2O3/c11-8(12,9(13,14)10(15,16)17)7(20)18-5-1-3-6(4-2-5)19(21)22/h1-4H,(H,18,20)"), ("38", "5", "HQOLLMKLYTYSHA-UHFFFAOYSA-N"), ("38", "7", "c1cc(ccc1NC(=O)C(C(C(F)(F)F)(F)F)(F)F)N(=O)=O"), ("38", "3", "DTXSID60897039"), ("38", "2", "DTXCID401326475"), ("38", "1", "6/5/3869"), ("39", "4", "InChI=1S/C12H4F11N3O6/c13-8(10(16,17)18,32-12(22,23)9(14,15)11(19,20)21)7(27)24-5-2-1-4(25(28)29)3-6(5)26(30)31/h1-3H,(H,24,27)"), ("39", "5", "NVOHYTMPHXLVPF-UHFFFAOYSA-N"), ("39", "7", "c1cc(c(cc1N(=O)=O)N(=O)=O)N=C(C(C(F)(F)F)(F)OC(C(C(F)(F)F)(F)F)(F)F)O"), ("39", "3", "DTXSID30896559"), ("39", "2", "DTXCID401326051"), ("39", "1", "105936-30-9"), ("40", "4", "InChI=1S/C10H4F7NO4/c11-8(12,9(13,14)10(15,16)17)7(19)22-6-3-1-5(2-4-6)18(20)21/h1-4H"), ("40", "5", "HEVDQVCIAUCJDV-UHFFFAOYSA-N"), ("40", "7", "c1cc(ccc1N(=O)=O)OC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("40", "3", "DTXSID00775625"), ("40", "2", "DTXCID90726368"), ("40", "1", "1799-92-4"), ("41", "4", "InChI=1S/C12H6F11NO3/c13-8(14,5-27-7-3-1-6(2-4-7)24(25)26)9(15,16)10(17,18)11(19,20)12(21,22)23/h1-4H,5H2"), ("41", "5", "RGOZNZUAXTXBNG-UHFFFAOYSA-N"), ("41", "7", "c1cc(ccc1N(=O)=O)OCC(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("41", "3", "DTXSID10896052"), ("41", "2", "DTXCID701325545"), ("41", "1", "183997-46-8"), ("42", "4", "InChI=1S/C10H6F7NO3/c11-8(12,9(13,14)10(15,16)17)5-21-7-3-1-6(2-4-7)18(19)20/h1-4H,5H2"), ("42", "5", "AZABPWAOUQABLY-UHFFFAOYSA-N"), ("42", "7", "c1cc(ccc1N(=O)=O)OCC(C(C(F)(F)F)(F)F)(F)F"), ("42", "3", "DTXSID20895970"), ("42", "2", "DTXCID701325464"), ("42", "1", "109230-68-4"), ("43", "4", "InChI=1S/C10H4F7N3O2/c11-8(12,9(13,14)10(15,16)17)7-18-5-2-1-4(20(21)22)3-6(5)19-7/h1-3H,(H,18,19)"), ("43", "5", "IXFBWEUABZKVQQ-UHFFFAOYSA-N"), ("43", "7", "c1cc2c(cc1N(=O)=O)[nH]c(C(C(C(F)(F)F)(F)F)(F)F)n2"), ("43", "3", "DTXSID10896118"), ("43", "2", "DTXCID601325611"), ("43", "1", "6826-38-6"), ("44", "4", "InChI=1S/C6H3F9N2O2/c7-3(8,2(16)1-17(18)19)4(9,10)5(11,12)6(13,14)15/h16H,1H2"), ("44", "5", "ZLFGSBKCGQBTKE-UHFFFAOYSA-N"), ("44", "7", "C(C(=N)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("45", "4", "InChI=1S/C6H5F7N2O4/c7-4(8,5(9,10)6(11,12)13)3(1-14(16)17)2-15(18)19/h3H,1-2H2"), ("45", "5", "PAESHGHUQXDFGZ-UHFFFAOYSA-N"), ("45", "7", "C(C(CN(=O)=O)C(C(C(F)(F)F)(F)F)(F)F)N(=O)=O"), ("45", "3", "DTXSID20296261"), ("45", "2", "DTXCID20247399"), ("45", "1", "355-91-9"), ("46", "4", "InChI=1S/C6H4F9NO3/c7-3(8,1-2-19-16(17)18)4(9,10)5(11,12)6(13,14)15/h1-2H2"), ("46", "5", "JTINRXZCXXXKMA-UHFFFAOYSA-N"), ("46", "7", "C(CON(=O)=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("46", "3", "DTXSID70188389"), ("46", "2", "DTXCID50110880"), ("46", "1", "34839-44-6"), ("47", "4", "InChI=1S/C12H13F13N2O3/c1-27(2,29)5-3-4-26-6(28)7(13,14)8(15,16)11(22,23)30-12(24,25)9(17,18)10(19,20)21/h3-5H2,1-2H3,(H,26,28)"), ("47", "5", "FNPQQUYBBRHUFI-UHFFFAOYSA-N"), ("47", "7", "CN(=O)(C)CCCN=C(C(C(C(F)(F)OC(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("47", "3", "DTXSID70896553"), ("47", "2", "DTXCID601326045"), ("47", "1", "87112-48-9"), ("48", "4", "InChI=1S/C9H13F9N2O3S/c1-20(2,21)5-3-4-19-24(22,23)9(17,18)7(12,13)6(10,11)8(14,15)16/h19H,3-5H2,1-2H3"), ("48", "5", "HQIKMYJOLJOSOX-UHFFFAOYSA-N"), ("48", "7", "CN(=O)(C)CCCNS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("48", "3", "DTXSID50893565"), ("48", "2", "DTXCID101323591"), ("48", "1", "178094-76-3"), ("49", "4", "InChI=1S/C22H21F17N2O2/c1-41(2,3)10-4-9-40-14(42)12-5-7-13(8-6-12)43-22(38,39)21(36,37)20(34,35)19(32,33)18(30,31)17(28,29)15(23,24)11-16(25,26)27/h5-8H,4,9-11H2,1-3H3/p+1"), ("49", "5", "LENDGRWTJNFJQE-UHFFFAOYSA-O"), ("49", "7", "C[N+](C)(C)CCCN=C(c1ccc(cc1)OC(C(C(C(C(C(C(CC(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("49", "3", "DTXSID70897580"), ("49", "2", "DTXCID301326927"), ("49", "1", "59493-71-9"), ("50", "4", "InChI=1S/C15H16F19N2OS/c1-36(2,3)6-4-5-35-38(37)15(33,34)13(28,29)11(24,25)9(20,21)7(16,17)8(18,19)10(22,23)12(26,27)14(30,31)32/h35H,4-6H2,1-3H3/q+1"), ("50", "5", "IEIYQVSGMNXXNU-UHFFFAOYSA-N"), ("50", "7", "C[N+](C)(C)CCCNS(=O)C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("50", "3", "DTXSID40893256"), ("50", "2", "DTXCID001323324"), ("50", "1", "69091-20-9"), ("51", "4", "InChI=1S/C17H17F17N2O3/c1-36(2,7-4-8(37)38)6-3-5-35-9(39)10(18,19)11(20,21)12(22,23)13(24,25)14(26,27)15(28,29)16(30,31)17(32,33)34/h3-7H2,1-2H3,(H-,35,37,38,39)/p+1"), ("51", "5", "ZGBMFNJIPSRTBS-UHFFFAOYSA-O"), ("51", "7", "C[N+](C)(CCCN=C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)CCC(=O)O"), ("51", "3", "DTXSID70893340"), ("51", "2", "DTXCID401323302"), ("51", "1", "119131-05-4"), ("52", "4", "InChI=1S/C9H5F11O2/c1-3(2)4(21)22-5(7(12,13)14,8(15,16)17)6(10,11)9(18,19)20/h1H2,2H3"), ("52", "5", "ZYEKBRZVGPYUIW-UHFFFAOYSA-N"), ("52", "7", "C=C(C)C(=O)OC(C(C(F)(F)F)(F)F)(C(F)(F)F)C(F)(F)F"), ("52", "3", "DTXSID40896606"), ("52", "2", "DTXCID701326098"), ("52", "1", "101061-05-6"), ("53", "4", "InChI=1S/C8H5F9O2/c1-3(2)4(18)19-5(6(9,10)11,7(12,13)14)8(15,16)17/h1H2,2H3"), ("53", "5", "JXVINEGBEPHVPO-UHFFFAOYSA-N"), ("53", "7", "C=C(C)C(=O)OC(C(F)(F)F)(C(F)(F)F)C(F)(F)F"), ("53", "3", "DTXSID90896611"), ("53", "2", "DTXCID301326103"), ("53", "1", "17526-97-5"), ("54", "4", "InChI=1S/C7H5F7O2/c1-3(2)4(15)16-5(8,6(9,10)11)7(12,13)14/h1H2,2H3"), ("54", "5", "DAUQEQSACMZHDS-UHFFFAOYSA-N"), ("54", "7", "C=C(C)C(=O)OC(C(F)(F)F)(C(F)(F)F)F"), ("54", "3", "DTXSID70896619"), ("54", "2", "DTXCID501326111"), ("54", "1", "7459-59-8"), ("55", "4", "InChI=1S/C11H5F15O2/c1-3(2)4(27)28-11(25,26)9(20,21)7(16,17)5(12,13)6(14,15)8(18,19)10(22,23)24/h1H2,2H3"), ("55", "5", "HEFHMJVNMXDZKE-UHFFFAOYSA-N"), ("55", "7", "C=C(C)C(=O)OC(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("55", "3", "DTXSID90624471"), ("55", "2", "DTXCID60575224"), ("55", "1", "96724-20-8"), ("56", "4", "InChI=1S/C9H5F11O2/c1-3(2)4(21)22-9(19,20)7(14,15)5(10,11)6(12,13)8(16,17)18/h1H2,2H3"), ("56", "5", "BWIUYRXKEFSAJX-UHFFFAOYSA-N"), ("56", "7", "C=C(C)C(=O)OC(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("56", "3", "DTXSID60603314"), ("56", "2", "DTXCID80554071"), ("56", "1", "89004-77-3"), ("57", "4", "InChI=1S/C15H8F20O2/c1-4(2)5(36)37-6(17)8(20,21)10(24,25)12(28,29)14(32,33)15(34,35)13(30,31)11(26,27)9(22,23)7(18,19)3-16/h6H,1,3H2,2H3"), ("57", "5", "KDUYSMPJTYKVBA-UHFFFAOYSA-N"), ("57", "7", "C=C(C)C(=O)OC(C(C(C(C(C(C(C(C(C(CF)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)F"), ("57", "3", "DTXSID00880420"), ("57", "2", "DTXCID301021868"), ("57", "1", "41123-44-8"), ("58", "4", "InChI=1S/C25H7F41O2/c1-4(2)5(67)68-3-6(26,27)7(28,29)8(30,31)9(32,33)10(34,35)11(36,37)12(38,39)13(40,41)14(42,43)15(44,45)16(46,47)17(48,49)18(50,51)19(52,53)20(54,55)21(56,57)22(58,59)23(60,61)24(62,63)25(64,65)66/h1,3H2,2H3"), ("58", "5", "QWUFNQYGXMUGOZ-UHFFFAOYSA-N"), ("58", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("58", "3", "DTXSID80896605"), ("58", "2", "DTXCID001326097"), ("58", "1", "132405-54-0"), ("59", "4", "InChI=1S/C15H7F21O2/c1-4(2)5(37)38-3-6(16,17)7(18,19)8(20,21)9(22,23)10(24,25)11(26,27)12(28,29)13(30,31)14(32,33)15(34,35)36/h1,3H2,2H3"), ("59", "5", "QDIWIWGKFGVURE-UHFFFAOYSA-N"), ("59", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("59", "3", "DTXSID40197408"), ("59", "2", "DTXCID10119899"), ("59", "1", "48077-86-7"), ("60", "4", "InChI=1S/C14H7F19O2/c1-4(2)5(34)35-3-6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)13(29,30)14(31,32)33/h1,3H2,2H3"), ("60", "5", "NSSMHXVPVQADLY-UHFFFAOYSA-N"), ("60", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("60", "3", "DTXSID70377690"), ("60", "2", "DTXCID20328718"), ("60", "1", "23069-32-1"), ("61", "4", "InChI=1S/C13H7F17O2/c1-4(2)5(31)32-3-6(14,15)7(16,17)8(18,19)9(20,21)10(22,23)11(24,25)12(26,27)13(28,29)30/h1,3H2,2H3"), ("61", "5", "ZDXYSIRXXGOEEA-UHFFFAOYSA-N"), ("61", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("61", "3", "DTXSID80197407"), ("61", "2", "DTXCID50119898"), ("61", "1", "48077-33-4"), ("62", "4", "InChI=1S/C13H8F16O2/c1-4(2)5(30)31-3-7(16,17)9(20,21)11(24,25)13(28,29)12(26,27)10(22,23)8(18,19)6(14)15/h6H,1,3H2,2H3"), ("62", "5", "XAENZTGUQXVFPQ-UHFFFAOYSA-N"), ("62", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(C(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("62", "3", "DTXSID10171538"), ("62", "2", "DTXCID0094029"), ("62", "1", "1841-46-9"), ("63", "4", "InChI=1S/C12H7F15O2/c1-4(2)5(28)29-3-6(13,14)7(15,16)8(17,18)9(19,20)10(21,22)11(23,24)12(25,26)27/h1,3H2,2H3"), ("63", "5", "RUEKTOVLVIXOHT-UHFFFAOYSA-N"), ("63", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("63", "3", "DTXSID5063235"), ("63", "2", "DTXCID2039621"), ("63", "1", "3934-23-4"), ("64", "4", "InChI=1S/C11H7F13O2/c1-4(2)5(25)26-3-6(12,13)7(14,15)8(16,17)9(18,19)10(20,21)11(22,23)24/h1,3H2,2H3"), ("64", "5", "OGTUUPXNYCOCKQ-UHFFFAOYSA-N"), ("64", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("64", "3", "DTXSID60197405"), ("64", "2", "DTXCID30119896"), ("64", "1", "48076-44-4"), ("65", "4", "InChI=1S/C11H8F12O2/c1-4(2)5(24)25-3-7(14,15)9(18,19)11(22,23)10(20,21)8(16,17)6(12)13/h6H,1,3H2,2H3"), ("65", "5", "YJKHMSPWWGBKTN-UHFFFAOYSA-N"), ("65", "7", "C=C(C)C(=O)OCC(C(C(C(C(C(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("65", "3", "DTXSID70177132"), ("65", "2", "DTXCID8099623"), ("65", "1", "2261-99-6"), ("66", "4", "InChI=1S/C10H7F11O2/c1-4(2)5(22)23-3-6(11,12)7(13,14)8(15,16)9(17,18)10(19,20)21/h1,3H2,2H3"), ("66", "5", "AMFSMDRXAVOFCS-UHFFFAOYSA-N"), ("66", "7", "C=C(C)C(=O)OCC(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("66", "3", "DTXSID60895752"), ("66", "2", "DTXCID401325265"), ("66", "1", "13173-36-9"), ("67", "4", "InChI=1S/C9H7F9O2/c1-4(2)5(19)20-3-6(10,11)7(12,13)8(14,15)9(16,17)18/h1,3H2,2H3"), ("67", "5", "XBZLJCYNLZUIGP-UHFFFAOYSA-N"), ("67", "7", "C=C(C)C(=O)OCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("67", "3", "DTXSID20207771"), ("67", "2", "DTXCID70130262"), ("67", "1", "59006-65-4"), ("68", "4", "InChI=1S/C9H8F8O2/c1-4(2)5(18)19-3-7(12,13)9(16,17)8(14,15)6(10)11/h6H,1,3H2,2H3"), ("68", "5", "ZNJXRXXJPIFFAO-UHFFFAOYSA-N"), ("68", "7", "C=C(C)C(=O)OCC(C(C(C(F)F)(F)F)(F)F)(F)F"), ("68", "3", "DTXSID90880131"), ("68", "2", "DTXCID701021727"), ("68", "1", "355-93-1"), ("69", "4", "InChI=1S/C8H7F7O2/c1-4(2)5(16)17-3-6(9,10)7(11,12)8(13,14)15/h1,3H2,2H3"), ("69", "5", "VIEHKBXCWMMOOU-UHFFFAOYSA-N"), ("69", "7", "C=C(C)C(=O)OCC(C(C(F)(F)F)(F)F)(F)F"), ("69", "3", "DTXSID3065586"), ("69", "2", "DTXCID6034390"), ("69", "1", "13695-31-3"), ("70", "4", "InChI=1S/C8H8F6O2/c1-4(2)5(15)16-3-7(10,11)6(9)8(12,13)14/h6H,1,3H2,2H3"), ("70", "5", "DFVPUWGVOPDJTC-UHFFFAOYSA-N"), ("70", "7", "C=C(C)C(=O)OCC(C(C(F)(F)F)F)(F)F"), ("70", "3", "DTXSID80880403"), ("70", "2", "DTXCID301021856"), ("70", "1", "36405-47-7"), ("71", "4", "InChI=1S/C12H11F11O3/c1-5(2)7(25)26-4-6(24)3-8(13,14)10(16,17)9(15,11(18,19)20)12(21,22)23/h6,24H,1,3-4H2,2H3"), ("71", "5", "LZKRGSPBGVICLV-UHFFFAOYSA-N"), ("71", "7", "C=C(C)C(=O)OCC(CC(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)O"), ("71", "3", "DTXSID80379882"), ("71", "2", "DTXCID30330908"), ("71", "1", "16083-79-7"), ("72", "4", "InChI=1S/C14H11F15O3/c1-5(2)7(31)32-4-6(30)3-8(15,16)10(18,19)12(22,23)11(20,21)9(17,13(24,25)26)14(27,28)29/h6,30H,1,3-4H2,2H3"), ("72", "5", "RPDBRTLKDYJCCE-UHFFFAOYSA-N"), ("72", "7", "C=C(C)C(=O)OCC(CC(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)O"), ("72", "3", "DTXSID40379904"), ("72", "2", "DTXCID00330930"), ("72", "1", "16083-81-1"), ("73", "4", "InChI=1S/C16H11F19O3/c1-5(2)7(37)38-4-6(36)3-8(17,18)10(20,21)12(24,25)14(28,29)13(26,27)11(22,23)9(19,15(30,31)32)16(33,34)35/h6,36H,1,3-4H2,2H3"), ("73", "5", "WNVNMSONKCMAPU-UHFFFAOYSA-N"), ("73", "7", "C=C(C)C(=O)OCC(CC(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("73", "3", "DTXSID10379911"), ("73", "2", "DTXCID00896743"), ("73", "1", "88752-37-8"), ("74", "4", "InChI=1S/C15H11F17O3/c1-5(2)7(34)35-4-6(33)3-8(16,17)9(18,19)10(20,21)11(22,23)12(24,25)13(26,27)14(28,29)15(30,31)32/h6,33H,1,3-4H2,2H3"), ("74", "5", "DCXZWVLJCYXHDV-UHFFFAOYSA-N"), ("74", "7", "C=C(C)C(=O)OCC(CC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("74", "3", "DTXSID20380871"), ("74", "2", "DTXCID50331896"), ("74", "1", "93706-76-4"), ("75", "4", "InChI=1S/C13H11F13O3/c1-5(2)7(28)29-4-6(27)3-8(14,15)9(16,17)10(18,19)11(20,21)12(22,23)13(24,25)26/h6,27H,1,3-4H2,2H3"), ("75", "5", "QJNMSQFOKUQZBA-UHFFFAOYSA-N"), ("75", "7", "C=C(C)C(=O)OCC(CC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("75", "3", "DTXSID20379861"), ("75", "2", "DTXCID30330887"), ("75", "1", "86994-47-0"), ("76", "4", "InChI=1S/C11H11F9O3/c1-5(2)7(22)23-4-6(21)3-8(12,13)9(14,15)10(16,17)11(18,19)20/h6,21H,1,3-4H2,2H3"), ("76", "5", "BCTGGJURYOEMFV-UHFFFAOYSA-N"), ("76", "7", "C=C(C)C(=O)OCC(CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("76", "3", "DTXSID50381270"), ("76", "2", "DTXCID80332295"), ("76", "1", "36915-03-4"), ("77", "4", "InChI=1S/C11H7F11O2/c1-4(2)5(23)24-3-6(12)7(13,14)9(17,18)11(21,22)10(19,20)8(6,15)16/h1,3H2,2H3"), ("77", "5", "DZZAHYHMWKNGLC-UHFFFAOYSA-N"), ("77", "7", "C=C(C)C(=O)OCC1(C(C(C(C(C1(F)F)(F)F)(F)F)(F)F)(F)F)F"), ("77", "3", "DTXSID00379783"), ("77", "2", "DTXCID50330809"), ("77", "1", "25965-83-7"), ("78", "4", "InChI=1S/C11H9F11O2/c1-5(2)6(23)24-4-3-7(12,13)9(15,16)8(14,10(17,18)19)11(20,21)22/h1,3-4H2,2H3"), ("78", "5", "JTEKNLSWXJADLG-UHFFFAOYSA-N"), ("78", "7", "C=C(C)C(=O)OCCC(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F"), ("78", "3", "DTXSID50379879"), ("78", "2", "DTXCID50330905"), ("78", "1", "65195-44-0"), ("79", "4", "InChI=1S/C12H12F10O2/c1-6(2)7(23)24-5-4-9(15,16)11(19,20)12(21,22)10(17,18)8(3,13)14/h1,4-5H2,2-3H3"), ("79", "5", "ZLBLHEUUSFNQAN-UHFFFAOYSA-N"), ("79", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C)(F)F)(F)F)(F)F)(F)F)(F)F"), ("79", "3", "DTXSID60881312"), ("79", "2", "DTXCID201022568"), ("79", "1", "61915-92-2"), ("80", "4", "InChI=1S/C13H9F15O2/c1-5(2)6(29)30-4-3-7(14,15)9(17,18)11(21,22)10(19,20)8(16,12(23,24)25)13(26,27)28/h1,3-4H2,2H3"), ("80", "5", "SAIYGCOTLRCBJP-UHFFFAOYSA-N"), ("80", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F"), ("80", "3", "DTXSID60379901"), ("80", "2", "DTXCID70330927"), ("80", "1", "50836-66-3"), ("81", "4", "InChI=1S/C15H9F19O2/c1-5(2)6(35)36-4-3-7(16,17)9(19,20)11(23,24)13(27,28)12(25,26)10(21,22)8(18,14(29,30)31)15(32,33)34/h1,3-4H2,2H3"), ("81", "5", "KTPONRIHDUNNPD-UHFFFAOYSA-N"), ("81", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("81", "3", "DTXSID60164839"), ("81", "2", "DTXCID3087330"), ("81", "1", "15166-00-4"), ("82", "4", "InChI=1S/C17H9F23O2/c1-5(2)6(41)42-4-3-7(18,19)9(21,22)11(25,26)13(29,30)15(33,34)14(31,32)12(27,28)10(23,24)8(20,16(35,36)37)17(38,39)40/h1,3-4H2,2H3"), ("82", "5", "PVMWMBHAEVDBQR-UHFFFAOYSA-N"), ("82", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("82", "3", "DTXSID80880968"), ("82", "2", "DTXCID501022305"), ("82", "1", "74256-14-7"), ("83", "4", "InChI=1S/C19H9F27O2/c1-5(2)6(47)48-4-3-7(20,21)9(23,24)11(27,28)13(31,32)15(35,36)17(39,40)16(37,38)14(33,34)12(29,30)10(25,26)8(22,18(41,42)43)19(44,45)46/h1,3-4H2,2H3"), ("83", "5", "NZSKSDOUVOVFHC-UHFFFAOYSA-N"), ("83", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("83", "3", "DTXSID40880969"), ("83", "2", "DTXCID201022306"), ("83", "1", "74256-15-8"), ("84", "4", "InChI=1S/C21H9F31O2/c1-5(2)6(53)54-4-3-7(22,23)9(25,26)11(29,30)13(33,34)15(37,38)17(41,42)19(45,46)18(43,44)16(39,40)14(35,36)12(31,32)10(27,28)8(24,20(47,48)49)21(50,51)52/h1,3-4H2,2H3"), ("84", "5", "WSPGUHLVXPTGNB-UHFFFAOYSA-N"), ("84", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("84", "3", "DTXSID20240840"), ("84", "2", "DTXCID50163331"), ("84", "1", "94158-64-2"), ("85", "4", "InChI=1S/C23H9F35O2/c1-5(2)6(59)60-4-3-7(24,25)9(27,28)11(31,32)13(35,36)15(39,40)17(43,44)19(47,48)21(51,52)20(49,50)18(45,46)16(41,42)14(37,38)12(33,34)10(29,30)8(26,22(53,54)55)23(56,57)58/h1,3-4H2,2H3"), ("85", "5", "BEMICOOQLAQVTK-UHFFFAOYSA-N"), ("85", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("85", "3", "DTXSID80240841"), ("85", "2", "DTXCID10163332"), ("85", "1", "94158-65-3"), ("86", "4", "InChI=1S/C24H9F37O2/c1-5(2)6(62)63-4-3-7(25,26)8(27,28)9(29,30)10(31,32)11(33,34)12(35,36)13(37,38)14(39,40)15(41,42)16(43,44)17(45,46)18(47,48)19(49,50)20(51,52)21(53,54)22(55,56)23(57,58)24(59,60)61/h1,3-4H2,2H3"), ("86", "5", "OWAQRMVKMUUGIA-UHFFFAOYSA-N"), ("86", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("86", "3", "DTXSID1070220"), ("86", "2", "DTXCID0044492"), ("86", "1", "65104-66-7"), ("87", "4", "InChI=1S/C22H9F33O2/c1-5(2)6(56)57-4-3-7(23,24)8(25,26)9(27,28)10(29,30)11(31,32)12(33,34)13(35,36)14(37,38)15(39,40)16(41,42)17(43,44)18(45,46)19(47,48)20(49,50)21(51,52)22(53,54)55/h1,3-4H2,2H3"), ("87", "5", "XLGBPNZHUPJRPB-UHFFFAOYSA-N"), ("87", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("87", "3", "DTXSID2069361"), ("87", "2", "DTXCID3042689"), ("87", "1", "59778-97-1"), ("88", "4", "InChI=1S/C20H9F29O2/c1-5(2)6(50)51-4-3-7(21,22)8(23,24)9(25,26)10(27,28)11(29,30)12(31,32)13(33,34)14(35,36)15(37,38)16(39,40)17(41,42)18(43,44)19(45,46)20(47,48)49/h1,3-4H2,2H3"), ("88", "5", "KLVRPMUTIRAYBC-UHFFFAOYSA-N"), ("88", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("88", "3", "DTXSID4063660"), ("88", "2", "DTXCID6040745"), ("88", "1", "4980-53-4"), ("89", "4", "InChI=1S/C18H9F25O2/c1-5(2)6(44)45-4-3-7(19,20)8(21,22)9(23,24)10(25,26)11(27,28)12(29,30)13(31,32)14(33,34)15(35,36)16(37,38)17(39,40)18(41,42)43/h1,3-4H2,2H3"), ("89", "5", "LFEGLDRNIDJMKB-UHFFFAOYSA-N"), ("89", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("89", "3", "DTXSID1064083"), ("89", "2", "DTXCID8042763"), ("89", "1", "6014-75-1"), ("90", "4", "InChI=1S/C16H9F21O2/c1-5(2)6(38)39-4-3-7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)13(29,30)14(31,32)15(33,34)16(35,36)37/h1,3-4H2,2H3"), ("90", "5", "FQHLOOOXLDQLPF-UHFFFAOYSA-N"), ("90", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("90", "3", "DTXSID6062204"), ("90", "2", "DTXCID9036480"), ("90", "1", "2144-54-9"), ("91", "4", "InChI=1S/C14H9F17O2/c1-5(2)6(32)33-4-3-7(15,16)8(17,18)9(19,20)10(21,22)11(23,24)12(25,26)13(27,28)14(29,30)31/h1,3-4H2,2H3"), ("91", "5", "HBZFBSFGXQBQTB-UHFFFAOYSA-N"), ("91", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("91", "3", "DTXSID8062101"), ("91", "2", "DTXCID5036187"), ("91", "1", "1996-88-9"), ("92", "4", "InChI=1S/C12H9F13O2/c1-5(2)6(26)27-4-3-7(13,14)8(15,16)9(17,18)10(19,20)11(21,22)12(23,24)25/h1,3-4H2,2H3"), ("92", "5", "CDXFIRXEAJABAZ-UHFFFAOYSA-N"), ("92", "7", "C=C(C)C(=O)OCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("92", "3", "DTXSID3047558"), ("92", "2", "DTXCID1027558"), ("92", "1", "2144-53-8"), ("93", "4", "InChI=1S/C10H9F9O2/c1-5(2)6(20)21-4-3-7(11,12)8(13,14)9(15,16)10(17,18)19/h1,3-4H2,2H3"), ("93", "5", "TYNRPOFACABVSI-UHFFFAOYSA-N"), ("93", "7", "C=C(C)C(=O)OCCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("93", "3", "DTXSID8061979"), ("93", "2", "DTXCID3035713"), ("93", "1", "1799-84-4"), ("94", "4", "InChI=1S/C9H9F7O2/c1-5(2)6(17)18-4-3-7(10,11)8(12,13)9(14,15)16/h1,3-4H2,2H3"), ("94", "5", "VZOWCSFBTSNJKX-UHFFFAOYSA-N"), ("94", "7", "C=C(C)C(=O)OCCC(C(C(F)(F)F)(F)F)(F)F"), ("94", "3", "DTXSID80562853"), ("94", "2", "DTXCID40513629"), ("94", "1", "2145-81-5"), ("95", "4", "InChI=1S/C15H11F17O2/c1-6(2)7(33)34-5-3-4-8(16,17)9(18,19)10(20,21)11(22,23)12(24,25)13(26,27)14(28,29)15(30,31)32/h1,3-5H2,2H3"), ("95", "5", "QOIKFYLOUXBJNG-UHFFFAOYSA-N"), ("95", "7", "C=C(C)C(=O)OCCCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("95", "3", "DTXSID60895914"), ("95", "2", "DTXCID601325409"), ("95", "1", "150625-20-0"), ("96", "4", "InChI=1S/C13H11F13O2/c1-6(2)7(27)28-5-3-4-8(14,15)9(16,17)10(18,19)11(20,21)12(22,23)13(24,25)26/h1,3-5H2,2H3"), ("96", "5", "AIIUJTLQIOPZBE-UHFFFAOYSA-N"), ("96", "7", "C=C(C)C(=O)OCCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("96", "3", "DTXSID90895740"), ("96", "2", "DTXCID401325253"), ("96", "1", "1228350-17-1"), ("97", "4", "InChI=1S/C11H11F9O2/c1-6(2)7(21)22-5-3-4-8(12,13)9(14,15)10(16,17)11(18,19)20/h1,3-5H2,2H3"), ("97", "5", "WOISXUMMZSMYSB-UHFFFAOYSA-N"), ("97", "7", "C=C(C)C(=O)OCCCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("97", "3", "DTXSID30895648"), ("97", "2", "DTXCID801325162"), ("97", "1", "243842-15-1"), ("98", "4", "InChI=1S/C10H9F7O4/c1-5(2)6(18)20-3-4-21-7(19)8(11,12)9(13,14)10(15,16)17/h1,3-4H2,2H3"), ("98", "5", "VQOPAPHAKJCJTK-UHFFFAOYSA-N"), ("98", "7", "C=C(C)C(=O)OCCOC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("98", "3", "DTXSID60895737"), ("98", "2", "DTXCID301325250"), ("98", "1", "146615-73-8"), ("99", "4", "InChI=1S/C13H9F15OS/c1-5(2)6(29)30-4-3-7(14,15)9(17,18)11(21,22)10(19,20)8(16,12(23,24)25)13(26,27)28/h1,3-4H2,2H3"), ("99", "5", "LDEYRMSHMYWNMA-UHFFFAOYSA-N"), ("99", "7", "C=C(C)C(=O)SCCC(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F"), ("99", "3", "DTXSID3067574"), ("99", "2", "DTXCID5038256"), ("99", "1", "30769-91-6"), ("100", "4", "InChI=1S/C15H9F19OS/c1-5(2)6(35)36-4-3-7(16,17)9(19,20)11(23,24)13(27,28)12(25,26)10(21,22)8(18,14(29,30)31)15(32,33)34/h1,3-4H2,2H3"), ("100", "5", "LELPCBUDRUDINH-UHFFFAOYSA-N"), ("100", "7", "C=C(C)C(=O)SCCC(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("100", "3", "DTXSID5067394"), ("100", "2", "DTXCID3037830"), ("100", "1", "28506-33-4"), ("101", "4", "InChI=1S/C17H9F23OS/c1-5(2)6(41)42-4-3-7(18,19)9(21,22)11(25,26)13(29,30)15(33,34)14(31,32)12(27,28)10(23,24)8(20,16(35,36)37)17(38,39)40/h1,3-4H2,2H3"), ("101", "5", "ZBPHBMSKQBHWJR-UHFFFAOYSA-N"), ("101", "7", "C=C(C)C(=O)SCCC(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("101", "3", "DTXSID8067573"), ("101", "2", "DTXCID0038255"), ("101", "1", "30769-88-1"), ("102", "4", "InChI=1S/C7H7F7O/c1-4(2)3-15-5(8,6(9,10)11)7(12,13)14/h1,3H2,2H3"), ("102", "5", "VMDVHHXKJFTLTD-UHFFFAOYSA-N"), ("102", "7", "C=C(C)COC(C(F)(F)F)(C(F)(F)F)F"), ("102", "3", "DTXSID70617184"), ("102", "2", "DTXCID70567938"), ("102", "1", "38471-83-9"), ("103", "4", "InChI=1S/C12H7BrF9NOS/c1-6(24)23-25(8-4-2-7(13)3-5-8)12(21,22)10(16,17)9(14,15)11(18,19)20/h2-5H,1H3"), ("103", "5", "ALLMSMRJFZFUBB-UHFFFAOYSA-N"), ("103", "7", "CC(=O)N=S(c1ccc(cc1)Br)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("103", "3", "DTXSID90897466"), ("103", "2", "DTXCID901326806"), ("103", "1", "1178899-27-8"), ("104", "4", "InChI=1S/C12H8F9NOS/c1-7(23)22-24(8-5-3-2-4-6-8)12(20,21)10(15,16)9(13,14)11(17,18)19/h2-6H,1H3"), ("104", "5", "MAUZJOYMXJCRIB-UHFFFAOYSA-N"), ("104", "7", "CC(=O)N=S(c1ccccc1)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("104", "3", "DTXSID60897211"), ("104", "2", "DTXCID801326603"), ("104", "1", "1178899-18-7"), ("105", "4", "InChI=1S/C10H7F9O3/c1-3(20)5(4(2)21)6(22)7(11,12)8(13,14)9(15,16)10(17,18)19/h5H,1-2H3"), ("105", "5", "HVLNFEAJGJQHFN-UHFFFAOYSA-N"), ("105", "7", "CC(=O)C(C(=O)C)C(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("105", "3", "DTXSID50895625"), ("105", "2", "DTXCID201325140"), ("105", "1", "120110-91-0"), ("106", "4", "InChI=1S/C9H3F15O/c1-2(25)3(10,11)4(12,13)5(14,15)6(16,17)7(18,19)8(20,21)9(22,23)24/h1H3"), ("106", "5", "LFMZSQGESVNRLL-UHFFFAOYSA-N"), ("106", "7", "CC(=O)C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("106", "3", "DTXSID50504109"), ("106", "2", "DTXCID10454919"), ("106", "1", "754-85-8"), ("107", "4", "InChI=1S/C8H3F13O/c1-2(22)3(9,10)4(11,12)5(13,14)6(15,16)7(17,18)8(19,20)21/h1H3"), ("107", "5", "IWJCXMJWFQQWED-UHFFFAOYSA-N"), ("107", "7", "CC(=O)C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("107", "3", "DTXSID80895471"), ("107", "2", "DTXCID101324987"), ("107", "1", "80793-21-1"), ("108", "4", "InChI=1S/C7H3F11O/c1-2(19)3(8,9)4(10,11)5(12,13)6(14,15)7(16,17)18/h1H3"), ("108", "5", "HWGNOHFZECDUBX-UHFFFAOYSA-N"), ("108", "7", "CC(=O)C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("108", "3", "DTXSID00578936"), ("108", "2", "DTXCID20529703"), ("108", "1", "7/8/2708"), ("109", "4", "InChI=1S/C6H3F9O/c1-2(16)3(7,8)4(9,10)5(11,12)6(13,14)15/h1H3"), ("109", "5", "LPPFRPMJUNOKRS-UHFFFAOYSA-N"), ("109", "7", "CC(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("109", "3", "DTXSID90379555"), ("109", "2", "DTXCID50330581"), ("109", "1", "678-18-2"), ("110", "4", "InChI=1S/C5H3F7O/c1-2(13)3(6,7)4(8,9)5(10,11)12/h1H3"), ("110", "5", "XJYXROGTQYHLTH-UHFFFAOYSA-N"), ("110", "7", "CC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("110", "3", "DTXSID00188993"), ("110", "2", "DTXCID60111484"), ("110", "1", "355-17-9"), ("111", "4", "InChI=1S/C10H3F15O/c1-2(26)3(11)4(12)5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)25/h1H3"), ("111", "5", "GASXCMFGMORIFO-UHFFFAOYSA-N"), ("111", "7", "CC(=O)C(=C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)F)F"), ("111", "3", "DTXSID20758051"), ("111", "2", "DTXCID40708795"), ("111", "1", "92604-91-6"), ("112", "4", "InChI=1S/C11H4F16O/c1-3(28)2-4(12)5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)27/h2H,1H3"), ("112", "5", "FGWAKQKTCXBUER-UHFFFAOYSA-N"), ("112", "7", "CC(=O)C=C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)F"), ("113", "4", "InChI=1S/C11H7F7O/c1-6(19)7-2-4-8(5-3-7)9(12,10(13,14)15)11(16,17)18/h2-5H,1H3"), ("113", "5", "HJVLSXWSPYGSIV-UHFFFAOYSA-N"), ("113", "7", "CC(=O)c1ccc(cc1)C(C(F)(F)F)(C(F)(F)F)F"), ("113", "3", "DTXSID10896330"), ("113", "2", "DTXCID601325823"), ("113", "1", "353273-22-0"), ("114", "4", "InChI=1S/C9H6F7NO/c1-4(18)5-2-17-3-6(5)7(10,11)8(12,13)9(14,15)16/h2-3,17H,1H3"), ("114", "5", "BWOZUJHCNZSSLZ-UHFFFAOYSA-N"), ("114", "7", "CC(=O)c1c[nH]cc1C(C(C(F)(F)F)(F)F)(F)F"), ("114", "3", "DTXSID60557803"), ("114", "2", "DTXCID90508585"), ("114", "1", "121103-97-7"), ("115", "4", "InChI=1S/C7H6F7NO/c1-3(16)2-4(15)5(8,9)6(10,11)7(12,13)14/h15H,2H2,1H3"), ("115", "5", "DWUMJZXYFAYWQF-UHFFFAOYSA-N"), ("115", "7", "CC(=O)CC(=N)C(C(C(F)(F)F)(F)F)(F)F"), ("116", "4", "InChI=1S/C12H5F17O2/c1-3(30)2-4(31)5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)29/h2H2,1H3"), ("116", "5", "LOPUACNVJXKLKA-UHFFFAOYSA-N"), ("116", "7", "CC(=O)CC(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("116", "3", "DTXSID20895672"), ("116", "2", "DTXCID101325185"), ("116", "1", "203201-14-3"), ("117", "4", "InChI=1S/C10H5F13O2/c1-3(24)2-4(25)5(11,12)6(13,14)7(15,16)8(17,18)9(19,20)10(21,22)23/h2H2,1H3"), ("117", "5", "VMRLNPHYYNLINM-UHFFFAOYSA-N"), ("117", "7", "CC(=O)CC(=O)C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("117", "3", "DTXSID90382069"), ("117", "2", "DTXCID70333094"), ("117", "1", "82822-26-2"), ("118", "4", "InChI=1S/C9H5F11O2/c1-3(21)2-4(22)5(10,11)6(12,13)7(14,15)8(16,17)9(18,19)20/h2H2,1H3"), ("118", "5", "YKIGIKLABXBCDX-UHFFFAOYSA-N"), ("118", "7", "CC(=O)CC(=O)C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("118", "3", "DTXSID90504108"), ("118", "2", "DTXCID50454918"), ("118", "1", "75824-01-0"), ("119", "4", "InChI=1S/C8H5F9O2/c1-3(18)2-4(19)5(9,10)6(11,12)7(13,14)8(15,16)17/h2H2,1H3"), ("119", "5", "NQPVZXRGQCXFLN-UHFFFAOYSA-N"), ("119", "7", "CC(=O)CC(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("119", "3", "DTXSID70379715"), ("119", "2", "DTXCID30330741"), ("119", "1", "355-84-0"), ("120", "4", "InChI=1S/C7H5F7O2/c1-3(15)2-4(16)5(8,9)6(10,11)7(12,13)14/h2H2,1H3"), ("120", "5", "QHBCZMRCKGKVSR-UHFFFAOYSA-N"), ("120", "7", "CC(=O)CC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("120", "3", "DTXSID40379267"), ("120", "2", "DTXCID00330293"), ("120", "1", "356-30-9"), ("121", "4", "InChI=1S/C9H5F11O3/c1-3(21)2-4(22)5(10,7(13,14)15)23-9(19,20)6(11,12)8(16,17)18/h2H2,1H3"), ("121", "5", "WKZWQTGKGJHUHH-UHFFFAOYSA-N"), ("121", "7", "CC(=O)CC(=O)C(C(F)(F)F)(F)OC(C(C(F)(F)F)(F)F)(F)F"), ("121", "3", "DTXSID70896513"), ("121", "2", "DTXCID201326005"), ("121", "1", "261760-03-6"), ("122", "4", "InChI=1S/C9H5F13O/c1-3(23)2-4(10,11)5(12,13)6(14,15)7(16,17)8(18,19)9(20,21)22/h2H2,1H3"), ("122", "5", "RRFHTSQSIQEIHY-UHFFFAOYSA-N"), ("122", "7", "CC(=O)CC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("122", "3", "DTXSID40379924"), ("122", "2", "DTXCID00330950"), ("122", "1", "77893-60-8"), ("123", "4", "InChI=1S/C7H5F9O/c1-3(17)2-4(8,9)5(10,11)6(12,13)7(14,15)16/h2H2,1H3"), ("123", "5", "YBLYWKGTXUNAOC-UHFFFAOYSA-N"), ("123", "7", "CC(=O)CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("123", "3", "DTXSID90516569"), ("123", "2", "DTXCID40467375"), ("123", "1", "86358-19-2"), ("124", "4", "InChI=1S/C6H5F7O/c1-3(14)2-4(7,8)5(9,10)6(11,12)13/h2H2,1H3"), ("124", "5", "HXAYZDVVQAKLDA-UHFFFAOYSA-N"), ("124", "7", "CC(=O)CC(C(C(F)(F)F)(F)F)(F)F"), ("124", "3", "DTXSID80382139"), ("124", "2", "DTXCID60333164"), ("124", "1", "136909-72-3"), ("125", "4", "InChI=1S/C43H45F23O11/c1-22(67)2-3-23(68)4-5-24(69)6-7-25(70)8-9-26(71)10-11-27(72)12-13-28(73)14-15-29(74)16-17-30(75)18-19-31(76)20-32(77)21-33(44,45)35(47,48)37(51,52)39(55,56)41(59,60)40(57,58)38(53,54)36(49,50)34(46,42(61,62)63)43(64,65)66/h32,77H,2-21H2,1H3"), ("125", "5", "NFDIWGSYOGEYNO-UHFFFAOYSA-N"), ("125", "7", "CC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CCC(=O)CC(CC(C(C(C(C(C(C(C(C(C(F)(F)F)(C(F)(F)F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("125", "3", "DTXSID90881027"), ("125", "2", "DTXCID901022345"), ("125", "1", "93776-10-4"), ("126", "4", "InChI=1S/C12H7F17O/c1-4(30)2-3-5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)29/h2-3H2,1H3"), ("126", "5", "YODYACHGCKMUMD-UHFFFAOYSA-N"), ("126", "7", "CC(=O)CCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("126", "3", "DTXSID20895536"), ("126", "2", "DTXCID001325051"), ("126", "1", "82486-22-4"), ("127", "4", "InChI=1S/C8H7F9O/c1-4(18)2-3-5(9,10)6(11,12)7(13,14)8(15,16)17/h2-3H2,1H3"), ("127", "5", "QSFHSDZDCSCCGQ-UHFFFAOYSA-N"), ("127", "7", "CC(=O)CCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("127", "3", "DTXSID20577986"), ("127", "2", "DTXCID80528757"), ("127", "1", "140834-64-6"), ("128", "4", "InChI=1S/C19H15F7N4O2/c1-11(31)30-15-5-4-14(17(20,18(21,22)23)19(24,25)26)7-13(15)10-29(16(30)32)28-9-12-3-2-6-27-8-12/h2-8,28H,9-10H2,1H3"), ("128", "5", "MIOBBYRMXGNORL-UHFFFAOYSA-N"), ("128", "7", "CC(=O)N1c2ccc(cc2CN(C1=O)NCc1cccnc1)C(C(F)(F)F)(C(F)(F)F)F"), ("128", "3", "DTXSID6058057"), ("128", "2", "DTXCID2031825"), ("128", "1", "337458-27-2"), ("129", "4", "InChI=1S/C12H12F9NO/c1-6-4-22(7(2)23)5-8(6)3-9(13,14)10(15,16)11(17,18)12(19,20)21/h8H,1,3-5H2,2H3"), ("129", "5", "CFZPILZXWJKGJJ-UHFFFAOYSA-N"), ("129", "7", "C=C1CN(CC1CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)C(=O)C"), ("129", "3", "DTXSID90370986"), ("129", "2", "DTXCID30322020"), ("129", "1", "31164-13-3"), ("130", "4", "InChI=1S/C17H4F26N2O/c1-3(46)45-5(7(20,21)9(24,25)11(28,29)13(32,33)15(36,37)17(41,42)43)2-4(44-45)6(18,19)8(22,23)10(26,27)12(30,31)14(34,35)16(38,39)40/h2H,1H3"), ("130", "5", "IQHPIVLECIKIGS-UHFFFAOYSA-N"), ("130", "7", "CC(=O)n1c(cc(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)n1)C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("130", "3", "DTXSID60370978"), ("130", "2", "DTXCID00322012"), ("130", "1", "231953-34-7"), ("131", "4", "InChI=1S/C19H11F17N2O3/c1-6(39)37-8-3-9(38-7(2)40)5-10(4-8)41-12(15(22,23)24)11(13(20,16(25,26)27)17(28,29)30)14(21,18(31,32)33)19(34,35)36/h3-5H,1-2H3,(H,37,39)(H,38,40)"), ("131", "5", "NPGWPCYQBUMSNZ-UHFFFAOYSA-N"), ("131", "7", "CC(=Nc1cc(cc(c1)OC(=C(C(C(F)(F)F)(C(F)(F)F)F)C(C(F)(F)F)(C(F)(F)F)F)C(F)(F)F)N=C(C)O)O"), ("131", "3", "DTXSID20896745"), ("131", "2", "DTXCID601326233"), ("131", "1", "150225-65-3"), ("132", "4", "InChI=1S/C11H8F7NO/c1-6(20)19-8-4-2-7(3-5-8)9(12,13)10(14,15)11(16,17)18/h2-5H,1H3,(H,19,20)"), ("132", "5", "DGTLBPOBSFXXAK-UHFFFAOYSA-N"), ("132", "7", "CC(=Nc1ccc(cc1)C(C(C(F)(F)F)(F)F)(F)F)O"), ("132", "3", "DTXSID30895946"), ("132", "2", "DTXCID701325440"), ("132", "1", "199530-73-9"), ("133", "4", "InChI=1S/C12H8F9NO4S/c1-6(23)22-7-2-4-8(5-3-7)26-27(24,25)12(20,21)10(15,16)9(13,14)11(17,18)19/h2-5H,1H3,(H,22,23)"), ("133", "5", "XKJVCVNWVBTHFU-UHFFFAOYSA-N"), ("133", "7", "CC(=Nc1ccc(cc1)OS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("133", "3", "DTXSID80896221"), ("133", "2", "DTXCID201325714"), ("133", "1", "41605-57-6"), ("134", "4", "InChI=1S/C12H7ClF9NO4S/c1-5(24)23-8-3-2-6(4-7(8)13)27-28(25,26)12(21,22)10(16,17)9(14,15)11(18,19)20/h2-4H,1H3,(H,23,24)"), ("134", "5", "OSNHQRSDSSUDCW-UHFFFAOYSA-N"), ("134", "7", "CC(=Nc1ccc(cc1Cl)OS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("134", "3", "DTXSID00896263"), ("134", "2", "DTXCID001325756"), ("134", "1", "1428370-26-6"), ("135", "4", "InChI=1S/C10H6F7N5O/c1-3(23)20-5-4-6(19-2-18-5)22-7(21-4)8(11,12)9(13,14)10(15,16)17/h2H,1H3,(H2,18,19,20,21,22,23)"), ("135", "5", "MHGACOGUAGEXMU-UHFFFAOYSA-N"), ("135", "7", "CC(=Nc1c2c(ncn1)[nH]c(C(C(C(F)(F)F)(F)F)(F)F)n2)O"), ("135", "3", "DTXSID50896218"), ("135", "2", "DTXCID101325711"), ("135", "1", "147916-78-7"), ("136", "4", "InChI=1S/C7H4F7N3OS/c1-2(18)15-4-17-16-3(19-4)5(8,9)6(10,11)7(12,13)14/h1H3,(H,15,17,18)"), ("136", "5", "UZHFMCLWCHAURR-UHFFFAOYSA-N"), ("136", "7", "CC(=Nc1nnc(C(C(C(F)(F)F)(F)F)(F)F)s1)O"), ("136", "3", "DTXSID50896192"), ("136", "2", "DTXCID601325685"), ("136", "1", "356795-59-0"), ("137", "4", "InChI=1S/C12H9F9N2O5S2/c1-6(24)22-29(25,26)8-4-2-7(3-5-8)23-30(27,28)12(20,21)10(15,16)9(13,14)11(17,18)19/h2-5,23H,1H3,(H,22,24)"), ("137", "5", "IIGNRGIDQZSRJU-UHFFFAOYSA-N"), ("137", "7", "CC(=NS(=O)(=O)c1ccc(cc1)NS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("137", "3", "DTXSID40896267"), ("137", "2", "DTXCID401325760"), ("137", "1", "320599-24-4"), ("138", "4", "InChI=1S/C20H14F17IO4/c1-9(39)41-38(42-10(2)40)12-5-3-11(4-6-12)7-8-13(21,22)14(23,24)15(25,26)16(27,28)17(29,30)18(31,32)19(33,34)20(35,36)37/h3-6H,7-8H2,1-2H3"), ("138", "5", "YHQLCCOIFRKRJC-UHFFFAOYSA-N"), ("138", "7", "CC(=O)O[I](c1ccc(cc1)CCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)OC(=O)C"), ("138", "3", "DTXSID30897046"), ("138", "2", "DTXCID901326482"), ("138", "1", "882186-02-9"), ("139", "4", "InChI=1S/C8H7F7O2/c1-4(17-5(2)16)3-6(9,10)7(11,12)8(13,14)15/h1,3H2,2H3"), ("139", "5", "OKIJUKHROTUCQA-UHFFFAOYSA-N"), ("139", "7", "C=C(CC(C(C(F)(F)F)(F)F)(F)F)OC(=O)C"), ("139", "3", "DTXSID60895631"), ("139", "2", "DTXCID701325145"), ("139", "1", "136909-80-3"), ("140", "4", "InChI=1S/C19H11Cl2F17O2/c1-7(39)40-11-3-2-9(20)4-8(11)5-10(21)6-12(22,23)13(24,25)14(26,27)15(28,29)16(30,31)17(32,33)18(34,35)19(36,37)38/h2-4,10H,5-6H2,1H3"), ("140", "5", "NVGMZQYQNNPDAJ-UHFFFAOYSA-N"), ("140", "7", "CC(=O)Oc1ccc(cc1CC(CC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)Cl)Cl"), ("140", "3", "DTXSID80896165"), ("140", "2", "DTXCID901325658"), ("140", "1", "38506-76-2"), ("141", "4", "InChI=1S/C19H11Cl2F17O2/c1-7(39)40-11-5-9(20)3-2-8(11)4-10(21)6-12(22,23)13(24,25)14(26,27)15(28,29)16(30,31)17(32,33)18(34,35)19(36,37)38/h2-3,5,10H,4,6H2,1H3"), ("141", "5", "ZHZVFKZCPDCNHG-UHFFFAOYSA-N"), ("141", "7", "CC(=O)Oc1cc(ccc1CC(CC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)Cl)Cl"), ("141", "3", "DTXSID10896173"), ("141", "2", "DTXCID101325666"), ("141", "1", "38506-72-8"), ("142", "4", "InChI=1S/C19H9Cl4F17O2/c1-5(41)42-11-7(10(23)8(21)3-9(11)22)2-6(20)4-12(24,25)13(26,27)14(28,29)15(30,31)16(32,33)17(34,35)18(36,37)19(38,39)40/h3,6H,2,4H2,1H3"), ("142", "5", "JDRLLIHRNJZEPG-UHFFFAOYSA-N"), ("142", "7", "CC(=O)Oc1c(CC(CC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)Cl)c(c(cc1Cl)Cl)Cl"), ("142", "3", "DTXSID80896226"), ("142", "2", "DTXCID701325719"), ("142", "1", "38506-78-4"), ("143", "4", "InChI=1S/C6H5F7O2/c1-3(14)15-2-4(7,8)5(9,10)6(11,12)13/h2H2,1H3"), ("143", "5", "JJRRHZPKVSFERJ-UHFFFAOYSA-N"), ("143", "7", "CC(=O)OCC(C(C(F)(F)F)(F)F)(F)F"), ("143", "3", "DTXSID00895473"), ("143", "2", "DTXCID501324989"), ("143", "1", "356-06-9"), ("144", "4", "InChI=1S/C8H8F7IO2/c1-4(17)18-3-5(16)2-6(9,10)7(11,12)8(13,14)15/h5H,2-3H2,1H3"), ("144", "5", "TYWLMXXVTNXETF-UHFFFAOYSA-N"), ("144", "7", "CC(=O)OCC(CC(C(C(F)(F)F)(F)F)(F)F)I"), ("144", "3", "DTXSID00896985"), ("144", "2", "DTXCID401326413"), ("144", "1", "5/2/3108"), ("145", "4", "InChI=1S/C18H19F9O12S/c1-6(28)34-5-10-11(35-7(2)29)12(36-8(3)30)13(14(38-10)37-9(4)31)39-40(32,33)18(26,27)16(21,22)15(19,20)17(23,24)25/h10-14H,5H2,1-4H3"), ("145", "5", "RHEYHPACKVZWRD-UHFFFAOYSA-N"), ("145", "7", "CC(=O)OCC1C(C(C(C(OC(=O)C)O1)OS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)OC(=O)C)OC(=O)C"), ("145", "3", "DTXSID80401536"), ("145", "2", "DTXCID20352391"), ("145", "1", "480438-48-0"), ("146", "4", "InChI=1S/C12H7F17O2/c1-4(30)31-3-2-5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)29/h2-3H2,1H3"), ("146", "5", "CPOHLPPQNCULDC-UHFFFAOYSA-N"), ("146", "7", "CC(=O)OCCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("146", "3", "DTXSID80895739"), ("146", "2", "DTXCID701325252"), ("146", "1", "37858-04-1"), ("147", "4", "InChI=1S/C10H7F13O2/c1-4(24)25-3-2-5(11,12)6(13,14)7(15,16)8(17,18)9(19,20)10(21,22)23/h2-3H2,1H3"), ("147", "5", "RWFSINLLADOLPV-UHFFFAOYSA-N"), ("147", "7", "CC(=O)OCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("147", "3", "DTXSID20895677"), ("147", "2", "DTXCID201325190"), ("147", "1", "37858-03-0"), ("148", "4", "InChI=1S/C8H7F9O2/c1-4(18)19-3-2-5(9,10)6(11,12)7(13,14)8(15,16)17/h2-3H2,1H3"), ("148", "5", "WUXJRZYSKWYAEV-UHFFFAOYSA-N"), ("148", "7", "CC(=O)OCCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("148", "3", "DTXSID40895598"), ("148", "2", "DTXCID501325113"), ("148", "1", "80705-15-3"), ("149", "4", "InChI=1S/C7H7F7O2/c1-4(15)16-3-2-5(8,9)6(10,11)7(12,13)14/h2-3H2,1H3"), ("149", "5", "ZWEZQJCJOMYJJZ-UHFFFAOYSA-N"), ("149", "7", "CC(=O)OCCC(C(C(F)(F)F)(F)F)(F)F"), ("149", "3", "DTXSID20895495"), ("149", "2", "DTXCID601325011"), ("149", "1", "425-68-3"), ("150", "4", "InChI=1S/C13H9F17O2/c1-5(31)32-4-2-3-6(14,15)7(16,17)8(18,19)9(20,21)10(22,23)11(24,25)12(26,27)13(28,29)30/h2-4H2,1H3"), ("150", "5", "SMQMUBNEBGDJAY-UHFFFAOYSA-N"), ("150", "7", "CC(=O)OCCCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("150", "3", "DTXSID80382073"), ("150", "2", "DTXCID10333098"), ("150", "1", "150225-00-6"), ("151", "4", "InChI=1S/C8H9F7O2/c1-5(16)17-4-2-3-6(9,10)7(11,12)8(13,14)15/h2-4H2,1H3"), ("151", "5", "ACXWRVKTAODIKP-UHFFFAOYSA-N"), ("151", "7", "CC(=O)OCCCC(C(C(F)(F)F)(F)F)(F)F"), ("151", "3", "DTXSID00895478"), ("151", "2", "DTXCID601324994"), ("151", "1", "25600-64-0"), ("152", "4", "InChI=1S/C7H7F7OS/c1-4(15)16-3-2-5(8,6(9,10)11)7(12,13)14/h2-3H2,1H3"), ("152", "5", "RRZDHOAZQMLOTR-UHFFFAOYSA-N"), ("152", "7", "CC(=O)SCCC(C(F)(F)F)(C(F)(F)F)F"), ("152", "3", "DTXSID30896332"), ("152", "2", "DTXCID001325825"), ("152", "1", "1097631-01-0"), ("153", "4", "InChI=1S/C12H7F17OS/c1-4(30)31-3-2-5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)11(25,26)12(27,28)29/h2-3H2,1H3"), ("153", "5", "FCWDPZFBROQQBN-UHFFFAOYSA-N"), ("153", "7", "CC(=O)SCCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("153", "3", "DTXSID30895749"), ("153", "2", "DTXCID301325262"), ("153", "1", "125640-21-3"), ("154", "4", "InChI=1S/C10H7F13OS/c1-4(24)25-3-2-5(11,12)6(13,14)7(15,16)8(17,18)9(19,20)10(21,22)23/h2-3H2,1H3"), ("154", "5", "SVEVXDYTPMSOIT-UHFFFAOYSA-N"), ("154", "7", "CC(=O)SCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("154", "3", "DTXSID60895691"), ("154", "2", "DTXCID101325204"), ("154", "1", "213681-67-5"), ("155", "4", "InChI=1S/C7H7Br2F7O/c1-3(9)4(17,2-8)5(10,11)6(12,13)7(14,15)16/h3,17H,2H2,1H3"), ("155", "5", "BMHLOJFRGFOQEG-UHFFFAOYSA-N"), ("155", "7", "CC(C(CBr)(C(C(C(F)(F)F)(F)F)(F)F)O)Br"), ("155", "3", "DTXSID00758594"), ("155", "2", "DTXCID30709337"), ("155", "1", "93339-87-8"), ("156", "4", "InChI=1S/C7H3F13/c1-2(5(12,13)14,6(15,16)17)3(8,9)4(10,11)7(18,19)20/h1H3"), ("156", "5", "YYCWIWYZXFOZFO-UHFFFAOYSA-N"), ("156", "7", "CC(C(C(C(F)(F)F)(F)F)(F)F)(C(F)(F)F)C(F)(F)F"), ("156", "3", "DTXSID60467913"), ("156", "2", "DTXCID50418732"), ("156", "1", "100645-99-6"), ("157", "4", "InChI=1S/C11H5F17O2/c1-2(3(29)30)4(12,13)5(14,15)6(16,17)7(18,19)8(20,21)9(22,23)10(24,25)11(26,27)28/h2H,1H3,(H,29,30)"), ("157", "5", "LYZCGZWGQVKVSU-UHFFFAOYSA-N"), ("157", "7", "CC(C(=O)O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("157", "3", "DTXSID20895637"), ("157", "2", "DTXCID501325151"), ("157", "1", "136022-86-1"), ("158", "4", "InChI=1S/C9H6F13NO2/c1-3(2,23(24)25)4(10,11)5(12,13)6(14,15)7(16,17)8(18,19)9(20,21)22/h1-2H3"), ("158", "5", "ITHGUKYRCZMXFU-UHFFFAOYSA-N"), ("158", "7", "CC(C)(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)N(=O)=O"), ("158", "3", "DTXSID90895669"), ("158", "2", "DTXCID001325182"), ("158", "1", "84108-41-8"), ("159", "4", "InChI=1S/C10H12F7NO/c1-7(2,3)5(18)4-6(19)8(11,12)9(13,14)10(15,16)17/h18H,4H2,1-3H3"), ("159", "5", "HTLIQAXQGGLRLK-UHFFFAOYSA-N"), ("159", "7", "CC(C)(C)C(=N)CC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("160", "4", "InChI=1S/C16H14F7N3O4/c1-13(2,3)11(27)10(12(28)14(17,18)15(19,20)16(21,22)23)25-24-8-4-6-9(7-5-8)26(29)30/h4-7,10H,1-3H3"), ("160", "5", "KVAYICJLGQPULN-UHFFFAOYSA-N"), ("160", "7", "CC(C)(C)C(=O)C(C(=O)C(C(C(F)(F)F)(F)F)(F)F)N=Nc1ccc(cc1)N(=O)=O"), ("161", "4", "InChI=1S/C11H11F9O/c1-7(2,3)6(21)4-5-8(12,13)9(14,15)10(16,17)11(18,19)20/h4-5H,1-3H3"), ("161", "5", "FDLCNAFIXQUBBQ-UHFFFAOYSA-N"), ("161", "7", "CC(C)(C)C(=O)C=CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F"), ("161", "3", "DTXSID20761863"), ("161", "2", "DTXCID50712606"), ("161", "1", "105602-69-5"), ("162", "4", "InChI=1S/C9H11F5O3/c1-7(2,3)5(15)4-6(16)8(10,11)17-9(12,13)14/h4H2,1-3H3"), ("162", "5", "MMQBZJXQJGQEHQ-UHFFFAOYSA-N"), ("162", "7", "CC(C)(C)C(=O)CC(=O)C(F)(F)OC(F)(F)F"), ("162", "3", "DTXSID90509057"), ("162", "2", "DTXCID70459864"), ("162", "1", "61894-06-2"), ("163", "4", "InChI=1S/C10H12F9I/c1-6(2,3)5(20)4-7(11,12)8(13,14)9(15,16)10(17,18)19/h5H,4H2,1-3H3"), ("163", "5", "RZXNATDVPGMVHV-UHFFFAOYSA-N"), ("163", "7", "CC(C)(C)C(CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)I"), ("163", "3", "DTXSID70895228"), ("163", "2", "DTXCID401324748"), ("163", "1", "1464148-69-3"), ("164", "4", "InChI=1S/C44H36F34N2O2/c1-27(2,3)21-13-19(29(45,46)31(49,50)33(53,54)35(57,58)37(61,62)39(65,66)41(69,70)43(73,74)75)11-17(25(21)81)15-79-23-9-7-8-10-24(23)80-16-18-12-20(14-22(26(18)82)28(4,5)6)30(47,48)32(51,52)34(55,56)36(59,60)38(63,64)40(67,68)42(71,72)44(76,77)78/h11-16,23-24,81-82H,7-10H2,1-6H3"), ("164", "5", "JLYAJKMTSYBUFR-UHFFFAOYSA-N"), ("164", "7", "CC(C)(C)c1cc(cc(C=NC2CCCCC2N=Cc2cc(cc(c2O)C(C)(C)C)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)c1O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("165", "4", "InChI=1S/C18H17F7N2O2/c1-15(2,3)11-6-4-10(5-7-11)13-8-12(27-29-13)14(28)26-9-16(19,20)17(21,22)18(23,24)25/h4-8H,9H2,1-3H3,(H,26,28)"), ("165", "5", "PXIPJQUDARNNQU-UHFFFAOYSA-N"), ("165", "7", "CC(C)(C)c1ccc(cc1)c1cc(C(=NCC(C(C(F)(F)F)(F)F)(F)F)O)no1"), ("165", "3", "DTXSID70896275"), ("165", "2", "DTXCID001325768"), ("165", "1", "922421-40-7"), ("166", "4", "InChI=1S/C19H16F7N3/c1-16(2,3)13-10-14(17(20,21)18(22,23)19(24,25)26)29-15(27-13)9-12(28-29)11-7-5-4-6-8-11/h4-10H,1-3H3"), ("166", "5", "RNWIQELODLHLDL-UHFFFAOYSA-N"), ("166", "7", "CC(C)(C)c1cc(C(C(C(F)(F)F)(F)F)(F)F)n2c(cc(c3ccccc3)n2)n1"), ("166", "3", "DTXSID60896269"), ("166", "2", "DTXCID801325762"), ("166", "1", "346637-99-8"), ("167", "4", "InChI=1S/C26H34F14N4/c1-19(2,3)15-13-17(21(27,28)23(31,32)25(35,36)37)43-12-8-10-42-16(20(4,5)6)14-18(44-11-7-9-41-15)22(29,30)24(33,34)26(38,39)40/h7-14H2,1-6H3"), ("167", "5", "UYRIJNJIDYTBCG-UHFFFAOYSA-N"), ("167", "7", "CC(C)(C)C1=NCCCN=C(CC(=NCCCN=C(C1)C(C(C(F)(F)F)(F)F)(F)F)C(C)(C)C)C(C(C(F)(F)F)(F)F)(F)F"), ("167", "3", "DTXSID60896188"), ("167", "2", "DTXCID801325681"), ("167", "1", "925457-51-8"), ("168", "4", "InChI=1S/C10H12F8/c1-7(2,3)5-4-6(11)8(12,13)9(14,15)10(16,17)18/h4H,5H2,1-3H3"), ("168", "5", "AQGWVKJSVXSZGI-UHFFFAOYSA-N"), ("168", "7", "CC(C)(C)CC=C(C(C(C(F)(F)F)(F)F)(F)F)F"), ("168", "3", "DTXSID10848036"), ("168", "2", "DTXCID40798777"), ("168", "1", "90292-33-4"), ("169", "4", "InChI=1S/C8H10F7NO/c1-5(2,3)16-4(17)6(9,10)7(11,12)8(13,14)15/h1-3H3,(H,16,17)"), ("169", "5", "SUHRXMXSRDLXIL-UHFFFAOYSA-N"), ("169", "7", "CC(C)(C)N=C(C(C(C(F)(F)F)(F)F)(F)F)O"), ("169", "3", "DTXSID60895919"), ("169", "2", "DTXCID701325414"), ("169", "1", "99089-22-2"), ("170", "4", "InChI=1S/C8H9F7O2/c1-5(2,3)17-4(16)6(9,10)7(11,12)8(13,14)15/h1-3H3"), ("170", "5", "JPVACFHILHDRGX-UHFFFAOYSA-N"), ("170", "7", "CC(C)(C)OC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("170", "3", "DTXSID40895593"), ("170", "2", "DTXCID401325108"), ("170", "1", "425-24-1"), ("171", "4", "InChI=1S/C12H15F9INO2/c1-8(2,3)25-7(24)23-5-6(22)4-9(13,14)10(15,16)11(17,18)12(19,20)21/h6H,4-5H2,1-3H3,(H,23,24)"), ("171", "5", "FAXXTHFQCHDQLQ-UHFFFAOYSA-N"), ("171", "7", "CC(C)(C)OC(=NCC(CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)I)O"), ("171", "3", "DTXSID20896088"), ("171", "2", "DTXCID301325581"), ("171", "1", "1301739-79-6"), ("172", "4", "InChI=1S/C8H9F7O3/c1-5(2,3)18-17-4(16)6(9,10)7(11,12)8(13,14)15/h1-3H3"), ("172", "5", "IEIUNVABWRASPD-UHFFFAOYSA-N"), ("172", "7", "CC(C)(C)OOC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("172", "3", "DTXSID10757210"), ("172", "2", "DTXCID30707954"), ("172", "1", "91481-65-1"), ("173", "4", "InChI=1S/C9H9F8NO2/c1-6(2,18(19)20)4-3-5(10)7(11,12)8(13,14)9(15,16)17/h3H,4H2,1-2H3"), ("173", "5", "OWTPDHDNFWAJET-UHFFFAOYSA-N"), ("173", "7", "CC(C)(CC=C(C(C(C(F)(F)F)(F)F)(F)F)F)N(=O)=O"), ("173", "3", "DTXSID30848038"), ("173", "2", "DTXCID60798779"), ("173", "1", "90292-31-2"), ("174", "4", "InChI=1S/C22H15F17N2O3/c1-14(2,43-13(42)44-41-12(10-40)11-6-4-3-5-7-11)8-9-15(23,24)16(25,26)17(27,28)18(29,30)19(31,32)20(33,34)21(35,36)22(37,38)39/h3-7H,8-9H2,1-2H3"), ("174", "5", "NFEFLNJWJYPWIZ-UHFFFAOYSA-N"), ("174", "7", "CC(C)(CCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)OC(=O)ON=C(C#N)c1ccccc1"), ("174", "3", "DTXSID00698325"), ("174", "2", "DTXCID00649074"), ("174", "1", "350716-42-6"), ("175", "4", "InChI=1S/C8H8F7NO3/c1-5(2,4(18)19)16-3(17)6(9,10)7(11,12)8(13,14)15/h1-2H3,(H,16,17)(H,18,19)"), ("175", "5", "GLLTUKTVAHGIDJ-UHFFFAOYSA-N"), ("175", "7", "CC(C)(C(=O)O)N=C(C(C(C(F)(F)F)(F)F)(F)F)O"), ("175", "3", "DTXSID40826029"), ("175", "2", "DTXCID80776771"), ("175", "1", "880353-20-8"), ("176", "4", "InChI=1S/C9H7F9O/c1-5(2,19)3-4-6(10,11)7(12,13)8(14,15)9(16,17)18/h19H,1-2H3"), ("176", "5", "WITWPGGAZCIZSI-UHFFFAOYSA-N"), ("176", "7", "CC(C)(C#CC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("176", "3", "DTXSID30535037"), ("176", "2", "DTXCID30485826"), ("176", "1", "82721-68-4"), ("177", "4", "InChI=1S/C10H7F15O/c1-3(2,26)4(11,12)5(13,14)6(15,16)7(17,18)8(19,20)9(21,22)10(23,24)25/h26H,1-2H3"), ("177", "5", "BZJOFKMJAVMVQL-UHFFFAOYSA-N"), ("177", "7", "CC(C)(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("177", "3", "DTXSID60524434"), ("177", "2", "DTXCID00475239"), ("177", "1", "92914-88-0"), ("178", "4", "InChI=1S/C6H7F7O/c1-3(2,14)4(7,8)5(9,10)6(11,12)13/h14H,1-2H3"), ("178", "5", "CZPWXOSMOFCBOR-UHFFFAOYSA-N"), ("178", "7", "CC(C)(C(C(C(F)(F)F)(F)F)(F)F)O"), ("178", "3", "DTXSID20337244"), ("178", "2", "DTXCID10288332"), ("178", "1", "355-22-6"), ("179", "4", "InChI=1S/C13H11F17O/c1-5(2,31)3-4-6(14,15)7(16,17)8(18,19)9(20,21)10(22,23)11(24,25)12(26,27)13(28,29)30/h31H,3-4H2,1-2H3"), ("179", "5", "VDLOMMAXELCHDN-UHFFFAOYSA-N"), ("179", "7", "CC(C)(CCC(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("179", "3", "DTXSID70382067"), ("179", "2", "DTXCID50333092"), ("179", "1", "141183-94-0"), ("180", "4", "InChI=1S/C11H11F13O/c1-5(2,25)3-4-6(12,13)7(14,15)8(16,17)9(18,19)10(20,21)11(22,23)24/h25H,3-4H2,1-2H3"), ("180", "5", "JFTPFVPCFXEYSQ-UHFFFAOYSA-N"), ("180", "7", "CC(C)(CCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("180", "3", "DTXSID30895441"), ("180", "2", "DTXCID301324957"), ("180", "1", "159142-65-1"), ("181", "4", "InChI=1S/C9H11F9O/c1-5(2,19)3-4-6(10,11)7(12,13)8(14,15)9(16,17)18/h19H,3-4H2,1-2H3"), ("181", "5", "RQVWCCCEFXMBKB-UHFFFAOYSA-N"), ("181", "7", "CC(C)(CCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)O"), ("181", "3", "DTXSID40895275"), ("181", "2", "DTXCID601324794"), ("181", "1", "269394-08-3"), ("182", "4", "InChI=1S/C30H21F14OP/c1-18(2)22(25(31,32)27(35,36)29(39,40)41)23(24(45)26(33,34)28(37,38)30(42,43)44)46(19-12-6-3-7-13-19,20-14-8-4-9-15-20)21-16-10-5-11-17-21/h3-17H,1-2H3"), ("182", "5", "ILHSDNSKBVJICM-UHFFFAOYSA-N"), ("182", "7", "CC(=C(C(=P(c1ccccc1)(c1ccccc1)c1ccccc1)C(=O)C(C(C(F)(F)F)(F)F)(F)F)C(C(C(F)(F)F)(F)F)(F)F)C"), ("182", "3", "DTXSID20897459"), ("182", "2", "DTXCID701326800"), ("182", "1", "139225-92-6"), ("183", "4", "InChI=1S/C10H9F7O2/c1-5(2)3-6(18)4-7(19)8(11,12)9(13,14)10(15,16)17/h3H,4H2,1-2H3"), ("183", "5", "NOQZTHSTUPFMOL-UHFFFAOYSA-N"), ("183", "7", "CC(=CC(=O)CC(=O)C(C(C(F)(F)F)(F)F)(F)F)C"), ("183", "3", "DTXSID80285777"), ("183", "2", "DTXCID00236928"), ("183", "1", "559-99-9"), ("184", "4", "InChI=1S/C9H8F8/c1-5(2)3-4-6(10)7(11,12)8(13,14)9(15,16)17/h3-4H,1-2H3"), ("184", "5", "ZSBHSCZBWXUBAW-UHFFFAOYSA-N"), ("184", "7", "CC(=CC=C(C(C(C(F)(F)F)(F)F)(F)F)F)C"), ("184", "3", "DTXSID00848040"), ("184", "2", "DTXCID30798781"), ("184", "1", "90292-28-7"), ("185", "4", "InChI=1S/C9H9F9/c1-5(2)3-4-6(10,11)7(12,13)8(14,15)9(16,17)18/h3H,4H2,1-2H3"), ("185", "5", "GBTVYCBTXQALCR-UHFFFAOYSA-N"), ("185", "7", "CC(=CCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)C"), ("185", "3", "DTXSID00760218"), ("185", "2", "DTXCID10710961"), ("185", "1", "97294-02-5"), ("186", "4", "InChI=1S/C8H7F9O3S/c1-4(2)3-20-21(18,19)8(16,17)6(11,12)5(9,10)7(13,14)15/h3H,1-2H3"), ("186", "5", "YXLCUSYNDAFUJJ-UHFFFAOYSA-N"), ("186", "7", "CC(=COS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)C"), ("186", "3", "DTXSID20895930"), ("186", "2", "DTXCID001325425"), ("186", "1", "84224-48-6"), ("187", "4", "InChI=1S/C7H7F7O/c1-3(2)4(15)5(8,6(9,10)11)7(12,13)14/h3H,1-2H3"), ("187", "5", "ANKPHPVKEKGBFK-UHFFFAOYSA-N"), ("187", "7", "CC(C)C(=O)C(C(F)(F)F)(C(F)(F)F)F"), ("187", "3", "DTXSID00508475"), ("187", "2", "DTXCID10459282"), ("187", "1", "62656-72-8"), ("188", "4", "InChI=1S/C9H9F7O2/c1-4(2)5(17)3-6(18)7(10,11)8(12,13)9(14,15)16/h4H,3H2,1-2H3"), ("188", "5", "SRYIDYXKUUXFNI-UHFFFAOYSA-N"), ("188", "7", "CC(C)C(=O)CC(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("188", "3", "DTXSID60193068"), ("188", "2", "DTXCID70115559"), ("188", "1", "40002-62-8"), ("189", "4", "InChI=1S/C12H11F13O2/c1-5(2)6(26)27-4-3-7(13,14)8(15,16)9(17,18)10(19,20)11(21,22)12(23,24)25/h5H,3-4H2,1-2H3"), ("189", "5", "VEAHUEAEPJJBDN-UHFFFAOYSA-N"), ("189", "7", "CC(C)C(=O)OCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("189", "3", "DTXSID00379980"), ("189", "2", "DTXCID80331006"), ("189", "1", "242812-05-1"), ("190", "4", "InChI=1S/C9H13F9N2O2S/c1-4(2)5(19)3-20-23(21,22)9(17,18)7(12,13)6(10,11)8(14,15)16/h4-5,20H,3,19H2,1-2H3"), ("190", "5", "LCROMADRNFAIKT-UHFFFAOYSA-N"), ("190", "7", "CC(C)C(CNS(=O)(=O)C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)N"), ("191", "4", "InChI=1S/C12H13F11O3/c1-5(2)6(24)9(15,16)7(25)26-4-3-8(13,14)10(17,18)11(19,20)12(21,22)23/h5-6,24H,3-4H2,1-2H3"), ("191", "5", "BFMMVADDYVCWBU-UHFFFAOYSA-N"), ("191", "7", "CC(C)C(C(C(=O)OCCC(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)O"), ("191", "3", "DTXSID70895940"), ("191", "2", "DTXCID601325435"), ("191", "1", "1370345-78-0"), ("192", "4", "InChI=1S/C14H14F13NO2/c1-5(2)7-6(30-8(29)28-7)3-4-9(15,16)10(17,18)11(19,20)12(21,22)13(23,24)14(25,26)27/h5-7H,3-4H2,1-2H3,(H,28,29)"), ("192", "5", "KIONFYCZIQVYKJ-UHFFFAOYSA-N"), ("192", "7", "CC(C)C1C(CCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)OC(=N1)O"), ("193", "4", "InChI=1S/C14H17F13O/c1-7(2)6-8(3)28-5-4-9(15,16)10(17,18)11(19,20)12(21,22)13(23,24)14(25,26)27/h7-8H,4-6H2,1-3H3"), ("193", "5", "REMSMUILZZYKPD-UHFFFAOYSA-N"), ("193", "7", "CC(C)CC(C)OCCC(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("193", "3", "DTXSID30893366"), ("193", "2", "DTXCID001323348"), ("193", "1", "210896-25-6"), ("194", "4", "InChI=1S/C35H48F14O2/c1-18(2)7-6-8-19(3)23-11-12-24-22-10-9-20-17-21(13-15-28(20,4)25(22)14-16-29(23,24)5)51-27(50)26(36)30(37,38)31(39,40)32(41,42)33(43,44)34(45,46)35(47,48)49/h18-26H,6-17H2,1-5H3"), ("194", "5", "QYBUWJRMHQVYLH-UHFFFAOYSA-N"), ("194", "7", "CC(C)CCCC(C)C1CCC2C3CCC4CC(CCC4(C)C3CCC12C)OC(=O)C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)F"), ("195", "4", "InChI=1S/C14H11F17O2/c1-5(2)3-4-33-6(32)7(15,16)8(17,18)9(19,20)10(21,22)11(23,24)12(25,26)13(27,28)14(29,30)31/h5H,3-4H2,1-2H3"), ("195", "5", "AFQCXIHNDWCQHP-UHFFFAOYSA-N"), ("195", "7", "CC(C)CCOC(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F"), ("195", "3", "DTXSID40895937"), ("195", "2", "DTXCID501325432"), ("195", "1", "117374-32-0"), ("196", "4", "InChI=1S/C11H11F11O3/c1-5(2)3-4-24-6(23)7(12,9(15,16)17)25-11(21,22)8(13,14)10(18,19)20/h5H,3-4H2,1-2H3"), ("196", "5", "AXCQVYBSRFQQRB-UHFFFAOYSA-N"), ("196", "7", "CC(C)CCOC(=O)C(C(F)(F)F)(F)OC(C(C(F)(F)F)(F)F)(F)F"), ("196", "3", "DTXSID90896510"), ("196", "2", "DTXCID101326002"), ("196", "1", "183873-56-5"), ("197", "4", "InChI=1S/C18H26F7NO5/c1-10(2)5-7-30-13(27)9-12(14(28)31-8-6-11(3)4)26-15(29)16(19,20)17(21,22)18(23,24)25/h10-12H,5-9H2,1-4H3,(H,26,29)"), ("197", "5", "VIFUJIXWSIVXKN-UHFFFAOYSA-N"), ("197", "7", "CC(C)CCOC(=O)CC(C(=O)OCCC(C)C)N=C(C(C(C(F)(F)F)(F)F)(F)F)O"), ("197", "3", "DTXSID00338835"), ("197", "2", "DTXCID40289918"), ("197", "1", "75743-06-5"), ("198", "4", "InChI=1S/C12H18F7NO/c1-7(2)5-20(6-8(3)4)9(21)10(13,14)11(15,16)12(17,18)19/h7-8H,5-6H2,1-4H3"), ("198", "5", "NDFMNNOBKSRVCH-UHFFFAOYSA-N"), ("198", "7", "CC(C)CN(CC(C)C)C(=O)C(C(C(F)(F)F)(F)F)(F)F"), ("198", "3", "DTXSID00895751"), ("198", "2", "DTXCID701325264"), ("198", "1", "336-30-1"), ("199", "4", "InChI=1S/C8H10F7NO/c1-4(2)3-16-5(17)6(9,10)7(11,12)8(13,14)15/h4H,3H2,1-2H3,(H,16,17)"), ("199", "5", "HWSOCRJXRIBNPB-UHFFFAOYSA-N"), ("199", "7", "CC(C)CN=C(C(C(C(F)(F)F)(F)F)(F)F)O"), ("199", "3", "DTXSID30895744"), ("199", "2", "DTXCID201325257"), ("199", "1", "75668-25-6"), ("200", "4", "InChI=1S/C22H32F7NO7/c1-11(2)8-35-16(31)14(17(32)36-9-12(3)4)7-15(18(33)37-10-13(5)6)30-19(34)20(23,24)21(25,26)22(27,28)29/h11-15H,7-10H2,1-6H3,(H,30,34)"), ("200", "5", "FWAHHXBYEZUSRR-UHFFFAOYSA-N"), ("200", "7", "CC(C)COC(=O)C(CC(C(=O)OCC(C)C)N=C(C(C(C(F)(F)F)(F)F)(F)F)O)C(=O)OCC(C)C"), ("200", "3", "DTXSID50896238"), ("200", "2", "DTXCID301325731"), ("200", "1", "95654-14-1");
+INSERT INTO `conversion_software_linkage` VALUES ("1", "-999");
+INSERT INTO `conversion_software_settings` VALUES ("1", "peakPicking vendor msLevel=1-"), ("1", "threshold absolute 1 most-intense 1-");
+INSERT INTO `samples` VALUES ("1", "CR001", "4", "colab1", "2", "2021-08-18 14:47:15 UTC", "1", "1"), ("2", "CR002", "4", "colab1", "3", "2021-08-18 14:47:15 UTC", "1", "1"), ("3", "SD001", "1", "colab1", "6", "2021-08-18 14:47:15 UTC", "1", "1"), ("4", "SD002", "1", "colab1", "6", "2021-08-18 14:47:15 UTC", "1", "2");
