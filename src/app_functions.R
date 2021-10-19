@@ -339,7 +339,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
         out$valid           <- FALSE
         n_msg <- length(out$messages) + 1
         out$messages[n_msg] <- msg
-        if (logger) log_warn(msg)
+        log_it("warn", msg)
       }
     }
   }
