@@ -186,7 +186,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   }
   names(args)  <- names(conditions)
   if (is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
-  log_it("info", glue('Verifying arguments for "{from_fn}".'))
+  log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -368,7 +368,8 @@ verify_args <- function(args, conditions, from_fn = NULL) {
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
 format_list_of_names <- function(namelist) {
-  if ( length(namelist) == 1 )
+  require(glue)
+  if (length(namelist) == 1)
     return(glue::glue("{paste0(namelist, collapse = '')}"))
   res <- glue::glue(
     "{paste0(namelist[1:length(namelist) - 1], collapse = ', ')}\\
