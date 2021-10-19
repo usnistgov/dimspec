@@ -59,20 +59,13 @@ invisible(sapply(sources, source))
 # _Set up logger ---------------------------------------------------------------
 layout <- layout_glue_generator(format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
                                                "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]", 
-                                               "- {fn} {grayscale_by_log_level(msg, levelr)}")) 
+                                               "in {fn}(): {grayscale_by_log_level(msg, levelr)}")) 
 log_threshold(LOG_THRESHOLD)
 log_layout(layout)
 log_formatter(formatter_glue)
-log_ns <- list(db       = "db_transaction",
-               build    = "db_build",
-               internal = "internal_function",
-               app      = "app_function")
 
 # _Build database if it doesn't exist ------------------------------------------
-if (!DB_BUILT) {
-  build_db(connect = INIT_CONNECT)
-  source(file.path("config", "env_R.R"))
-}
+if (!DB_BUILT) build_db(connect = INIT_CONNECT)
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)
