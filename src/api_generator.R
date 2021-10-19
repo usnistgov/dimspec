@@ -22,6 +22,20 @@ queries <- list(
 #'
 #' @examples
 validate_tables <- function(con, table_names) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        con         = list(c("length", 1)),
+        table_names = list(c("mode", "character"), c("n>=", 1))
+      )
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  
   table_list   <- unique(dbListTables(con))
   table_exists <- unique(table_names) %in% table_list
   if (!all(table_exists)) {
@@ -52,6 +66,20 @@ validate_tables <- function(con, table_names) {
 #'
 #' @examples
 validate_column_names <- function(con, table_names, column_names) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        con          = list(c("length", 1)),
+        table_names  = list(c("mode", "character"), c("n>=", 1)),
+        column_names = list(c("mode", "character"), c("n>=", 1))
+      )
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  
   valid_fields <- lapply(table_names, function(x) dbListFields(con, x)) %>%
     unlist() %>% unique()
   valid_columns <- unique(column_names) %in% valid_fields
@@ -107,10 +135,25 @@ validate_column_names <- function(con, table_names, column_names) {
 #' clause_where(ANSI(), "example", list("foo" = list(values = "bar", like = TRUE)))
 #' clause_where(ANSI(), "example", list("foo" = list(values = "bar", exclude = TRUE)))
 clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
-  and_or <- toupper(and_or)
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        con            = list(c("length", 1)),
+        table_names    = list(c("mode", "character"), c("n>=", 1)),
+        match_criteria = list(c("mode", "list")),
+        and_or         = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  and_or <- toupper(str_trim(and_or))
   and_or <- match.arg(and_or, c("AND", "OR"))
   and_or <- paste0(" ", and_or, " ")
   out    <- match_criteria
+  if (!length(names(out)) == length(out)) stop("All match criteria must be named.")
   is_ansi <- identical(con, ANSI())
   # Ensure column names exist
   if (!is_ansi) {
@@ -185,7 +228,7 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
           str_replace_all("[%]+", "%")
         if (!grepl("%", out[[m]]$query)) {
           out[[m]]$query <- str_replace(out[[m]]$query,
-                                        "LIKE '(.*)'",
+                                        "LIKE '?(.*)'?",
                                         "LIKE '%\\1%'")
         }
       }
@@ -289,11 +332,8 @@ build_db_action <- function(action,
       )
     )
     if (!arg_check$valid) {
-      if ("logger" %in% (.packages())) {
-        stop()
-      } else {
-        stop(cat(paste0(arg_check$messages, collapse = "\n")))
-      }
+      msg <- paste0(arg_check$messages, collapse = "\n")
+      log_it("warn", msg)
     }
   }
   if (!is_ansi) {
@@ -303,6 +343,10 @@ build_db_action <- function(action,
   query <- queries[[action]]
   if (all(action == "SELECT", distinct)) {
     query <- str_replace(query, "SELECT", "SELECT DISTINCT")
+  }
+  
+  if (action == "INSERT") {
+    column_names <- names(values)
   }
   
   # Ensure columns exist or is a select all query
@@ -414,7 +458,7 @@ build_db_action <- function(action,
       if (any(length(limit) == 0, length(limit) > 1)) {
         stop('Exactly one value must be provided for the "limit" parameter.')
       } else {
-        query <- paste(query, "LIMIT", dbQuoteLiteral(conn, used_args$limit))
+        query <- paste(query, "LIMIT", dbQuoteLiteral(conn, limit))
       }
     }
     
