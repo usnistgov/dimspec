@@ -43,8 +43,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
+		  TEXT NOT NULL,
+		  /* user-defined name of the sample */
+		description
 			TEXT NOT NULL,
-			/* user-defined name of the sample */
+			/* user-defined description of the sample */
 		sample_class_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_sample_classes */
@@ -59,10 +62,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  /* datetime the raw data file was generated in UTC */
 		software_conversion_settings_id
 			INTEGER,
-			/* settings for the msconvert program used to generate data from this sample */
+			/* foreign key to conversion_software_linkage describing the program used to generate data from this sample */
 		ms_methods_id
 			INTEGER,
-			/* foreign key to methods */
+			/* foreign key to ms_methods */
 		/* Check constraints */
 		CHECK (generated_on == strftime("%Y-%m-%d %H:%M:%S", generated_on))
 		/* Foreign key relationships */
