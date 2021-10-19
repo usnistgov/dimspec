@@ -178,15 +178,15 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("choices", list("a", "b")))))
 #' }
 verify_args <- function(args, conditions, from_fn = NULL) {
-  names(args) <- names(conditions)
-  if (is.null(from_fn)) {
-    from_fn <- ""
-  } else {
-    from_fn <- glue(' for function "{from_fn}"')
-  }
-  logger <- "logger" %in% (.packages())
-  if (logger) log_trace('Verifying arguments{from_fn}.')
   require(glue)
+  if (length(args) != length(conditions)) {
+    log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
+                            length(args),
+                            length(conditions)))
+  }
+  names(args)  <- names(conditions)
+  if (is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
+  log_it("info", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -343,13 +343,10 @@ verify_args <- function(args, conditions, from_fn = NULL) {
       }
     }
   }
-  if (logger) {
-    if (out$valid) {
-      log_trace('Arguments verified{from_fn}.')
-    } else {
-      error_appendix <- ifelse(log_threshold() < 300, " See return for details.", "")
-      log_error('Arguments could not be verified{from_fn}.{error_appendix}')
-    }
+  if (out$valid) {
+    log_it("trace", sprintf('Arguments verified for "%s"', from_fn))
+  } else {
+    log_it("error", sprintf('Arguments could not be verified for "%s". See return for details."', from_fn))
   }
   return(out)
 }
@@ -378,4 +375,42 @@ format_list_of_names <- function(namelist) {
      {ifelse(length(namelist) > 2, ',', '')} \\
      {ifelse(length(namelist) > 1, paste('and ', namelist[length(namelist)], sep = ''), '')}")
   return(res)
+}
+
+#' Conveniently log a message to the console
+#'
+#' Use this to log messages of various level in the console for situations where
+#' package [logger] may not be available.
+#'
+#' @param log_level CHR scalar of the level at which to log a given statement.
+#'   If using the [logger] package, must match one of [logger:::log_levels]
+#' @param msg CHR scalar of the message to accompany the log.
+#'
+#' @return Adds to the logger log (if enabled) and prints to the console in all
+#'   cases
+#' @export
+#'
+#' @examples
+#' log_it("test", "a test message")
+#' test_log <- function() {
+#'   log_it("success", "a success message")
+#'   log_it("warn", "a warning message")
+#' }
+#' test_log()
+#' # Try it with and without logger loaded.
+log_it <- function(log_level, msg) {
+  log_func  <- sprintf("log_%s", tolower(log_level))
+  n_call    <- sys.nframe() + 1 * -1
+  if (exists(log_func)) {
+    log_level(level    = toupper(log_level),
+              .topcall = sys.call(n_call),
+              msg)
+  } else {
+    msg <- sprintf("%s [%s] in %s(): %s",
+                   toupper(log_level),
+                   format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
+                   deparse(sys.call(n_call)[[1]]),
+                   msg)
+    cat(msg)
+  }
 }
