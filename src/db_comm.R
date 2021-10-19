@@ -360,16 +360,14 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
       conditions = list(
         db      = list(c("mode", "character"), c("length", 1)),
         archive = list(c("mode", "logical"), c("length", 1))
-      ),
-      from_fn    = "remove_db"
+      )
     )
-    logger <- "logger" %in% (.packages())
     if (!arg_check$valid) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
   # Resolve database file location
-  if (logger) log_trace('Finding database file "{db}"')
+  log_it("trace", sprintf('Finding database file "%s"', db))
   db_path  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
   db_path  <- db_path[basename(db_path) == db]
   if (length(db_path) > 0) {
@@ -383,16 +381,16 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
                         sprintf("%s_archive_%s",fname, now),
                         db)
       file.copy(db_path, new_fname)
-      if (logger) log_success('Archive created as "{new_fname}"')
+      log_it("success", sprintf('Archive created as "%s"', new_fname))
     }
     result <- try(file.remove(db_path))
     if (class(result) == "try-error") {
-      if (logger) log_error('Database "{db}" could not be removed; another connection is likely open elsedb_path.')
+      log_it("error", sprintf('Database "%s" could not be removed; another connection is likely open.', db))
     } else {
-      if (logger) log_success('Database "{db}" removed.')
+      log_it("success", sprintf('Database "%s" removed.', db))
     }
   } else {
-    if (logger) log_warn('Database "{db}" does not exist in this directory tree.')
+    log_it("warn", sprintf('Database "%s" does not exist in this directory tree.', db))
   }
 }
 
@@ -859,6 +857,167 @@ associated_scan <- function(df, scan_time) {
   ]
 }
 
+#' Verify a sample class exists, and add it if needed
+#'
+#' This utility function leverages [add_normalization_value] for the
+#' "norm_sample_classes" table to verify and add, if necessary, a sample class
+#' name or ID. If an integer is provided, it is verified against existing IDs.
+#' If a character scalar is provided it is checked against the sample class
+#' names and the associated ID number is returned.
+#'
+#' If used in an interactive mode, the user has the option of selecting an
+#' existing sample class, aborting, or creating a new entry with the value of
+#' parameter `sample_class`.
+#'
+#' If used non-interactively, new classes can be added automatically by setting
+#' `auto_add` to TRUE and using the associated sample class ID downstream. Note
+#' this may cause disconnections if typos are introduced (e.g. "plasma" vs
+#' "plamsa").
+#'
+#' @param sample_class CHR or NUM scalar of the sample class name or ID
+#' @param conn connection object (default "con")
+#' @param auto_add LGL scalar of whether to automatically add an entry for
+#'   `sample_class` as provided if it does not exist (use with caution: default
+#'   FALSE)
+#'
+#' @return NULL if no action is taken, or the new sample class ID
+#' @export
+#'
+#' @examples
+verify_sample_class <- function(sample_class, conn = con, auto_add = FALSE) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        sample_class = list(c("length", 1)),
+        conn         = list(c("length", 1)),
+        auto_add     = list(c("mode", "logical"), c("length", 1))
+      )
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  sample_classes <- tbl(conn, "norm_sample_classes") %>% collect()
+  if (is.numeric(sample_class)) {
+    if (sample_class %in% sample_classes$id) {
+      sample_class_id <- sample_class
+      log_it("trace", sprintf('Sample class "%s" identified from provided integer "%s".',
+                              sample_classes$name[sample_classes$id == sample_class],
+                              sample_class))
+    } else {
+      sample_class_id <- NULL
+      log_it("warn", sprintf('No sample class with ID = "%s" currently exists.',
+                             sample_class))
+    }
+  } else if (is.character(sample_class)) {
+    if (sample_class %in% sample_classes$name) {
+      sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
+      log_it("trace", sprintf('Sample class id "%s" identified from direct name match to "%s".',
+                              sample_class_id,
+                              sample_class))
+    } else {
+      sample_class_id <- NULL
+      log_it("warn", sprintf('No sample class with name "%s" currently exists.',
+                             sample_class))
+      if (interactive()) {
+        new_class  <- sprintf("(Add New) %s", sample_class)
+        log_it("trace", 'Selecting a sample class interactively.')
+        create_it  <- select.list(
+          title = 'Select a sample class from the list to confirm',
+          choices = c("(Abort)", new_class, sort(sample_classes$name))
+        )
+        if (create_it == new_class) {
+          sample_class_id <- try(add_normalization_value("norm_sample_classes", sample_class))
+          if (class(sample_class_id) == "try-error") {
+            sample_class_id <- NULL
+            log_it("error",
+                   sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+                           sample_class)
+            )
+          } else {
+            log_it("success",
+                   sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+                           sample_class)
+            )
+          }
+        } else if (create_it == "(Abort)") {
+          sample_class_id <- NULL
+          log_it("info", 'Sample class selection aborted.')
+        } else {
+          sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
+        }
+      } else {
+        if (auto_add) {
+          sample_class_id <- try(add_normalization_value("norm_sample_classes", sample_class))
+          if (class(sample_class_id) == "try-error") {
+            sample_class_id <- NULL
+            log_it("error",
+                   sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+                           sample_class)
+            )
+          } else {
+            log_it("success",
+                   sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+                           sample_class)
+            )
+          }
+        } else {
+          sample_class_id <- NULL
+          log_it("info", 'No new sample class added because "auto_add" is FALSE.')
+        }
+      }
+    }
+  } else {
+    log_it("error", sprintf('Only character or numeric types are accepted for parameter "sample_class".'))
+    sample_class_id <- NULL
+  }
+  return(sample_class_id)
+}
+
+#' Add value(s) to a normalization table
+#'
+#' One of the most common database operations is to look up or add a value in
+#' a normalization (look up) table. This utility function adds a value to a
+#' normalization table and returns its associated id by using [build_db_action].
+#'
+#' @param db_table CHR scalar of the normalization table's name
+#' @param conn connection object (default "con")
+#' @param ... values to add to the table
+#'
+#' @return NULL if unable to add the values, INT scalar of the new ID otherwise
+#' @export
+#'
+#' @examples
+add_normalization_value <- function(db_table, conn = con, ...) {
+  new_values <- list(...)
+  if (length(names(new_values)) != length(new_values)) {
+    stop("All values provided to this function must be named.")
+  }
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        new_values  = list(c("mode", "list"), c("n>=", 1)),
+        db_table    = list(c("mode", "character"), c("length", 1)),
+        conn        = list(c("length", 1))
+      )
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  if (!all(names(new_values) %in% dbListFields(conn, db_table))) {
+    log_it("warn", sprintf('Not all values supplied are in table "%s".', db_table))
+    return(NULL)
+  } else {
+    build_db_action("insert", db_table, values = new_values)
+    return(build_db_action("get_id", db_table, match_criteria = new_values, and_or = "AND"))
+  }
+}
+
 verify_contributor <- function(contributor_text, conn = con, ...) {
   # Check contributor - do not check for internal id number
   # Prefer username
@@ -958,8 +1117,7 @@ add_contributor <- function(conn = con,
         last_name   = list(c("mode", "character"), c("length", 1)),
         affiliation = list(c("mode", "character"), c("length", 1)),
         orcid       = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn    = "add_contributor"
+      )
     )
     if (!arg_check$valid) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
@@ -1206,7 +1364,6 @@ create_fallback_build <- function(build_file    = NULL,
   if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
   comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
   has_import <- FALSE
-  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
   build_file <- list.files(pattern = build_file,
                            full.names = TRUE,
                            recursive = TRUE)
@@ -1259,10 +1416,6 @@ create_fallback_build <- function(build_file    = NULL,
   build <- unlist(build) %>%
     paste0(collapse = "\n")
   write_file(build, outfile)
-  if (logger_active) {
-    log_info('Fallback build file created as "{outfile}".')
-  } else {
-    cat(sprintf('Fallback build file created as "%s".',
-                outfile))
-  }
+  log_it("info", sprintf('Fallback build file created as "%s".',
+                         outfile))
 }
