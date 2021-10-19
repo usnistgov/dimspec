@@ -164,7 +164,7 @@ pragma_table_info <- function(db_table,
     any()
   # Get comments if any
   if (include_comments) {
-    tmp <- pragma_table_def(db_table, db_conn, get_sql = TRUE) %>%
+    tmp <- pragma_table_def(db_table = db_table, conn = db_conn, get_sql = TRUE) %>%
       tidy_comments() %>%
       bind_rows()
     out <- out %>%
@@ -289,7 +289,7 @@ build_db <- function(db            = DB_NAME,
     log_trace("Issuing shell command {full_call}")
     if (file.exists(db)) remove_db(db = db, archive = archive)
     shell(full_call)
-    log_success('Finished attempted build of "{db}" as specified. Check console for any failure details.')
+    log_info('Finished attempted build of "{db}" as specified. Check console for any failure details.')
   } else {
     # Do it the long way
     log_trace('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...')
@@ -301,23 +301,35 @@ build_db <- function(db            = DB_NAME,
     }
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
-    if (file.exists(db)) remove_db(db = db, archive = archive)
+    if (file.exists(db)) {
+      log_trace('Removing "{db}".')
+      remove_db(db = db, archive = archive)
+    }
     # -- Create the build commands in R to pass through RSQLite::SQLite()
+    log_trace('Creating build statements.')
     build_path <- list.files(pattern = build_file,
                              full.names = TRUE,
                              recursive = TRUE)
+    if (!length(build_path) == 1) {
+      stop(sprintf('Could not find build file "%s" in this directory.',
+                   build_path))
+    }
     build_statement <- create_fallback_build(build_path)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
+    log_trace('Creating new database as "{db}".')
     con <- dbConnect(RSQLite::SQLite(), db)
+    log_trace('Building "{db}"...')
     invisible(
       lapply(build_statement,
              function(x) dbSendStatement(con, str_trim(x, "both")))
     )
     # Clean up
+    log_trace('Cleaning up.')
     dbDisconnect(con)
   }
   if (connect) {
+    log_trace('Connecting to "{db}".')
     manage_connection(db = db, reconnect = TRUE)
   }
 }
@@ -775,7 +787,7 @@ save_data_dictionary <- function(conn_obj           = con,
 #'
 #' @examples
 er_map <- function(conn = con) {
-  build_statements <- pragma_table_def(conn, dbListTables(conn), get_sql = TRUE)
+  build_statements <- pragma_table_def(conn = conn, db_table = dbListTables(conn), get_sql = TRUE)
   build_statements <- build_statements[-grep("^sqlite", build_statements$table_name), ]
   n_tables <- nrow(build_statements)
   t_names  <- build_statements$table_name
@@ -1079,12 +1091,15 @@ sqlite_parse_import <- function(build_statements) {
                                 str_remove(".import( --)?") %>%
                                 str_squish()
                               if (data_type == "") {
+                                data_type_read <- FALSE
                                 if (logger_active) {
                                   log_warn('No data type identified. Assuming a ".csv" extension.')
                                 } else {
                                   warning('No data type identified. Assuming a ".csv" extension.')
                                 }
                                 data_type <- "csv"
+                              } else {
+                                data_type_read <- TRUE
                               }
                               skip_rows <- str_extract(x, regex_skip) %>%
                                 str_remove("--skip ") %>%
@@ -1094,8 +1109,9 @@ sqlite_parse_import <- function(build_statements) {
                                 if (logger_active) {
                                   log_warn('Could not convert "{skip_rows}" to numeric in "{x}".')
                                 } else {
-                                  warning(sprintf('Could not convert "%s" to numeric in "%s".',
-                                                  skip_rows, x))
+                                  sprintf('Could not convert "%s" to numeric in "%s".',
+                                          skip_rows, x) %>%
+                                    warning()
                                 }
                                 return(x)
                               }
@@ -1106,8 +1122,9 @@ sqlite_parse_import <- function(build_statements) {
                                 if (logger_active) {
                                   log_warn('Could not parse "{x}" to identify both a target file and database target table.')
                                 } else {
-                                  warning(sprintf('Could not parse "%s" to identify both a target file and database target table.',
-                                                  x))
+                                  sprintf('Could not parse "%s" to identify both a target file and database target table.',
+                                          x) %>%
+                                    warning()
                                 }
                                 return(x)
                               }
@@ -1120,17 +1137,37 @@ sqlite_parse_import <- function(build_statements) {
                                   read_func <- sprintf("read.%s", data_type)
                                 }
                                 if (exists(read_func)) {
-                                  read_data <- invisible(
-                                    do.call(read_func,
-                                            list(data_file))
+                                  read_data <- try(
+                                    invisible(
+                                      do.call(read_func,
+                                              list(data_file))
+                                    )
                                   )
+                                  if (class(read_data) == "try-error") {
+                                    msg <- sprintf('Error reading file "%s" with function "%s".\n%s
+                                                   Read command was "%s"; make sure file extensions match the file format and try again.',
+                                                   data_file,
+                                                   read_func,
+                                                   ifelse(data_type_read,
+                                                          "",
+                                                          sprintf('Data type was assumed to be "%s".\n',
+                                                                  data_type)),
+                                                   x
+                                    )
+                                    if (logger_active) {
+                                      log_warn(msg)
+                                    } else {
+                                      warning(msg)
+                                    }
+                                  }
                                 } else {
                                   if (logger_active) {
                                     log_warn('Cannot read file "{data_file}". Function "{read_func}" is not available.')
                                   } else {
-                                    warning(sprintf('Cannot read file "%s". Function "%s" is not available.',
+                                    sprintf('Cannot read file "%s". Function "%s" is not available.',
                                                     data_file,
-                                                    read_func))
+                                                    read_func) %>%
+                                      warning()
                                   }
                                   return(x)
                                 }
