@@ -344,9 +344,9 @@ verify_args <- function(args, conditions, from_fn = NULL) {
     }
   }
   if (out$valid) {
-    log_it("trace", sprintf('Arguments verified for "%s"', from_fn))
+    log_it("trace", sprintf("Arguments verified for '%s'", from_fn))
   } else {
-    log_it("error", sprintf('Arguments could not be verified for "%s". See return for details."', from_fn))
+    log_it("error", sprintf("Arguments could not be verified for '%s'. See return for details.", from_fn))
   }
   return(out)
 }
@@ -401,7 +401,7 @@ format_list_of_names <- function(namelist) {
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg) {
   log_func  <- sprintf("log_%s", tolower(log_level))
-  n_call    <- sys.nframe() + 1 * -1
+  n_call    <- sys.nframe() * -1 + 1
   if (exists(log_func)) {
     log_level(level    = toupper(log_level),
               .topcall = sys.call(n_call),
