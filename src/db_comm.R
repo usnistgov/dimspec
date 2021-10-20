@@ -797,12 +797,15 @@ er_map <- function(conn = con) {
     lapply(str_remove_all, "CREATE ")
   tables_and_views <- which(unlist(er_type) %in% c("TABLE", "VIEW"))
   build_statements <- build_statements[tables_and_views, ]
-  refs     <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
+  ref_tables <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
     lapply(str_remove_all, "REFERENCES ")
+  refs     <- str_extract_all(build_statements$sql, "(FOREIGN KEY \\([:word:]+\\) )?REFERENCES [:word:]+\\([:word:]+\\)") %>%
+    lapply(str_remove_all, "FOREIGN KEY \\(") %>%
+    lapply(str_replace_all, "\\) ", " ")
   used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
     lapply(str_remove_all, "(JOIN|FROM) ")
   for (i in 1:n_tables) {
-    z <- which(t_names %in% refs[[i]])
+    z <- which(t_names %in% ref_tables[[i]])
     if (length(z) > 0) {
       er_mask[i, z] <- 1
     }
@@ -815,14 +818,15 @@ er_map <- function(conn = con) {
     setNames(t_names)
   for (i in 1:n_tables) {
     er_map[[i]] <- list(
-      object_type  = er_type[[i]],
-      references   = if (er_type[[i]] == "TABLE") {
+      object_type         = er_type[[i]],
+      references_tables   = if (er_type[[i]] == "TABLE") {
         t_names[as.logical(er_mask[i, ])]
       } else {
         t_names[as.logical(view_mask[, i])]
       },
-      normalizes   = t_names[as.logical(er_mask[, i])],
-      used_in_view = t_names[as.logical(view_mask[i, ])]
+      references          = refs[[i]],
+      normalizes_tables   = t_names[as.logical(er_mask[, i])],
+      used_in_view        = t_names[as.logical(view_mask[i, ])]
     )
   }
   direct_add <- names(
