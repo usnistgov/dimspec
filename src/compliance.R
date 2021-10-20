@@ -65,7 +65,11 @@ log_layout(layout)
 log_formatter(formatter_glue)
 
 # _Build database if it doesn't exist ------------------------------------------
-if (!DB_BUILT) build_db(connect = INIT_CONNECT)
+if (!DB_BUILT) build_db()
+if (INIT_CONNECT) {
+  manage_connection()
+  db_map <- er_map()
+}
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)
