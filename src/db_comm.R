@@ -1,3 +1,5 @@
+# Database operations and inspection -------------------------------------------
+
 #' Get table definition from SQLite
 #'
 #' Given a database connection (`con`). Get more information about the
@@ -37,10 +39,11 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
       ),
       from_fn    = "pragma_table_def"
     )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+    stopifnot(arg_check$valid)
   }
+  # Ensure table exists
+  db_table <- existing_tables(db_table, conn)
+  
   # Define function scope
   func <- ifelse(get_sql,
                  "select name, type, sql from sqlite_master where name = '%s'",
@@ -130,16 +133,10 @@ pragma_table_info <- function(db_table,
       ),
       from_fn   = "pragma_table_info"
     )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+    stopifnot(arg_check$valid)
   }
   # Ensure table exists
-  tables_exist <- db_table %in% dbListTables(db_conn)
-  if (!all(tables_exist)) {
-    warning(sprintf('No table named "%s" was found in this schema.', table[!tables_exist]))
-    db_table <- db_table[tables_exist]
-  }
+  db_table <- existing_tables(db_table, db_conn)
   # Get table properties
   out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
   # Set up condition checks
@@ -238,22 +235,23 @@ build_db <- function(db            = DB_NAME,
                      archive       = FALSE,
                      sqlite_cli    = SQLITE_CLI,
                      connect       = FALSE) {
+  require(glue)
   # Argument validation
-  arg_check <- verify_args(
-    args       = as.list(environment()),
-    conditions = list(
-      db            = list(c("mode", "character"), c("length", 1)),
-      build_from    = list(c("mode", "character"), c("length", 1)),
-      populate      = list(c("mode", "logical"), c("length", 1)),
-      populate_with = list(c("mode", "character"), c("length", 1)),
-      archive       = list(c("mode", "logical"), c("length", 1)),
-      sqlite_cli    = list(c("mode", "character"), c("length", 1)),
-      connect       = list(c("mode", "logical"), c("length", 1))
-    ),
-    from_fn    = "build_db"
-  )
-  if (!arg_check$valid) {
-    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  if (exists("arg_check")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        db            = list(c("mode", "character"), c("length", 1)),
+        build_from    = list(c("mode", "character"), c("length", 1)),
+        populate      = list(c("mode", "logical"), c("length", 1)),
+        populate_with = list(c("mode", "character"), c("length", 1)),
+        archive       = list(c("mode", "logical"), c("length", 1)),
+        sqlite_cli    = list(c("mode", "character"), c("length", 1)),
+        connect       = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn    = "build_db"
+    )
+    stopifnot(arg_check$valid)
   }
   manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
   build_file    <- list.files(pattern = build_from,
@@ -265,7 +263,7 @@ build_db <- function(db            = DB_NAME,
   sqlite_available <- length(Sys.which(sqlite_cli) > 1)
   # Do it the short way (with CLI)
   if (sqlite_available) {
-    log_trace('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...')
+    log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'))
     require(glue)
     sqlite_call   <- glue('{sqlite_cli} {db}')
     if (!file.exists(build_file)) {
@@ -275,7 +273,7 @@ build_db <- function(db            = DB_NAME,
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
-        log_warn('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.')
+        log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'))
         populate_cmd <- ""
       } else {
         populate_cmd <- glue(' -cmd ".read {populate_file}"')
@@ -286,13 +284,13 @@ build_db <- function(db            = DB_NAME,
     full_call     <- glue('{build}{populate_cmd}') %>%
       str_remove_all("\\./")
     full_call     <- glue('{sqlite_call} {full_call} -cmd ".exit"')
-    log_trace("Issuing shell command {full_call}")
+    log_it("trace", glue("Issuing shell command {full_call}"))
     if (file.exists(db)) remove_db(db = db, archive = archive)
     shell(full_call)
-    log_info('Finished attempted build of "{db}" as specified. Check console for any failure details.')
+    log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'))
   } else {
     # Do it the long way
-    log_trace('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...')
+    log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'))
     # -- Ensure packages are available
     reqs <- c("stringr", "magrittr", "readr", "DBI")
     packs_available <- reqs %in% installed.packages()
@@ -302,11 +300,11 @@ build_db <- function(db            = DB_NAME,
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
     if (file.exists(db)) {
-      log_trace('Removing "{db}".')
+      log_it("trace", glue('Removing "{db}".'))
       remove_db(db = db, archive = archive)
     }
     # -- Create the build commands in R to pass through RSQLite::SQLite()
-    log_trace('Creating build statements.')
+    log_it("trace", glue('Creating build statements.'))
     build_path <- list.files(pattern = build_file,
                              full.names = TRUE,
                              recursive = TRUE)
@@ -317,19 +315,19 @@ build_db <- function(db            = DB_NAME,
     build_statement <- create_fallback_build(build_path)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
-    log_trace('Creating new database as "{db}".')
+    log_it("trace", glue('Creating new database as "{db}".'))
     con <- dbConnect(RSQLite::SQLite(), db)
-    log_trace('Building "{db}"...')
+    log_it("trace", glue('Building "{db}"...'))
     invisible(
       lapply(build_statement,
              function(x) dbSendStatement(con, str_trim(x, "both")))
     )
     # Clean up
-    log_trace('Cleaning up.')
+    log_it("trace", 'Cleaning up.')
     dbDisconnect(con)
   }
   if (connect) {
-    log_trace('Connecting to "{db}".')
+    log_it("trace", 'Connecting to "{db}".')
     manage_connection(db = db, reconnect = TRUE)
   }
 }
@@ -362,9 +360,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
         archive = list(c("mode", "logical"), c("length", 1))
       )
     )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+    stopifnot(arg_check$valid)
   }
   # Resolve database file location
   log_it("trace", sprintf('Finding database file "%s"', db))
@@ -394,186 +390,73 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
   }
 }
 
-#' Check for, and optionally remove, a database connection object
+#' Check presence of a database table
 #'
-#' This function seeks to abstract connection management objects to a degree. It
-#' seeks to streamline the process of connecting and disconnecting existing
-#' connections as defined by function parameters. This release has not been
-#' tested extensively drivers other than SQLite.
+#' This convenience function checks for the existence of one or more `db_table`
+#' objects in a database.
 #'
-#' @param db CHR scalar name of the database to check, defaults to the name
-#'   supplied in config/env.R (default: session variable DB_NAME)
-#' @param drv_pack CHR scalar of the package used to connect to this database
-#'   (default: session variable DB_DRIVER)
-#' @param conn_class CHR vector of connection object classes to check against.
-#'   Note this may depend heavily on connection packages and must be present in
-#'   the class names of the driver used. (default session variable DB_CLASS)
-#' @param conn_name CHR scalar of the R environment object name to use for this
-#'   connection (default: "con")
-#' @param is_local LGL scalar indicating whether or not the referenced database
-#'   is a local file, if not it will be treated as though it is either a DSN or
-#'   a database name on your host server, connecting as otherwise defined
-#' @param rm_objects LGL scalar indicating whether or not to remove objects
-#'   identifiably connected to the database from the current environment. This
-#'   is particularly useful if there are outstanding connections that need to be
-#'   closed (default: TRUE)
-#' @param reconnect LGL scalar indicating whether or not to connect if a
-#'   connection does not exist; if both this and `disconnect` are true, it will
-#'   first be disconnected before reconnecting. (default: TRUE)
-#' @param disconnect LGL scalar indicating whether or not to terminate and
-#'   remove the connection from the current global environment (default: TRUE)
-#' @param ... named list of any other connection parameters required for your
-#'   database driver (e.g. postgres username/password)
+#' @param db_table CHR vector of table names to check
+#' @param conn connection object (default: con)
 #'
-#' @return None
+#' @return CHR vector of existing tables
 #' @export
 #'
-#' @note For more complicated setups, it may be easier to use this function by
-#'   storing parameters in a list and calling with [base::do.call()]
-#'
 #' @examples
-manage_connection <- function(db          = DB_NAME,
-                              drv_pack    = DB_PACKAGE,
-                              drv         = DB_DRIVER,
-                              conn_class  = DB_CLASS,
-                              conn_name   = "con",
-                              is_local    = TRUE,
-                              rm_objects  = TRUE,
-                              reconnect   = TRUE,
-                              disconnect  = TRUE,
-                              ...) {
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect),
-      conditions = list(
-        db         = list(c("mode", "character"), c("length", 1)),
-        drv_pack   = list(c("mode", "character"), c("length", 1)),
-        drv        = list(c("mode", "character"), c("length", 1)),
-        conn_class = list(c("mode", "character"), c("length", 1)),
-        conn_name  = list(c("mode", "character"), c("length", 1)),
-        is_local   = list(c("mode", "logical"), c("length", 1)),
-        rm_objects = list(c("mode", "logical"), c("length", 1)),
-        reconnect  = list(c("mode", "logical"), c("length", 1)),
-        disconnect = list(c("mode", "logical"), c("length", 1))
-      ),
-      from_fn    = "manage_connection"
-    )
-    logger <- "logger" %in% (.packages())
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+existing_tables <- function(db_table, db_conn = con) {
+  tables_exist <- db_table %in% dbListTables(db_conn)
+  if (!all(tables_exist)) {
+    log_it("warn", sprintf('No table named "%s" was found in this schema.', db_table[!tables_exist]))
+    db_table <- db_table[tables_exist]
   }
-  require(drv_pack, character.only = TRUE)
-  logger           <- "logger" %in% (.packages())
-  global_env       <- as.list(.GlobalEnv)
-  global_env_names <- names(global_env)
-  connection_object_classes <- sprintf("%sConnection", conn_class)
-  for (env in global_env_names) {
-    connected      <- FALSE
-    this_obj       <- global_env[[env]]
-    this_obj_class <- class(this_obj)
-    if (any(grepl(conn_class, this_obj_class))) {
-      if (any(grepl(connection_object_classes, this_obj_class))) {
-        connection <- try(this_obj@dbname)
-      } else if (any(grepl(sprintf("^tbl_%s$", conn_class), this_obj_class))) {
-        connection <- try(this_obj$src$con@dbname)
-      } else if (any(grepl(sprintf("^%sResult$", drv), this_obj_class))) {
-        connection <- try(this_obj@conn@dbname)
-        dbClearResult(this_obj)
-      } else if (class(this_obj) == conn_class) {
-        connection <- "other"
-      } else {
-        connection <- ""
-      }
-      if (class(connection) == "try-error") {
-        if (logger) log_warn('Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.')
-        connection <- ""
-      }
-      if (
-        any(
-          all(basename(connection) == db,
-              this_obj_class %in% connection_object_classes),
-          class(this_obj) == conn_class
-        )
-      ){
-        connected <- dbIsValid(this_obj)
-        if (logger) log_trace('Database "{db}" is currently open.')
-        if (all(connected, disconnect)) {
-          check <- try(invisible(dbDisconnect(this_obj)))
-          status <- ifelse(class(check)[1] == "try-error",
-                           "unable to be disconnected",
-                           "disconnected")
-          if (logger) log_trace('Database "{db}" {status}.')
-          connected <- dbIsValid(this_obj)
-        }
-      }
-      if (logger) log_trace('Closing and removing "{env}"...')
-      if (all(rm_objects, disconnect, !connection == "")) {
-        rm(list = env, pos = ".GlobalEnv")
-      }
-    }
-  }
-  if (reconnect) {
-    if (is_local) {
-      # Resolve database file location
-      if (logger) log_trace('Finding local database file "{db}"')
-      db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
-      if (length(db_where) == 0) {
-        stop(sprintf('Unable to locate "%s".', db))
-      }
-    }
-    if (conn_name %in% global_env_names) {
-      if (connected) dbDisconnect(sym(conn_name)) else rm(list = eval(sym(conn_name)), pos = ".GlobalEnv")
-    }
-    args <- list(db, ...)
-    assign(x     = conn_name,
-           value = try(do.call("dbConnect", args = c(drv = do.call(drv, list()), args))),
-           envir = .GlobalEnv)
-    if (class(eval(sym(conn_name))) == "try-error") {
-      stop(sprintf('Unable to connect to "%s".\nCall attempted was "assign(x = %s, value = try(do.call("dbConnect", args = c(drv = do.call(%s, list()), %s)))',
-                   db,
-                   drv,
-                   paste0(args, collapse = ", ")))
-    } else {
-      if (all(logger, dbIsValid(eval(sym(conn_name))))) log_trace('"{db}" connected as "{conn_name}".')
-    }
-  }
+  if (length(db_table) == 0) stop("No valid tables were found in this schema.")
+  return(db_table)
 }
 
-# TODO early sketch for construction of automatic logging triggers
-build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
-  # According to the current environment setup, exclude logging to save space
-  if (!exists("DB_LOGGING")) {
-    DB_LOGGING <- FALSE
-  }
-  if (DB_LOGGING) {
-    # Require a connection object
-    require(glue)
-    require(magrittr)
-    if (!exists(connection)) {
-      con <- dbConnect(RSQLite::SQLite(), db)
+#' Create a data dictionary
+#'
+#' Get a list of tables and their defined columns with properties, including
+#' comments, suitable as a data dictionary from a connection object amenable to
+#' [odbc::dbListTables]. This function relies on [pragma_table_info].
+#'
+#' @param conn_obj connection object (default:con)
+#'
+#' @return LIST of length equal to the number of tables in `con` with attributes
+#'   identifying which tables, if any, failed to render into the dictionary.
+#' @export
+#'
+#' @examples
+data_dictionary <- function(conn_obj = con) {
+  tabls <- dbListTables(con)
+  tabls <- tabls[-grep("sqlite_", tabls)]
+  out <- vector('list', length(tabls))
+  names(out) <- tabls
+  failures <- character(0)
+  for (tabl in tabls) {
+    tmp <- try(pragma_table_info(db_table = tabl,
+                                 db_conn = con,
+                                 include_comments = TRUE))
+    if (class(tmp) == "try-error") {
+      log_it("warn", sprintf('Dictionary failure on table "%s"\n', tabl))
+      failures <- c(failures, tabl)
+    } else {
+      log_it("success", sprintf('"%s" added to dictionary\n', tabl))
     }
-    tables  <- dbListTables(con)
-    tables  <- tables[!tables == log_table_name]
-    log_cols <- dbListFields(con, log_table_name)
-    out <- character(0)
-    for (table in tables) {
-      table_cols <- dbGetQuery(con, glue("PRAGMA table_info({table})")) %>%
-        filter(pk != 1, name != "id") %>%
-        pull(name) %>%
-        paste0(collapse = ", ")
-      out <- c(out,
-               glue(
-                 "CREATE TRIGGER {table}_track_insert",
-                 "  AFTER INSERT ON {table}",
-                 "  BEGIN",
-                 "    INSERT INTO {log_table_name} (affect_type, affects_table, affects_ids, executed_by)",
-                 "    VALUES ('INSERT', '{table}', NEW.id);",
-                 "  END;"
-               )
-      )
-    }
+    out[[tabl]] <- tmp
   }
+  if (length(failures) > 0) {
+    has_failures <- TRUE
+    msg <- sprintf("Dictionary was not available for %s: %s",
+                   ifelse(length(failures) > 1, "tables", "table"),
+                   format_list_of_names(failures))
+    log_it("warn", msg)
+  } else {
+    has_failures <- FALSE
+    failures <- "Dictionary available for all tables."
+    log_it("success", failures)
+  }
+  attr(out, "has_failures") <- has_failures
+  attr(out, "failures")     <- failures
+  return(out)
 }
 
 #' Tidy up table and field comments
@@ -591,73 +474,33 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @examples
 tidy_comments <- function(obj) {
-  comments <- obj$sql %>%
-    str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
-    str_extract_all("/\\* [[:alnum:][:punct:]\\[\\]\\+ ]+ \\*/") %>%
-    lapply(str_remove_all, "/\\* | \\*/")
-  table_comments <- lapply(comments, function(x) x[1])
-  field_comments <- lapply(comments, function(x) x[-1])
-  out <- vector('list', nrow(obj))
-  for (i in 1:length(out)) {
-    out[[i]]$table_comment  <- table_comments[[i]]
-    out[[i]]$field_comments <- field_comments[[i]]
+  # Argument validation
+  if (exists("arg_check")) {
+    arg_check <- verify_args(
+      args       = list(obj),
+      conditions = list(
+        obj      = list(c("mode", "data.frame"))
+      )
+    )
+    stopifnot(arg_check$valid)
   }
-  names(out) <- obj$db_table
-  return(out)
-}
-
-#' Create a data dictionary
-#'
-#' Get a list of tables and their defined columns with properties, including
-#' comments, suitable as a data dictionary from a connection object amenable to
-#' [odbc::dbListTables]. This function relies on [pragma_table_info].
-#'
-#' @param conn_obj connection object (default:con)
-#'
-#' @return LIST of length equal to the number of tables in `con` with attributes
-#'   identifying which tables, if any, failed to render into the dictionary.
-#' @export
-#'
-#' @examples
-data_dictionary <- function(conn_obj = con) {
-  logger <- "logger" %in% (.packages())
-  tabls <- dbListTables(con)
-  tabls <- tabls[-grep("sqlite_", tabls)]
-  out <- vector('list', length(tabls))
-  names(out) <- tabls
-  failures <- character(0)
-  for (tabl in tabls) {
-    tmp <- try(pragma_table_info(db_table = tabl,
-                                 db_conn = con,
-                                 include_comments = TRUE))
-    if (class(tmp) == "try-error") {
-      if (logger) {
-        log_warn('Dictionary failure on table "{tabl}"')
-      } else {
-        cat(sprintf('Dictionary failure on table "%s"\n', tabl))
-      }
-      failures <- c(failures, tabl)
-    } else {
-      if (logger) {
-        log_success('{tabl} added to dictionary')
-      } else {
-        cat(sprintf('"%s" added to dictionary\n', tabl))
-      }
-    }
-    out[[tabl]] <- tmp
-  }
-  if (length(failures) > 0) {
-    has_failures <- TRUE
-    cat(sprintf("\nDictionary was not available for %s: %s\n",
-                ifelse(length(failures) > 1, "tables", "table"),
-                format_list_of_names(failures)),
-        "\n")
+  if (!all(c("sql", "table_name") %in% names(obj))) {
+    log_it("error", 'Object must contain both "sql" and "table_name" entries. Returning as provided.')
+    out <- obj
   } else {
-    has_failures <- FALSE
-    failures <- "Dictionary available for all tables."
+    comments <- obj$sql %>%
+      str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
+      str_extract_all("/\\* [[:alnum:][:punct:]\\[\\]\\+ ]+ \\*/") %>%
+      lapply(str_remove_all, "/\\* | \\*/")
+    table_comments <- lapply(comments, function(x) x[1])
+    field_comments <- lapply(comments, function(x) x[-1])
+    out <- vector('list', nrow(obj))
+    for (i in 1:length(out)) {
+      out[[i]]$table_comment  <- table_comments[[i]]
+      out[[i]]$field_comments <- field_comments[[i]]
+    }
+    names(out) <- obj$db_table
   }
-  attr(out, "has_failures") <- has_failures
-  attr(out, "failures")     <- failures
   return(out)
 }
 
@@ -687,16 +530,16 @@ save_data_dictionary <- function(conn_obj           = con,
                                  output_file        = NULL,
                                  overwrite_existing = TRUE) {
   # Argument validation
-  arg_check <- verify_args(
-    args       = list(output_format, overwrite_existing),
-    conditions = list(
-      output_format      = list(c("mode", "character"), c("length", 1)),
-      overwrite_existing = list(c("mode", "logical"), c("length", 1))
-    ),
-    from_fn    = "build_db"
-  )
-  if (!arg_check$valid) {
-    stop(cat(paste0(arg_check$messages, collapse = "\n")))
+  if (exists("arg_check")) {
+    arg_check <- verify_args(
+      args       = list(output_format, overwrite_existing),
+      conditions = list(
+        output_format      = list(c("mode", "character"), c("length", 1)),
+        overwrite_existing = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn    = "build_db"
+    )
+    stopifnot(arg_check$valid)
   }
   logger <- "logger" %in% (.packages())
   output_format <- tolower(output_format)
@@ -852,14 +695,485 @@ er_map <- function(conn = con) {
   return(er_map)
 }
 
-# TODO - abstract the appropriate ms_n - 1 scan to associate with ms_data
-associated_scan <- function(df, scan_time) {
-  scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
-  df$scantime[
-    which(all(df$scantime < scan_time,
-              df$msn == scan_msn))
-  ]
+#' Check for, and optionally remove, a database connection object
+#'
+#' This function seeks to abstract connection management objects to a degree. It
+#' seeks to streamline the process of connecting and disconnecting existing
+#' connections as defined by function parameters. This release has not been
+#' tested extensively drivers other than SQLite.
+#'
+#' @param db CHR scalar name of the database to check, defaults to the name
+#'   supplied in config/env.R (default: session variable DB_NAME)
+#' @param drv_pack CHR scalar of the package used to connect to this database
+#'   (default: session variable DB_DRIVER)
+#' @param conn_class CHR vector of connection object classes to check against.
+#'   Note this may depend heavily on connection packages and must be present in
+#'   the class names of the driver used. (default session variable DB_CLASS)
+#' @param conn_name CHR scalar of the R environment object name to use for this
+#'   connection (default: "con")
+#' @param is_local LGL scalar indicating whether or not the referenced database
+#'   is a local file, if not it will be treated as though it is either a DSN or
+#'   a database name on your host server, connecting as otherwise defined
+#' @param rm_objects LGL scalar indicating whether or not to remove objects
+#'   identifiably connected to the database from the current environment. This
+#'   is particularly useful if there are outstanding connections that need to be
+#'   closed (default: TRUE)
+#' @param reconnect LGL scalar indicating whether or not to connect if a
+#'   connection does not exist; if both this and `disconnect` are true, it will
+#'   first be disconnected before reconnecting. (default: TRUE)
+#' @param disconnect LGL scalar indicating whether or not to terminate and
+#'   remove the connection from the current global environment (default: TRUE)
+#' @param ... named list of any other connection parameters required for your
+#'   database driver (e.g. postgres username/password)
+#'
+#' @return None
+#' @export
+#'
+#' @note For more complicated setups, it may be easier to use this function by
+#'   storing parameters in a list and calling with [base::do.call()]
+#'
+#' @examples
+manage_connection <- function(db          = DB_NAME,
+                              drv_pack    = DB_PACKAGE,
+                              drv         = DB_DRIVER,
+                              conn_class  = DB_CLASS,
+                              conn_name   = "con",
+                              is_local    = TRUE,
+                              rm_objects  = TRUE,
+                              reconnect   = TRUE,
+                              disconnect  = TRUE,
+                              ...) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect),
+      conditions = list(
+        db         = list(c("mode", "character"), c("length", 1)),
+        drv_pack   = list(c("mode", "character"), c("length", 1)),
+        drv        = list(c("mode", "character"), c("length", 1)),
+        conn_class = list(c("mode", "character"), c("length", 1)),
+        conn_name  = list(c("mode", "character"), c("length", 1)),
+        is_local   = list(c("mode", "logical"), c("length", 1)),
+        rm_objects = list(c("mode", "logical"), c("length", 1)),
+        reconnect  = list(c("mode", "logical"), c("length", 1)),
+        disconnect = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn    = "manage_connection"
+    )
+    stopifnot(arg_check$valid)
+  }
+  require(drv_pack, character.only = TRUE)
+  logger           <- "logger" %in% (.packages())
+  global_env       <- as.list(.GlobalEnv)
+  global_env_names <- names(global_env)
+  connection_object_classes <- sprintf("%sConnection", conn_class)
+  for (env in global_env_names) {
+    connected      <- FALSE
+    this_obj       <- global_env[[env]]
+    this_obj_class <- class(this_obj)
+    if (any(grepl(conn_class, this_obj_class))) {
+      if (any(grepl(connection_object_classes, this_obj_class))) {
+        connection <- try(this_obj@dbname)
+      } else if (any(grepl(sprintf("^tbl_%s$", conn_class), this_obj_class))) {
+        connection <- try(this_obj$src$con@dbname)
+      } else if (any(grepl(sprintf("^%sResult$", drv), this_obj_class))) {
+        connection <- try(this_obj@conn@dbname)
+        dbClearResult(this_obj)
+      } else if (class(this_obj) == conn_class) {
+        connection <- "other"
+      } else {
+        connection <- ""
+      }
+      if (class(connection) == "try-error") {
+        if (logger) log_warn('Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.')
+        connection <- ""
+      }
+      if (
+        any(
+          all(basename(connection) == db,
+              this_obj_class %in% connection_object_classes),
+          class(this_obj) == conn_class
+        )
+      ){
+        connected <- dbIsValid(this_obj)
+        log_it("trace", glue('Database "{db}" is currently open.'))
+        if (all(connected, disconnect)) {
+          check <- try(invisible(dbDisconnect(this_obj)))
+          status <- ifelse(class(check)[1] == "try-error",
+                           "unable to be disconnected",
+                           "disconnected")
+          log_it("trace", glue('Database "{db}" {status}.'))
+          connected <- dbIsValid(this_obj)
+        }
+      }
+      log_it("trace", glue('Closing and removing "{env}"...'))
+      if (all(rm_objects, disconnect, !connection == "")) {
+        rm(list = env, pos = ".GlobalEnv")
+      }
+    }
+  }
+  if (reconnect) {
+    if (is_local) {
+      # Resolve database file location
+      log_it("trace", glue('Finding local database file "{db}"'))
+      db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
+      if (length(db_where) == 0) {
+        stop(sprintf('Unable to locate "%s".', db))
+      }
+    }
+    if (conn_name %in% global_env_names) {
+      if (connected) dbDisconnect(sym(conn_name))
+      rm(list = eval(sym(conn_name)), pos = ".GlobalEnv")
+    }
+    args <- list(db, ...)
+    assign(x     = conn_name,
+           value = try(do.call("dbConnect", args = c(drv = do.call(drv, list()), args))),
+           envir = .GlobalEnv)
+    if (class(eval(sym(conn_name))) == "try-error") {
+      stop(sprintf('Unable to connect to "%s".\nCall attempted was "assign(x = %s, value = try(do.call("dbConnect", args = c(drv = do.call(%s, list()), %s)))',
+                   db,
+                   drv,
+                   paste0(args, collapse = ", ")))
+    } else {
+      if (dbIsValid(eval(sym(conn_name)))) log_it("trace", glue('"{db}" connected as "{conn_name}".'))
+    }
+  }
 }
+
+#' Parse SQL build statements
+#'
+#' Reading SQL files directly into R can be problematic. This function is
+#' primarily called in [create_fallback_build].
+#'
+#' All arguments `magicsplit`, `header`, and `section` provide flexibility in
+#' the comment structure of the SQL file and accept regex for character matching
+#' purposes.
+#'
+#' @param sql_statements CHR vector of SQL build statements from an SQL file.
+#' @param magicsplit CHR scalar regex indicating some "magic" split point SQL
+#'   comment to simplify the identification of discrete commands; will be used
+#'   to split results (optional but highly recommended)
+#' @param header CHR scalar regex indicating the format of header comments SQL
+#'   comment to remove (optional)
+#' @param section CHR scalar regex indicating the format of section comments SQL
+#'   comment to remove (optional)
+#'
+#' @return LIST of parsed complete build commands as CHR vectors containing each
+#'   line.
+#' @export
+#'
+#' @examples
+#' example_file <- "./config/sql_nodes/reference.sql"
+#' if (file.exists(example_file)) {
+#'   build_commands <- readr::read_file(example_file)
+#'   sqlite_parse_build(build_commands)
+#' }
+sqlite_parse_build <- function(sql_statements,
+                               magicsplit = "/\\*magicsplit\\*/",
+                               header     = "/\\*\\=+\\r*\\n[[:print:][:cntrl:]]+\\r*\\n\\=+\\*/",
+                               section    = "/\\* -* [[:print:][:cntrl:]]+ -* \\*/") {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        sql_statements = list(c("mode", "character"), c("length", 1)),
+        magicsplit     = list(c("mode", "character"), c("length", 1)),
+        header         = list(c("mode", "character"), c("length", 1)),
+        section        = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn    = "sqlite_parse_build"
+    )
+    stopifnot(arg_check$valid)
+  }
+  log_it("trace", glue('Parsing \n{sql_statements}\n\tfor build commands.'))
+  to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
+  out        <- sql_statements %>%
+    str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
+    str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
+    str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
+    str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
+    str_split(magicsplit) %>%
+    .[[1]] %>%
+    str_remove_all(to_remove) %>%
+    str_replace_all("\\n{2,10}", "\n") %>%
+    str_replace_all(" {2,10}", " ") %>%
+    str_split("\\n") %>%
+    lapply(str_squish) %>%
+    lapply(function(x) x[! x %in% c("", " ")])
+  out        <- out[unlist(lapply(out, length)) > 0]
+  return(out)
+}
+
+#' Parse SQL import statements
+#'
+#' In the absence of the sqlite command line interface (CLI), the [build_db]
+#' process needs a full set of SQL statements to execute directly rather than
+#' CLI dot commands. This utility function parses formatted SQL statements
+#' containing CLI ".import" commands to create SQL INSERT statements. This
+#' function is primarily called in [create_fallback_build].
+#'
+#' @param build_statements CHR vector of SQL build statements from an SQL file.
+#'
+#' @return LIST of parsed .import statements as full "INSERT" statements.
+#' @export
+#'
+#' @examples
+#' if (file.exists("./config/data/elements.csv")) {
+#'   sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
+#' }
+sqlite_parse_import <- function(build_statements) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        build_statements = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn    = "sqlite_parse_import"
+    )
+    stopifnot(arg_check$valid)
+  }
+  regex_import  <- ".import (--[[:alnum:]]+)? "
+  regex_skip    <- "(--skip [[:number:]]+) ?"
+  regex_prefix  <- paste0(c(regex_import, regex_skip), collapse = "?")
+  log_it("trace", glue('Parsing \n{build_statements}\n for import modification.'))
+  out           <- lapply(build_statements,
+                          function(x) {
+                            if (grepl("\\.import", x)) {
+                              data_type <- str_extract(x, regex_import) %>%
+                                str_remove(".import( --)?") %>%
+                                str_squish()
+                              if (data_type == "") {
+                                data_type_read <- FALSE
+                                log_it("warn", 'No data type identified. Assuming a ".csv" extension.')
+                                data_type <- "csv"
+                              } else {
+                                data_type_read <- TRUE
+                              }
+                              skip_rows <- str_extract(x, regex_skip) %>%
+                                str_remove("--skip ") %>%
+                                str_squish()
+                              skip_rows <- try(as.numeric(skip_rows))
+                              if (class(skip_rows) == 'try-error') {
+                                log_it("warn", glue('Could not convert "{skip_rows}" to numeric in "{x}".'))
+                                return(x)
+                              }
+                              tmp <- str_remove(x, regex_prefix) %>%
+                                str_split(" ") %>%
+                                .[[1]]
+                              if (length(tmp) != 2) {
+                                log_it("warn", glue('Could not parse "{x}" to identify both a target file and database target table.'))
+                                return(x)
+                              }
+                              data_file <- tmp[1]
+                              if (file.exists(data_file)) {
+                                if ("readr" %in% installed.packages()) {
+                                  require(readr)
+                                  read_func <- sprintf("read_%s", data_type)
+                                } else {
+                                  read_func <- sprintf("read.%s", data_type)
+                                }
+                                if (exists(read_func)) {
+                                  read_data <- try(
+                                    suppressMessages(
+                                      do.call(read_func,
+                                              list(data_file))
+                                    )
+                                  )
+                                  if ("try-error" %in% class(read_data)) {
+                                    msg <- sprintf('Error reading file "%s" with function "%s".\n%s
+                                                   Read command was "%s"; make sure file extensions match the file format and try again.',
+                                                   data_file,
+                                                   read_func,
+                                                   ifelse(data_type_read,
+                                                          "",
+                                                          sprintf('Data type was assumed to be "%s".\n',
+                                                                  data_type)),
+                                                   x
+                                    )
+                                    log_it("warn", msg)
+                                  }
+                                } else {
+                                  log_it("warn", glue('Cannot read file "{data_file}". Function "{read_func}" is not available.'))
+                                  return(x)
+                                }
+                              } else {
+                                log_it("warn", glue('Could not find file "{data_file}".'))
+                                return(x)
+                              }
+                              target    <- tmp[2]
+                              insert_values <- sprintf('("%s")',
+                                                       read_data %>%
+                                                         unite(col = "statement", sep = '", "') %>%
+                                                         pull(statement) %>%
+                                                         paste0(collapse = '"), ("')
+                              )
+                              insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
+                                                          target,
+                                                          insert_values)
+                              return(insert_statement)
+                            } else {
+                              return(x)
+                            }
+                          })
+  return(out)
+}
+
+#' Create an SQL file for use without the SQLite CLI
+#'
+#' For cases where the SQLite Command Line Interface is not available, dot
+#' commands used to simplify the database build pipeline are not usable. Call
+#' this function to create a self-contained SQL build file that can be used in
+#' [build_db] to build the database. The self-contained file will include all
+#' "CREATE" and "INSERT" statements necessary by parsing lines including ".read"
+#' and ".import" commands and directly reading referenced files.
+#'
+#' @param build_file CHR scalar name SQL build file to use. The default, NULL,
+#'   will use the environment variable "DB_BUILD_FILE" if it is available.
+#' @param populate LGL scalar of whether to populate data (default: TRUE)
+#' @param populate_with CHR scalar name SQL population file to use. The default,
+#'   NULL, will use the environment variable "DB_DATA" if it is available.
+#' @param driver CHR scalar of the database driver class to use to correctly
+#'   interpolate SQL commands (default: "SQLite")
+#' @param out_file CHR scalar of the output file name and destination. The
+#'   default, NULL, will write to a file named similarly to `build_file`
+#'   suffixed with "_full".
+#'
+#' @return None: a file will be written at `out_file` with the output.
+#' @export
+#'
+#' @examples
+create_fallback_build <- function(build_file    = NULL,
+                                  populate      = TRUE,
+                                  populate_with = NULL,
+                                  driver        = "SQLite",
+                                  out_file      = NULL) {
+  if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
+  if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
+  build_files <- list.files(pattern = build_file,
+                            full.names = TRUE,
+                            recursive = TRUE)
+  if (length(build_files) > 1) {
+    msg <- sprintf('Multiple build files matching "%s" identified.', build_file)
+    if (interactive()) {
+      build_file <- select.list(build_files, title = paste(msg, "Please select one."))
+    } else {
+      stop(msg)
+    }
+  } else if (length(build_files) == 1) {
+    build_file <- build_files
+  }
+  if (is.null(out_file)) {
+    out_file <- gsub(".sql", "_full.sql", build_file)
+  } else {
+    out_file <- out_file
+  }
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(build_file, populate, populate_with, driver, out_file),
+      conditions = list(
+        build_file    = list(c("mode", "character"), c("length", 1)),
+        populate      = list(c("mode", "logical"), c("length", 1)),
+        populate_with = list(c("mode", "character"), c("length", 1)),
+        driver        = list(c("mode", "character"), c("length", 1)),
+        out_file      = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn    = "create_fallback_build"
+    )
+    stopifnot(arg_check$valid)
+  }
+  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
+  has_import <- FALSE
+  if (!file.exists(build_file)) {
+    stop(sprintf('Could not locate file "%s".', build_file))
+  }
+  build   <- read_file(build_file) %>%
+    sqlite_parse_build()
+  
+  if (populate) {
+    populate_file <- list.files(pattern = populate_with,
+                                full.names = TRUE,
+                                recursive = TRUE)
+    populate <- read_file(populate_file) %>%
+      sqlite_parse_build()
+    build <- c(build, populate)
+  }
+  # Make SQL build statements
+  build   <- unlist(build) %>%
+    as.list()
+  index_read   <- grep("^.read", build)
+  temp_read    <- lapply(build[index_read],
+                         function(x) {
+                           node_file <- str_remove(x, ".read ")
+                           read_file(node_file) %>%
+                             sqlite_parse_build()
+                         })
+  source_read  <- str_remove(unlist(build[index_read]), ".read ")
+  names(temp_read) <- source_read %>%
+    basename() %>%
+    file_path_sans_ext()
+  for (i in 1:length(temp_read)) {
+    source_comment <- sprintf("/* Sourced from ./%s */", source_read[i])
+    temp_read[[i]] <- c(source_comment, temp_read[[i]])
+  }
+  build[index_read] <- temp_read %>%
+    lapply(function(x) {
+      lapply(x, function(y) {
+        paste0(y, collapse = " ")
+      })
+    })
+  build <- unlist(build) %>% as.list()
+  index_import <- grep("^.import", build)
+  temp_import  <- lapply(build[index_import],
+                         function(x) {
+                           if (grepl(comments, x)) return(x)
+                           lapply(x, sqlite_parse_import)
+                         }
+  ) %>% unlist()
+  check <- build
+  build[index_import] <- temp_import
+  build <- unlist(build) %>%
+    paste0(collapse = "\n")
+  write_file(build, out_file)
+  log_it("info", sprintf('Fallback build file created as "%s".',
+                         out_file))
+}
+
+# TODO early sketch for construction of automatic logging triggers
+build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
+  # According to the current environment setup, exclude logging to save space
+  if (!exists("DB_LOGGING")) {
+    DB_LOGGING <- FALSE
+  }
+  if (DB_LOGGING) {
+    # Require a connection object
+    require(glue)
+    require(magrittr)
+    if (!exists(connection)) {
+      con <- dbConnect(RSQLite::SQLite(), db)
+    }
+    tables  <- dbListTables(con)
+    tables  <- tables[!tables == log_table_name]
+    log_cols <- dbListFields(con, log_table_name)
+    out <- character(0)
+    for (table in tables) {
+      table_cols <- dbGetQuery(con, glue("PRAGMA table_info({table})")) %>%
+        filter(pk != 1, name != "id") %>%
+        pull(name) %>%
+        paste0(collapse = ", ")
+      out <- c(out,
+               glue(
+                 "CREATE TRIGGER {table}_track_insert",
+                 "  AFTER INSERT ON {table}",
+                 "  BEGIN",
+                 "    INSERT INTO {log_table_name} (affect_type, affects_table, affects_ids, executed_by)",
+                 "    VALUES ('INSERT', '{table}', NEW.id);",
+                 "  END;"
+               )
+      )
+    }
+  }
+}
+
+# Database utility functions ---------------------------------------------------
 
 #' Verify a sample class exists, and add it if needed
 #'
@@ -1215,211 +1529,11 @@ check_for_value <- function(values, db_table, db_column, conn = con) {
   return(out)
 }
 
-sqlite_parse_build <- function(sql_statements) {
-  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
-  if (logger_active) log_trace('Parsing "{sql_statements}" for build commands.')
-  magicsplit <- "/\\*magicsplit\\*/"
-  header     <- "/\\*\\=+\\r*\\n[[:print:][:cntrl:]]+\\r*\\n\\=+\\*/"
-  section    <- "/\\* -* [[:print:][:cntrl:]]+ -* \\*/"
-  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
-  to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
-  out        <- sql_statements %>%
-    str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
-    str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
-    str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
-    str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
-    str_split(magicsplit) %>%
-    .[[1]] %>%
-    str_remove_all(to_remove) %>%
-    str_replace_all("\\n{2,10}", "\n") %>%
-    str_replace_all(" {2,10}", " ") %>%
-    str_split("\\n") %>%
-    lapply(str_squish) %>%
-    lapply(function(x) x[! x %in% c("", " ")])
-  out        <- out[unlist(lapply(out, length)) > 0]
-  return(out)
-}
-
-sqlite_parse_import <- function(build_statements) {
-  regex_import  <- ".import (--[[:alnum:]]+)? "
-  regex_skip    <- "(--skip [[:number:]]+) ?"
-  regex_prefix  <- paste0(c(regex_import, regex_skip), collapse = "?")
-  logger_active <- all(exists("LOGGING_ON"), LOGGING_ON)
-  if (logger_active) log_trace('Parsing "{build_statements}" for import modification.')
-  out           <- lapply(build_statements,
-                          function(x) {
-                            if (grepl("\\.import", x)) {
-                              data_type <- str_extract(x, regex_import) %>%
-                                str_remove(".import( --)?") %>%
-                                str_squish()
-                              if (data_type == "") {
-                                data_type_read <- FALSE
-                                if (logger_active) {
-                                  log_warn('No data type identified. Assuming a ".csv" extension.')
-                                } else {
-                                  warning('No data type identified. Assuming a ".csv" extension.')
-                                }
-                                data_type <- "csv"
-                              } else {
-                                data_type_read <- TRUE
-                              }
-                              skip_rows <- str_extract(x, regex_skip) %>%
-                                str_remove("--skip ") %>%
-                                str_squish()
-                              skip_rows <- try(as.numeric(skip_rows))
-                              if (class(skip_rows) == 'try-error') {
-                                if (logger_active) {
-                                  log_warn('Could not convert "{skip_rows}" to numeric in "{x}".')
-                                } else {
-                                  sprintf('Could not convert "%s" to numeric in "%s".',
-                                          skip_rows, x) %>%
-                                    warning()
-                                }
-                                return(x)
-                              }
-                              tmp <- str_remove(x, regex_prefix) %>%
-                                str_split(" ") %>%
-                                .[[1]]
-                              if (length(tmp) != 2) {
-                                if (logger_active) {
-                                  log_warn('Could not parse "{x}" to identify both a target file and database target table.')
-                                } else {
-                                  sprintf('Could not parse "%s" to identify both a target file and database target table.',
-                                          x) %>%
-                                    warning()
-                                }
-                                return(x)
-                              }
-                              data_file <- tmp[1]
-                              if (file.exists(data_file)) {
-                                if ("readr" %in% installed.packages()) {
-                                  require(readr)
-                                  read_func <- sprintf("read_%s", data_type)
-                                } else {
-                                  read_func <- sprintf("read.%s", data_type)
-                                }
-                                if (exists(read_func)) {
-                                  read_data <- try(
-                                    invisible(
-                                      do.call(read_func,
-                                              list(data_file))
-                                    )
-                                  )
-                                  if (class(read_data) == "try-error") {
-                                    msg <- sprintf('Error reading file "%s" with function "%s".\n%s
-                                                   Read command was "%s"; make sure file extensions match the file format and try again.',
-                                                   data_file,
-                                                   read_func,
-                                                   ifelse(data_type_read,
-                                                          "",
-                                                          sprintf('Data type was assumed to be "%s".\n',
-                                                                  data_type)),
-                                                   x
-                                    )
-                                    if (logger_active) {
-                                      log_warn(msg)
-                                    } else {
-                                      warning(msg)
-                                    }
-                                  }
-                                } else {
-                                  if (logger_active) {
-                                    log_warn('Cannot read file "{data_file}". Function "{read_func}" is not available.')
-                                  } else {
-                                    sprintf('Cannot read file "%s". Function "%s" is not available.',
-                                                    data_file,
-                                                    read_func) %>%
-                                      warning()
-                                  }
-                                  return(x)
-                                }
-                              } else {
-                                if (logger_active) {
-                                  log_warn('Could not find file "{data_file}".')
-                                } else {
-                                  warning(sprintf('Could not find file %s.',
-                                                  x))
-                                }
-                                return(x)
-                              }
-                              target    <- tmp[2]
-                              insert_values <- sprintf('("%s")',
-                                                       read_data %>%
-                                                         unite(col = "statement", sep = '", "') %>%
-                                                         pull(statement) %>%
-                                                         paste0(collapse = '"), ("')
-                              )
-                              insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
-                                                          target,
-                                                          insert_values)
-                              return(insert_statement)
-                            } else {
-                              return(x)
-                            }
-                          })
-  return(out)
-}
-
-create_fallback_build <- function(build_file    = NULL,
-                                  populate_with = NULL,
-                                  populate      = TRUE,
-                                  driver        = "SQLite") {
-  if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
-  if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
-  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
-  has_import <- FALSE
-  build_file <- list.files(pattern = build_file,
-                           full.names = TRUE,
-                           recursive = TRUE)
-  outfile <- gsub(".sql", "_full.sql", build_file)
-  build   <- read_file(build_file) %>%
-    sqlite_parse_build()
-  
-  if (populate) {
-    populate_file <- list.files(pattern = populate_with,
-                                full.names = TRUE,
-                                recursive = TRUE)
-    populate <- read_file(populate_file) %>%
-      sqlite_parse_build()
-    build <- c(build, populate)
-  }
-  # Make SQL build statements
-  build   <- unlist(build) %>%
-    as.list()
-  index_read   <- grep("^.read", build)
-  temp_read    <- lapply(build[index_read],
-                         function(x) {
-                           node_file <- str_remove(x, ".read ")
-                           read_file(node_file) %>%
-                             sqlite_parse_build()
-                         })
-  source_read  <- str_remove(unlist(build[index_read]), ".read ")
-  names(temp_read) <- source_read %>%
-    basename() %>%
-    file_path_sans_ext()
-  for (i in 1:length(temp_read)) {
-    source_comment <- sprintf("/* Sourced from ./%s */", source_read[i])
-    temp_read[[i]] <- c(source_comment, temp_read[[i]])
-  }
-  build[index_read] <- temp_read %>%
-    lapply(function(x) {
-      lapply(x, function(y) {
-        paste0(y, collapse = " ")
-      })
-    })
-  build <- unlist(build) %>% as.list()
-  index_import <- grep("^.import", build)
-  temp_import  <- lapply(build[index_import],
-                         function(x) {
-                           if (grepl(comments, x)) return(x)
-                           lapply(x, sqlite_parse_import)
-                         }
-  ) %>% unlist()
-  check <- build
-  build[index_import] <- temp_import
-  build <- unlist(build) %>%
-    paste0(collapse = "\n")
-  write_file(build, outfile)
-  log_it("info", sprintf('Fallback build file created as "%s".',
-                         outfile))
+# TODO - abstract the appropriate ms_n - 1 scan to associate with ms_data
+associated_scan <- function(df, scan_time) {
+  scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
+  df$scantime[
+    which(all(df$scantime < scan_time,
+              df$msn == scan_msn))
+  ]
 }
