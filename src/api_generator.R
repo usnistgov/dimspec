@@ -396,8 +396,8 @@ build_db_action <- function(action,
                              function(x) {
                                lapply(x,
                                       function(x) {
-                                        if (tolower(x) == 'null') {
-                                          'null'
+                                        if (tolower(x) == "null" || x == "") {
+                                          "null"
                                         } else {
                                           dbQuoteLiteral(conn, x)
                                         }
