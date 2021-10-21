@@ -1363,7 +1363,7 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
   # Check contributor - do not check for internal id number
   # Prefer username
   db_contributors  <- tbl(conn, "contributors")
-  contributor_properties <- list(...)
+  contributor_properties <- c(list(...), user_value = contributor_text)
   possible_matches <- db_contributors %>%
     filter(username %in% contributor_text |
              contact %in% contributor_text |
@@ -1375,6 +1375,7 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
   if (!contributor_exists) {
     log_it("warn", sprintf('No contributor matching "%s" was located.', contributor_text))
     if (interactive()) {
+      log_it("trace", "Getting user information from an interactive session.")
       new_user <- do.call(add_contributor, contributor_properties)
       if (is.null(new_user)) stop("Could not verify this user.")
     } else {
@@ -1409,7 +1410,7 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
           # cat("New contributors must be added manually at this time.")
           make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
           if (make_new == "Yes") {
-            id <- add_contributor(db_contributors)
+            id <- add_contributor(db_contributors, user_value = contributor_text)
             return(id)
           } else {
             return("Create a contributor manually to proceed.")
@@ -1438,13 +1439,14 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
 #' @export
 #'
 #' @examples
-add_contributor <- function(conn = con,
-                            username = "",
-                            contact = "",
-                            first_name = "",
-                            last_name = "",
+add_contributor <- function(conn        = con,
+                            username    = "",
+                            contact     = "",
+                            first_name  = "",
+                            last_name   = "",
                             affiliation = "",
-                            orcid = "") {
+                            orcid       = "",
+                            user_value  = "") {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1456,14 +1458,16 @@ add_contributor <- function(conn = con,
         first_name  = list(c("mode", "character"), c("length", 1)),
         last_name   = list(c("mode", "character"), c("length", 1)),
         affiliation = list(c("mode", "character"), c("length", 1)),
-        orcid       = list(c("mode", "character"), c("length", 1))
+        orcid       = list(c("mode", "character"), c("length", 1)),
+        user_value  = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "add_contributor"
     )
     stopifnot(arg_check$valid)
   }
   if (interactive()) {
-    cat("Would you like to add a user now?")
+    cat(sprintf('Would you like to add a user now? The value provided was "%s".',
+                user_value))
     if (menu(c("Yes", "No")) != 1) {
       cat("You can always add a user later.\n")
       return(NULL)
