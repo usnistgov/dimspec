@@ -186,7 +186,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   }
   names(args)  <- names(conditions)
   if (is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
-  log_it("trace", glue('Verifying arguments for "{from_fn}".'))
+  log_it("info", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -204,6 +204,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   for (i in 1:length(args)) {
     arg   <- args[i]
     needs <- conditions[[i]]
+    log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -211,11 +212,11 @@ verify_args <- function(args, conditions, from_fn = NULL) {
       x     <- needs[[j]]
       val   <- arg[[1]]
       type  <- unlist(x[1])
-      check <- unlist(x[2])
+      check <- unlist(x[-1])
       switch(type,
              "class"   = {
                rslt <- check %in% class(val)
-               msg  <- glue("'{names(arg)}' must be of class '{check} rather than '{class(val)}'.")
+               msg  <- glue('"{names(arg)}" must be of class "{check}" rather than "{class(val)}".')
              },
              "mode"    = {
                mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
@@ -312,7 +313,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
              },
              "choices" = {
                rslt <- all(val %in% check)
-               msg  <- glue("Argument '{names(arg)}' was not present in c({paste0(check, collapse = ', ')}).")
+               msg  <- glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
              },
              "call"    = {
                rslt <- tryCatch(do.call(check, list(val)),
@@ -334,12 +335,16 @@ verify_args <- function(args, conditions, from_fn = NULL) {
                msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
              }
       )
+      log_msg <- glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
       out$results[[i]][j]   <- rslt
       if (!rslt) {
         out$valid           <- FALSE
         n_msg <- length(out$messages) + 1
         out$messages[n_msg] <- msg
-        log_it("warn", msg)
+        log_it("warn", glue('{log_msg} - FAIL'))
+        log_it("error", glue("    {msg}"))
+      } else {
+        log_it("trace", glue('{log_msg} - PASS'))
       }
     }
   }
