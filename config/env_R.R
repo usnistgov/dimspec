@@ -64,7 +64,7 @@ EXCLUSIONS     <- c(".RDS",
 # Import namespace checks
 IMPORT_HEADERS <- list(
   software = "msconvertsettings",
-  samples  = "samples",
+  samples  = "sample",
   method   = c("chromatography", "massspectrometry", "qcmethod"),
   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
 )
