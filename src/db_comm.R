@@ -28,7 +28,7 @@
 pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRUE) {
   require(dplyr)
   # Argument validation relies on verify_args
-  log_it("trace", sprintf('Getting table definition for "%s".', db_table))
+  log_it("trace", sprintf('Getting table definition for "%s".', format_list_of_names(db_table)))
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -36,7 +36,7 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
         db_table = list(c("mode", "character"), c("n>=", 1)),
         conn     = list(c("length", 1)),
         get_sql  = list(c("mode", "logical"), c("length", 1)),
-        pretty   = list(c("mode", "logical", c("length", 1)))
+        pretty   = list(c("mode", "logical"), c("length", 1))
       ),
       from_fn    = "pragma_table_def"
     )
@@ -123,79 +123,76 @@ pragma_table_info <- function(db_table,
                               include_comments = FALSE,
                               names_only       = FALSE) {
   # Argument validation relies on verify_args
-  if (!str_detect(db_table, "sqlite_")) {
-    log_it("trace", glue('Getting table definition for "{db_table}".'))
-    if (exists("verify_args")) {
-      arg_check <- verify_args(
-        args       = list(db_table, db_conn, include_comments, names_only),
-        conditions = list(
-          db_table         = list(c("mode", "character"), c("n>=", 1)),
-          db_conn          = list(c("length", 1)),
-          include_comments = list(c("mode", "logical"), c("length", 1)),
-          names_only       = list(c("mode", "logical"), c("length", 1))
-        ),
-        from_fn   = "pragma_table_info"
-      )
-      stopifnot(arg_check$valid)
-    }
-    # Ensure table exists
-    db_table <- existing_tables(db_table, db_conn)
-    # Get table properties
-    out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
-    # Set up condition checks
-    valid_conditions <- c("required", "has_default", "is_PK")
-    if (!is.null(condition)) {
-      condition <- match.arg(condition, valid_conditions, several.ok = TRUE)
-    }
-    fns <- list(
-      function(out) which(out$notnull == 1),
-      function(out) which(!is.na(out$dflt_value)),
-      function(out) which(out$pk == 1)
+  log_it("trace", glue('Getting table definition for "{db_table}".'))
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(db_table, db_conn, include_comments, names_only),
+      conditions = list(
+        db_table         = list(c("mode", "character"), c("n>=", 1)),
+        db_conn          = list(c("length", 1)),
+        include_comments = list(c("mode", "logical"), c("length", 1)),
+        names_only       = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn   = "pragma_table_info"
     )
-    names(fns) <- valid_conditions
-    check_columns <- c("notnull", "dflt_value", "pk")
-    # Define which rows and columns to return
-    out_rows <- 1:nrow(out)
-    out_check <- integer(0)
-    # Limit column outputs?
-    limit <- lapply(c(condition, name_like, data_type),
-                    function(x) !is.null(x)) %>%
-      unlist() %>%
-      any()
-    # Get comments if any
-    log_info(db_table)
-    if (include_comments) {
-      tmp <- pragma_table_def(db_table = db_table, conn = db_conn, get_sql = TRUE) %>%
-        tidy_comments() %>%
-        bind_rows()
-      out <- out %>%
-        bind_cols(tmp) %>%
-        relocate(table_comment, .after = table_name)
-    }
-    # Do condition checks
-    if (!is.null(condition)) {
-      for (check in condition) {
-        out_check <- c(out_check, fns[[check]](out))
-      }
-    }
-    if (!is.null(name_like)) {
-      name_like <- paste0(name_like, collapse = "|")
-      out_check <- c(out_check, grep(name_like, out$name))
-    }
-    if (!is.null(data_type)) {
-      data_type <- paste0(data_type, collapse = "|")
-      out_check <- c(out_check, grep(toupper(data_type), out$type))
-    }
-    # Shape up the return
-    if (limit) out_rows <- out_check %>% unique() %>% sort()
-    out <- out[out_rows, ]
-    if (names_only) {
-      out <- out$name
-    }
-    # Return data frame object representing PRAGMA table_info columns matching the
-    # requested properties
-    return(out)
+    stopifnot(arg_check$valid)
   }
+  # Ensure table exists
+  db_table <- existing_tables(db_table, db_conn)
+  # Get table properties
+  out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
+  # Set up condition checks
+  valid_conditions <- c("required", "has_default", "is_PK")
+  if (!is.null(condition)) {
+    condition <- match.arg(condition, valid_conditions, several.ok = TRUE)
+  }
+  fns <- list(
+    function(out) which(out$notnull == 1),
+    function(out) which(!is.na(out$dflt_value)),
+    function(out) which(out$pk == 1)
+  )
+  names(fns) <- valid_conditions
+  check_columns <- c("notnull", "dflt_value", "pk")
+  # Define which rows and columns to return
+  out_rows <- 1:nrow(out)
+  out_check <- integer(0)
+  # Limit column outputs?
+  limit <- lapply(c(condition, name_like, data_type),
+                  function(x) !is.null(x)) %>%
+    unlist() %>%
+    any()
+  # Get comments if any
+  if (include_comments) {
+    tmp <- pragma_table_def(db_table = db_table, conn = db_conn, get_sql = TRUE) %>%
+      tidy_comments() %>%
+      bind_rows()
+    out <- out %>%
+      bind_cols(tmp) %>%
+      relocate(table_comment, .after = table_name)
+  }
+  # Do condition checks
+  if (!is.null(condition)) {
+    for (check in condition) {
+      out_check <- c(out_check, fns[[check]](out))
+    }
+  }
+  if (!is.null(name_like)) {
+    name_like <- paste0(name_like, collapse = "|")
+    out_check <- c(out_check, grep(name_like, out$name))
+  }
+  if (!is.null(data_type)) {
+    data_type <- paste0(data_type, collapse = "|")
+    out_check <- c(out_check, grep(toupper(data_type), out$type))
+  }
+  # Shape up the return
+  if (limit) out_rows <- out_check %>% unique() %>% sort()
+  out <- out[out_rows, ]
+  if (names_only) {
+    out <- out$name
+  }
+  # Return data frame object representing PRAGMA table_info columns matching the
+  # requested properties
+  return(out)
 }
 
 #' Build or rebuild the database from scratch
@@ -641,6 +638,19 @@ save_data_dictionary <- function(conn_obj           = con,
 #'
 #' @examples
 er_map <- function(conn = con) {
+  # Verify arguments
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        conn      = list(c("length", 1)),
+        return_as = list(c("choices", c("list", "matrix")), c("length", 1))
+      ),
+      from_fn    = "er_map"
+    )
+    stopifnot(arg_check$valid)
+  }
+  
   build_statements <- pragma_table_def(conn = conn, db_table = dbListTables(conn), get_sql = TRUE)
   build_statements <- build_statements[-grep("^sqlite", build_statements$table_name), ]
   n_tables <- nrow(build_statements)
