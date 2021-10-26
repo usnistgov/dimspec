@@ -186,7 +186,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   }
   names(args)  <- names(conditions)
   if (is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
-  log_it("info", glue('Verifying arguments for "{from_fn}".'))
+  log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -204,7 +204,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   for (i in 1:length(args)) {
     arg   <- args[i]
     needs <- conditions[[i]]
-    log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
+    log_it("debug", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -419,4 +419,28 @@ log_it <- function(log_level, msg) {
                    msg)
     cat(msg)
   }
+}
+
+#' Simple acronym generator
+#'
+#' At times it is useful for display purposes to generate acronyms for longer
+#' bits of text. This naively generates those by extracting the first letter as
+#' upper case from each word in `text` elements.
+#'
+#' @param text CHR vector of the text to acronym-ize
+#'
+#' @return CHR vector of length equal to that of `text` with the acronym
+#' @export
+#'
+#' @examples
+#' make_acronym("test me")
+#' make_acronym(paste("department of ", c("commerce", "energy", "defense")))
+make_acronym <- function(text) {
+  text %>%
+    str_to_lower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_to_title() %>%
+    str_extract_all("[A-Z]") %>%
+    lapply(function(x) paste0(x, collapse = "")) %>%
+    unlist()
 }
