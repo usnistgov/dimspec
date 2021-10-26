@@ -24,6 +24,8 @@ DELETE FROM norm_chromatography_types;
 .import --csv --skip 1 config/data/norm_chromatography_types.csv norm_chromatography_types
 DELETE FROM norm_polarity_types;
 .import --csv --skip 1 config/data/norm_polarity_types.csv norm_polarity_types
+DELETE FROM norm_fragment_generation_type;
+.import --csv --skip 1 config/data/norm_fragment_generation_type.csv norm_fragment_generation_type
 DELETE FROM norm_fragmentation_types;
 .import --csv --skip 1 config/data/norm_fragmentation_types.csv norm_fragmentation_types
 DELETE FROM norm_ms_n_types;

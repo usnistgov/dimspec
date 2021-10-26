@@ -49,12 +49,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		abbreviation
-			TEXT NOT NULL,
-			/* (single) letter abbreviation for the source type */
-		st_type
+		name
 			TEXT NOT NULL,
 			/* full name of the source type */
+		acronym
+			TEXT NOT NULL,
+			/* (single) letter acronym for the source type */
 		definition
 			TEXT NOT NULL
 			/* definition of the source type */
@@ -68,7 +68,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		ion_state
+		name
 			TEXT NOT NULL UNIQUE
 			/* state of the found ion with common mass spectrometric adjuncts/losses/charge */
 		/* Check constraints */

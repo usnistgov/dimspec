@@ -31,12 +31,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		acronym
-			TEXT NOT NULL UNIQUE,
-			/* validation list of ionization source acronyms */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source names */
+		acronym
+			TEXT NOT NULL UNIQUE
+			/* validation list of ionization source acronyms */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -125,12 +125,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		abbreviation
-			TEXT NOT NULL UNIQUE,
-			/* ionization energy units abbreviation */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* ionization energy units */
+		acronym
+			TEXT NOT NULL UNIQUE
+			/* ionization energy units acronym */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -144,9 +144,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		name
 			TEXT NOT NULL UNIQUE,
 			/* type of the mass analyzer */
-		abbreviation
+		acronym
 			TEXT NOT NULL UNIQUE
-			/* common abbreviation for the mass spectrometer type */
+			/* common acronym for the mass spectrometer type */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -157,12 +157,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		abbreviation
-			TEXT NOT NULL UNIQUE,
-			/* common abbreviation for the mass spectrometer type */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* type of the mass analyzer */
+		acronym
+			TEXT NOT NULL UNIQUE
+			/* common acronym for the mass spectrometer type */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -173,12 +173,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		abbreviation
-			TEXT NOT NULL UNIQUE,
-			/* common abbreviation for the fragmentation type */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* type of fragmentation */
+		acronym
+			TEXT NOT NULL UNIQUE
+			/* common acronym for the fragmentation type */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -191,7 +191,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
-			/* type of the polarity, controlled vocabular */
+			/* type of the polarity, controlled vocabulary */
 		/* Check constraints */
 		CHECK (name IN ('negative', 'positive', 'negative/positive'))
 		/* Foreign key relationships */
@@ -206,9 +206,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		name
 			TEXT NOT NULL UNIQUE,
 			/* type of chromatography */
-		abbreviation
+		acronym
 			TEXT NOT NULL UNIQUE
-			/* common abbreviation for chromatographic type (e.g. LC, GC) */
+			/* common acronym for chromatographic type (e.g. LC, GC) */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -472,9 +472,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* View all mass analyzers used in methods */
 		SELECT
 			msd.ms_methods_id,
-				/* mass spec method id */
-			ms.abbreviation,
-				/* mass spec abbreviation */
+				/* mass spectrometric method id */
+			ms.acronym,
+				/* mass spectrometer acronym */
 			ms.name
 				/* mass spectrometer type used in this method */
 		FROM ms_descriptions msd
@@ -485,8 +485,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		SELECT
 			cd.ms_methods_id,
 				/* mass spec method id */
-			nct.abbreviation,
-				/* chromatographic type abbreviation */
+			nct.acronym,
+				/* chromatographic type acronym */
 			nct.name
 				/* chromatographic type used in this method */
 		FROM chromatography_descriptions cd
@@ -536,7 +536,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* chromatography_descriptions id */
 			REPLACE(GROUP_CONCAT(DISTINCT(nv.name)), ",", " x ") AS "chrom_vendor",
 				/* chromatography system vendor */
-			REPLACE(GROUP_CONCAT(DISTINCT(ct.abbreviation)), ",", " x ") AS "chrom_type"
+			REPLACE(GROUP_CONCAT(DISTINCT(ct.acronym)), ",", " x ") AS "chrom_type"
 				/* chromatography type (e.g. LC, GC, etc.) */
 		FROM 
 			chromatography_descriptions cd 
@@ -559,8 +559,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* Mass spectrometer type */
 			vcc.columns AS "columns",
 			/* Chromatographic columns used in this method */ 
-			nft.abbreviation AS "fragmentation_abbreviation",
-			/* Mass spectrometer fragmentation type abbreviation */
+			nft.acronym AS "fragmentation_acronym",
+			/* Mass spectrometer fragmentation type acronym */
 			nft.name AS "fragmentation_name",
 			/* Mass spectrometer fragmentation type */
 			pt.name AS "polarity",
@@ -608,7 +608,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				" and " ||
 			collision_energy_description ||
 				" fragmentation by " ||
-			fragmentation_abbreviation ||
+			fragmentation_acronym ||
 				" (" || fragmentation_name || ")" ||
 				" at " ||
 			collision_energy ||
