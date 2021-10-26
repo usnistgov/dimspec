@@ -134,10 +134,10 @@ validate_column_names <- function(con, table_names, column_names) {
 #' @export
 #'
 #' @examples
-#' clause_where(ANSI(), "example", list("foo" = "bar", "cat" = "dog"))
-#' clause_where(ANSI(), "example", list("foo" = list(values = "bar", like = TRUE)))
-#' clause_where(ANSI(), "example", list("foo" = list(values = "bar", exclude = TRUE)))
-clause_where <- function(con, table_names, match_criteria, case_sensitive, and_or = "OR") {
+#' clause_where(ANSI(), "example", list(foo = "bar", cat = "dog"))
+#' clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
+#' clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
+clause_where <- function(con, table_names, match_criteria, case_sensitive = TRUE, and_or = "OR") {
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
