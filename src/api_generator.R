@@ -122,6 +122,9 @@ validate_column_names <- function(con, table_names, column_names) {
 #'   = "Smith", exclude = TRUE))`, or to look for all records LIKE (or NOT LIKE)
 #'   "Smith", set this as `list(last_name = list(values = "Smith", exclude =
 #'   FALSE, like = TRUE))`
+#' @param case_sensitive LGL scalar of whether to match on a case sensitive
+#'   basis (the default TRUE searches for values as-provided) or whether to
+#'   coerce value matches by upper, lower, sentence, and title case matches
 #' @param and_or LGL scalar of whether to use "AND" or "OR" for multiple
 #'   criteria, which will be used to combine them all. More complicated WHERE
 #'   clauses (including a mixture of AND and OR usage) should be built directly.
@@ -134,7 +137,7 @@ validate_column_names <- function(con, table_names, column_names) {
 #' clause_where(ANSI(), "example", list("foo" = "bar", "cat" = "dog"))
 #' clause_where(ANSI(), "example", list("foo" = list(values = "bar", like = TRUE)))
 #' clause_where(ANSI(), "example", list("foo" = list(values = "bar", exclude = TRUE)))
-clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
+clause_where <- function(con, table_names, match_criteria, case_sensitive, and_or = "OR") {
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -142,6 +145,7 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
         con            = list(c("length", 1)),
         table_names    = list(c("mode", "character"), c("n>=", 1)),
         match_criteria = list(c("mode", "list")),
+        case_sensitive = list(c("mode", "logical"), c("length", 1)),
         and_or         = list(c("mode", "character"), c("length", 1))
       )
     )
@@ -191,6 +195,17 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
     }
     modifiers <- names(out[[m]])
     checks    <- out[[m]]$values
+    if (!case_sensitive) {
+      checks <- unique(
+        c(
+          checks,
+          str_to_lower(checks),
+          str_to_title(checks),
+          str_to_sentence(checks),
+          str_to_upper(checks)
+        )
+      )
+    }
     if (length(checks) == 1) {
       out[[m]]$query <- sqlInterpolate(con, "? = ?", column, checks)
     } else {
@@ -267,6 +282,10 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #'   `list(last_name = list(values = "Smith", exclude = TRUE))`, or to look for
 #'   all records LIKE (or NOT LIKE) "Smith", set this as `list(last_name =
 #'   list(values = "Smith", exclude = FALSE, like = TRUE))`
+#' @param case_sensitive LGL scalar of whether to match on a case sensitive
+#'   basis (the default TRUE searches for values as-provided) or whether to
+#'   coerce value matches by upper, lower, sentence, and title case matches;
+#'   passed directly to [clause_where] (default: TRUE)
 #' @param and_or CHR scalar one of "AND" or "OR" to be applied to the match
 #'   criteria (default "OR")
 #' @param limit INT scalar of the maximum number of rows to return  (default
@@ -294,6 +313,7 @@ build_db_action <- function(action,
                             column_names    = NULL,
                             values          = NULL,
                             match_criteria  = NULL,
+                            case_sensitive  = TRUE,
                             and_or          = "OR",
                             limit           = NULL,
                             group_by        = NULL,
@@ -309,7 +329,7 @@ build_db_action <- function(action,
   is_ansi      <- identical(conn, ANSI())
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(action, table_name, conn, and_or, distinct, get_all_columns),
+      args       = list(action, table_name, conn, case_sensitive, and_or, distinct, get_all_columns),
       conditions = list(
         action          = list(c("choices", list(toupper(names(queries)))),
                                c("mode", "character")),
@@ -322,6 +342,7 @@ build_db_action <- function(action,
                c("length", 1))
         },
         conn            = list(c("length", 1)),
+        case_sensitive  = list(c("mode", "logical"), c("length", 1)),
         and_or          = list(c("choices", list(c("AND", "OR"))),
                                c("mode", "character"),
                                c("length", 1)),
@@ -444,6 +465,7 @@ build_db_action <- function(action,
     query <- paste(query, "WHERE",
                    clause_where(con            = conn,
                                 table_names    = table_name,
+                                case_sensitive = case_sensitive,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
   }
@@ -497,7 +519,7 @@ build_db_action <- function(action,
       confirm <- select.list(choices   = c("CONFIRM", "abort"),
                              preselect = "abort",
                              multiple  = FALSE,
-                             title     = "Please connfirm.")
+                             title     = "Please confirm.")
       if (!confirm == "CONFIRM") {
         cat("Query construction aborted.\n")
         query <- NA
