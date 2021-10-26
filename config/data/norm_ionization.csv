@@ -1,9 +1,9 @@
-id,acronym,name
-1,APCI,atmospheric pressure chemical ionization
-2,APPI,atmospheric pressure photoionization
-3,CI,chemical ionization
-4,EI,electron impact ionization
-5,ESI,electrospray ionization
-6,FAB,fast atom bombardment
-7,MALDI,matrix assisted laser desorption ionization
-8,NCI,negative chemical ionization
+id,name,acronym
+1,atmospheric pressure chemical ionization,APCI
+2,atmospheric pressure photoionization,APPI
+3,chemical ionization,CI
+4,electron impact ionization,EI
+5,electrospray ionization,ESI
+6,fast atom bombardment,FAB
+7,matrix assisted laser desorption ionization,MALDI
+8,negative chemical ionization,NCI
