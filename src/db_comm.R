@@ -1196,10 +1196,13 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 
 #' Convenience function to rebuild all database related files
 #'
-#' This requires references to be in place to the individual functions in the
-#' current environment.
+#' @note This requires references to be in place to the individual functions in
+#'   the current environment.
 #'
-#' @return None
+#' @return Files for the new database, fallback build, and data dictionary will
+#'   be created in the project directory and objects will be created in the
+#'   global environment for the database map (LIST "db_map") and current
+#'   dictionary (LIST "db_dict")
 #' @export
 #'
 #' @examples
@@ -1212,7 +1215,8 @@ update_all <- function() {
   db_map <<- er_map()
   db_dict <<- jsonlite::read_json(
     list.files(pattern = "data_dictionary.json", full.names = TRUE)
-  )
+  ) %>%
+    lapply(bind_rows)
 }
 
 # Database utility functions ---------------------------------------------------
@@ -1478,6 +1482,19 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       return(NULL)
     }
   }
+}
+
+ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_refs_in = "references") {
+  log_it("trace", sprintf('Getting normalization table reference for column  "%s" in table "%s"', table_column, table_name) )
+  refs <- this_map[[table_name]][[fk_refs_in]]
+  table_column <- sprintf("^%s", table_column)
+  refers_to <- grep(table_column, refs, value = TRUE)
+  if (length(refers_to) == 1) {
+    refers_to <- refers_to %>%
+      str_remove_all("^[[:alpha:]-_]* REFERENCES |\\([[:alpha:]]*\\)$") %>%
+      str_trim()
+  }
+  return(refers_to)
 }
 
 # Operation specific functions -------------------------------------------------
