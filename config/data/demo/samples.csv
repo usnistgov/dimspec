@@ -1,4 +1,4 @@
 ﻿id,name,description,sample_class,source,data_generator,generated_on,msconvert_settings_id,ms_methods_id
-1,file1,CR001,4,colab1,2,2021-08-18 14:47:15 UTC,1,1
-2,file2,SD001,5,colab1,2,2021-08-18 14:47:15 UTC,1,1
-3,file3,CR002,4,colab2,3,2021-08-18 14:47:15 UTC,1,1
+1,file1,CR001,4,colab1,2,2021-08-18T14:47:15Z,1,1
+2,file2,SD001,5,colab1,2,2021-08-18T14:47:15Z,1,1
+3,file3,CR002,4,colab2,3,2021-08-18T14:47:15Z,1,1

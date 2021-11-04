@@ -67,7 +67,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER,
 			/* foreign key to ms_methods */
 		/* Check constraints */
-		CHECK (generated_on == strftime("%Y-%m-%d %H:%M:%S", generated_on))
+		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
