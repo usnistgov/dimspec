@@ -320,6 +320,7 @@ build_db_action <- function(action,
                             order_by        = NULL,
                             distinct        = FALSE,
                             get_all_columns = FALSE,
+                            ignore          = TRUE,
                             execute         = TRUE,
                             single_column_as_vector = TRUE) {
   # Argument validation
@@ -329,7 +330,9 @@ build_db_action <- function(action,
   is_ansi      <- identical(conn, ANSI())
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(action, table_name, conn, case_sensitive, and_or, distinct, get_all_columns),
+      args       = list(action, table_name, conn, case_sensitive, and_or,
+                        distinct, get_all_columns, ignore, execute,
+                        single_column_as_vector),
       conditions = list(
         action          = list(c("choices", list(toupper(names(queries)))),
                                c("mode", "character")),
@@ -349,7 +352,13 @@ build_db_action <- function(action,
         distinct        = list(c("mode", "logical"),
                                c("length", 1)),
         get_all_columns = list(c("mode", "logical"),
-                               c("length", 1))
+                               c("length", 1)),
+        ignore          = list(c("mode", "logical"),
+                               c("length", 1)),
+        execute         = list(c("mode", "logical"),
+                               c("length", 1)),
+        single_column_as_vector = list(c("mode", "logical"),
+                                       c("length", 1))
       )
     )
     if (!arg_check$valid) {
@@ -367,6 +376,9 @@ build_db_action <- function(action,
   }
   
   if (action == "INSERT") {
+    if (ignore) {
+      query <- str_replace(query, "INSERT", "INSERT OR IGNORE")
+    }
     column_names <- names(values)
   }
   

@@ -317,7 +317,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL,
 			/* foreign key to norm_vendors */
 		/* Check constraints */
-		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id),
+		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id, column_position_id, vendor_id),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
 		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -367,6 +367,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* citation for the experimental method */
 		/* Check constraints */
 		CHECK (has_qc_method IN (0, 1)),
+		UNIQUE(ionization, voltage, voltage_units, polarity, ce_value, ce_units, ce_desc, fragmentation, ms2_type, has_qc_method, citation)
 		/* Foreign key relationships */
 		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE,
 		FOREIGN KEY (voltage_units) REFERENCES norm_ionization_units(id) ON UPDATE CASCADE,
