@@ -1491,7 +1491,7 @@ ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_r
   refers_to <- grep(table_column, refs, value = TRUE)
   if (length(refers_to) == 1) {
     refers_to <- refers_to %>%
-      str_remove_all("^[[:alpha:]-_]* REFERENCES |\\([[:alpha:]]*\\)$") %>%
+      str_remove_all("^[[:alnum:]-_]* REFERENCES |\\([[:alpha:]]*\\)$") %>%
       str_trim()
   }
   return(refers_to)
