@@ -446,7 +446,7 @@ data_dictionary <- function(conn_obj = con) {
                                  db_conn = con,
                                  include_comments = TRUE))
     if (class(tmp) == "try-error") {
-      log_it("warn", sprintf('Dictionary failure on table "%s"\n', tabl))
+      log_it("warn", sprintf('Dictionary failure on "%s"\n', tabl))
       failures <- c(failures, tabl)
     } else {
       log_it("success", sprintf('"%s" added to dictionary\n', tabl))
@@ -551,7 +551,6 @@ save_data_dictionary <- function(conn_obj           = con,
     )
     stopifnot(arg_check$valid)
   }
-  logger <- "logger" %in% (.packages())
   output_format <- tolower(output_format)
   output_format <- match.arg(output_format,
                              c("json", "csv", "data.frame", "list"))
@@ -561,11 +560,20 @@ save_data_dictionary <- function(conn_obj           = con,
     f_ext <- output_format
   }
   if (is.null(output_file)) {
-    f_name <- sprintf("%s/%s_%s_data_dictionary.%s",
-                      getwd(),
-                      DB_TITLE,
-                      DB_VERSION,
-                      f_ext)
+    can_construct <- sapply(c("DB_TITLE", "DB_VERSION", "DICT_FILE_NAME"), exists)
+    if (!all(can_construct)) {
+      log_it("warn", "Not enough values provided to construct a file name. Using defaults.")
+      if (!exists("DB_TITLE"))       DB_TITLE <- "hrams_database"
+      if (!exists("DB_VERSION"))     DB_VERSION <- NULL
+      if (!exists("DICT_FILE_NAME")) DICT_FILE_NAME <- "dictionary"
+    }
+    f_name <- file.path(getwd(),
+                        sprintf("%s.%s",
+                                paste0(c(DB_TITLE,
+                                         DB_VERSION,
+                                         DICT_FILE_NAME), collapse = "_"),
+                                f_ext)
+    )
   } else {
     f_name <- output_file
   }
@@ -576,44 +584,42 @@ save_data_dictionary <- function(conn_obj           = con,
   while (file.exists(f_name)) {
     i <- i + 1
     f_name <- str_replace(f_name,
-                          sprintf("_data_dictionary%s.%s", 
+                          sprintf("%s%s.%s", 
+                                  DICT_FILE_NAME,
                                   ifelse(i == 1, "",
                                          sprintf(" (%s)", i - 1)),
                                   f_ext),
-                          sprintf("_data_dictionary (%s).%s",
+                          sprintf("%s (%s).%s",
+                                  DICT_FILE_NAME,
                                   i,
                                   f_ext)
     )
   }
   out <- data_dictionary(conn_obj)
-  if (is.null(output_file)) {
-    if (logger) {
-      log_warn('No file name provided to "output_file", saving as "{f_name}"')
-    } else {
-      cat(sprintf('No file name provided to "output_file", saving as "%s"\n', f_name))
-    }
-  }
   if (attr(out, "has_failures")) {
-    if (logger) {
-      log_error('This dictionary failed on tables {format_list_of_names(out$failures)}')
-    } else {
-      stop(sprintf('This dictionary failed on tables %s',
-                   format_list_of_names(out$failures)))
+    log_it("error",
+           sprintf('This dictionary failed on %s. No file will be saved.',
+                   format_list_of_names(attr(out, "failures"))))
+  } else {
+    if (is.null(output_file)) {
+      log_it("warn",
+             sprintf('No file name provided to "output_file", saving as "%s".',
+                     f_name))
     }
+    switch(output_format,
+           "json"       = out %>%
+             jsonlite::toJSON() %>%
+             write_file(f_name),
+           "csv"        = out %>%
+             dplyr::bind_rows() %>%
+             readr::write_csv(f_name),
+           "data.frame" = out %>%
+             dplyr::bind_rows() %>%
+             write_rds(f_name),
+           "list"       = out %>%
+             write_rds(f_name)
+    )
   }
-  switch(output_format,
-         "json"       = out %>%
-           jsonlite::toJSON() %>%
-           write_file(f_name),
-         "csv"        = out %>%
-           dplyr::bind_rows() %>%
-           readr::write_csv(f_name),
-         "data.frame" = out %>%
-           dplyr::bind_rows() %>%
-           write_rds(f_name),
-         "list"       = out %>%
-           write_rds(f_name)
-  )
 }
 
 #' Create a simple entity relationship map
