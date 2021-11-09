@@ -22,6 +22,7 @@ INIT_CONNECT   <- TRUE
 DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
 DB_CLASS       <- "SQLite"
+DICT_FILE_NAME <- "data_dictionary"
 
 # The last time the main database schema defined in BUILD_FILE was updated
 LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = TRUE))$mtime
@@ -62,12 +63,12 @@ EXCLUSIONS     <- c(".RDS",
                     "metadata_xml")
 
 # Import namespace checks
-IMPORT_HEADERS <- list(
-  software = "msconvertsettings",
-  samples  = "sample",
-  method   = c("chromatography", "massspectrometry", "qcmethod"),
-  data     = c("peak", "compounddata", "annotation", "msdata", "qc")
-)
+# IMPORT_HEADERS <- list(
+#   software = "msconvertsettings",
+#   samples  = "sample",
+#   method   = c("chromatography", "massspectrometry", "qcmethod"),
+#   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
+# )
 
 # Convenience collection of the items above is available from `support_info()`
 # once `source("compliance.R")` is complete.

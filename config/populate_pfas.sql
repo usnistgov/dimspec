@@ -17,8 +17,10 @@
 DELETE FROM solvent_mixes;
 DELETE FROM solvent_mix_collections;
 DELETE FROM solvent_aliases;
+DELETE FROM additive_aliases;
 DELETE FROM mobile_phases;
 DELETE FROM norm_solvents;
+DELETE FROM norm_additives;
 DELETE FROM samples;
 DELETE FROM norm_sample_classes;
 DELETE FROM ms_methods;
@@ -33,6 +35,7 @@ DELETE FROM compound_aliases;
 DELETE FROM conversion_software_linkage;
 DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents
+.import --csv --skip 1 config/data/pfas/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes
 .import --csv --skip 1 config/data/pfas/ms_methods.csv ms_methods
 .import --csv --skip 1 config/data/pfas/ms_descriptions.csv ms_descriptions
@@ -42,6 +45,7 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/solvent_mix_collections.csv solvent_mix_collections
 .import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/pfas/solvent_aliases.csv solvent_aliases
+.import --csv --skip 1 config/data/pfas/additive_aliases.csv additive_aliases
 .import --csv --skip 1 config/data/pfas/solvent_mixes.csv solvent_mixes
 .import --csv --skip 1 config/data/pfas/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds

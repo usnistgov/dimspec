@@ -54,6 +54,19 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_additives
+		/* Solvent additives list: controlled. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* IUPAC name for solvent additives */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_vendors
 		/* Normalization table holding commercial instrument vendor information. */
 	(
@@ -261,9 +274,15 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		carrier
 			INTEGER NOT NULL,
 			/* informal foreign key to solvent_mixes */
-		additive
-			TEXT,
-			/* buffer/salt/acid addition to mobile phase */
+		additive1_id
+			INTEGER,
+			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
+		additive2_id
+			INTEGER,
+			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
+		additive3_id
+			INTEGER,
+			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
 		duration
 			REAL,
 			/* time duration mobile phase was applied */
@@ -275,6 +294,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (duration > 0),
 		/* Foreign key relationships */
 		FOREIGN KEY (methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
+		FOREIGN KEY (additive1_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
+		FOREIGN KEY (additive2_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
+		FOREIGN KEY (additive3_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
 		FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
@@ -366,8 +388,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT,
 			/* citation for the experimental method */
 		/* Check constraints */
-		CHECK (has_qc_method IN (0, 1)),
-		UNIQUE(ionization, voltage, voltage_units, polarity, ce_value, ce_units, ce_desc, fragmentation, ms2_type, has_qc_method, citation)
+		CHECK (has_qc_method IN (0, 1))
 		/* Foreign key relationships */
 		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE,
 		FOREIGN KEY (voltage_units) REFERENCES norm_ionization_units(id) ON UPDATE CASCADE,
@@ -444,6 +465,20 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS additive_aliases
+		/* List of common aliases for each entry in norm_additives */
+	(
+		additive_id
+			INTEGER NOT NULL,
+			/* foreign key to norm_solvents */
+		alias
+			TEXT NOT NULL UNIQUE,
+			/* human meaningful name(s) associated with an additive */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS solvent_mixes
 		/* Mobile phase solvent mixture for a given elution method */
 	(
@@ -459,7 +494,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
 		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/

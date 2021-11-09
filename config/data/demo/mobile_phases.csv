@@ -1,2 +1,2 @@
-﻿method_id,carrier,additive,duration,duration_units
-1,1,,60,minutes
+﻿method_id,carrier,additive1,additive2,additive3,duration,duration_units
+1,1,0,0,0,60,minutes
