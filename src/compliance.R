@@ -69,6 +69,13 @@ if (!DB_BUILT) build_db()
 if (INIT_CONNECT) {
   manage_connection()
   db_map <- er_map()
+  db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
+  if (length(db_dict) == 1) {
+    db_dict <- read_json(db_dict) %>%
+      lapply(bind_rows)
+  } else {
+    db_dict <- data_dictionary()
+  }
 }
 
 # _Clean up --------------------------------------------------------------------
