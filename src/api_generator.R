@@ -1,5 +1,6 @@
 
 queries <- list(
+  NROW   = "SELECT COUNT(*) FROM ?table_name",
   INSERT = "INSERT INTO ?table_name (?column_names) VALUES ?values",
   UPDATE = "UPDATE ?table_name SET ?values",
   SELECT = "SELECT ?column_names FROM ?table_name",
@@ -243,7 +244,7 @@ clause_where <- function(con, table_names, match_criteria, case_sensitive = TRUE
           str_replace_all("[%]+", "%")
         if (!grepl("%", out[[m]]$query)) {
           out[[m]]$query <- str_replace(out[[m]]$query,
-                                        "LIKE '?(.*)'?",
+                                        "LIKE '(.*)'",
                                         "LIKE '%\\1%'")
         }
       }
@@ -320,7 +321,7 @@ build_db_action <- function(action,
                             order_by        = NULL,
                             distinct        = FALSE,
                             get_all_columns = FALSE,
-                            ignore          = TRUE,
+                            ignore          = FALSE,
                             execute         = TRUE,
                             single_column_as_vector = TRUE) {
   # Argument validation
@@ -369,6 +370,8 @@ build_db_action <- function(action,
   if (!is_ansi) {
     validate_tables(conn, table_name)
   }
+  
+  if (is.data.frame(values)) values <- purrr::transpose(values)
   
   query <- queries[[action]]
   if (all(action == "SELECT", distinct)) {
@@ -429,7 +432,7 @@ build_db_action <- function(action,
                              function(x) {
                                lapply(x,
                                       function(x) {
-                                        if (tolower(x) == "null" || x == "") {
+                                        if (any(tolower(x) == "null", x == "", is.na(x))) {
                                           "null"
                                         } else {
                                           dbQuoteLiteral(conn, x)
