@@ -283,6 +283,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		additive3_id
 			INTEGER,
 			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
+		additive4_id
+			INTEGER,
+			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
 		duration
 			REAL,
 			/* time duration mobile phase was applied */
@@ -297,6 +300,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (additive1_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
 		FOREIGN KEY (additive2_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
 		FOREIGN KEY (additive3_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
+		FOREIGN KEY (additive4_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
 		FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/

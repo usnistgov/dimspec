@@ -25,6 +25,31 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS config
+	  /* Installation code to facilitate widespread usage. */
+	(
+	  id
+	    INTEGER PRIMARY KEY,
+	    /* primary key */
+	  code
+	    INTEGER NOT NULL,
+	    /* random installation number */
+	  name
+	    TEXT,
+	    /* name for this installation */
+	  build_date
+	    TEXT,
+	    /* build date for this installation */
+		/* Check constraints */
+		CHECK (id = 0),
+		CHECK (build_date == strftime("%Y-%m-%d %H:%M:%S", build_date))
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	INSERT INTO config VALUES (
+	  0, strftime("%s", "now", "utc"), null, datetime('now', 'utc')
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS elements
 		/* Normalization list of periodic table elements 1-118. */
 	(

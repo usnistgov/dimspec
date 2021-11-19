@@ -26,7 +26,9 @@ DELETE FROM norm_sample_classes;
 DELETE FROM ms_methods;
 DELETE FROM ms_descriptions;
 .read config/populate_common.sql
-.read config/sql_nodes/contributors_data.sql
+DELETE FROM contributors;
+DELETE FROM affiliations;
+DELETE FROM chromatography_descriptions;
 DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_alias_references;

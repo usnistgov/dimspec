@@ -29,20 +29,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_fragment_generation_type
-		/* Normalization table for fragmenet generation source type */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL,
-			/* one of "in silico" or "empirical" */
-		/* Check constraints */
-		CHECK (name IN ("in silico", "empirical"))
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_source_types
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
@@ -113,10 +99,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		additional
 			TEXT,
 			/* additional information, as submitted */
-		local_pos
+		local_positive
 			INTEGER NOT NULL DEFAULT 0,
 			/* number of atoms with positive charges, derived */
-		local_neg
+		local_negative
 			INTEGER NOT NULL DEFAULT 0,
 			/* number of atoms with negative charges, derived */
 		formula
@@ -132,19 +118,20 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL,
 			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
 		inspected_by
-			TEXT,
+			INTEGER,
 			/* user inspection id */
 		inspected_on
 			TEXT,
 			/* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */
 		/* Check constraints */
-		CHECK (local_pos >= 0),
-		CHECK (local_neg >= 0),
+		CHECK (local_positive >= 0),
+		CHECK (local_negative >= 0),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
 		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE,
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
 		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
@@ -192,7 +179,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL,
 			/* foreign key to peaks */
 		compound_id
-			INTEGER NOT NULL,
+			INTEGER,
 			/* foreign key to compounds */
 		fragment_id
 			INTEGER NOT NULL,
@@ -200,7 +187,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id),
-		FOREIGN KEY (compound_id) REFERENCES compounds(id),
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
 	);
 	/*magicsplit*/
@@ -243,14 +229,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to fragments */
 		generated_by
 			INTEGER NOT NULL,
-			/* foreign key to norm_fragment_generation_type */
+			/* foreign key to norm_generation_type */
 		citation
 			TEXT NOT NULL,
 			/* DOI, etc. */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-		FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id)
+		FOREIGN KEY (generated_by) REFERENCES norm_generation_type(id)
 	);
 	/*magicsplit*/
 /* Views */
@@ -324,5 +310,15 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN compound_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
 /* Triggers */
+	/*magicsplit*/
+	CREATE TRIGGER nullify_blank_compounds_inspected_by
+		AFTER INSERT ON compounds
+		WHEN NEW.inspected_by = ''
+		BEGIN
+			UPDATE compounds SET
+				inspected_by = NULL,
+				inspected_on = NULL
+			WHERE ROWID = NEW.ROWID;
+		END;
 	/*magicsplit*/
 	/* none */
