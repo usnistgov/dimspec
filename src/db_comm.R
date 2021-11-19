@@ -117,6 +117,7 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
 #' @examples
 pragma_table_info <- function(db_table,
                               db_conn          = con,
+                              table_type       = NULL,
                               condition        = NULL,
                               name_like        = NULL,
                               data_type        = NULL,
@@ -139,6 +140,10 @@ pragma_table_info <- function(db_table,
   }
   # Ensure table exists
   db_table <- existing_tables(db_table, db_conn)
+  # Bail early for performance if names only
+  if (names_only) {
+    return(DBI::dbListFields(db_conn, db_table))
+  }
   # Get table properties
   out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
   # Set up condition checks
@@ -187,9 +192,6 @@ pragma_table_info <- function(db_table,
   # Shape up the return
   if (limit) out_rows <- out_check %>% unique() %>% sort()
   out <- out[out_rows, ]
-  if (names_only) {
-    out <- out$name
-  }
   # Return data frame object representing PRAGMA table_info columns matching the
   # requested properties
   return(out)
@@ -268,29 +270,25 @@ build_db <- function(db            = DB_NAME,
   # Do it the short way (with CLI)
   if (sqlite_available) {
     log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'))
-    require(glue)
-    sqlite_call   <- glue('{sqlite_cli} {db}')
+    sqlite_call <- glue('{sqlite_cli} {db}')
     if (!file.exists(build_file)) {
       stop(glue('Cannot locate file "{build_file}" in this directory.'))
     }
-    build         <- glue('-cmd ".read {build_file}"')
+    build_cmd   <- glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
+    log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'))
+    if (file.exists(db)) remove_db(db = db, archive = archive)
+    shell(build_cmd)
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
         log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'))
         populate_cmd <- ""
       } else {
-        populate_cmd <- glue(' -cmd ".read {populate_file}"')
+        populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
+        log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'))
+        shell(populate_cmd)
       }
-    } else {
-      populate_cmd <- ""
     }
-    full_call     <- glue('{build}{populate_cmd}') %>%
-      str_remove_all("\\./")
-    full_call     <- glue('{sqlite_call} {full_call} -cmd ".exit"')
-    log_it("trace", glue("Issuing shell command {full_call}"))
-    if (file.exists(db)) remove_db(db = db, archive = archive)
-    shell(full_call)
     log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'))
   } else {
     # Do it the long way
@@ -449,7 +447,7 @@ data_dictionary <- function(conn_obj = con) {
       log_it("warn", sprintf('Dictionary failure on "%s"\n', tabl))
       failures <- c(failures, tabl)
     } else {
-      log_it("success", sprintf('"%s" added to dictionary\n', tabl))
+      log_it("info", sprintf('"%s" added to dictionary\n', tabl))
     }
     out[[tabl]] <- tmp
   }
@@ -500,8 +498,8 @@ tidy_comments <- function(obj) {
   } else {
     comments <- obj$sql %>%
       str_remove_all("/\\* (Check constraints|Foreign key relationships) \\*/") %>%
-      str_extract_all("/\\* [[:alnum:][:punct:]\\[\\]\\+ ]+ \\*/") %>%
-      lapply(str_remove_all, "/\\* | \\*/")
+      str_extract_all("/\\* [[:alnum:][:punct:]\\[\\]\\+ ]+[[:alnum:][:punct:] ]\\*/") %>%
+      lapply(str_remove_all, "/\\* *| *\\*/")
     table_comments <- lapply(comments, function(x) x[1])
     field_comments <- lapply(comments, function(x) x[-1])
     out <- vector('list', nrow(obj))
@@ -1219,9 +1217,14 @@ update_all <- function() {
   create_fallback_build()
   save_data_dictionary()
   db_map <<- er_map()
-  db_dict <<- jsonlite::read_json(
-    list.files(pattern = "data_dictionary.json", full.names = TRUE)
-  ) %>%
+  dict_file <- list.files(pattern = "data_dictionary.json",
+                          full.names = TRUE) %>%
+    file.info() %>%
+    arrange(desc(ctime)) %>%
+    slice(1) %>%
+    rownames()
+  db_dict <<- dict_file %>%
+    jsonlite::read_json() %>%
     lapply(bind_rows)
 }
 
@@ -1268,7 +1271,14 @@ add_normalization_value <- function(db_table, ..., conn = con) {
   if (!all(needed %in% names(new_values))) {
     msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
     if (interactive()) {
-      log_it("warn", paste0(msg, " Please provide values to continue."))
+      log_it("warn",
+             sprintf("%s Please provide the following values associated with %s to continue.",
+                     msg,
+                     format_list_of_names(
+                       sprintf('"%s = %s"', names(new_values), unlist(new_values))
+                     )
+             )
+      )
       for (need_this in needed) {
         if (!need_this %in% names(new_values)) {
           if (all(need_this == "acronym", "name" %in% names(new_values))) {
