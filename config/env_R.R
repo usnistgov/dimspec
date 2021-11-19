@@ -14,7 +14,7 @@ DB_VERSION     <- sprintf("%s.%s",
                           DB_RELEASE,
                           ifelse(DB_BUILT,
                                  format(DB_DATE, "%Y%m%d"),
-                                 NA)
+                                 format(Sys.Date(), "%Y%m%d"))
 )
 INIT_CONNECT   <- TRUE
 
