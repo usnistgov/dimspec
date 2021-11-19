@@ -154,7 +154,11 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'   if the function fails) message back to the user, but does not halt checks}
 #'   }
 #' @param from_fn CHR scalar of the function from which this is called, used if
-#'   logger is enabled and ignored if not. (default NULL)
+#'   logger is enabled and ignored if not; by default it will pull the calling
+#'   function's name from the call stack, but can be overwritten by a manual
+#'   entry here for better tracing. (default NULL)
+#' @param silent LGL scalar of whether to silence warnings for individual
+#'   failiures, leaving them only as part of the output. (default: FALSE)
 #'
 #' @return LIST of the resulting values and checks, primarily useful for
 #'   $message
@@ -180,8 +184,8 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("between", list(100, 200)),
 #'                                          c("choices", list("a", "b")))))
 #' }
-verify_args <- function(args, conditions, from_fn = NULL) {
-  require(glue)
+verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
+  if (exists("VERIFY_ARGUMENTS")) if (!VERIFY_ARGUMENTS) return()
   if (length(args) != length(conditions)) {
     log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
                             length(args),
@@ -199,8 +203,10 @@ verify_args <- function(args, conditions, from_fn = NULL) {
       } else {
         log_it("trace", "Arguments provided are unnamed, order will be inferred from conditions.")
         names(args) <- names(conditions)
-        args <- args[names(conditions)]
       }
+    } else if (n_con_names == 0) {
+      log_it("trace", "Conditions provided are unnamed, order will be inferred from arguments.")
+      names(conditions) <- names(args)
     } else if (!n_arg_names == n_con_names) {
       stop("Length of named arguments did not match the length of named conditions.")
     } else {
@@ -374,7 +380,7 @@ verify_args <- function(args, conditions, from_fn = NULL) {
         n_msg <- length(out$messages) + 1
         out$messages[n_msg] <- msg
         log_it("trace", glue('{log_msg} - FAIL'))
-        log_it("error", glue("    {msg}"))
+        if (!silent) log_it("error", glue("    {msg}"))
       } else {
         log_it("trace", glue('{log_msg} - PASS'))
       }

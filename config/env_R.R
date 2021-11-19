@@ -62,6 +62,10 @@ EXCLUSIONS     <- c(".RDS",
                     "generate_db",
                     "metadata_xml")
 
+# Use function argument verification. Set to FALSE to serve as a global cut off
+# and increase execution speed.
+VERIFY_ARGUMENTS <- TRUE
+
 # Import namespace checks
 # IMPORT_HEADERS <- list(
 #   software = "msconvertsettings",
