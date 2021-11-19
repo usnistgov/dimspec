@@ -117,7 +117,6 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
 #' @examples
 pragma_table_info <- function(db_table,
                               db_conn          = con,
-                              table_type       = NULL,
                               condition        = NULL,
                               name_like        = NULL,
                               data_type        = NULL,
@@ -275,8 +274,9 @@ build_db <- function(db            = DB_NAME,
       stop(glue('Cannot locate file "{build_file}" in this directory.'))
     }
     build_cmd   <- glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
-    log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'))
     if (file.exists(db)) remove_db(db = db, archive = archive)
+    log_it("info", glue('Building database "{db}".'))
+    log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'))
     shell(build_cmd)
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
@@ -284,6 +284,7 @@ build_db <- function(db            = DB_NAME,
         log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'))
         populate_cmd <- ""
       } else {
+        log_it("info", glue('Populating from "{populate_file}".'))
         populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
         log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'))
         shell(populate_cmd)
@@ -439,15 +440,16 @@ data_dictionary <- function(conn_obj = con) {
   out <- vector('list', length(tabls))
   names(out) <- tabls
   failures <- character(0)
+  log_it("info", "Adding tables to the dictionary...one moment please...")
   for (tabl in tabls) {
     tmp <- try(pragma_table_info(db_table = tabl,
                                  db_conn = con,
                                  include_comments = TRUE))
     if (class(tmp) == "try-error") {
-      log_it("warn", sprintf('Dictionary failure on "%s"\n', tabl))
+      log_it("warn", sprintf('Dictionary failure on "%s"', tabl))
       failures <- c(failures, tabl)
     } else {
-      log_it("info", sprintf('"%s" added to dictionary\n', tabl))
+      log_it("trace", sprintf('"%s" added to dictionary', tabl))
     }
     out[[tabl]] <- tmp
   }
@@ -617,6 +619,7 @@ save_data_dictionary <- function(conn_obj           = con,
            "list"       = out %>%
              write_rds(f_name)
     )
+    log_it("success", "Dictionary created.")
   }
 }
 
@@ -1110,10 +1113,12 @@ create_fallback_build <- function(build_file    = NULL,
   if (!file.exists(build_file)) {
     stop(sprintf('Could not locate file "%s".', build_file))
   }
+  log_it("info", "Creating fall back build schema...")
   build   <- read_file(build_file) %>%
     sqlite_parse_build()
   
   if (populate) {
+    log_it("info", "Adding data insert reads...")
     populate_file <- list.files(pattern = populate_with,
                                 full.names = TRUE,
                                 recursive = TRUE)
@@ -1121,7 +1126,9 @@ create_fallback_build <- function(build_file    = NULL,
       sqlite_parse_build()
     build <- c(build, populate)
   }
+  
   # Make SQL build statements
+  log_it("info", "Expanding .build statements...")
   build   <- unlist(build) %>%
     as.list()
   index_read   <- grep("^.read", build)
@@ -1147,6 +1154,7 @@ create_fallback_build <- function(build_file    = NULL,
     })
   build <- unlist(build) %>% as.list()
   index_import <- grep("^.import", build)
+  log_it("info", "Expanding .import statements...")
   temp_import  <- lapply(build[index_import],
                          function(x) {
                            if (grepl(comments, x)) return(x)
