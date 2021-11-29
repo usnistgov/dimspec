@@ -187,6 +187,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id),
+		FOREIGN KEY (compound_id) REFERENCES compounds(id),
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
 	);
 	/*magicsplit*/
