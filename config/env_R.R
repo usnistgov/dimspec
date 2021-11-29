@@ -67,12 +67,12 @@ EXCLUSIONS     <- c(".RDS",
 VERIFY_ARGUMENTS <- TRUE
 
 # Import namespace checks
-# IMPORT_HEADERS <- list(
-#   software = "msconvertsettings",
-#   samples  = "sample",
-#   method   = c("chromatography", "massspectrometry", "qcmethod"),
-#   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
-# )
+IMPORT_HEADERS <- list(
+  software = "msconvertsettings",
+  samples  = "sample",
+  method   = c("chromatography", "massspectrometry", "qcmethod"),
+  data     = c("peak", "compounddata", "annotation", "msdata", "qc")
+)
 
 # Convenience collection of the items above is available from `support_info()`
 # once `source("compliance.R")` is complete.
