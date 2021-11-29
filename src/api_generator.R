@@ -476,13 +476,16 @@ build_db_action <- function(action,
   )
   
   # Safely escape where clauses
-  if (all(!is.null(match_criteria), action != "INSERT")) {
+  if (all(!is.null(match_criteria), !action %in% c("NROW", "INSERT"))) {
     query <- paste(query, "WHERE",
                    clause_where(con            = conn,
                                 table_names    = table_name,
                                 case_sensitive = case_sensitive,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
+  } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT"))) {
+    log_it("error", 'Only "NROW" and "INSERT" actions are valid when argument "match_criteria" is not provided.')
+    stop()
   }
   
   if (action == "SELECT") {
