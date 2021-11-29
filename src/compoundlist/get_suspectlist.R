@@ -65,6 +65,35 @@ suspectlist_at_NIST <- function(url_file = 'suspectlist_url.txt') {
   browseURL(url)
 }
 
+#' Extend the compounds and aliases tables
+#'
+#' Suspect lists are occasionally updated. To keep the current database up to
+#' date, run this function by pointing it to the updated or current suspect
+#' list. That suspect list should be one of (1) a file in either
+#' comma-separated-value (CSV) or a Microsoft Excel format (XLS or XLSX), (2) a
+#' data frame containing the new compounds in the standard format of the suspect
+#' list, or (3) a URL pointing to the suspect list.
+#'
+#' If `suspect_list` does not contain one of the expected file extensions, it
+#' will be assumed to be a URL pointing to a Microsoft Excel file with the
+#' suspect list in the first spreadsheet. The file for that URL will be
+#' downloaded temporarily, read in as a data frame, and then removed.
+#'
+#' Required columns for the compounds table are first pulled and all other
+#' columns are treated as aliases. If `retain_current` is TRUE, entries in the
+#' "name" column will be matched against current aliases and the compound id
+#' will be persisted for that compound.
+#'
+#' @param suspect_list CHR scalar pointing either to a file (CSV, XLS, or XLSX)
+#'   or URL pointing to an XLSX file.
+#' @param db_conn connection object (default: con)
+#' @param retain_current LGL scalar of whether to retain the current list by
+#'   attempting to match new entries to older ones, or to append all entries
+#'   (default: TRUE)
+#'
+#' @return None
+#' @export
+#' 
 extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TRUE) {
   # Get the current suspect list
   if (is.character(suspect_list)) {
@@ -99,7 +128,7 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
       if (class(slist_download) == "try-error") {
         stop(sprintf('Unable to download from "%s".', suspect_list))
       }
-      slist <- readxl::read_excel("tmp.xlsx")
+      slist <- readxl::read_excel("tmp.xlsx", sheet = 1)
       file.remove("tmp.xlsx")
     }
   } else if (is.data.frame(suspect_list)) {
@@ -518,7 +547,31 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
 }
 
 
+#' Repair CAS RNs forced to a date numeric by MSXL
+#'
+#' If a file is opened in Microsoft Excel(R), Chemical Abstract Service (CAS)
+#' Registry Numbers (RNs) can occasionally be read as a pseudodate (e.g.
+#' "1903-02-8"). Without tight controls over column formatting, this can result
+#' in CAS RNs that are not real entering a processing pipeline. This convenience
+#' function attempts to undo that automatic formatting by forcing vector members
+#' whose values when coerced to numeric are equal to those provided to a
+#' properly formatted date with an origin depending on operating system platform
+#' (as read by `.Platform$OS.type`); Windows operating systems use the Windows
+#' MSXL origin date of "1899-12-30" while others use "1904-01-01". Text entries
+#' of "NA" are coerced to NA.
+#'
+#' @param casrn_vec CHR or NUM vector of what should be valid CAS RNs
+#' @param output_format CHR scalar of the output format, which
+#'
+#' @return CHR vector of length equal to that of `casrn_vec` where numeric
+#'   entries have been coerced to the assumed date
+#'
+#' @export
+#'
+#' @examples
+#' repair_xl_casrn_forced_to_date(c("64324-08-3", "12332"))
 repair_xl_casrn_forced_to_date <- function(casrn_vec, output_format = "%Y-%m-%d") {
+  stopifnot(length(output_format) == 1)
   casrn_vec[casrn_vec == "NA"] <- NA
   unformat  <- which(!is.na(casrn_vec) & suppressWarnings(as.numeric(casrn_vec)) == casrn_vec)
   casrn_vec[unformat] <- format(
@@ -532,8 +585,38 @@ repair_xl_casrn_forced_to_date <- function(casrn_vec, output_format = "%Y-%m-%d"
   return(casrn_vec)
 }
 
-validate_casrns <- function(casrn_vec, strip_bad_cas = FALSE) {
+#' Validate a CAS RN
+#'
+#' Chemical Abstract Service (CAS) Registry Numbers (RNs) follow a standard
+#' creation format. From
+#' [https://www.cas.org/support/documentation/chemical-substances/faqs], a CAS
+#' RN is a "numeric identifier that can contain up to 10 digits, divided by
+#' hyphens into three parts. The right-most digit is a check digit used to
+#' verify the validity and uniqueness of the entire number. For example, 58-08-2
+#' is the CAS Registry Number for caffeine."
+#'
+#' Provided CAS RNs in `casrn_vec` are validated for format and their checksum
+#' digit. Those failing will be printed to the console by default, and users
+#' have the option of stripping unverified entries from the return vector.
+#'
+#' This only validates that a CAS RN is properly constructed; it does not
+#' indicate that the registry number exists in the CAS Registry.
+#' 
+#' See [repair_xl_casrn_forced_to_date] as one possible pre-processing step.
+#'
+#' @param casrn_vec CHR vector of what CAS RNs to validate
+#' @param strip_bad_cas LGL scalar of whether to strip out invalid CAS RNs
+#'   (default: TRUE)
+#'
+#' @return CHR vector of length equal to that of `casrn_vec`
+#' @export
+#'
+#' @examples
+#' validate_casrns(c("64324-08-9", "64324-08-5", "12332"))
+#' validate_casrns(c("64324-08-9", "64324-08-5", "12332"), strip_bad_cas = FALSE)
+validate_casrns <- function(casrn_vec, strip_bad_cas = TRUE) {
   parts <- casrn_vec
+  parts[parts == "NA"] <- NA
   na_part <- parts == "NA" | is.na(parts)
   parseable <- parts %>%
     str_split("-") %>%
@@ -542,8 +625,11 @@ validate_casrns <- function(casrn_vec, strip_bad_cas = FALSE) {
   parts[parseable] <- parts[parseable] %>%
     str_pad(width = 13, pad = "0", side = "left")
   if (any(!parseable)) {
+    bad_cas <- parts[!na_part & !parseable]
     log_it("warn", 'Not all entries were parseable to the CAS RN format.')
-    log_it("info", sprintf("\tApplies to entries %s", format_list_of_names(parts[!na_part & !parseable])))
+    log_it("info", sprintf("\tApplies to entr%s %s",
+                           ifelse(length(bad_cas) > 1, "ies", "y"),
+                           format_list_of_names(bad_cas)))
   }
   valid_casrn <- lapply(parts,
                         function(x) {
@@ -560,16 +646,18 @@ validate_casrns <- function(casrn_vec, strip_bad_cas = FALSE) {
                           return(check_sum == check_val)
                         }) %>%
     unlist()
+  parts <- parts %>%
+    str_remove_all("^0*")
   if (!all(valid_casrn[!is.na(valid_casrn)])) {
     log_it("warn", 'Not all CAS RNs were valid.')
-    log_it("info", sprintf("\tApplies to records %s", format_list_of_names(parts[!valid_casrn & !na_part])))
+    bad_cas <- parts[parseable & !valid_casrn & !na_part]
+    log_it("info", sprintf("\tApplies to entr%s %s",
+                           ifelse(length(bad_cas) > 1, "ies", "y"),
+                           format_list_of_names(bad_cas)))
   }
   if (strip_bad_cas) {
-    parts[!valid_casrn] <- "NA"
+    parts[!valid_casrn] <- NA
   }
-  parts[valid_casrn] <- parts[valid_casrn] %>%
-    lapply(str_c, collapse = "-") %>%
-    str_remove_all("^0*")
   return(unlist(parts))
 }
 
