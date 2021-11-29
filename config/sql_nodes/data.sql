@@ -187,9 +187,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	CREATE TABLE IF NOT EXISTS qc_data
 	  /* Detailed quality control data data as assessed by expert review (long format). */
 	(
-  	ms_data_id
+  	sample_id
 			INTEGER NOT NULL,
-			/* foreign key to ms_data */
+			/* foreign key to samples */
 		parameter
 		  TEXT NOT NULL,
 		  /* QC parameter class */
@@ -201,7 +201,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  /* Value associated with parameter and name */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id)
+		FOREIGN KEY (sample_id) REFERENCES samples(id)
 	);
 	/*magicsplit*/
 /* Views */
