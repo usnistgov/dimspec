@@ -93,7 +93,7 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
         db_table = list(c("mode", "character"), c("length", 1)),
         # values   = list(c("mode", "vector"), c("n>=", 1)),
         values   = list(c("n>=", 1)),
-        conn     = list(c("length", 1)),
+        db_conn  = list(c("length", 1)),
         ignore   = list(c("mode", "logical"), c("length", 1))
       ),
       from_fn = "add_and_get_id"
@@ -190,22 +190,6 @@ add_software_settings <- function(obj, conn = con, software_settings_name = "msc
   }
   # Add linkage record and get new ID for inclusion in conversion_software_settings
   use_timestamp <- c(ts = as.numeric(Sys.time()) * 1000)
-  # res <- try(
-  #   build_db_action(action       = "INSERT",
-  #                   table_name   = "conversion_software_linkage",
-  #                   values       = list(ts = use_timestamp),
-  #                   conn         = conn)
-  # )
-  # linkage_id <- build_db_action(
-  #   conn,
-  #   action = "GET_ID",
-  #   table_name = "conversion_software_linkage",
-  #   match_criteria = list(ts = use_timestamp)
-  # )
-  # if (class(res) != "try-error") {
-  #   msg <- sprintf("Record added to conversion_software_linkage as linkage id %s.", linkage_id)
-  #   log_it("success", msg)
-  # }
   linkage_id <- add_and_get_id(
     db_table = "conversion_software_linkage",
     values   = use_timestamp,
@@ -230,7 +214,7 @@ add_software_settings <- function(obj, conn = con, software_settings_name = "msc
                     values = values)
   )
   if (class(res) != "try-error") {
-    msg <- sprintf("Record added to conversion_software_settings under linkage id %s.", linkage_id)
+    msg <- sprintf("Records added to conversion_software_settings under linkage id %s.", linkage_id)
     log_it("success", msg)
   }
   return(linkage_id)
