@@ -483,7 +483,7 @@ build_db_action <- function(action,
                                 case_sensitive = case_sensitive,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
-  } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT"))) {
+  } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT", "SELECT"))) {
     log_it("error", 'Only "NROW" and "INSERT" actions are valid when argument "match_criteria" is not provided.')
     stop()
   }
