@@ -33,7 +33,6 @@ DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_alias_references;
 DELETE FROM compound_aliases;
-DELETE FROM conversion_software_linkage;
 DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents
 .import --csv --skip 1 config/data/pfas/norm_additives.csv norm_additives
@@ -52,6 +51,5 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds
 .import --csv --skip 1 config/data/pfas/compound_alias_references.csv compound_alias_references
 .import --csv --skip 1 config/data/pfas/compound_aliases.csv compound_aliases
-.import --csv --skip 1 config/data/pfas/conversion_software_linkage.csv conversion_software_linkage
 .import --csv --skip 1 config/data/pfas/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/pfas/samples.csv samples
