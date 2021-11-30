@@ -77,9 +77,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		generated_on
 		  TEXT NOT NULL,
 		  /* datetime the raw data file was generated in UTC */
-		software_conversion_settings_id
-			INTEGER,
-			/* foreign key to conversion_software_linkage describing the program used to generate data from this sample */
 		ms_methods_id
 			INTEGER,
 			/* foreign key to ms_methods */
@@ -89,8 +86,21 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
 		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (software_conversion_settings_id) REFERENCES conversion_software_linkage(id) ON UPDATE CASCADE
+		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS conversion_software_settings
+		/* Settings specific to the software package used to preprocess raw data. */
+	(
+		sample_id
+			INTEGER,
+			/* foreign key to samples */
+		setting_value
+			TEXT NOT NULL,
+			/* value of the software setting */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (sample_id) REFERENCES samples(id)
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS peaks

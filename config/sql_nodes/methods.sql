@@ -403,33 +403,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS conversion_software_linkage
-		/* Linkage table keeping conversion software setting id groupings in line. These IDs are used to link tables conversion_software_settings and samples. This must be incremented prior to adding new rows in conversion_software_settings, and the new ID used in both conversion_software_settings(id) and samples(software_conversion_settings_id). */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* automatically populated with each call to keep settings together */
-		ts
-			REAL NOT NULL DEFAULT -999
-			/* timestamp to ensure referential integrity during import, -999 indicates that settings were not provided */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS conversion_software_settings
-		/* Settings specific to the software package used to preprocess raw data. */
-	(
-		linkage_id
-			INTEGER,
-			/* foreign key to msconvert_settings_linkage */
-		setting_value
-			TEXT NOT NULL,
-			/* value of the software setting */
-		/* Check constraints */
-		/* Foreign key relationships */
-		FOREIGN KEY (linkage_id) REFERENCES conversion_software_linkage(id)
-	);
-	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS qc_methods
 		/* References to quality control (QC) methods used to vet experimental results */
 	(
