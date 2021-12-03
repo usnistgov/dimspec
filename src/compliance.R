@@ -46,36 +46,30 @@ if (!"renv" %in% installed_packages) {
   library(renv)
   renv::restore()
 }
-# - here all are from CRAN 
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
   renv::install(packages = packs_FALSE)
-  # install.packages(pkgs         = packs_FALSE,
-  #                  quiet        = TRUE,
-  #                  dependencies = TRUE)
 }
-lapply(packs, library, character.only = TRUE, quietly = TRUE)
+suppressPackageStartupMessages(
+  lapply(packs, library, character.only = TRUE, quietly = TRUE)
+)
 rm(packs, unload_packs, packs_TRUE, packs_FALSE)
-
-# Also needs ChemmineR, which is only available through Bioconductor
-# if (!requireNamespace("BiocManager", quietly = TRUE)) {
-#   install.packages("BiocManager")
-#   BiocManager::install("ChemmineR")
-# }
 
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
-sources <- list.files('src', pattern = ".R$", full.names = TRUE, recursive = TRUE)
+sources <- list.files(path = 'src', pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
-layout <- layout_glue_generator(format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
-                                               "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]", 
-                                               "in {fn}(): {grayscale_by_log_level(msg, levelr)}")) 
+layout <- layout_glue_generator(
+  format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}",
+                 "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]",
+                 "in {fn}(): {grayscale_by_log_level(msg, levelr)}")
+)
 log_threshold(LOG_THRESHOLD)
 log_layout(layout)
 log_formatter(formatter_glue)
@@ -84,16 +78,17 @@ log_formatter(formatter_glue)
 if (!DB_BUILT) build_db()
 if (INIT_CONNECT) {
   manage_connection()
-  db_map <- er_map()
-  db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
-  if (length(db_dict) == 1) {
-    db_dict <- read_json(db_dict) %>%
-      lapply(bind_rows)
-  } else {
-    db_dict <- data_dictionary()
+  if (INCLUDE_MAP) db_map <- er_map()
+  if (INCLUDE_DICT) {
+    db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
+    if (length(db_dict) == 1) {
+      db_dict <- read_json(db_dict) %>%
+        lapply(bind_rows)
+    } else {
+      db_dict <- data_dictionary()
+    }
   }
 }
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)
-

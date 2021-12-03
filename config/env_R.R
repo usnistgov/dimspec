@@ -2,7 +2,7 @@
 
 # Current version of the database and the date it was created (if present)
 DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME),
-                                       recursive = TRUE))$ctime
+                                       recursive = FALSE))$ctime
 DB_BUILT       <- length(DB_DATE) > 0
 # Releases will be coded by:
 #   - First position: major version (e.g. schema changes)
@@ -23,12 +23,29 @@ DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
 DB_CLASS       <- "SQLite"
 DICT_FILE_NAME <- "data_dictionary"
+INCLUDE_DICT   <- TRUE
+INCLUDE_MAP    <- TRUE
 
 # The last time the main database schema defined in BUILD_FILE was updated
-LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = TRUE))$mtime
+LAST_DB_SCHEMA <- file.info(
+  list.files(path = "config",
+             pattern = DB_BUILD_FILE,
+             recursive = FALSE)
+)$mtime
 
-# The last time any file in this project was modified
-LAST_MODIFIED  <- max(file.info(list.files(recursive = TRUE))$mtime)
+# The last time any file in this project's config directory was modified
+search_paths <- list.dirs(recursive = FALSE)
+path_exclude <- "^\\./\\.[[:alnum:]]*|renv|data/backups"
+search_paths <- search_paths[-grep(path_exclude, search_paths)]
+LAST_MODIFIED  <- max(
+  file.info(
+    list.files(path = search_paths,
+               recursive = TRUE,
+               full.names = TRUE
+    )
+  )$mtime,
+  na.rm = TRUE)
+rm(search_paths, path_exclude)
 
 # Set logger threshold.
 LOG_THRESHOLD  <- "INFO"
