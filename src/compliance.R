@@ -37,17 +37,33 @@ source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
+installed_packages <- installed.packages()
+if (!"renv" %in% installed_packages) {
+  if (!"remotes" %in% installed_packages) {
+    install.packages("remotes")
+  }
+  remotes::install_github("rstudio/renv")
+  library(renv)
+  renv::restore()
+}
 # - here all are from CRAN 
 packs       <- DEPENDS_ON
-packs_TRUE  <- which(packs %in% installed.packages())
+packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
-  install.packages(pkgs         = packs_FALSE,
-                   quiet        = TRUE,
-                   dependencies = TRUE)
+  renv::install(packages = packs_FALSE)
+  # install.packages(pkgs         = packs_FALSE,
+  #                  quiet        = TRUE,
+  #                  dependencies = TRUE)
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 rm(packs, unload_packs, packs_TRUE, packs_FALSE)
+
+# Also needs ChemmineR, which is only available through Bioconductor
+# if (!requireNamespace("BiocManager", quietly = TRUE)) {
+#   install.packages("BiocManager")
+#   BiocManager::install("ChemmineR")
+# }
 
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
