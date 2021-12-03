@@ -43,9 +43,10 @@ if (!"renv" %in% installed_packages) {
     install.packages("remotes")
   }
   remotes::install_github("rstudio/renv")
-  library(renv)
-  renv::restore()
 }
+renv::activate()
+renv::restore(clean = TRUE)
+
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
