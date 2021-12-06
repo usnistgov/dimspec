@@ -37,15 +37,21 @@ source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
-installed_packages <- installed.packages()
-if (!"renv" %in% installed_packages) {
-  if (!"remotes" %in% installed_packages) {
-    install.packages("remotes")
+if (USE_RENV_LOCK) {
+  installed_packages <- installed.packages()
+  if (!"renv" %in% installed_packages) {
+    if (!"remotes" %in% installed_packages) {
+      install.packages("remotes")
+    }
+    remotes::install_github("rstudio/renv")
   }
-  remotes::install_github("rstudio/renv")
+  # renv::activate()
+  # renv::restore()
+  renv_check <- renv::status()
+  if (!renv_check$synchronized) {
+    renv::restore()
+  }
 }
-renv::activate()
-renv::restore()
 
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed_packages)

@@ -26,6 +26,9 @@ DICT_FILE_NAME <- "data_dictionary"
 INCLUDE_DICT   <- TRUE
 INCLUDE_MAP    <- TRUE
 
+# Set this to TRUE to isolate environment to the renv.lock file
+USE_RENV_LOCK  <- TRUE
+
 # The last time the main database schema defined in BUILD_FILE was updated
 LAST_DB_SCHEMA <- file.info(
   list.files(path = "config",
