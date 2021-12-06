@@ -298,6 +298,13 @@
       "Repository": "CRAN",
       "Hash": "ac5c6baf7822ce8732b343f14c072c4d"
     },
+    "here": {
+      "Package": "here",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "24b224366f9c2e7534d2344d10d59211"
+    },
     "highr": {
       "Package": "highr",
       "Version": "0.9",
@@ -402,6 +409,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3471fb65971f1a7b2d4ae7848cf2db8d"
+    },
+    "logger": {
+      "Package": "logger",
+      "Version": "0.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c269b06beb2bbadb0d058c0e6fa4ec3d"
     },
     "magrittr": {
       "Package": "magrittr",
@@ -515,6 +529,13 @@
       "Repository": "CRAN",
       "Hash": "0cd1ee479ba887170411af6d81705003"
     },
+    "rappdirs": {
+      "Package": "rappdirs",
+      "Version": "0.3.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5e3c5dc0b071b21fa128676560dbe94d"
+    },
     "rcdk": {
       "Package": "rcdk",
       "Version": "3.5.0",
@@ -569,6 +590,13 @@
       "RemoteSha": "695a22b913a5421dc220502da958e954ac20f391",
       "Hash": "e88c70a70f05a0fcec0a65ff66e1fea4"
     },
+    "reticulate": {
+      "Package": "reticulate",
+      "Version": "1.22",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b34a8bb69005168078d1d546a53912b2"
+    },
     "rjson": {
       "Package": "rjson",
       "Version": "0.2.20",
@@ -589,6 +617,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1fb097f233ee98968f8e5d0bcd42df6d"
+    },
+    "rprojroot": {
+      "Package": "rprojroot",
+      "Version": "2.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "249d8cd1e74a8f6a26194a91b47f21d1"
     },
     "rsvg": {
       "Package": "rsvg",
@@ -624,6 +659,18 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "5e8ad5621e5c94b24ec07b88eee13df8"
+    },
+    "tidychem": {
+      "Package": "tidychem",
+      "Version": "0.1.0",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "nanxstats",
+      "RemoteRepo": "tidychem",
+      "RemoteRef": "master",
+      "RemoteSha": "868230c0a5a2620b3370e67076400aaaff481053",
+      "Hash": "beb5dd9ee0555d026ec3dd7168a2b7c7"
     },
     "tidyselect": {
       "Package": "tidyselect",

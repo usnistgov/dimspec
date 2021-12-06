@@ -45,7 +45,7 @@ if (!"renv" %in% installed_packages) {
   remotes::install_github("rstudio/renv")
 }
 renv::activate()
-renv::restore(clean = TRUE)
+renv::restore()
 
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed_packages)
@@ -66,7 +66,7 @@ sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
-layout <- layout_glue_generator(
+layout <- logger::layout_glue_generator(
   format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}",
                  "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]",
                  "in {fn}(): {grayscale_by_log_level(msg, levelr)}")
