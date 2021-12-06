@@ -60,6 +60,7 @@ DEPENDS_ON     <- c("base64enc",
                     "stringi",
                     "tidyverse",
                     "jsonlite",
+                    "rlang",
                     "tools",
                     "xlsx",
                     "XML")
