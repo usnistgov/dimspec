@@ -37,6 +37,7 @@ source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
+renv::activate()
 if (USE_RENV_LOCK) {
   installed_packages <- installed.packages()
   if (!"renv" %in% installed_packages) {
@@ -45,8 +46,6 @@ if (USE_RENV_LOCK) {
     }
     remotes::install_github("rstudio/renv")
   }
-  # renv::activate()
-  # renv::restore()
   renv_check <- renv::status()
   if (!renv_check$synchronized) {
     renv::restore()
