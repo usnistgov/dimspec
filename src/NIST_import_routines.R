@@ -267,6 +267,24 @@ add_sample <- function(obj, conn = con, name_is = "sample") {
   
   this_sample_class_id <- verify_sample_class(obj_sample$sample_class)
   this_contributor_id  <- verify_contributor(obj_sample$data_generator)
+  if ("generation_type" %in% names(obj_sample)) {
+    this_generation_type <- obj_sample$generation_type
+  } else {
+    if (interactive()) {
+      this_generation_type <- select.list(
+        title = "No generation type was provided. Please select one.",
+        choices = tbl(con, "norm_generation_type") %>%
+          pull(name)
+      )
+      this_generation_type <- build_db_action(
+        action = "get_id",
+        table_name = "norm_generation_type",
+        match_criteria = list(name = this_generation_type)
+      )
+    } else {
+      stop("No generation type (in silico or empirical) provided.")
+    }
+  }
   this_software_id     <- add_software_settings(obj)
   
   log_it("info", "Building sample entry values...")
@@ -276,6 +294,7 @@ add_sample <- function(obj, conn = con, name_is = "sample") {
     sample_class_id                 = this_sample_class_id,
     source_citation                 = obj_sample$source,
     sample_contributor              = this_contributor_id,
+    generation_type                 = this_generation_type,
     generated_on                    = obj_sample$starttime,
     software_conversion_settings_id = this_software_id,
     ms_methods_id                   = if ('method_id' %in% names(obj_sample)) {
@@ -323,14 +342,14 @@ add_method <- function(obj, conn = con, name_is = "massspectrometry") {
     )
     stopifnot(arg_check$valid)
   }
-  # needed <- IMPORT_HEADERS$method
-  # if (!all(needed %in% names(obj))) {
-  #   log_it("error",
-  #          sprintf("Object does not have children with all defined names (%s).",
-  #                  paste0(needed, collapse = ", "))
-  #   )
-  #   return(NULL)
-  # }
+  needed <- IMPORT_HEADERS$method
+  if (!all(needed %in% names(obj))) {
+    log_it("error",
+           sprintf("Object does not have children with all defined names (%s).",
+                   paste0(needed, collapse = ", "))
+    )
+    return(NULL)
+  }
   
   if (name_is %in% names(obj)) {
     obj_method <- obj[[name_is]]
@@ -379,7 +398,7 @@ add_method <- function(obj, conn = con, name_is = "massspectrometry") {
     db_conn  = conn
   )
   if (class(add_description) == 'try-error') {
-    log_it("warn", glue('Unable to add values ({format_list_names(add_description}) to table "ms_descriptions".'))
+    log_it("warn", glue('Unable to add values ({format_list_of_names(add_description)}) to table "ms_descriptions".'))
   }
   return(added)
 }
@@ -405,7 +424,34 @@ add_ms_data <- function(obj) {
   
 }
 
-add_qc_data <- function(obj) {
+add_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source")) {
+  if ("data.frame" %in% class(obj)) {
+    tmp <- obj
+  } else if (class(obj) == "list") {
+    if (name_is %in% names(obj)) {
+      tmp <- obj[[name_is]]
+    } else if (length(obj) > 1) {
+      log_it("warn", "The object provided is longer than length 1; only the first element will be used.")
+      if (name_is %in% names(obj[[1]])) {
+        tmp <- obj[[1]][[name_is]]
+      } else {
+        stop(sprintf('The name "%s" was not found in the first element of "obj" and is required.', name_is))
+      }
+    }
+  }
+  if (!all(required %in% names(tmp))) {
+    log_it("error", sprintf('Required column%s %s %s not present.',
+                            ifelse(length(required > 1), "s", ""),
+                            format_list_of_names(required),
+                            ifelse(length(required > 1), "are", "is")))
+  }
+  tmp <- tmp %>%
+    filter(value == TRUE) %>%
+    select(all_of(required))
+  return(tmp)
+}
+
+add_qc_data <- function(obj, sample_id) {
   values <- lapply(obj,
                    function(x) {
                      x %>%
@@ -413,7 +459,8 @@ add_qc_data <- function(obj) {
                        pivot_longer(cols = -parameter)
                    }) %>%
     bind_rows() %>%
-    purrr::transpose()
+    mutate(sample_id = sample_id) %>%
+    relocate(ms_data_id)
   res <- try(
     build_db_action(
       action = "insert",
@@ -472,6 +519,118 @@ remove_sample <- function(sample_ids, db_conn = con) {
   build_db_action('delete', 'conversion_software_linkage', match_criteria = list(id = unique(dat$software_conversion_settings_id)))
 }
 
+#' Make import requirements file
+#'
+#' Importing from the NIST contribution spreadsheet requires a certain format.
+#' In order to proceed smoothly, that format must be verified for gross
+#' integrity with regard to expectations about shape (i.e. class), names of
+#' elements, and whether they are required for import. This function creates a
+#' JSON expression of the expected import structure and saves it to the project
+#' directory.
+#'
+#' Either an existing JSON expression or an R list object may be used for
+#' `example_import`. If it is a character scalar, it will be assumed to be a
+#' file name, which will be loaded based on file extension. That file must be a
+#' JSON parseable text file, though raw text is acceptable.
+#'
+#' An example file is located in the project directory at
+#' "example/PFAC30PAR_PFCA1_mzML_cmpd2627.JSON"
+#'
+#' As with any file manipulation, use care with `file_name`.
+#'
+#' @param example_import CHR or LIST object containing an example of the
+#'   expected import format; this should include only a SINGLE compound
+#'   contribution file
+#' @param file_name CHR scalar indicating a file name to save the resulting name
+#'   or search on any existing file to archive if `archive` = TRUE (default:
+#'   "import_requirements.json")
+#' @param archive LGL indicating whether or not to archive an existing file
+#'   matching `file_name` by suffixing the file name with current date. Only one
+#'   archive per date is supported; if a file already exists, it will be
+#'   deleted. (default: TRUE)
+#' @param retain_in_R LGL indicating whether to retain a local copy of the
+#'   requirements file generated (default: TRUE)
+#'
+#' @return writes a file to the project directory (based on the found location
+#'   of `file_name`) with the JSON structure
+#' @export
+#' 
+make_requirements <- function(example_import,
+                              file_name = "import_requirements.json",
+                              archive = TRUE,
+                              retain_in_R = TRUE) {
+  if (class(example_import) == "character") {
+    log_it("info", sprintf('Assuming "%s" refers to a file name, and that the file is parseable as JSON.', example_import))
+    f_name <- list.files(pattern = example_import, recursive = TRUE, full.names = TRUE)
+    if (length(f_name) == 0) {
+      log_it("error", sprintf('No file matching "%s" was located in the project directory.', example_import))
+      stop()
+    } else if (length(f_name) > 1) {
+      log_it("warn", sprintf('Multiple files matching "%s" were located in the project directory.', example_import))
+      if (interactive()) {
+        f_name <- select.list(
+          title = "Please select an example file to continue.",
+          choices = f_name
+        )
+      } else {
+        log_it("info", format_list_of_names(f_name))
+        stop()
+      }
+    }
+    example_import <- try(
+      fromJSON(read_file(f_name))
+    )
+    if (class(example_import) == "try-error") {
+      stop(sprintf('The file "%s" was not readable as JSON.', f_name))
+    }
+  }
+  f_name <- list.files(pattern = file_name, full.names = TRUE, recursive = TRUE)
+  if (length(f_name) > 1) {
+    f_name <- f_name[1]
+    log_it(
+      "warn",
+      sprintf(
+        "Multiple import requirements files located. Only the file at (%s) will be replaced.",
+        f_name
+      )
+    )
+  } else if (length(f_name) == 1 && archive) {
+    f_ext      <- paste0(".", tools::file_ext(f_name))
+    f_suffix   <- paste0("_", format(Sys.Date(), "%Y%m%d"), f_ext)
+    new_f_name <- gsub(
+        f_ext,
+        f_suffix,
+        f_name
+      )
+    if (file.exists(new_f_name)) file.remove(new_f_name)
+    file.rename(f_name, new_f_name)
+  } else {
+    f_name <- paste0(
+      tools::file_path_sans_ext(file_name),
+      ".json"
+    )
+  }
+  out <- lapply(
+    example_import,
+    function(x) {
+      list(
+        class = class(x),
+        names = names(x),
+        required = TRUE
+      )
+    }
+  )
+  not_required <- c("annotation", "chromatography")
+  for (nr in not_required) {
+    out[[nr]]$required <- FALSE
+  }
+  if (retain_in_R) import_requirements <<- out
+  out <- toJSON(out, auto_unbox = TRUE, pretty = TRUE)
+  write_file(out, f_name)
+}
+
+
+
 #' Verify column names for import
 #'
 #' This function validates that all required columns are present prior to
@@ -481,11 +640,11 @@ remove_sample <- function(sample_ids, db_conn = con) {
 #' action. The input to `values` should be either a LIST or named CHR vector of
 #' values for insertion or a CHR vector of the column names.
 #'
-#' @note If columns are defined as required in the schema are not present, this will
-#' fail with an informative message about which columns were missing.
+#' @note If columns are defined as required in the schema are not present, this
+#'   will fail with an informative message about which columns were missing.
 #'
-#' @note If columns are provided that do not match the schema, they will be stripped
-#' away in the return value.
+#' @note If columns are provided that do not match the schema, they will be
+#'   stripped away in the return value.
 #'
 #' @param db_table CHR scalar of the table name
 #' @param values LIST or CHR vector of values to add. If `names_only` is TRUE,
@@ -493,6 +652,9 @@ remove_sample <- function(sample_ids, db_conn = con) {
 #'   provided must be named.
 #' @param names_only LGL scalar of whether to treat entries of `values` as the
 #'   column names rather than the column values (default: FALSE)
+#' @param require_all LGL scalar of whether to require all columns (except the
+#'   assumed primary key column of "id") or only those defined as "NOT NULL"
+#'   (default: FALSE)
 #' @param db_conn connection object (default: con)
 #'
 #' @return An object of the same type as `values` with extraneous values (i.e.
@@ -500,17 +662,18 @@ remove_sample <- function(sample_ids, db_conn = con) {
 #' @export
 #'
 #' @examples
-verify_import_columns <- function(db_table, values, names_only = FALSE, db_conn = con) {
+verify_import_columns <- function(db_table, values, names_only = FALSE, require_all = FALSE, db_conn = con) {
   log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'))
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        db_table = list(c("mode", "character"), c("length", 1)),
-        values   = list(c("n>=", 1)),
-        names_only = list(c("mode", "logical"), c("length", 1)),
-        db_conn  = list(c("length", 1))
+        db_table    = list(c("mode", "character"), c("length", 1)),
+        values      = list(c("n>=", 1)),
+        names_only  = list(c("mode", "logical"), c("length", 1)),
+        require_all = list(c("mode", "logical"), c("length", 1)),
+        db_conn     = list(c("length", 1))
       ),
       from_fn = "verify_import_columns"
     )
@@ -528,20 +691,106 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, db_conn 
     if (!names_only) stop("Values provided to verify_import_columns() must all be named unless 'names_only' is set to TRUE.")
   }
   # Make sure required column names are present
-  table_info      <- pragma_table_info(db_table, db_conn = db_conn)
-  table_columns   <- table_info$name[-which(table_info$name == "id")]
-  table_needs     <- table_info$name[which(table_info$notnull == 1)]
+  table_info      <- pragma_table_info(db_table = db_table,db_conn = db_conn)
+  table_info      <- table_info %>%
+    filter(!name == "id")
+  if (require_all) {
+    table_needs <- table_info$name
+  } else {
+    table_needs <- table_info$name[table_info$notnull == 1]
+  }
   provided        <- if (names_only) values else names(values)
   columns_present <- table_needs %in% provided
   if (!all(columns_present)) {
     missing_columns <- table_needs[!columns_present]
-    stop(glue('Required {ifelse(length(missing_columns) > 1, "fields", "field")} {format_list_of_names(missing_columns)} {ifelse(length(missing_columns) > 1, "are", "is")} missing.'))
+    stop(glue('Required column{ifelse(length(missing_columns) > 1, "s", "")} {ifelse(length(missing_columns) > 1, "are", "is")} missing: {format_list_of_names(missing_columns)}.'))
   } else {
-    valid_columns <- provided %in% table_columns
+    valid_columns <- provided %in% table_info$name
     if (!all(valid_columns)) {
       extra_columns <- provided[!valid_columns]
-      log_it("warn", glue('Extra {ifelse(length(extra_columns) > 1, "fields", "field")} {format_list_of_names(extra_columns)} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored.'))
+      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'))
+      stop()
     }
     return(values[valid_columns])
   }
+}
+
+#' Verify an import file's properties
+#'
+#' @param obj 
+#' @param requirements_obj CHR scalar of the 
+#' @param file_name CHR scalar of the name of a file holding 
+#' @param nested 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+verify_import_requirements <- function(obj, requirements_obj = "requirements", file_name = "import_requirements.json", nested = FALSE) {
+  # Argument validation relies on verify_args
+  if (all(exists("verify_args"), !nested)) {
+    arg_check <- verify_args(
+      args       = list(obj, file_name, nested),
+      conditions = list(
+        obj       = list(c("mode", "list")),
+        file_name = list(c("mode", "character"), c("length", 1)),
+        nested    = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn = "verify_import_requirements"
+    )
+    stopifnot(arg_check$valid)
+  }
+  # TODO fix this to allow direct use of requirements object as well as name reference
+  if (exists(requirements_obj)) {
+    reqs <- eval(sym(requirements_obj))
+  } else {
+    f_name <- list.files(pattern = file_name, recursive = TRUE, full.names = TRUE)
+    if (length(f_name) == 1) {
+      reqs <- fromJSON(read_file(f_name))
+      requirements <<- reqs
+    } else {
+      if (interactive()) {
+        f_name <- select.list(
+          title = "Please select one requirements file.",
+          choices = f_name
+        )
+      } else {
+        log_it("error", "Multiple files matching the requirements name were identified. Please be more specific.")
+        stop()
+      }
+    }
+  }
+  hard_reqs    <- names(reqs)[which(lapply(reqs, function(x) x$required) == TRUE)]
+  all_required <- all(hard_reqs %in% names(obj))
+  full_detail  <- all(names(reqs) %in% names(obj))
+  extra_cols   <- !names(obj) %in% names(reqs)
+  extra        <- any(extra_cols)
+  extra_cols   <- names(obj)[extra_cols]
+  if (all_required) {
+    out    <- list(all_required = all_required, full_detail = full_detail, extra = extra, extra_cols = list(extra_cols))
+    nested <- FALSE
+  } else {
+    all_required <- all(hard_reqs %in% unique(unlist(lapply(obj, names))))
+    if (all_required) {
+      log_it("info", "The provided object contains a nested list where required names were located.")
+      nested <- TRUE
+      out <- lapply(obj, verify_import_requirements, nested = TRUE)
+    } else {
+      log_it("error", "Not all required columns were present.")
+      stop()
+    }
+  }
+  if (all(extra, !nested)) {
+    log_it("warn", "Extraneous elements identified; these will be removed from the import file.")
+    obj <- obj[which(names(obj) %in% names(reqs))]
+  }
+  if (nested) {
+    out <- out %>%
+      bind_rows() %>%
+      mutate(applies_to = names(obj)) %>%
+      relocate(applies_to)
+  } else {
+    out <- as_tibble(out)
+  }
+  return(out)
 }
