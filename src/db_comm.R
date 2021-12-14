@@ -1247,7 +1247,7 @@ update_all <- function() {
 #' something like [lapply].
 #'
 #' @param db_table CHR scalar of the normalization table's name
-#' @param ... LIST values to add to the table. All values must be named.
+#' @param ... Values to add to the table. All values must be named.
 #' @param conn connection object (default "con")
 #'
 #' @return NULL if unable to add the values, INT scalar of the new ID otherwise
@@ -1273,8 +1273,21 @@ add_normalization_value <- function(db_table, ..., conn = con) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
-  needed <- dbListFields(conn, db_table)
-  needed <- needed[needed != "id"]
+  if (exists("db_dict")) {
+    if (db_table %in% names(db_dict)) {
+      table_cols <- db_dict[[db_table]]
+    } else {
+      table_cols <- pragma_table_info(db_table)
+    }
+  } else {
+    table_cols <- pragma_table_info(db_table)
+  }
+  needed     <- table_cols %>%
+    filter(name != "id") %>%
+    pull(name)
+  required   <- table_cols %>%
+    filter(notnull == 1) %>%
+    pull(name)
   new_values <- new_values[which(names(new_values) %in% needed)]
   if (!all(needed %in% names(new_values))) {
     msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
@@ -1289,6 +1302,7 @@ add_normalization_value <- function(db_table, ..., conn = con) {
       )
       for (need_this in needed) {
         if (!need_this %in% names(new_values)) {
+          new_value <- ""
           if (all(need_this == "acronym", "name" %in% names(new_values))) {
             auto_acro <- make_acronym(new_values$name)
             use_auto_acro <- select.list(
@@ -1304,7 +1318,15 @@ add_normalization_value <- function(db_table, ..., conn = con) {
                 sprintf("%s: ", need_this)
               )
             }
-          } else {
+          }
+          while (
+            all(
+              need_this %in% required,
+              any(need_this == "",
+                  is.null(need_this),
+                  is.na(need_this))
+            )
+          ) {
             new_value <- readline(
               sprintf("%s: ", need_this)
             )
@@ -1424,7 +1446,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        values       = list(c("n>=", 1)),
+        values       = list(c("n>=", 0)),
         search_value = list(c("length", 1)),
         db_table     = list(c("mode", "character"), c("length", 1))
       ),
@@ -1437,7 +1459,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
   if (present && only_one) {
     chosen_value <- search_value
   } else {
-    if (length(values) > 1) {
+    if (length(values) %in% c(0, 1)) {
       values <- c("(Abort)", sprintf("(New) %s", search_value), values)
       msg <- sprintf('\n%s values directly matching "%s" were identified%s.',
                      ifelse(all(present, !only_one), "Multiple", "No"),
@@ -1705,7 +1727,6 @@ verify_sample_class <- function(sample_class, conn = con, auto_add = FALSE) {
     sample_class <- sample_classes$values$id
     sample_classes <- sample_classes$values
   } else {
-    # sample_class <- str_to_lower(sample_class)
     sample_classes <- tbl(conn, "norm_sample_classes") %>% collect()
   }
   if (is.numeric(sample_class)) {
@@ -1817,7 +1838,27 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
     log_it("warn", sprintf('No contributor matching "%s" was located.', contributor_text))
     if (interactive()) {
       log_it("trace", "Getting user information from an interactive session.")
-      new_user <- do.call(add_contributor, contributor_properties)
+      if (db_contributors %>% collect() %>% nrow() > 1) {
+        associate_with <- menu(choices = c("Yes", "No"), title = "Associate with a current user?") == 1
+      } else {
+        associate_with <- FALSE
+      }
+      new_user <- NULL
+      if (associate_with) {
+        cat("\nCurrent contributors:\n")
+        print(db_contributors)
+        cat("\n")
+        new_contrib_prompt <- "Make new contributor"
+        new_user <- select.list(
+          title = sprintf('Select a current user from the list above or select "%s" to continue.', new_contrib_prompt),
+          choices = c("Abort", new_contrib_prompt)
+        )
+        if (new_user == "Abort") stop("Operation aborted.")
+        if (new_user == new_contrib_prompt) new_user <- NULL
+      }
+      if (is.null(new_user)) {
+        new_user <- do.call(add_contributor, contributor_properties)
+      }
       if (is.null(new_user)) stop("Could not verify this user.")
       return(new_user)
     } else {
@@ -1849,7 +1890,6 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
         log_it("info", "Multiple contributors found.")
         verified_match <- resolve_multiple_values(possibles$Contributor, contributor_text)
         if (str_detect(verified_match, "\\(New\\) ")) {
-          # cat("New contributors must be added manually at this time.")
           make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
           if (make_new == "Yes") {
             id <- add_contributor(db_contributors, user_value = contributor_text)
