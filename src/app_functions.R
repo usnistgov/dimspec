@@ -185,7 +185,11 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("choices", list("a", "b")))))
 #' }
 verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
-  if (exists("VERIFY_ARGUMENTS")) if (!VERIFY_ARGUMENTS) return()
+  if (exists("VERIFY_ARGUMENTS")) {
+    if (!VERIFY_ARGUMENTS) {
+      return(list(valid = TRUE))
+    }
+  }
   if (length(args) != length(conditions)) {
     log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
                             length(args),
