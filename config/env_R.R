@@ -1,8 +1,10 @@
 # Environment variables specific to R.
 
+# Set to search for files in any directory. Setting to TRUE will increase
+# fidelity but also load times.
+
 # Current version of the database and the date it was created (if present)
-DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME),
-                                       recursive = TRUE))$ctime
+DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME), recursive = !EXPLICIT_PATHS))$ctime
 DB_BUILT       <- length(DB_DATE) > 0
 # Releases will be coded by:
 #   - First position: major version (e.g. schema changes)
@@ -25,10 +27,10 @@ DB_CLASS       <- "SQLite"
 DICT_FILE_NAME <- "data_dictionary"
 
 # The last time the main database schema defined in BUILD_FILE was updated
-LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = TRUE))$mtime
+LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE,recursive = !EXPLICIT_PATHS))$mtime
 
 # The last time any file in this project was modified
-LAST_MODIFIED  <- max(file.info(list.files(recursive = TRUE))$mtime)
+LAST_MODIFIED  <- max(file.info(list.files(recursive = !EXPLICIT_PATHS))$mtime)
 
 # Set logger threshold.
 LOG_THRESHOLD  <- "INFO"

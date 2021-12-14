@@ -1,6 +1,11 @@
 # Title of this database
 DB_TITLE       = "NIST HRAMS Database for PFAS"
 
+# Treat DB_NAME, DB_BUILD_FILE, DB_BUILD_FULL, and DB_DATA as file names (FALSE) or explicit file locations (TRUE).
+# If TRUE, R will treat these as specific locations for files to use (safer).
+# If FALSE, R will search all project directories for files matching the supplied names (flexible for prototyping or multi-project builds).
+EXPLICIT_PATHS = FALSE
+
 # Text name to use for this project's database file
 DB_NAME        = "nist_pfas_nta_dev.sqlite"
 
