@@ -1,5 +1,3 @@
-if (!exists("con")) manage_connection()
-
 #* @apiTitle Application Programming Interface: NIST HRMS Database
 #* @apiDescription This plumber API requires a current copy of the NIST high-resolution accurate-mass spectrometry database.
 
@@ -42,6 +40,9 @@ function(action          = "select",
   check_null <- c("column_names", "values", "match_criteria", "group_by", "order_by")
   for (cn in check_null) {
     if (params[[cn]] == "") params[[cn]] <- NULL
+  }
+  if (!match_criteria == "") {
+    match_criteria <- sym(match_criteria)
   }
   do.call("build_db_action", params)
 }

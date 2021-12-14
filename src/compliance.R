@@ -78,6 +78,26 @@ if (INIT_CONNECT) {
   }
 }
 
+# _Plumber set up --------------------------------------------------------------
+if (ACTIVATE_API) {
+  if (!"plumber" %in% installed.packages()) install.packages("plumber")
+  api_control <- file.path("plumber", "api_control.R")
+  plumber_status <- callr::r_bg(
+    function() {
+      source(file.path("plumber", "env_plumb.R"))
+      source(api_control)
+      api_start(
+        on_host = PLUMBER_HOST,
+        on_port = PLUMBER_PORT
+      )
+    }
+  )
+  source(api_control)
+  plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+  cat(sprintf("\nRunning plumber API at %s", plumber_url))
+  cat(sprintf("\nView plumber docs API at %s/__docs__/\n", plumber_url))
+}
+
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, fragments, exactmasschart)
 

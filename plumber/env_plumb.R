@@ -1,0 +1,10 @@
+source(file.path("config", "env_glob.txt"))
+source(file.path("config", "env_R.R"))
+source(file.path("src", "app_functions.R"))
+source(file.path("src", "db_comm.R"))
+source(file.path("src", "api_generator.R"))
+source(file.path("plumber", "api_control.R"))
+packs <- DEPENDS_ON
+lapply(packs, library, character.only = TRUE, quietly = TRUE)
+manage_connection()
+library(plumber)

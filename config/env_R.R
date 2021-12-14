@@ -76,5 +76,12 @@ IMPORT_HEADERS <- list(
   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
 )
 
+# Run the plumber API?
+# Set to true to run plumber
+ACTIVATE_API   <- TRUE
+PLUMBER_HOST   <- "127.0.0.1"
+# PLUMBER_PORT   <- getOption("plumber.port", NULL)
+PLUMBER_PORT   <- 8080
+
 # Convenience collection of the items above is available from `support_info()`
 # once `source("compliance.R")` is complete.
