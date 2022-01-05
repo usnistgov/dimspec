@@ -771,6 +771,7 @@ manage_connection <- function(db          = DB_NAME,
                               rm_objects  = TRUE,
                               reconnect   = TRUE,
                               disconnect  = TRUE,
+                              .environ    = .GlobalEnv,
                               ...) {
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -792,7 +793,7 @@ manage_connection <- function(db          = DB_NAME,
   }
   require(drv_pack, character.only = TRUE)
   logger           <- "logger" %in% (.packages())
-  global_env       <- as.list(.GlobalEnv)
+  global_env       <- as.list(.environ)
   global_env_names <- names(global_env)
   connection_object_classes <- sprintf("%sConnection", conn_class)
   for (env in global_env_names) {
