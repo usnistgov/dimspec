@@ -489,19 +489,6 @@ build_db_action <- function(action,
   }
   
   if (action == "SELECT") {
-    # Safely escape limit clause
-    if (!is.null(limit)) {
-      if (!is.numeric(limit)) {
-        limit <- as.integer(limit)
-        limit <- limit[!is.na(limit)]
-      }
-      if (any(length(limit) == 0, length(limit) > 1)) {
-        stop('Exactly one value must be provided for the "limit" parameter.')
-      } else {
-        query <- paste(query, "LIMIT", dbQuoteLiteral(conn, limit))
-      }
-    }
-    
     # Safely escape group by clause
     if (!is.null(group_by)) {
       query <- paste(query, "GROUP BY", dbQuoteIdentifier(conn, group_by))
@@ -520,6 +507,19 @@ build_db_action <- function(action,
       )
       query <- paste(query, "ORDER BY", ordering) %>%
         str_trim()
+    }
+    
+    # Safely escape limit clause
+    if (!is.null(limit)) {
+      if (!is.numeric(limit)) {
+        limit <- as.integer(limit)
+        limit <- limit[!is.na(limit)]
+      }
+      if (any(length(limit) == 0, length(limit) > 1)) {
+        stop('Exactly one value must be provided for the "limit" parameter.')
+      } else {
+        query <- paste(query, "LIMIT", dbQuoteLiteral(conn, limit))
+      }
     }
   }
   
