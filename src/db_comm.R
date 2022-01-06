@@ -13,7 +13,7 @@
 #' include either `get_sql` or `pretty` as TRUE.
 #'
 #' @param db_table CHR vector name of the table(s) to inspect
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #' @param get_sql BOOL scalar of whether or not to return the schema sql
 #'   (default FALSE)
 #' @param pretty BOOL scalar for whether to return "pretty" SQL that includes
@@ -25,7 +25,7 @@
 #' @export
 #'
 #' @examples
-pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRUE) {
+pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE) {
   require(dplyr)
   # Argument validation relies on verify_args
   log_it("trace", sprintf('Getting table definition for "%s".', format_list_of_names(db_table)))
@@ -34,7 +34,7 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
       args       = as.list(environment()),
       conditions = list(
         db_table = list(c("mode", "character"), c("n>=", 1)),
-        conn     = list(c("length", 1)),
+        db_conn  = list(c("length", 1)),
         get_sql  = list(c("mode", "logical"), c("length", 1)),
         pretty   = list(c("mode", "logical"), c("length", 1))
       ),
@@ -42,8 +42,10 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   # Ensure table exists
-  db_table <- existing_tables(db_table, conn)
+  db_table <- existing_tables(db_table, db_conn)
   
   # Define function scope
   func <- ifelse(get_sql,
@@ -53,7 +55,7 @@ pragma_table_def <- function(db_table, conn = con, get_sql = FALSE, pretty = TRU
   # Basic return
   out <- lapply(db_table,
                 function(x) {
-                  tmp <- dbGetQuery(conn, sprintf(func, x))
+                  tmp <- dbGetQuery(db_conn, sprintf(func, x))
                   tmp$table_name <- x
                   return(tmp)
                 }
@@ -137,6 +139,8 @@ pragma_table_info <- function(db_table,
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   # Ensure table exists
   db_table <- existing_tables(db_table, db_conn)
   # Bail early for performance if names only
@@ -167,7 +171,7 @@ pragma_table_info <- function(db_table,
     any()
   # Get comments if any
   if (include_comments) {
-    tmp <- pragma_table_def(db_table = db_table, conn = db_conn, get_sql = TRUE) %>%
+    tmp <- pragma_table_def(db_table = db_table, db_conn = db_conn, get_sql = TRUE) %>%
       tidy_comments() %>%
       bind_rows()
     out <- out %>%
@@ -405,7 +409,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #' objects in a database.
 #'
 #' @param db_table CHR vector of table names to check
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return CHR vector of existing tables
 #' @export
@@ -427,14 +431,16 @@ existing_tables <- function(db_table, db_conn = con) {
 #' comments, suitable as a data dictionary from a connection object amenable to
 #' [odbc::dbListTables]. This function relies on [pragma_table_info].
 #'
-#' @param conn_obj connection object (default:con)
+#' @param db_conn connection object (default:con)
 #'
 #' @return LIST of length equal to the number of tables in `con` with attributes
 #'   identifying which tables, if any, failed to render into the dictionary.
 #' @export
 #'
 #' @examples
-data_dictionary <- function(conn_obj = con) {
+data_dictionary <- function(db_conn = con) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   tabls <- dbListTables(con)
   tabls <- tabls[-grep("sqlite_", tabls)]
   out <- vector('list', length(tabls))
@@ -521,7 +527,7 @@ tidy_comments <- function(obj) {
 #' Parameter `output_file` will be used during the save process; relative paths
 #' are fine and will be identified by the current working directory.
 #'
-#' @param conn_obj connection object (default: con)
+#' @param db_conn connection object (default: con)
 #' @param output_format CHR scalar, one of (capitalization insensitive) "json",
 #'   "csv", "data.frame", or "list" (default "json")
 #' @param output_file CHR scalar indicating where to save the resulting file; an
@@ -535,7 +541,7 @@ tidy_comments <- function(obj) {
 #' @export
 #'
 #' @examples
-save_data_dictionary <- function(conn_obj           = con,
+save_data_dictionary <- function(db_conn            = con,
                                  output_format      = "json",
                                  output_file        = NULL,
                                  overwrite_existing = TRUE) {
@@ -551,6 +557,8 @@ save_data_dictionary <- function(conn_obj           = con,
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   output_format <- tolower(output_format)
   output_format <- match.arg(output_format,
                              c("json", "csv", "data.frame", "list"))
@@ -595,7 +603,7 @@ save_data_dictionary <- function(conn_obj           = con,
                                   f_ext)
     )
   }
-  out <- data_dictionary(conn_obj)
+  out <- data_dictionary(db_conn)
   if (attr(out, "has_failures")) {
     log_it("error",
            sprintf('This dictionary failed on %s. No file will be saved.',
@@ -637,27 +645,29 @@ save_data_dictionary <- function(conn_obj           = con,
 #' SQL is generated from [pragma_table_def] with argument `get_sql` = TRUE and
 #' ignores entities whose names start with "sqlite".
 #'
-#' @param conn connection object, specifically of class "SQLiteConnection" but
+#' @param db_conn connection object, specifically of class "SQLiteConnection" but
 #'   not strictly enforced
 #'
 #' @return nested LIST object
 #' @export
 #'
 #' @examples
-er_map <- function(conn = con) {
+er_map <- function(db_conn = con) {
   # Verify arguments
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        conn      = list(c("length", 1))
+        db_conn  = list(c("length", 1))
       ),
       from_fn    = "er_map"
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   
-  build_statements <- pragma_table_def(conn = conn, db_table = dbListTables(conn), get_sql = TRUE)
+  build_statements <- pragma_table_def(db_conn = db_conn, db_table = dbListTables(db_conn), get_sql = TRUE)
   build_statements <- build_statements[-grep("^sqlite", build_statements$table_name), ]
   n_tables <- nrow(build_statements)
   t_names  <- build_statements$table_name
@@ -806,7 +816,7 @@ manage_connection <- function(db          = DB_NAME,
       } else if (any(grepl(sprintf("^tbl_%s$", conn_class), this_obj_class))) {
         connection <- try(this_obj$src$con@dbname)
       } else if (any(grepl(sprintf("^%sResult$", drv), this_obj_class))) {
-        connection <- try(this_obj@conn@dbname)
+        connection <- try(this_obj@db_conn@dbname)
         dbClearResult(this_obj)
       } else if (class(this_obj) == conn_class) {
         connection <- "other"
@@ -1239,6 +1249,35 @@ update_all <- function() {
 
 # Database utility functions ---------------------------------------------------
 
+#' Is a connection object still available?
+#' 
+#' This is a thin wrapper for [DBI::dbIsValid] with some error logging.
+#'
+#' @aliases [DBI::dbIsValid]
+#' 
+#' @param db_conn 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+active_connection <- function(db_conn = con) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(db_conn),
+      conditions = list(
+        db_conn    = list(c("length", 1))
+      ),
+      from_fn = "active_connection"
+    )
+    stopifnot(arg_check$valid)
+  }
+  status <- DBI::dbIsValid(db_conn)
+  if (!status) log_it("error", "Connection is no longer available.")
+  return(status)
+}
+
 #' Add value(s) to a normalization table
 #'
 #' One of the most common database operations is to look up or add a value in a
@@ -1249,13 +1288,13 @@ update_all <- function() {
 #'
 #' @param db_table CHR scalar of the normalization table's name
 #' @param ... Values to add to the table. All values must be named.
-#' @param conn connection object (default "con")
+#' @param db_conn connection object (default "con")
 #'
 #' @return NULL if unable to add the values, INT scalar of the new ID otherwise
 #' @export
 #'
 #' @examples
-add_normalization_value <- function(db_table, ..., conn = con) {
+add_normalization_value <- function(db_table, ..., db_conn = con) {
   new_values <- list(...)
   if (length(names(new_values)) != length(new_values)) {
     stop("All values provided to this function must be named.")
@@ -1267,13 +1306,15 @@ add_normalization_value <- function(db_table, ..., conn = con) {
       conditions = list(
         new_values  = list(c("mode", "list"), c("n>=", 1)),
         db_table    = list(c("mode", "character"), c("length", 1)),
-        conn        = list(c("length", 1))
+        db_conn     = list(c("length", 1))
       )
     )
     if (!arg_check$valid) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   if (exists("db_dict")) {
     if (db_table %in% names(db_dict)) {
       table_cols <- db_dict[[db_table]]
@@ -1381,7 +1422,7 @@ add_normalization_value <- function(db_table, ..., conn = con) {
 #' @param case_sensitive LGL scalar of whether to match on a case sensitive
 #'   basis (the default TRUE searches for values as-provided) or whether to
 #'   coerce value matches by upper, lower, sentence, and title case matches
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return LIST of length 1-2 containing "exists" as a LGL scalar for whether
 #'   the values were found, and "values" containing the result of the database
@@ -1400,7 +1441,7 @@ add_normalization_value <- function(db_table, ..., conn = con) {
 #' check_for_value(letters[1:10], "alphabet", "lower", con)
 #'
 #' ## End(Not run)
-check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, conn = con) {
+check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1410,13 +1451,15 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
         db_table       = list(c("mode", "character"), c("length", 1)),
         db_column      = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
-        conn           = list(c("length", 1))
+        db_conn        = list(c("length", 1))
       ),
       from_fn = "check_for_value"
     )
     stopifnot(arg_check$valid)
   }
-  existing_values <- build_db_action(con            = conn,
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  existing_values <- build_db_action(con            = db_conn,
                                      action         = "SELECT",
                                      table_name     = db_table,
                                      match_criteria = setNames(list(values), db_column),
@@ -1479,12 +1522,14 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
   return(chosen_value)
 }
 
-resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, conn = con, ...) {
-  fields <- dbListFields(conn = conn, db_table)
+resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, ...) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  fields <- dbListFields(db_conn = db_conn, db_table)
   this_id <- integer(0)
   for (field in fields) {
     if (length(this_id) == 0) {
-      tmp <- check_for_value(this_value, db_table, field, case_sensitive, conn)
+      tmp <- check_for_value(this_value, db_table, field, case_sensitive, db_conn)
       if (tmp$exists) {
         this_id <- tmp$values$id
       }
@@ -1517,7 +1562,7 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
           db_table = db_table,
           name = this_selection,
           list(...),
-          conn = conn
+          db_conn = db_conn
         )
         this_id <- do.call(add_normalization_value, to_add)
       } else {
@@ -1562,7 +1607,7 @@ ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_r
 #' @param orcid CHR scalar of the contributor's ORCID (default ""), which must
 #'   match the valid ORCID pattern of four sets of four alphanumeric characters
 #'   separated by dashes (e.g. "1111-2222-3333-4444")
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return
 #' @export
@@ -1575,7 +1620,7 @@ add_contributor <- function(user_value  = "",
                             last_name   = "",
                             affiliation = "",
                             orcid       = "",
-                            conn        = con) {
+                            db_conn     = con) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1588,12 +1633,14 @@ add_contributor <- function(user_value  = "",
         last_name   = list(c("mode", "character"), c("length", 1)),
         affiliation = list(c("mode", "character"), c("length", 1)),
         orcid       = list(c("mode", "character"), c("length", 1)),
-        conn        = list(c("length", 1))
+        db_conn     = list(c("length", 1))
       ),
       from_fn = "add_contributor"
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   if (interactive()) {
     cat(
       sprintf(
@@ -1662,7 +1709,7 @@ add_contributor <- function(user_value  = "",
   build_db_action(
     action     = "INSERT",
     table_name = "contributors",
-    conn       = conn,
+    db_conn       = db_conn,
     values     = c(
       username    = username,
       contact     = contact,
@@ -1675,7 +1722,7 @@ add_contributor <- function(user_value  = "",
   user_id <- build_db_action(
     action         = "GET_ID",
     table_name     = "contributors",
-    conn           = conn,
+    db_conn           = db_conn,
     match_criteria = list(username = username)
   )
   return(user_id)
@@ -1699,7 +1746,7 @@ add_contributor <- function(user_value  = "",
 #' "plamsa").
 #'
 #' @param sample_class CHR or NUM scalar of the sample class name or ID
-#' @param conn connection object (default "con")
+#' @param db_conn connection object (default "con")
 #' @param auto_add LGL scalar of whether to automatically add an entry for
 #'   `sample_class` as provided if it does not exist (use with caution: default
 #'   FALSE)
@@ -1708,14 +1755,14 @@ add_contributor <- function(user_value  = "",
 #' @export
 #'
 #' @examples
-verify_sample_class <- function(sample_class, conn = con, auto_add = FALSE) {
+verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
         sample_class = list(c("length", 1)),
-        conn         = list(c("length", 1)),
+        db_conn      = list(c("length", 1)),
         auto_add     = list(c("mode", "logical"), c("length", 1))
       )
     )
@@ -1723,12 +1770,14 @@ verify_sample_class <- function(sample_class, conn = con, auto_add = FALSE) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   sample_classes <- check_for_value(sample_class, "norm_sample_classes", "name", case_sensitive = FALSE)
   if (sample_classes$exists) {
     sample_class <- sample_classes$values$id
     sample_classes <- sample_classes$values
   } else {
-    sample_classes <- tbl(conn, "norm_sample_classes") %>% collect()
+    sample_classes <- tbl(db_conn, "norm_sample_classes") %>% collect()
   }
   if (is.numeric(sample_class)) {
     if (sample_class %in% sample_classes$id) {
@@ -1815,17 +1864,19 @@ verify_sample_class <- function(sample_class, conn = con, auto_add = FALSE) {
 #' Title
 #'
 #' @param contributor_text 
-#' @param conn 
+#' @param db_conn 
 #' @param ... 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-verify_contributor <- function(contributor_text, conn = con, ...) {
+verify_contributor <- function(contributor_text, db_conn = con, ...) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   # Check contributor - do not check for internal id number
   # Prefer username
-  db_contributors  <- tbl(conn, "contributors")
+  db_contributors  <- tbl(db_conn, "contributors")
   contributor_properties <- c(list(...), user_value = contributor_text)
   possible_matches <- db_contributors %>%
     filter(username %in% contributor_text |
@@ -1863,7 +1914,7 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
       if (is.null(new_user)) stop("Could not verify this user.")
       return(new_user)
     } else {
-      needed <- dbListFields(conn, "contributors")
+      needed <- dbListFields(db_conn, "contributors")
       needed <- needed[needed != "id"]
       properties_present <- needed %in% names(contributor_properties)
       if (all(properties_present)) {
@@ -1879,7 +1930,7 @@ verify_contributor <- function(contributor_text, conn = con, ...) {
     } else {
       if (interactive()) {
         possibles <- possible_matches %>%
-          left_join(tbl(conn, "affiliations") %>% collect(),
+          left_join(tbl(db_conn, "affiliations") %>% collect(),
                     by = c("affiliation" = "id")) %>%
           select(-affiliation) %>%
           rename("affiliation" = "name") %>%

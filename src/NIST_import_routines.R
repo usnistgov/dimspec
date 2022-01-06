@@ -1,4 +1,6 @@
-full_import <- function(obj = NULL, file_name = NULL, conn = con, ignore_extra = TRUE, ignore_incomplete = FALSE) {
+full_import <- function(obj = NULL, file_name = NULL, db_conn = con, ignore_extra = TRUE, ignore_incomplete = FALSE) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   log_it("info", "Starting full import...")
   if (all(is.null(file_name), is.null(obj))) {
     stop('One of either "file_name" or "obj" must be provided.')
@@ -75,7 +77,7 @@ full_import <- function(obj = NULL, file_name = NULL, conn = con, ignore_extra =
   #               })
   # # Put in methods and append appropriate samples with the method id
   # for (i in 1:length(tmp)) {
-  #   method_id <- add_method(obj = tmp[[i]], conn = conn)
+  #   method_id <- add_method(obj = tmp[[i]], db_conn = db_conn)
   #   
   # }
   # # Add samples
@@ -129,6 +131,8 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   # Make sure required values are present
   values <- verify_import_columns(
     db_table   = db_table,
@@ -142,7 +146,7 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
     build_db_action(
       action     = "insert",
       table_name = db_table,
-      conn       = db_conn,
+      db_conn       = db_conn,
       values     = values,
       ignore     = ignore
     )
@@ -156,7 +160,7 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
     build_db_action(
       action         = "get_id",
       table_name     = db_table,
-      conn           = db_conn,
+      db_conn           = db_conn,
       match_criteria = as.list(values),
       and_or         = "AND"
     )
@@ -192,11 +196,11 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
 #'
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return status of the insertion
 #' @export
-add_software_settings <- function(obj, conn = con, software_settings_name = "msconvertsettings") {
+add_software_settings <- function(obj, db_conn = con, software_settings_name = "msconvertsettings") {
   # Argument validation relies on verify_args
   if (software_settings_name %in% names(obj)) {
     obj <- obj[[software_settings_name]]
@@ -206,21 +210,23 @@ add_software_settings <- function(obj, conn = con, software_settings_name = "msc
   }
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = c(conn, software_settings_name),
+      args       = c(db_conn, software_settings_name),
       conditions = list(
-        conn                   = list(c("length", 1)),
+        db_conn                   = list(c("length", 1)),
         software_settings_name = list(c("mode", "character"), c("length", 1))
       ),
       from_fn    = "insert_software_settings"
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   # Add linkage record and get new ID for inclusion in conversion_software_settings
   use_timestamp <- c(ts = as.numeric(Sys.time()) * 1000)
   linkage_id <- add_and_get_id(
     db_table = "conversion_software_linkage",
     values   = use_timestamp,
-    db_conn  = conn,
+    db_conn  = db_conn,
     ignore   = FALSE
   )
   
@@ -258,11 +264,11 @@ add_software_settings <- function(obj, conn = con, software_settings_name = "msc
 #' appropriate.
 #'
 #' @param obj LIST object containing data formatted from the import generator
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return INT scalar if successful, result of the call to [add_and_get_id]
 #'   otherwise
-add_sample <- function(obj, conn = con, name_is = "sample") {
+add_sample <- function(obj, db_conn = con, name_is = "sample") {
   log_it("info", "Preparing sample entry with add_sample().")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -270,13 +276,15 @@ add_sample <- function(obj, conn = con, name_is = "sample") {
       args       = as.list(environment()),
       conditions = list(
         obj                    = list(c("n>=", 1)),
-        conn                   = list(c("length", 1)),
+        db_conn                   = list(c("length", 1)),
         name_is = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "add_sample"
     )
     stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   needed <- unlist(IMPORT_HEADERS[grep("software|samples|method", names(IMPORT_HEADERS))])
   obj_components_present <- needed %in% names(obj)
   if (!all(obj_components_present)) {
@@ -334,7 +342,7 @@ add_sample <- function(obj, conn = con, name_is = "sample") {
   sample_id <- add_and_get_id(
     db_table = "samples",
     values   = sample_values,
-    db_conn  = conn,
+    db_conn  = db_conn,
     ignore   = FALSE
   )
   return(sample_id)
@@ -347,20 +355,22 @@ add_sample <- function(obj, conn = con, name_is = "sample") {
 #' [resolve_normalization_value] to parse foreign key relationships.
 #'
 #' @param obj LIST object containing data formatted from the import generator
-#' @param conn connection object (default: con)
+#' @param db_conn connection object (default: con)
 #'
 #' @return INT scalar if successful, result of the call to [add_and_get_id]
 #'   otherwise
 #'
-add_method <- function(obj, conn = con, name_is = "massspectrometry") {
+add_method <- function(obj, db_conn = con, name_is = "massspectrometry") {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   log_it("info", "Preparing method entry with add_method().")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        obj  = list(c("n>=", 1)),
-        conn = list(c("length", 1)),
+        obj     = list(c("n>=", 1)),
+        db_conn = list(c("length", 1)),
         name_is = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "add_method"
@@ -420,7 +430,7 @@ add_method <- function(obj, conn = con, name_is = "massspectrometry") {
   added <- add_and_get_id(
     db_table = "ms_methods",
     values   = ms_method_values,
-    db_conn  = conn
+    db_conn  = db_conn
   )
   if (class(add_description) == 'try-error') {
     log_it("warn", glue('Unable to add values ({format_list_of_names(add_description)}) to table "ms_descriptions".'))
@@ -430,6 +440,8 @@ add_method <- function(obj, conn = con, name_is = "massspectrometry") {
 
 # TODO
 add_description <- function(obj, type) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   type <- match.arg(type, c("ms", "chromatography"))
   type <- paste0(type, "_descriptions")
   log_it("trace", glue('Adding descriptions to table "{type}".'))
@@ -437,7 +449,7 @@ add_description <- function(obj, type) {
     build_db_action(
       action = "insert",
       table_name = type,
-      conn = con,
+      db_conn = con,
       values = obj
     )
   )
@@ -448,11 +460,15 @@ add_description <- function(obj, type) {
 
 # TODO
 add_ms_data <- function(obj) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   
 }
 
 # TODO
 add_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source")) {
+  # Check connection
+  stopifnot(active_connection(db_conn))
   if ("data.frame" %in% class(obj)) {
     tmp <- obj
   } else if (class(obj) == "list") {
@@ -480,7 +496,23 @@ add_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c
 }
 
 # TODO
-add_qc_data <- function(obj, sample_id) {
+add_qc_data <- function(obj, sample_id, db_conn = con) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(sample_id, db_conn),
+      conditions = list(
+        sample_id = list(c("mode", "integer"), c("n=", 1)),
+        db_conn    = list(c("length", 1))
+      ),
+      from_fn = "add_qc_data"
+    )
+    stopifnot(arg_check$valid)
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  # Sanity check that sample_id exists
+  valid_sample_id <- check_for_value(sample_id, "samples", "id", db_conn = db_conn)
   values <- lapply(obj,
                    function(x) {
                      x %>%
@@ -567,6 +599,7 @@ remove_sample <- function(sample_ids, db_conn = con) {
     )
     stopifnot(arg_check$valid)
   }
+  stopifnot(active_connection(db_conn))
   dat <- tbl(con, "samples") %>% filter(id %in% sample_ids) %>% collect()
   build_db_action('delete', 'samples', match_criteria = list(id = sample_ids))
   build_db_action('delete', 'ms_methods', match_criteria = list(id = unique(dat$ms_methods_id)))

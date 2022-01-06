@@ -48,7 +48,7 @@ api_open_doc <- function(url = plumber_url) {
 api_stop <- function(pr = plumber_status, flush = TRUE, db_conn = "con") {
   pr$kill()
   if (flush) {
-    if (valid_db_conn(eval(sym(db_conn))))
+    if (active_connection(eval(sym(db_conn))))
     manage_connection(conn_name = db_conn, reconnect = F)
     manage_connection(conn_name = db_conn)
   }
