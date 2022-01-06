@@ -219,7 +219,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   } else if (!any(is.character(args), !is.list(args))) {
     stop("Parameter 'args' must be either an environment or a list of values.")
   }
-  if (is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
+  if (rlang::is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
   log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
