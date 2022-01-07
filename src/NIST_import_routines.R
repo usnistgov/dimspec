@@ -1,4 +1,9 @@
-full_import <- function(obj = NULL, file_name = NULL, db_conn = con, ignore_extra = TRUE, ignore_incomplete = FALSE) {
+full_import <- function(obj = NULL,
+                        file_name = NULL,
+                        db_conn = con,
+                        ignore_extra = TRUE,
+                        ignore_incomplete = FALSE,
+                        requirements_obj = "import_requirements") {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_it("info", "Starting full import...")
@@ -11,7 +16,12 @@ full_import <- function(obj = NULL, file_name = NULL, db_conn = con, ignore_extr
     }
   }
   log_it("trace", glue('Verifying import requirements with verify_import_requirements().'))
-  meets_requirements <- verify_import_requirements(obj, ignore_extra = ignore_extra)
+  meets_requirements <- verify_import_requirements(
+    obj = obj,
+    requirements_obj = requirements_obj,
+    ignore_extra = ignore_extra
+  )
+  import_requirements <- eval(sym(requirements_obj))
   if (all(meets_requirements$all_required)) {
     log_it("success", "Import file meets all hard requirements.")
   } else {
@@ -37,7 +47,7 @@ full_import <- function(obj = NULL, file_name = NULL, db_conn = con, ignore_extr
     }
   }
   if (all(meets_requirements$full_detail)) {
-    log_it("info", "Import file contains all expected detail.")
+    log_it("success", "Import file contains all expected detail.")
   } else {
     n_missing <- sum(!meets_requirements$full_detail)
     if ("applies_to" %in% names(meets_requirements)) {
@@ -64,17 +74,14 @@ full_import <- function(obj = NULL, file_name = NULL, db_conn = con, ignore_extr
     )
     log_it("info", sprintf("Recommended information missing included: %s", details))
   }
-  # import_relationships <- lapply(get_names, get_uniques, import_obj = obj) %>%
-  #   setNames(glue("import_{get_names}"))
-  # tmp <- import_relationships %>%
-  #   setNames(str_remove_all(names(import_relationships), "^import_"))
-  # for (i in 1:length(tmp)) {
-  #   log_it("info", glue('\t{length(tmp[[i]])} unique entr{ifelse(length(tmp[[i]]) > 1, "ies", "y")} in {names(tmp)[i]}.'))
-  # }
-  # tmp <- lapply(import_relationships$import_massspectrometry,
-  #               function(x) {
-  #                 c(x, method_id = add_method(x))
-  #               })
+  # Get all unique relationships to cut down on extraneous database rows
+  # import_relationships <- vector("list", length(names(import_requirements)))
+  # names(import_relationships) <- names(import_requirements)
+  import_relationships <- import_requirements
+  for (ele in names(import_relationships)) {
+    import_relationships[[ele]] <- get_uniques(to_import, ele)
+  }
+  browser()
   # # Put in methods and append appropriate samples with the method id
   # for (i in 1:length(tmp)) {
   #   method_id <- add_method(obj = tmp[[i]], db_conn = db_conn)
@@ -566,8 +573,13 @@ get_uniques <- function(import_obj, aspect) {
   out_distinct <- out %>%
     unique() %>%
     lapply(function(x) {
-      c(x,
-        applies_to = list(unname(which(sapply(out, FUN = identical, x) == TRUE))))
+      ind <- unname(which(sapply(out, FUN = identical, x) == TRUE))
+      applies_to <- list(
+        index = ind,
+        file  = names(import_obj)[ind]
+      )
+      if (is.null(applies_to$file)) applies_to$file <- "import_file"
+      c(x, applies_to = list(applies_to))
     })
   return(out_distinct)
 }
