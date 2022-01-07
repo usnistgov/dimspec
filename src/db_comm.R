@@ -45,7 +45,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
   # Check connection
   stopifnot(active_connection(db_conn))
   # Ensure table exists
-  db_table <- existing_tables(db_table, db_conn)
+  db_table <- table_exists(db_table, db_conn)
   
   # Define function scope
   func <- ifelse(get_sql,
@@ -142,13 +142,13 @@ pragma_table_info <- function(db_table,
   # Check connection
   stopifnot(active_connection(db_conn))
   # Ensure table exists
-  db_table <- existing_tables(db_table, db_conn)
+  db_table <- table_exists(db_table, db_conn)
   # Bail early for performance if names only
   if (names_only) {
     return(DBI::dbListFields(db_conn, db_table))
   }
   # Get table properties
-  out <- pragma_table_def(db_table = db_table, con = db_conn, get_sql = FALSE)
+  out <- pragma_table_def(db_table = db_table, db_conn = db_conn, get_sql = FALSE)
   # Set up condition checks
   valid_conditions <- c("required", "has_default", "is_PK")
   if (!is.null(condition)) {
@@ -415,7 +415,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #' @export
 #'
 #' @examples
-existing_tables <- function(db_table, db_conn = con) {
+table_exists <- function(db_table, db_conn = con) {
   tables_exist <- db_table %in% dbListTables(db_conn)
   if (!all(tables_exist)) {
     log_it("warn", sprintf('No table named "%s" was found in this schema.', db_table[!tables_exist]))
@@ -441,7 +441,7 @@ existing_tables <- function(db_table, db_conn = con) {
 data_dictionary <- function(db_conn = con) {
   # Check connection
   stopifnot(active_connection(db_conn))
-  tabls <- dbListTables(con)
+  tabls <- dbListTables(db_conn)
   tabls <- tabls[-grep("sqlite_", tabls)]
   out <- vector('list', length(tabls))
   names(out) <- tabls
@@ -811,13 +811,13 @@ manage_connection <- function(db          = DB_NAME,
     this_obj       <- global_env[[env]]
     this_obj_class <- class(this_obj)
     if (any(grepl(conn_class, this_obj_class))) {
-      if (any(grepl(connection_object_classes, this_obj_class))) {
-        connection <- try(this_obj@dbname)
-      } else if (any(grepl(sprintf("^tbl_%s$", conn_class), this_obj_class))) {
+      if (any(grepl(sprintf("^tbl_%s$", connection_object_classes), this_obj_class))) {
         connection <- try(this_obj$src$con@dbname)
       } else if (any(grepl(sprintf("^%sResult$", drv), this_obj_class))) {
         connection <- try(this_obj@db_conn@dbname)
         dbClearResult(this_obj)
+      } else if (any(grepl(connection_object_classes, this_obj_class))) {
+        connection <- try(this_obj@dbname)
       } else if (class(this_obj) == conn_class) {
         connection <- "other"
       } else {
@@ -1222,6 +1222,11 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
 #'
+#' @param api_running LGL scalar of whether or not the API service is currently
+#'   running (default: TRUE)
+#' @param api_monitor process object pointing to the API service (default:
+#'   NULL)
+#'
 #' @return Files for the new database, fallback build, and data dictionary will
 #'   be created in the project directory and objects will be created in the
 #'   global environment for the database map (LIST "db_map") and current
@@ -1229,7 +1234,15 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @export
 #'
 #' @examples
-update_all <- function() {
+update_all <- function(api_running = TRUE, api_monitor = NULL) {
+  pr_name <- obj_name_check(api_monitor)
+  if (api_running) {
+    plumber_service_existed <- exists(pr_name)
+    if (plumber_service_existed) {
+      api_monitor <- eval(sym(pr_name))
+      if (api_monitor$is_alive()) api_stop(pr = api_monitor)
+    }
+  }
   manage_connection(reconnect = FALSE)
   build_db()
   manage_connection()
@@ -1245,6 +1258,66 @@ update_all <- function() {
   db_dict <<- dict_file %>%
     jsonlite::read_json() %>%
     lapply(bind_rows)
+  if (api_running) {
+    if (plumber_service_existed) {
+      api_reload(pr = api_monitor, background = TRUE)
+    } else {
+      api_reload(background = TRUE)
+    }
+  }
+}
+
+#' Conveniently close all database connections
+#'
+#' This closes both the plumber service and all database connections from the
+#' current running environment. If outstanding promises exist to database tables
+#' or views were created as class `tbl_` (e.g. with `tbl(con, "table")`), set
+#' `back_up_connected_tbls` to TRUE to collect data from those and preserve
+#' in-place in the current global environment.
+#'
+#' @param back_up_connected_tbls LGL scalar of whether to clone currently
+#'   promised tibble connections to database objects as data frames (default:
+#'   FALSE).
+#'
+#' @return None, modifies the current global environment in place
+close_up_shop <- function(back_up_connected_tbls = FALSE) {
+  # Kill plumber instances
+  tmp <- lapply(as.list(.GlobalEnv), class)
+  api_services <- names(tmp)[
+    which(
+      lapply(
+        tmp,
+        function(x) all(c("r_process", "R6", "process") %in% x)
+      ) == TRUE
+    )
+  ]
+  for (api in api_services) {
+    if (eval(sym(api))$is_alive()) api_stop(pr = eval(sym(api)))
+    rm(sym(api), envir = .GlobalEnv)
+  }
+  # Kill db connected objects
+  db_connections <- names(tmp)[
+    which(
+      unlist(
+        lapply(
+          tmp,
+          function(x) any(str_detect(x, "Connection$")))
+      ) == TRUE
+    )
+  ]
+  for (db_conn in db_connections) {
+    if (any(str_detect(tmp[[db_conn]], "^tbl_"))) {
+      if (back_up_connected_tbls) {
+        assign(
+          x     = db_conn,
+          value = collect(eval(sym(db_conn))),
+          envir = .GlobalEnv
+        )
+      }
+    } else {
+      manage_connection(conn_name = db_conn, reconnect = FALSE)
+    }
+  }
 }
 
 # Database utility functions ---------------------------------------------------

@@ -42,11 +42,17 @@ api_open_doc <- function(url = plumber_url) {
 #' @param flush LGL scalar of whether to disconnect and reconnect to a database
 #'   connection named as `db_conn` (default: TRUE)
 #' @param db_conn CHR scalar of the connection object name (default: "con")
+#' @param remove_service_obj LGL scalar of whether to remove the reference to
+#'   `pr` from the current global environment (default: TRUE)
 #'
 #' @return None, stops the plumber server
 #' @export
-api_stop <- function(pr = plumber_status, flush = TRUE, db_conn = "con") {
+api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove_service_obj = TRUE) {
   pr$kill()
+  if (remove_service_obj) {
+    rm(list = deparse(substitute(pr)), envir = .GlobalEnv)
+  }
+  if (!exists(db_conn)) flush <- FALSE
   if (flush) {
     if (active_connection(eval(sym(db_conn))))
     manage_connection(conn_name = db_conn, reconnect = F)
@@ -64,27 +70,80 @@ api_stop <- function(pr = plumber_status, flush = TRUE, db_conn = "con") {
 #' @export
 #'
 #' @examples
-api_reload <- function(pr = plumber_status, background = TRUE) {
-  api_stop(pr)
+api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL) {
+  if (is.null(on_host)) PLUMBER_HOST <- PLUMBER_HOST
+  if (is.null(on_port)) PLUMBER_PORT <- PLUMBER_PORT
+  pr_name <- obj_name_check(pr)
+  if (all(c("r_process", "process", "R6") %in% class(pr))) {
+    if (pr$is_alive()) api_stop(pr)
+  }
   if (background) {
-    plumber_status <<- callr::r_bg(
-      function() {
-        source(file.path("plumber", "env_plumb.R"))
-        api_start(
-          on_host = PLUMBER_HOST,
-          on_port = PLUMBER_PORT
-        )
-      }
+    assign(
+      x = pr_name,
+      value = callr::r_bg(
+        function() {
+          source(file.path("plumber", "env_plumb.R"))
+          api_start(
+            on_host = on_host,
+            on_port = on_port
+          )
+        }
+      ),
+      envir = .GlobalEnv
     )
   } else {
     api_start(
-      on_host = PLUMBER_HOST,
-      on_port = PLUMBER_PORT
+      on_host = on_host,
+      on_port = on_port
     )
   }
-  if (plumber_status$is_alive()) {
-    cat("Reloaded")
+  plumber_service <- eval(sym(pr_name))
+  if (plumber_service$is_alive()) {
+    plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+    log_it("info",
+           sprintf(
+             "\nRunning plumber API at %s",
+             plumber_url
+             )
+           )
+    log_it("info",
+           sprintf(
+             "\nView docs at %s/__docs__/ or by calling `api_open_doc(plumber_url)`",
+             plumber_url
+             )
+           )
   } else {
-    cat("Unknown error")
+    log_it("error",
+           sprintf(
+             'Unknown error restarting the plumber API. Inspect the object named "%s" for details.',
+             pr_name
+           )
+    )
   }
+}
+
+#' Sanity check for plumber service name
+#'
+#' Provides a sanity check on whether or not a name reference exists and return
+#' its name if so. If not, return the default name of defined from
+#' `default_name`. This largely is used to prevent naming conflicts as part of
+#' managing the plumber service (thus the default name) but can be used for any
+#' item in the current namespace.
+#'
+#' @param obj R object or CHR scalar in question to be resolved in the namespace
+#' @param default_name CHR scalar name to use for `obj` if it does not exist.
+#'
+#' @return CHR scalar of the resolved name
+obj_name_check <- function(obj, default_name = "plumber_service") {
+  if (is.character(obj)) {
+    pr_name <- obj
+  } else {
+    pr_name <- deparse(substitute(obj))
+  }
+  if (exists(pr_name)) {
+    pr <- eval(sym(pr_name))
+  } else {
+    pr_name <- default_name
+  }
+  return(pr_name)
 }

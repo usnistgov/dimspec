@@ -82,7 +82,7 @@ if (INIT_CONNECT) {
 if (ACTIVATE_API) {
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(file.path("plumber", "api_control.R"))
-  plumber_status <- callr::r_bg(
+  plumber_service <- callr::r_bg(
     function() {
       source(file.path("plumber", "env_plumb.R"))
       api_start(
@@ -92,7 +92,7 @@ if (ACTIVATE_API) {
     }
   )
   plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
-  if (plumber_status$is_alive()) {
+  if (plumber_service$is_alive()) {
     cat(sprintf("\nRunning plumber API at %s", plumber_url))
     cat(sprintf("\nView plumber docs API at %s/__docs__/ or by calling `api_open_doc(plumber_url)`", plumber_url))
   } else {
