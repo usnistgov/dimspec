@@ -50,15 +50,32 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* name of the sample class */
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS sample_aliases
+		/* Alternative names by which this sample may be identified e.g. laboratory or repository names, external reference IDs, URIs, etc. */
+	(
+	  sample_id
+	    INTEGER NOT NULL,
+	    /* foreign key to samples */
+	  name
+	    TEXT NOT NULL,
+	    /* reference name for the sample */
+	  reference
+	    TEXT,
+	    /* source of the name, e.g. external database pointer or PID */
+	  /* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS samples
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		name
+		mzml_name
 		  TEXT NOT NULL,
-		  /* user-defined name of the sample */
+		  /* user-defined name of mzML file used to represent the sample */
 		description
 			TEXT NOT NULL,
 			/* user-defined description of the sample */
