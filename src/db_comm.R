@@ -860,9 +860,11 @@ manage_connection <- function(db          = DB_NAME,
         stop(sprintf('Unable to locate "%s".', db))
       }
     }
+    global_env       <- as.list(.environ)
+    global_env_names <- names(global_env)
     if (conn_name %in% global_env_names) {
       if (connected) dbDisconnect(sym(conn_name))
-      rm(list = eval(sym(conn_name)), pos = ".GlobalEnv")
+      rm(list = conn_name, pos = ".GlobalEnv")
     }
     args <- list(db, ...)
     assign(x     = conn_name,
@@ -1292,8 +1294,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   ]
   for (api in api_services) {
-    if (eval(sym(api))$is_alive()) api_stop(pr = eval(sym(api)))
-    rm(sym(api), envir = .GlobalEnv)
+    if (.GlobalEnv[[api]]$is_alive()) api_stop(pr = .GlobalEnv[[api]])
+    rm(list = api, envir = .GlobalEnv)
   }
   # Kill db connected objects
   db_connections <- names(tmp)[
