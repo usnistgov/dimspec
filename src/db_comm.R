@@ -1294,8 +1294,9 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   ]
   for (api in api_services) {
-    if (.GlobalEnv[[api]]$is_alive()) api_stop(pr = .GlobalEnv[[api]])
-    rm(list = api, envir = .GlobalEnv)
+    if (.GlobalEnv[[api]]$is_alive()) {
+      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = TRUE)
+    }
   }
   # Kill db connected objects
   db_connections <- names(tmp)[
@@ -1315,6 +1316,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
           value = collect(eval(sym(db_conn))),
           envir = .GlobalEnv
         )
+      } else {
+        rm(list = db_conn, envir = .GlobalEnv)
       }
     } else {
       manage_connection(conn_name = db_conn, reconnect = FALSE)
