@@ -20,3 +20,9 @@ DB_DATA        = "populate_pfas.sql"
 # be the terminal reference to start sqlite3 on the deployment (e.g. $ sqlite3).
 SQLITE_CLI     = "sqlite3"
 SUS_LIST_URL   = "https://data.nist.gov/od/ds/mds2-2387/PFAS%20Suspect%20List_v1.xlsx"
+
+# Plumber integration (requires R)
+ACTIVATE_API   = TRUE
+
+# RDKit integration
+USE_RDKIT      = FALSE

@@ -490,3 +490,14 @@ make_acronym <- function(text) {
     lapply(function(x) paste0(x, collapse = "")) %>%
     unlist()
 }
+
+empty_variable <- function(x) {
+  return(
+    any(
+      x == "",
+      is.null(x),
+      is.na(x),
+      length(x) == 0
+    )
+  )
+}

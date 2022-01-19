@@ -860,9 +860,11 @@ manage_connection <- function(db          = DB_NAME,
         stop(sprintf('Unable to locate "%s".', db))
       }
     }
+    global_env       <- as.list(.environ)
+    global_env_names <- names(global_env)
     if (conn_name %in% global_env_names) {
       if (connected) dbDisconnect(sym(conn_name))
-      rm(list = eval(sym(conn_name)), pos = ".GlobalEnv")
+      rm(list = conn_name, pos = ".GlobalEnv")
     }
     args <- list(db, ...)
     assign(x     = conn_name,
@@ -1235,8 +1237,8 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @examples
 update_all <- function(api_running = TRUE, api_monitor = NULL) {
-  pr_name <- obj_name_check(api_monitor)
   if (api_running) {
+    pr_name <- obj_name_check(api_monitor)
     plumber_service_existed <- exists(pr_name)
     if (plumber_service_existed) {
       api_monitor <- eval(sym(pr_name))
@@ -1292,8 +1294,9 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   ]
   for (api in api_services) {
-    if (eval(sym(api))$is_alive()) api_stop(pr = eval(sym(api)))
-    rm(sym(api), envir = .GlobalEnv)
+    if (.GlobalEnv[[api]]$is_alive()) {
+      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = TRUE)
+    }
   }
   # Kill db connected objects
   db_connections <- names(tmp)[
@@ -1313,6 +1316,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
           value = collect(eval(sym(db_conn))),
           envir = .GlobalEnv
         )
+      } else {
+        rm(list = db_conn, envir = .GlobalEnv)
       }
     } else {
       manage_connection(conn_name = db_conn, reconnect = FALSE)

@@ -46,6 +46,8 @@ DELETE FROM norm_qc_methods_reference;
 .import --csv --skip 1 config/data/norm_qc_methods_reference.csv norm_qc_methods_reference
 DELETE FROM norm_ion_states;
 .import --csv --skip 1 config/data/norm_ion_states.csv norm_ion_states
+DELETE FROM norm_analyte_alias_references;
+.import --csv --skip 1 config/data/norm_analyte_alias_references.csv norm_analyte_alias_references
 DELETE FROM contributors;
 DELETE FROM affiliations;
 .read config/sql_nodes/contributors_data.sql

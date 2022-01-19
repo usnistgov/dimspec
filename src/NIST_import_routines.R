@@ -73,6 +73,13 @@ full_import <- function(obj = NULL,
       )
     )
     log_it("info", sprintf("Recommended information missing included: %s", details))
+    if (interactive()) {
+      continue <- askYesNo("Continue import even with missing recommended information?")
+      if (!continue) {
+        cat("Import aborted.")
+        return(FALSE)
+      }
+    }
   }
   # Get all unique relationships to cut down on extraneous database rows
   # import_relationships <- vector("list", length(names(import_requirements)))

@@ -31,7 +31,6 @@ DELETE FROM affiliations;
 DELETE FROM chromatography_descriptions;
 DELETE FROM compounds;
 DELETE FROM compound_categories;
-DELETE FROM compound_alias_references;
 DELETE FROM compound_aliases;
 DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/norm_solvents.csv norm_solvents
@@ -49,7 +48,6 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/solvent_mixes.csv solvent_mixes
 .import --csv --skip 1 config/data/demo/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
-.import --csv --skip 1 config/data/demo/compound_alias_references.csv compound_alias_references
 .import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases
 .import --csv --skip 1 config/data/demo/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/demo/samples.csv samples
