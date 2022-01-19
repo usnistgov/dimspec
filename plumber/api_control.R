@@ -71,8 +71,8 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 #'
 #' @examples
 api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL) {
-  if (is.null(on_host)) PLUMBER_HOST <- PLUMBER_HOST
-  if (is.null(on_port)) PLUMBER_PORT <- PLUMBER_PORT
+  if (is.null(on_host)) on_host <- PLUMBER_HOST
+  if (is.null(on_port)) on_port <- PLUMBER_PORT
   pr_name <- obj_name_check(pr)
   if (all(c("r_process", "process", "R6") %in% class(pr))) {
     if (pr$is_alive()) api_stop(pr)
@@ -97,9 +97,9 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
       on_port = on_port
     )
   }
-  plumber_service <- eval(sym(pr_name))
-  if (plumber_service$is_alive()) {
-    plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+  this_pr <- eval(sym(pr_name))
+  if (this_pr$is_alive()) {
+    plumber_url <- sprintf("http://%s:%s", on_host, on_port)
     log_it("info",
            sprintf(
              "\nRunning plumber API at %s",

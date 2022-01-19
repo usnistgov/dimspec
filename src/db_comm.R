@@ -1237,8 +1237,8 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @examples
 update_all <- function(api_running = TRUE, api_monitor = NULL) {
-  pr_name <- obj_name_check(api_monitor)
   if (api_running) {
+    pr_name <- obj_name_check(api_monitor)
     plumber_service_existed <- exists(pr_name)
     if (plumber_service_existed) {
       api_monitor <- eval(sym(pr_name))

@@ -135,7 +135,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_alias_references
+	CREATE TABLE IF NOT EXISTS norm_analyte_alias_references
 		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
 	(
 		id
@@ -162,14 +162,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to compounds */
 		alias_type
 			INTEGER,
-			/* foreign key to norm_alias_references */
+			/* foreign key to norm_analyte_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
-		FOREIGN KEY (alias_type) REFERENCES norm_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS compound_fragments
@@ -230,14 +230,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to compounds */
 		alias_type
 			INTEGER,
-			/* foreign key to norm_alias_references */
+			/* foreign key to norm_analyte_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE,
-		FOREIGN KEY (alias_type) REFERENCES norm_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_sources
@@ -326,7 +326,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* URL link to the alias ID source */
 		FROM compounds c
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
-		INNER JOIN norm_alias_references car ON ca.alias_type = car.id;
+		INNER JOIN norm_analyte_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/

@@ -48,7 +48,7 @@ DEPENDS_ON     <- c("base64enc",
                     "dbplyr",
                     "jsonlite",
                     "tools",
-                    "xlsx",
+                    # "xlsx",
                     "XML")
 
 # Also needs ChemmineR, which is only available through Bioconductor
@@ -78,7 +78,6 @@ IMPORT_HEADERS <- list(
 
 # Run the plumber API?
 # Set to true to run plumber
-ACTIVATE_API   <- TRUE
 PLUMBER_HOST   <- "127.0.0.1"
 # PLUMBER_PORT   <- getOption("plumber.port", NULL)
 PLUMBER_PORT   <- 8080
