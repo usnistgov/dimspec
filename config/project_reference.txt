@@ -13,7 +13,7 @@ Project Reference
 		Populates the database structure with demonstration data using files located in the /data/demo/ directory.
 	
 	/populate_pfas.sql
-		Populates the database structure with data for perfluoroalkyl substances using files located in the /data/pfas/ directory.
+		Populates the database structure with data for poly- and perfluoroalkyl substances using files located in the /data/pfas/ directory.
 		
 	/sql_nodes/
 		Each .sql file in this directory build a particular "node" in the database containing tables, views, and triggers as necessary. These are used by the /build.sql script to initialize a blank database. Refer to the annotated entity relationship diagram for a graphical view.

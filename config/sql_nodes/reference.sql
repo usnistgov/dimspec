@@ -24,9 +24,32 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 ====================================================================================================*/
 
 /* Tables */
-
-	/* - Reference tables */
-	
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS config
+	  /* Installation code to facilitate widespread usage. */
+	(
+	  id
+	    INTEGER PRIMARY KEY,
+	    /* primary key */
+	  code
+	    INTEGER NOT NULL,
+	    /* random installation number */
+	  name
+	    TEXT,
+	    /* name for this installation */
+	  build_date
+	    TEXT,
+	    /* build date for this installation */
+		/* Check constraints */
+		CHECK (id = 0),
+		CHECK (build_date == strftime("%Y-%m-%d %H:%M:%S", build_date))
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	INSERT INTO config VALUES (
+	  0, strftime("%s", "now", "utc"), null, datetime('now', 'utc')
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS elements
 		/* Normalization list of periodic table elements 1-118. */
 	(
@@ -43,7 +66,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS isotopes
 		/* Elemental isotope abundance ratios for comparison and deconvolution. */
 	(
@@ -63,9 +85,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE
 	);
 	/*magicsplit*/	
-	
-/* Views */
 
+/* Views */
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_element_isotopes AS
 	/* A view of all elemental isotopes and their relative abundances joining reference tables "elements" and "isotopes". */
 	SELECT
@@ -86,4 +108,5 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 
 /* Triggers */
-
+	/*magicsplit*/
+	/* none */

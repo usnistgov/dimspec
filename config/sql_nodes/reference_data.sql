@@ -23,10 +23,5 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 
 DELETE FROM elements;
 .import --csv --skip 1 config/data/elements.csv elements
-
-/*magicsplit*/
-
 DELETE FROM isotopes;
 .import --csv --skip 1 config/data/isotopes.csv isotopes
-
-/*magicsplit*/

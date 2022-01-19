@@ -28,7 +28,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 ====================================================================================================*/
 
 /* Tables */
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_log_executed_from
 		/* Normalization table for logs(executed_from) */
 	(
@@ -43,7 +43,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS norm_log_effect
 		/* Normalization table for logs(effect) */
 	(
@@ -58,7 +57,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS version_history
 		/* Versions of this database and its associated data or application */
 	(
@@ -80,7 +78,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS logs
 		/* Placeholder for logs */
 	(
@@ -127,9 +124,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id)
 	);
 	/*magicsplit*/
-
 /* Data */
-
+	/*magicsplit*/
 	INSERT OR IGNORE INTO norm_log_executed_from
 		VALUES
 			(1, "console"),
@@ -138,16 +134,15 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			(4, "application"),
 			(5, "other");
 	/*magicsplit*/
-	
 	INSERT OR IGNORE INTO norm_log_effect
 		VALUES
 			(1, "INSERT"),
 			(2, "UPDATE"),
 			(3, "DELETE"),
 			(4, "schema");
-
+	/*magicsplit*/
 /* Views */
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS log_summaries AS
 		/* Human readable logs */
 		SELECT
@@ -166,5 +161,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM logs l
 		INNER JOIN norm_log_effect nle ON l.effect = nle.id
 		GROUP BY affects_table, on_day;
-
+	/*magicsplit*/
 /* Triggers */
+	/*magicsplit*/
+	/* none */

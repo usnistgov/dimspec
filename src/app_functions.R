@@ -21,21 +21,24 @@ support_info <- function(app_info = TRUE) {
   }
   if (!exists("DB_VERSION")) source(list.files(pattern = "env.R", recursive = TRUE))
   sys_info <- list(
-      system          = sessionInfo(),
-      project_dir     = getwd(),
-      files_available = sort(list.files(full.names = TRUE, recursive  = TRUE)),
-      packs_installed = sort(installed.packages()[, 3]),
-      packs_active    = sort((.packages()))
+    system          = sessionInfo(),
+    project_dir     = getwd(),
+    files_available = sort(list.files(full.names = TRUE, recursive  = TRUE)),
+    packs_installed = sort(installed.packages()[, 3]),
+    packs_active    = sort((.packages()))
   )
   if (app_info) {
     app <- list(
       DB_DATE         = DB_DATE,
       DB_VERSION      = DB_VERSION,
-      BUILD_FILE      = BUILD_FILE,
+      BUILD_FILE      = DB_BUILD_FILE,
+      BUILD_FILE_FULL = DB_BUILD_FULL,
+      POPULATED_WITH  = POPULATED_WITH,
       LAST_DB_SCHEMA  = LAST_DB_SCHEMA,
       LAST_MODIFIED   = LAST_MODIFIED,
       DEPENDS_ON      = DEPENDS_ON,
-      EXCLUSIONS      = EXCLUSIONS
+      EXCLUSIONS      = EXCLUSIONS,
+      PID             = ifelse(exists("con"), tbl(con, "config") %>% pull(code), NA)
     )
     out <- c(app, sys_info)
   } else {
@@ -151,7 +154,11 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'   if the function fails) message back to the user, but does not halt checks}
 #'   }
 #' @param from_fn CHR scalar of the function from which this is called, used if
-#'   logger is enabled and ignored if not. (default NULL)
+#'   logger is enabled and ignored if not; by default it will pull the calling
+#'   function's name from the call stack, but can be overwritten by a manual
+#'   entry here for better tracing. (default NULL)
+#' @param silent LGL scalar of whether to silence warnings for individual
+#'   failiures, leaving them only as part of the output. (default: FALSE)
 #'
 #' @return LIST of the resulting values and checks, primarily useful for
 #'   $message
@@ -177,16 +184,43 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("between", list(100, 200)),
 #'                                          c("choices", list("a", "b")))))
 #' }
-verify_args <- function(args, conditions, from_fn = NULL) {
-  names(args) <- names(conditions)
-  if (is.null(from_fn)) {
-    from_fn <- ""
-  } else {
-    from_fn <- glue(' for function "{from_fn}"')
+verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
+  if (exists("VERIFY_ARGUMENTS")) {
+    if (!VERIFY_ARGUMENTS) {
+      return(list(valid = TRUE))
+    }
   }
-  logger <- "logger" %in% (.packages())
-  if (logger) log_trace('Verifying arguments{from_fn}.')
-  require(glue)
+  if (length(args) != length(conditions)) {
+    log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
+                            length(args),
+                            length(conditions)))
+  }
+  if (is.environment(args)) {
+    args <- as.list(args)
+  }
+  if (is.list(args)) {
+    n_arg_names <- length(names(args))
+    n_con_names <- length(names(conditions))
+    if (n_arg_names == 0) {
+      if (n_con_names == 0) {
+        log_it("trace", "Arguments and conditions are unnamed. Order will be inferred by index.")
+      } else {
+        log_it("trace", "Arguments provided are unnamed, order will be inferred from conditions.")
+        names(args) <- names(conditions)
+      }
+    } else if (n_con_names == 0) {
+      log_it("trace", "Conditions provided are unnamed, order will be inferred from arguments.")
+      names(conditions) <- names(args)
+    } else if (!n_arg_names == n_con_names) {
+      stop("Length of named arguments did not match the length of named conditions.")
+    } else {
+      args <- args[names(conditions)]
+    }
+  } else if (!any(is.character(args), !is.list(args))) {
+    stop("Parameter 'args' must be either an environment or a list of values.")
+  }
+  if (rlang::is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
+  log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -203,7 +237,11 @@ verify_args <- function(args, conditions, from_fn = NULL) {
   names(out$results) <- names(conditions)
   for (i in 1:length(args)) {
     arg   <- args[i]
+    if (is.null(names(arg))) {
+      names(arg) <- glue("argument_{i}")
+    }
     needs <- conditions[[i]]
+    log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -211,145 +249,153 @@ verify_args <- function(args, conditions, from_fn = NULL) {
       x     <- needs[[j]]
       val   <- arg[[1]]
       type  <- unlist(x[1])
-      check <- unlist(x[2])
-      switch(type,
-             "class"   = {
-               rslt <- check %in% class(val)
-               msg  <- glue("'{names(arg)}' must be of class '{check} rather than '{class(val)}'.")
-             },
-             "mode"    = {
-               mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
-               if (length(mode_check) > 0) {
-                 mode_check <- mode_check[1]
-               } else {
-                 mode_check <- check[[1]]
-               }
-               if (length(mode_check) == 1) {
-                 rslt <- do.call(mode_check, list(val))
-                 msg  <- glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
-               } else {
-                 rslt <- FALSE
-                 msg  <- glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
-               }
-             },
-             "length"  = {
-               rslt <- length(val) == as.integer(check)
-               msg  <- glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
-             },
-             "no_na"   = {
-               rslt <- !any(is.na(val))
-               msg  <- glue("Argument '{names(arg)}' includes NA values.")
-             },
-             "n>"      = {
-               rslt <- length(val) > as.integer(check)
-               msg  <- glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
-             },
-             "n<"      = {
-               rslt <- length(val) < as.integer(check)
-               msg  <- glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
-             },
-             "n>="     = {
-               rslt <- length(val) >= as.integer(check)
-               msg  <- glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
-             },
-             "n<="     = {
-               rslt <- length(val) <= as.integer(check)
-               msg  <- glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
-             },
-             ">"       = {
-               if (length(check) == 1) {
-                 rslt <- all(val > check)
-                 msg  <- glue("Argument '{names(arg)}' must be greater than {check}.")
-               } else {
-                 rslt <- FALSE
-                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
-               }
-             },
-             "<"       = {
-               if (length(check) == 1) {
-                 rslt <- all(val < check)
-                 msg  <- glue("Argument '{names(arg)}' must be lesser than {check}.")
-               } else {
-                 rslt <- FALSE
-                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
-               }
-             },
-             ">="       = {
-               if (length(check) == 1) {
-                 rslt <- all(val >= check)
-                 msg  <- glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
-               } else {
-                 rslt <- FALSE
-                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
-               }
-             },
-             "<="       = {
-               if (length(check) == 1) {
-                 rslt <- all(val <= check)
-                 msg  <- glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
-               } else {
-                 rslt <- FALSE
-                 msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
-               }
-             },
-             "between" = {
-               if (length(check) == 2) {
-                 rslt <- all(val >= check[1] && val <= check[2])
-                 if (is.numeric(val)) {
-                   msg  <- glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
+      check <- unlist(x[-1])
+      if (missing(val)) {
+        rslt <- FALSE
+        msg  <- glue('Parameter "{names(arg)}" is required.')
+      } else {
+        switch(type,
+               "class"   = {
+                 rslt <- check %in% class(val)
+                 msg  <- glue('Parameter "{names(arg)}" must be of class "{check}" rather than "{class(val)}".')
+               },
+               "mode"    = {
+                 mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
+                 if (length(mode_check) > 0) {
+                   mode_check <- mode_check[1]
                  } else {
-                   msg  <- glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
+                   mode_check <- check[[1]]
                  }
-               } else {
-                 if (length(check) < 2) {
-                   len_check <- "less than"
+                 if (length(mode_check) == 1) {
+                   rslt <- do.call(mode_check, list(val))
+                   msg  <- glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
                  } else {
-                   len_check <- "more than"
+                   rslt <- FALSE
+                   msg  <- glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
                  }
+               },
+               "length"  = {
+                 rslt <- length(val) == as.integer(check)
+                 msg  <- glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
+               },
+               "no_na"   = {
+                 rslt <- !any(is.na(val))
+                 msg  <- glue("Argument '{names(arg)}' includes NA values.")
+               },
+               "n>"      = {
+                 rslt <- length(val) > as.integer(check)
+                 msg  <- glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
+               },
+               "n<"      = {
+                 rslt <- length(val) < as.integer(check)
+                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
+               },
+               "n>="     = {
+                 rslt <- length(val) >= as.integer(check)
+                 msg  <- glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
+               },
+               "n<="     = {
+                 rslt <- length(val) <= as.integer(check)
+                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
+               },
+               ">"       = {
+                 if (length(check) == 1) {
+                   rslt <- all(val > check)
+                   msg  <- glue("Argument '{names(arg)}' must be greater than {check}.")
+                 } else {
+                   rslt <- FALSE
+                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                 }
+               },
+               "<"       = {
+                 if (length(check) == 1) {
+                   rslt <- all(val < check)
+                   msg  <- glue("Argument '{names(arg)}' must be lesser than {check}.")
+                 } else {
+                   rslt <- FALSE
+                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                 }
+               },
+               ">="       = {
+                 if (length(check) == 1) {
+                   rslt <- all(val >= check)
+                   msg  <- glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
+                 } else {
+                   rslt <- FALSE
+                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                 }
+               },
+               "<="       = {
+                 if (length(check) == 1) {
+                   rslt <- all(val <= check)
+                   msg  <- glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
+                 } else {
+                   rslt <- FALSE
+                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
+                 }
+               },
+               "between" = {
+                 if (length(check) == 2) {
+                   rslt <- all(val >= check[1] && val <= check[2])
+                   if (is.numeric(val)) {
+                     msg  <- glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
+                   } else {
+                     msg  <- glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
+                   }
+                 } else {
+                   if (length(check) < 2) {
+                     len_check <- "less than"
+                   } else {
+                     len_check <- "more than"
+                   }
+                   rslt <- FALSE
+                   msg  <- glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
+                 }
+               },
+               "choices" = {
+                 rslt <- all(val %in% check)
+                 msg  <- glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
+               },
+               "call"    = {
+                 rslt <- tryCatch(do.call(check, list(val)),
+                                  error   = function(e) e,
+                                  warning = function(w) w)
+                 val  <- paste0('"', val, '"', collapse = ", ")
+                 if ("simpleError" %in% class(rslt)) {
+                   msg  <- glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   rslt <- FALSE
+                 } else if ("simpleWarning" %in% class(rslt)) {
+                   msg  <- glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   rslt <- FALSE
+                 } else {
+                   rslt <- TRUE
+                 }
+               },
+               {
                  rslt <- FALSE
-                 msg  <- glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
+                 msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
                }
-             },
-             "choices" = {
-               rslt <- all(val %in% check)
-               msg  <- glue("Argument '{names(arg)}' was not present in c({paste0(check, collapse = ', ')}).")
-             },
-             "call"    = {
-               rslt <- tryCatch(do.call(check, list(val)),
-                                error   = function(e) e,
-                                warning = function(w) w)
-               val  <- paste0('"', val, '"', collapse = ", ")
-               if ("simpleError" %in% class(rslt)) {
-                 msg  <- glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
-                 rslt <- FALSE
-               } else if ("simpleWarning" %in% class(rslt)) {
-                 msg  <- glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
-                 rslt <- FALSE
-               } else {
-                 rslt <- TRUE
-               }
-             },
-             {
-               rslt <- FALSE
-               msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
-             }
-      )
+        )
+      }
+      log_msg <- glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
       out$results[[i]][j]   <- rslt
       if (!rslt) {
         out$valid           <- FALSE
         n_msg <- length(out$messages) + 1
         out$messages[n_msg] <- msg
-        if (logger) log_warn(msg)
+        log_it("trace", glue('{log_msg} - FAIL'))
+        if (!silent) log_it("error", glue("    {msg}"))
+      } else {
+        log_it("trace", glue('{log_msg} - PASS'))
       }
     }
   }
-  if (logger) {
-    if (out$valid) {
-      log_trace('Arguments verified{from_fn}.')
-    } else {
-      error_appendix <- ifelse(log_threshold() < 300, " See return for details.", "")
-      log_error('Arguments could not be verified{from_fn}.{error_appendix}')
-    }
+  if (out$valid) {
+    log_it("trace", glue("Arguments verified for '{from_fn}'"))
+  } else {
+    log_it("error", glue("Arguments could not be verified",
+                         ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
+                         " See return for details."))
   }
   return(out)
 }
@@ -358,24 +404,100 @@ verify_args <- function(args, conditions, from_fn = NULL) {
 #'
 #' Given a vector of arbitrary length that coerces properly to a human-readable
 #' character string, return it formatted as one of: "one", "one and two", or
-#' "one, two, ..., and three" using `glue::glue`
+#' "one, two, ..., and three" using `glue::glue`. This is functionally the same
+#' as a static version of [glue::glue_collapse] with parameters sep = ", ",
+#' width = Inf, and last = ", and ".
 #'
 #' @param namelist vector of values to format
-#' 
+#'
 #' @return CHR vector of length one
 #' @export
-#' 
+#'
 #' @examples
 #' format_list_of_names("test")
 #' format_list_of_names(c("apples", "bananas"))
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
 format_list_of_names <- function(namelist) {
-  if ( length(namelist) == 1 )
+  require(glue)
+  if (length(namelist) == 1)
     return(glue::glue("{paste0(namelist, collapse = '')}"))
   res <- glue::glue(
     "{paste0(namelist[1:length(namelist) - 1], collapse = ', ')}\\
      {ifelse(length(namelist) > 2, ',', '')} \\
      {ifelse(length(namelist) > 1, paste('and ', namelist[length(namelist)], sep = ''), '')}")
   return(res)
+}
+
+#' Conveniently log a message to the console
+#'
+#' Use this to log messages of various level in the console for situations where
+#' package [logger] may not be available.
+#'
+#' @param log_level CHR scalar of the level at which to log a given statement.
+#'   If using the [logger] package, must match one of [logger:::log_levels]
+#' @param msg CHR scalar of the message to accompany the log.
+#'
+#' @return Adds to the logger log (if enabled) and prints to the console in all
+#'   cases
+#' @export
+#'
+#' @examples
+#' log_it("test", "a test message")
+#' test_log <- function() {
+#'   log_it("success", "a success message")
+#'   log_it("warn", "a warning message")
+#' }
+#' test_log()
+#' # Try it with and without logger loaded.
+log_it <- function(log_level, msg) {
+  log_func  <- sprintf("log_%s", tolower(log_level))
+  n_call    <- sys.nframe() * -1 + 1
+  if (exists(log_func)) {
+    log_level(level    = toupper(log_level),
+              .topcall = sys.call(n_call),
+              msg)
+  } else {
+    msg <- sprintf("%s [%s] in %s(): %s",
+                   toupper(log_level),
+                   format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
+                   deparse(sys.call(n_call)[[1]]),
+                   msg)
+    cat(msg)
+  }
+}
+
+#' Simple acronym generator
+#'
+#' At times it is useful for display purposes to generate acronyms for longer
+#' bits of text. This naively generates those by extracting the first letter as
+#' upper case from each word in `text` elements.
+#'
+#' @param text CHR vector of the text to acronym-ize
+#'
+#' @return CHR vector of length equal to that of `text` with the acronym
+#' @export
+#'
+#' @examples
+#' make_acronym("test me")
+#' make_acronym(paste("department of ", c("commerce", "energy", "defense")))
+make_acronym <- function(text) {
+  text %>%
+    str_to_lower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_to_title() %>%
+    str_extract_all("[A-Z]") %>%
+    lapply(function(x) paste0(x, collapse = "")) %>%
+    unlist()
+}
+
+empty_variable <- function(x) {
+  return(
+    any(
+      x == "",
+      is.null(x),
+      is.na(x),
+      length(x) == 0
+    )
+  )
 }

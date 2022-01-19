@@ -1,5 +1,6 @@
 
 queries <- list(
+  NROW   = "SELECT COUNT(*) FROM ?table_name",
   INSERT = "INSERT INTO ?table_name (?column_names) VALUES ?values",
   UPDATE = "UPDATE ?table_name SET ?values",
   SELECT = "SELECT ?column_names FROM ?table_name",
@@ -14,15 +15,32 @@ queries <- list(
 #' Typically it is called transparently inline to cause execution failure when
 #' tables are not present during build of SQL queries.
 #'
-#' @param con connection object (e.g. of class "SQLiteConnection")
+#' @param db_conn connection object (e.g. of class "SQLiteConnection")
 #' @param table_names CHR vector name of tables to ensure are present
 #'
 #' @return
 #' @export
 #'
 #' @examples
-validate_tables <- function(con, table_names) {
-  table_list   <- unique(dbListTables(con))
+validate_tables <- function(db_conn, table_names) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        db_conn     = list(c("length", 1)),
+        table_names = list(c("mode", "character"), c("n>=", 1))
+      ),
+      from_fn = "validate_tables"
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  
+  table_list   <- unique(dbListTables(db_conn))
   table_exists <- unique(table_names) %in% table_list
   if (!all(table_exists)) {
     bad_tables <- table_names[!table_exists]
@@ -43,7 +61,7 @@ validate_tables <- function(con, table_names) {
 #' execution failure when column names are not present in referenced tables
 #' during build of SQL queries.
 #'
-#' @param con connection object (e.g. of class "SQLiteConnection")
+#' @param db_conn connection object (e.g. of class "SQLiteConnection")
 #' @param table_names CHR vector of tables to search
 #' @param column_names CHR vector of column names to validate
 #'
@@ -51,8 +69,25 @@ validate_tables <- function(con, table_names) {
 #' @export
 #'
 #' @examples
-validate_column_names <- function(con, table_names, column_names) {
-  valid_fields <- lapply(table_names, function(x) dbListFields(con, x)) %>%
+validate_column_names <- function(db_conn, table_names, column_names) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        db_conn          = list(c("length", 1)),
+        table_names  = list(c("mode", "character"), c("n>=", 1)),
+        column_names = list(c("mode", "character"), c("n>=", 1))
+      ),
+      from_fn = "validate_column_names"
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  
+  valid_fields <- lapply(table_names, function(x) dbListFields(db_conn, x)) %>%
     unlist() %>% unique()
   valid_columns <- unique(column_names) %in% valid_fields
   if (!all(valid_columns)) {
@@ -78,7 +113,7 @@ validate_column_names <- function(con, table_names, column_names) {
 #' including negation and similarity (see the description for argument
 #' `match_criteria`).
 #'
-#' @param con existing connection object (e.g. of class "SQLiteConnection")
+#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
 #' @param table_names CHR vector of tables to search
 #' @param match_criteria LIST of matching criteria with names matching columns
 #'   against which to apply. In the simplest case, a direct value is given to
@@ -94,6 +129,9 @@ validate_column_names <- function(con, table_names, column_names) {
 #'   = "Smith", exclude = TRUE))`, or to look for all records LIKE (or NOT LIKE)
 #'   "Smith", set this as `list(last_name = list(values = "Smith", exclude =
 #'   FALSE, like = TRUE))`
+#' @param case_sensitive LGL scalar of whether to match on a case sensitive
+#'   basis (the default TRUE searches for values as-provided) or whether to
+#'   coerce value matches by upper, lower, sentence, and title case matches
 #' @param and_or LGL scalar of whether to use "AND" or "OR" for multiple
 #'   criteria, which will be used to combine them all. More complicated WHERE
 #'   clauses (including a mixture of AND and OR usage) should be built directly.
@@ -103,23 +141,42 @@ validate_column_names <- function(con, table_names, column_names) {
 #' @export
 #'
 #' @examples
-#' clause_where(ANSI(), "example", list("foo" = "bar", "cat" = "dog"))
-#' clause_where(ANSI(), "example", list("foo" = list(values = "bar", like = TRUE)))
-#' clause_where(ANSI(), "example", list("foo" = list(values = "bar", exclude = TRUE)))
-clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
-  and_or <- toupper(and_or)
+#' clause_where(ANSI(), "example", list(foo = "bar", cat = "dog"))
+#' clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
+#' clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
+clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = TRUE, and_or = "OR") {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        db_conn        = list(c("length", 1)),
+        table_names    = list(c("mode", "character"), c("n>=", 1)),
+        match_criteria = list(c("mode", "list")),
+        case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        and_or         = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn = "clause_where"
+    )
+    if (!arg_check$valid) {
+      stop(cat(paste0(arg_check$messages, collapse = "\n")))
+    }
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  and_or <- toupper(str_trim(and_or))
   and_or <- match.arg(and_or, c("AND", "OR"))
   and_or <- paste0(" ", and_or, " ")
   out    <- match_criteria
-  is_ansi <- identical(con, ANSI())
+  if (!length(names(out)) == length(out)) stop("All match criteria must be named.")
+  is_ansi <- identical(db_conn, ANSI())
   # Ensure column names exist
   if (!is_ansi) {
-    validate_column_names(con, table_names, names(match_criteria))
+    validate_column_names(db_conn, table_names, names(match_criteria))
   }
   keywords <- c("values", "exclude", "like")
   # Parse match criteria
   for (m in names(out)) {
-    column <- dbQuoteIdentifier(con, m)
+    column <- dbQuoteIdentifier(db_conn, m)
     modifiers <- names(out[[m]])
     if (all(is.null(modifiers), !is.list(out[[m]]))) {
       out[[m]] <- list(
@@ -148,17 +205,28 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
     }
     modifiers <- names(out[[m]])
     checks    <- out[[m]]$values
+    if (!case_sensitive) {
+      checks <- unique(
+        c(
+          checks,
+          str_to_lower(checks),
+          str_to_title(checks),
+          str_to_sentence(checks),
+          str_to_upper(checks)
+        )
+      )
+    }
     if (length(checks) == 1) {
-      out[[m]]$query <- sqlInterpolate(con, "? = ?", column, checks)
+      out[[m]]$query <- sqlInterpolate(db_conn, "? = ?", column, checks)
     } else {
       out[[m]]$query <- paste0(column, " IN (",
                          paste0(
                            lapply(checks,
                                   function(x) {
                                     if (is.character(x)) {
-                                      dbQuoteString(con, x)
+                                      dbQuoteString(db_conn, x)
                                     } else {
-                                      dbQuoteLiteral(con, x)
+                                      dbQuoteLiteral(db_conn, x)
                                     }
                                     
                                   }) %>%
@@ -202,10 +270,11 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 
 #' Build a basic escaped SQL query
 #'
-#' @param con existing connection object (e.g. of class "SQLiteConnection")
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
 #' @param table_name CHR scalar of the table name to which this query applies
+#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
+#'   (default: con)
 #' @param column_names CHR vector of column names to include (default NULL)
 #' @param values LIST of CHR vectors with values to INSERT or UPDATE (default
 #'   NULL)
@@ -223,6 +292,10 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #'   `list(last_name = list(values = "Smith", exclude = TRUE))`, or to look for
 #'   all records LIKE (or NOT LIKE) "Smith", set this as `list(last_name =
 #'   list(values = "Smith", exclude = FALSE, like = TRUE))`
+#' @param case_sensitive LGL scalar of whether to match on a case sensitive
+#'   basis (the default TRUE searches for values as-provided) or whether to
+#'   coerce value matches by upper, lower, sentence, and title case matches;
+#'   passed directly to [clause_where] (default: TRUE)
 #' @param and_or CHR scalar one of "AND" or "OR" to be applied to the match
 #'   criteria (default "OR")
 #' @param limit INT scalar of the maximum number of rows to return  (default
@@ -237,32 +310,39 @@ clause_where <- function(con, table_names, match_criteria, and_or = "OR") {
 #'   set to TRUE automatically if no column names are provided (default FALSE)
 #' @param execute LGL scalar of whether or not to immediately execute the build
 #'   query statement (default TRUE)
+#' @param single_column_as_vector LGL scalar of whether to return results as a
+#'   vector if they consist of only a single column (default TRUE)
 #'
 #' @return CHR scalar of the constructed query
 #' @export
 #'
 #' @examples
-build_db_action <- function(con,
-                            action,
+build_db_action <- function(action,
                             table_name,
+                            db_conn         = con,
                             column_names    = NULL,
                             values          = NULL,
                             match_criteria  = NULL,
+                            case_sensitive  = TRUE,
                             and_or          = "OR",
                             limit           = NULL,
                             group_by        = NULL,
                             order_by        = NULL,
                             distinct        = FALSE,
                             get_all_columns = FALSE,
-                            execute         = TRUE) {
+                            ignore          = FALSE,
+                            execute         = TRUE,
+                            single_column_as_vector = TRUE) {
   # Argument validation
   action       <- toupper(action)
   table_name   <- tolower(table_name)
   and_or       <- toupper(and_or)
-  is_ansi      <- identical(con, ANSI())
+  is_ansi      <- identical(db_conn, ANSI())
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(action, table_name, and_or, distinct, get_all_columns),
+      args       = list(action, table_name, db_conn, case_sensitive, and_or,
+                        distinct, get_all_columns, ignore, execute,
+                        single_column_as_vector),
       conditions = list(
         action          = list(c("choices", list(toupper(names(queries)))),
                                c("mode", "character")),
@@ -270,34 +350,48 @@ build_db_action <- function(con,
           list(c("mode", "character"),
                c("length", 1))
         } else {
-          list(c("choices", list(dbListTables(con))),
+          list(c("choices", list(dbListTables(db_conn))),
                c("mode", "character"),
                c("length", 1))
         },
+        db_conn         = list(c("length", 1)),
+        case_sensitive  = list(c("mode", "logical"), c("length", 1)),
         and_or          = list(c("choices", list(c("AND", "OR"))),
                                c("mode", "character"),
                                c("length", 1)),
         distinct        = list(c("mode", "logical"),
                                c("length", 1)),
         get_all_columns = list(c("mode", "logical"),
-                               c("length", 1))
-      )
+                               c("length", 1)),
+        ignore          = list(c("mode", "logical"),
+                               c("length", 1)),
+        execute         = list(c("mode", "logical"),
+                               c("length", 1)),
+        single_column_as_vector = list(c("mode", "logical"),
+                                       c("length", 1))
+      ),
+      from_fn = "build_db_action"
     )
-    if (!arg_check$valid) {
-      if ("logger" %in% (.packages())) {
-        stop()
-      } else {
-        stop(cat(paste0(arg_check$messages, collapse = "\n")))
-      }
-    }
+    stopifnot(arg_check$valid)
   }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   if (!is_ansi) {
-    validate_tables(con, table_name)
+    validate_tables(db_conn, table_name)
   }
+  
+  if (is.data.frame(values)) values <- purrr::transpose(values)
   
   query <- queries[[action]]
   if (all(action == "SELECT", distinct)) {
     query <- str_replace(query, "SELECT", "SELECT DISTINCT")
+  }
+  
+  if (action == "INSERT") {
+    if (ignore) {
+      query <- str_replace(query, "INSERT", "INSERT OR IGNORE")
+    }
+    column_names <- names(values)
   }
   
   # Ensure columns exist or is a select all query
@@ -307,7 +401,7 @@ build_db_action <- function(con,
     check_fields <- c(column_names, names(match_criteria), group_by, names(order_by), names(values)) %>%
       tolower()
     if (!is_ansi) {
-        validate_column_names(con = con, table_names = table_name, column_names = check_fields)
+        validate_column_names(db_conn = db_conn, table_names = table_name, column_names = check_fields)
     }
   }
   
@@ -323,7 +417,7 @@ build_db_action <- function(con,
   
   if (get_all_columns) {
     if (action == "INSERT") {
-      req_names <- dbListFields(con, table_name)
+      req_names <- dbListFields(db_conn, table_name)
       if (length(value_names) == length(req_names)) {
         query <- gsub("\\(\\?column_names\\) ", "", query)
       }
@@ -347,10 +441,10 @@ build_db_action <- function(con,
                              function(x) {
                                lapply(x,
                                       function(x) {
-                                        if (tolower(x) == 'null') {
-                                          'null'
+                                        if (any(tolower(x) == "null", x == "", is.na(x))) {
+                                          "null"
                                         } else {
-                                          dbQuoteLiteral(con, x)
+                                          dbQuoteLiteral(db_conn, x)
                                         }
                                       }) %>%
                                  unlist() %>%
@@ -361,8 +455,8 @@ build_db_action <- function(con,
     "UPDATE" = paste0(lapply(names(values),
                              function(x) {
                                sprintf("%s = %s",
-                                       dbQuoteIdentifier(con, x),
-                                       dbQuoteLiteral(con, values[[x]]))
+                                       dbQuoteIdentifier(db_conn, x),
+                                       dbQuoteLiteral(db_conn, values[[x]]))
                              }),
                       collapse = ", "),
     ""
@@ -375,7 +469,7 @@ build_db_action <- function(con,
                          "\\?column_names",
                          paste0(lapply(column_names,
                                        function(x) {
-                                         dbQuoteIdentifier(con, x)
+                                         dbQuoteIdentifier(db_conn, x)
                                        }),
                                 collapse = ", "
                          )
@@ -387,19 +481,43 @@ build_db_action <- function(con,
   # Safely escape table names
   query <- str_replace(query,
                        "\\?table_name",
-                       dbQuoteIdentifier(con, table_name)
+                       dbQuoteIdentifier(db_conn, table_name)
   )
   
   # Safely escape where clauses
-  if (all(!is.null(match_criteria), action != "INSERT")) {
+  if (all(!is.null(match_criteria), !action %in% c("NROW", "INSERT"))) {
     query <- paste(query, "WHERE",
-                   clause_where(con            = con,
+                   clause_where(db_conn        = db_conn,
                                 table_names    = table_name,
+                                case_sensitive = case_sensitive,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
+  } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT", "SELECT"))) {
+    log_it("error", 'Only "NROW" and "INSERT" actions are valid when argument "match_criteria" is not provided.')
+    stop()
   }
   
   if (action == "SELECT") {
+    # Safely escape group by clause
+    if (!is.null(group_by)) {
+      query <- paste(query, "GROUP BY", dbQuoteIdentifier(db_conn, group_by))
+    }
+    
+    # Safely escape order by clause
+    if (!is.null(order_by)) {
+      ordering <- paste0(
+        lapply(names(order_by),
+               function(x) {
+                 paste0(dbQuoteIdentifier(db_conn, x),
+                        " ",
+                        order_by[[x]])
+               }),
+        collapse = ", "
+      )
+      query <- paste(query, "ORDER BY", ordering) %>%
+        str_trim()
+    }
+    
     # Safely escape limit clause
     if (!is.null(limit)) {
       if (!is.numeric(limit)) {
@@ -409,34 +527,14 @@ build_db_action <- function(con,
       if (any(length(limit) == 0, length(limit) > 1)) {
         stop('Exactly one value must be provided for the "limit" parameter.')
       } else {
-        query <- paste(query, "LIMIT", dbQuoteLiteral(con, used_args$limit))
+        query <- paste(query, "LIMIT", dbQuoteLiteral(db_conn, limit))
       }
-    }
-    
-    # Safely escape group by clause
-    if (!is.null(group_by)) {
-      query <- paste(query, "GROUP BY", dbQuoteIdentifier(con, group_by))
-    }
-    
-    # Safely escape order by clause
-    if (!is.null(order_by)) {
-      ordering <- paste0(
-        lapply(names(order_by),
-               function(x) {
-                 paste0(dbQuoteIdentifier(con, x),
-                        " ",
-                        order_by[[x]])
-               }),
-        collapse = ", "
-      )
-      query <- paste(query, "ORDER BY", ordering) %>%
-        str_trim()
     }
   }
   
   if (action == "DELETE") {
     select_version <- str_replace(query, "^DELETE FROM", "SELECT * FROM")
-    rows_affected <- nrow(dbGetQuery(con, select_version))
+    rows_affected <- nrow(dbGetQuery(db_conn, select_version))
     cat(sprintf("Your constructed action\n'%s'\n%s\n\n",
                 query,
                 ifelse(rows_affected > 0,
@@ -455,12 +553,19 @@ build_db_action <- function(con,
       }
     }
   }
+  
+  catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
+  if (str_detect(query, catch_null)) {
+    query <- query %>%
+      str_replace_all(catch_null, " IS NULL")
+  }
  
   if (execute) {
     if (grepl("^SELECT", query)) {
-      tmp <- dbGetQuery(con, query)
+      tmp <- dbGetQuery(db_conn, query)
+      if (all(ncol(tmp) == 1, single_column_as_vector)) tmp <- tmp[, 1]
     } else {
-      tmp <- dbSendStatement(con, query)
+      tmp <- dbSendStatement(db_conn, query)
       dbClearResult(tmp)
     }
     return(tmp)

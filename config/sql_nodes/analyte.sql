@@ -27,37 +27,20 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				
 ====================================================================================================*/
 
-/* Normalization Tables */
-
-	CREATE TABLE IF NOT EXISTS norm_fragment_generation_type
-		/* Normalization table for fragmenet generation source type */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL,
-			/* one of "in silico" or "empirical" */
-		/* Check constraints */
-		CHECK (name IN ("in silico", "empirical"))
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-
 /* Tables */
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_source_types
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
-		abbreviation
-			TEXT NOT NULL,
-			/* (single) letter abbreviation for the source type */
-		st_type
+		name
 			TEXT NOT NULL,
 			/* full name of the source type */
+		acronym
+			TEXT NOT NULL,
+			/* (single) letter acronym for the source type */
 		definition
 			TEXT NOT NULL
 			/* definition of the source type */
@@ -65,7 +48,19 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
+	CREATE TABLE IF NOT EXISTS norm_ion_states
+		/* Normalization table for the measured ion state as comared with the molecular ion. */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* state of the found ion with common mass spectrometric adjuncts/losses/charge */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS compound_categories
 		/* Normalization table for self-hierarchical chemical classes of compounds. */
 	(
@@ -78,11 +73,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		subclass_of
 			INTEGER,
 			/* self referential to compound_categories */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compounds
 		/* Controlled list of chemical compounds with attributable analytical data. */
 	(
@@ -104,10 +99,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		additional
 			TEXT,
 			/* additional information, as submitted */
-		local_pos
+		local_positive
 			INTEGER NOT NULL DEFAULT 0,
 			/* number of atoms with positive charges, derived */
-		local_neg
+		local_negative
 			INTEGER NOT NULL DEFAULT 0,
 			/* number of atoms with negative charges, derived */
 		formula
@@ -119,54 +114,64 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		netcharge
 			INTEGER NOT NULL DEFAULT 0,
 			/* total formal charge of compound, derived */
+		ion_state
+			INTEGER NOT NULL,
+			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
 		inspected_by
-			TEXT,
+			INTEGER,
 			/* user inspection id */
 		inspected_on
 			TEXT,
 			/* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */
 		/* Check constraints */
-		CHECK (local_pos >= 0),
-		CHECK (local_neg >= 0),
+		CHECK (local_positive >= 0),
+		CHECK (local_negative >= 0),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE
+		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE,
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
-	CREATE TABLE IF NOT EXISTS compound_alias_references
+	CREATE TABLE IF NOT EXISTS norm_analyte_alias_references
 		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
 	(
 		id
 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL
+			TEXT NOT NULL,
 			/* name of the source for the compound alias */
+		description
+			TEXT NOT NULL,
+			/* text describing the reference name/acronym */
+		reference
+			TEXT NOT NULL
+			/* reference URL for the alias */
+		/* Check constraints */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_aliases
 		/* List of alternate names or identifiers for compounds */
 	(
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
-		reference
+		alias_type
 			INTEGER,
-			/* foreign key to compound_alias_references */
+			/* foreign key to norm_analyte_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
-		FOREIGN KEY (reference) REFERENCES compound_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS compound_fragments
 		/* Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments. */
 	(
@@ -174,18 +179,18 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL,
 			/* foreign key to peaks */
 		compound_id
-			INTEGER NOT NULL,
+			INTEGER,
 			/* foreign key to compounds */
 		fragment_id
 			INTEGER NOT NULL,
 			/* foreign key to fragments */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id),
 		FOREIGN KEY (compound_id) REFERENCES compounds(id),
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
 	);
 	/*magicsplit*/
-
 	CREATE TABLE IF NOT EXISTS fragments
 		/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
 	(
@@ -214,9 +219,27 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (charge IN (-1, 1)),
 		CHECK (radical IN (0, 1)),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-
+	CREATE TABLE IF NOT EXISTS fragment_aliases
+		/* List of alternate names or identifiers for compounds */
+	(
+		fragment_id
+			INTEGER,
+			/* foreign key to compounds */
+		alias_type
+			INTEGER,
+			/* foreign key to norm_analyte_alias_references */
+		alias
+			TEXT NOT NULL,
+			/* Text name of the alias for a compound */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE,
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_sources
 		/* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical). */
 	(
@@ -225,18 +248,18 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to fragments */
 		generated_by
 			INTEGER NOT NULL,
-			/* foreign key to norm_fragment_generation_type */
+			/* foreign key to norm_generation_type */
 		citation
 			TEXT NOT NULL,
 			/* DOI, etc. */
+		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-		FOREIGN KEY (generated_by) REFERENCES norm_fragment_generation_type(id)
+		FOREIGN KEY (generated_by) REFERENCES norm_generation_type(id)
 	);
 	/*magicsplit*/
-
 /* Views */
-
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
 		SELECT
@@ -253,7 +276,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		INNER JOIN fragments f ON cf.fragment_id = f.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS view_fragment_count AS
 		/* Number of fragments associated with compounds. */
 		SELECT
@@ -269,7 +291,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
 	/*magicsplit*/
-
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
 		SELECT
@@ -277,35 +298,46 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* compound identifier */
 			c.name AS compound,
 				/* compound name */
-			ca.alias,
-				/* compound alias */
 			car.name as ref_type,
 				/* compound alias reference name */
+			ca.alias,
+				/* compound alias */
 			CASE 
 				WHEN car.name == "DTXSID"
-					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias 
+					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias
 				WHEN car.name == "DTXCID"
 					THEN "https://comptox.epa.gov/dashboard/dsstoxdb/results?search="||ca.alias
 				WHEN car.name == "PUBCHEMID"
-					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias 
+					THEN "https://pubchem.ncbi.nlm.nih.gov/compound/"||ca.alias
 				WHEN car.name == "CASRN"
-					THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias 
+					THEN "https://commonchemistry.cas.org/detail?cas_rn="||ca.alias
 				WHEN car.name == "INCHIKEY"
-					THEN "https://www.google.com/search?q="||ca.alias 
+					THEN "https://www.google.com/search?q=INCHIKEY+"||ca.alias
 				WHEN car.name == "INCHI"
-					THEN "https://www.google.com/search?q="||ca.alias 
+					THEN "https://www.google.com/search?q="||ca.alias
 				WHEN car.name == "SMILES"
 					THEN "https://www.google.com/search?q=canonical+SMILES+"||
 						REPLACE(ca.alias , "#", "%23")
 				WHEN c.obtained_from IS NOT NULL 
 					THEN c.obtained_from
 				ELSE
-					"(not available)"
+					"https://www.google.com/search?q="||ca.alias
 			END AS link
 				/* URL link to the alias ID source */
 		FROM compounds c
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
-		INNER JOIN compound_alias_references car ON ca.reference = car.id;
+		INNER JOIN norm_analyte_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
-
 /* Triggers */
+	/*magicsplit*/
+	CREATE TRIGGER nullify_blank_compounds_inspected_by
+		AFTER INSERT ON compounds
+		WHEN NEW.inspected_by = ''
+		BEGIN
+			UPDATE compounds SET
+				inspected_by = NULL,
+				inspected_on = NULL
+			WHERE ROWID = NEW.ROWID;
+		END;
+	/*magicsplit*/
+	/* none */

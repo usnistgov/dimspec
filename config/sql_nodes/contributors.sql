@@ -21,7 +21,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 ====================================================================================================*/
 
 /* Tables */
-
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS contributors
 		/* Contact information for individuals contributing data to this database */
 	(
@@ -55,10 +55,10 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		CHECK (length(first_name) = length(replace(replace(replace(replace(replace(replace(first_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
 		CHECK (length(last_name) = length(replace(replace(replace(replace(replace(replace(last_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
 		CHECK (length(username) = length(replace(replace(replace(replace(replace(replace(username, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
-	/* Foreign key relationships */
+		/* Foreign key relationships */
 		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
-	); /*magicsplit*/
-
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS affiliations
 		/* Normalization table for contributor.affiliation */
 	(
@@ -68,10 +68,12 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of professional affiliation */
-	); /*magicsplit*/
-
-	/* Views */
-		
+	);
+		/* Check constraints */
+		/* Foreign key relationships */
+	/*magicsplit*/
+/* Views */
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_contributors AS
 		/* Readable version of the contributors table that can be expanded with counts of contributions from various places. */
 		SELECT 
@@ -91,40 +93,41 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		JOIN samples s
 			ON c.id = s.sample_contributor
 		WHERE NOT c.id = 1
-		GROUP BY c.id; /*magicsplit*/
-
+		GROUP BY c.id;
+	/*magicsplit*/
 /* Triggers */
-		
+	/*magicsplit*/
 	CREATE TRIGGER IF NOT EXISTS new_contributor
 		/* When creating a new contributor, redirect to allow using affiliations(name) instead of affiliations(id), but still allow for direct use of affiliations(id). */
 		AFTER INSERT ON contributors
 		WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
-	BEGIN
-		INSERT INTO affiliations (name)
-			VALUES (NEW.affiliation);
-		UPDATE OR IGNORE contributors
-			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
-			WHERE ROWID = NEW.ROWID;
-	END; /*magicsplit*/
-
+		BEGIN
+			INSERT OR IGNORE INTO affiliations (name)
+				VALUES (NEW.affiliation);
+			UPDATE OR IGNORE contributors
+				SET affiliation = (SELECT id FROM affiliations WHERE UPPER(name) = UPPER(NEW.affiliation))
+				WHERE ROWID = NEW.ROWID;
+		END;
+	/*magicsplit*/
 	CREATE TRIGGER IF NOT EXISTS ensure_null_orcid
 		/* When creating a new contributor, ensure allowed nullable ORCID values are stored as NULL. */
 		AFTER INSERT ON contributors
 		WHEN NEW.orcid IN ("NA", "", "NULL", "null", "na")
-	BEGIN
-		UPDATE contributors 
-			SET orcid = NULL
-			WHERE ROWID = NEW.ROWID;
-	END; /*magicsplit*/
-
+		BEGIN
+			UPDATE contributors 
+				SET orcid = NULL
+				WHERE ROWID = NEW.ROWID;
+		END;
+	/*magicsplit*/
 	CREATE TRIGGER IF NOT EXISTS affiliation_update
 		/* When updating a contributor's affiliation with an affiliation that does not currently exist, add the affiliation and update the id appropriately, but still allow for direct use of affiliations(id). */
 		AFTER UPDATE ON contributors
 		WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations)
-	BEGIN
-		INSERT OR IGNORE INTO affiliations (name)
-			VALUES (NEW.affiliation);
-		UPDATE contributors
-			SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
-			WHERE ROWID = NEW.ROWID;
-	END; /*magicsplit*/
+		BEGIN
+			INSERT OR IGNORE INTO affiliations (name)
+				VALUES (NEW.affiliation);
+			UPDATE contributors
+				SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation)
+				WHERE ROWID = NEW.ROWID;
+		END;
+	/*magicsplit*/

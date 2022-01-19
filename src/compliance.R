@@ -2,20 +2,25 @@
 # _Remove environment variables ------------------------------------------------
 rm(list = ls())
 # _Unload non-core packages ----------------------------------------------------
-unload_packs <- c(
+#     Note this does not reliably remove namespaces.
+unload_packs <- unique(c(
+  if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
   names(sessionInfo()$loadedOnly),
   names(sessionInfo()$otherPkgs)
-)
+))
 invisible(
-  lapply(unload_packs, function(pkgs)
-    function(pkgs) {
-      detach(
-        paste0('package:', pkgs),
-        character.only = T,
-        unload = T,
-        force = T
-      )
-    })
+  lapply(unload_packs,
+         function(x) {
+           this_pack <- paste('package', x, sep = ":")
+           if (this_pack %in% search()) {
+             detach(
+               name = this_pack,
+               character.only = TRUE,
+               unload = TRUE,
+               force = TRUE
+             )
+           }
+         })
 )
 
 # Ensure compliant environment -------------------------------------------------
@@ -54,19 +59,149 @@ invisible(sapply(sources, source))
 # _Set up logger ---------------------------------------------------------------
 layout <- layout_glue_generator(format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
                                                "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]", 
-                                               "- {fn} {grayscale_by_log_level(msg, levelr)}")) 
+                                               "in {fn}(): {grayscale_by_log_level(msg, levelr)}")) 
 log_threshold(LOG_THRESHOLD)
 log_layout(layout)
 log_formatter(formatter_glue)
-log_ns <- list(db       = "db_transaction",
-               build    = "db_build",
-               internal = "internal_function",
-               app      = "app_function")
 
 # _Build database if it doesn't exist ------------------------------------------
-if (!DB_BUILT) {
-  build_db(connect = INIT_CONNECT)
-  source(file.path("config", "env_R.R"))
+if (!DB_BUILT) build_db()
+if (INIT_CONNECT) {
+  manage_connection()
+  db_map <- er_map()
+  db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
+  if (length(db_dict) == 1) {
+    db_dict <- read_json(db_dict) %>%
+      lapply(bind_rows)
+  } else {
+    db_dict <- data_dictionary()
+  }
+}
+
+# _Plumber set up --------------------------------------------------------------
+if (ACTIVATE_API) {
+  log_it("trace", "Activating plumber API...")
+  if (!"plumber" %in% installed.packages()) install.packages("plumber")
+  source(file.path("plumber", "api_control.R"))
+  plumber_service <- callr::r_bg(
+    function() {
+      source(file.path("plumber", "env_plumb.R"))
+      api_start(
+        on_host = PLUMBER_HOST,
+        on_port = PLUMBER_PORT
+      )
+    }
+  )
+  plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+  if (plumber_service$is_alive()) {
+    log_it("info", glue::glue("Running plumber API at {plumber_url}"))
+    log_it("info", glue::glue("View plumber docs at {plumber_url}/__docs__/ or by calling `api_open_doc(plumber_url)`"))
+  } else {
+    log_it("warn", "There was a problem launching the plumber API.")
+  }
+} else {
+  log_it("trace", "Plumber API not requested according to ACTIVATE_API setting in env_R.R settings.")
+}
+
+# _RDKit set up ----------------------------------------------------------------
+if (USE_RDKIT) {
+  # log_it("info", "Using RDKit for this session. Setting up...")
+  # if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
+  source(file.path("rdkit", "env_py.R"))
+  # source(file.path("rdkit", "py_setup.R"))
+  
+  # ---- try some stuff from icpmsflow
+  # source(file.path("rdkit", "py_setup_icpmsflow.R"))
+  # python_enabled <- py_setup()
+  # if (!python_enabled) {
+  #   stop("Unable to establish python environment.")
+  # }
+  # rdk <- import("rdkit")
+  
+  # ---- try simplistic
+  library(reticulate)
+  use_condaenv(USE_PY_ENV)
+  rdk <- import(CONDA_PACKAGE)
+  rdkit_active <- !"try-error" %in% class(
+    invisible(
+      try(
+        rdk$Chem$inchi$MolToInchi(
+          rdk$Chem$MolFromSmiles('C1CC1[C@H](F)C1CCC1')
+        )
+      )
+    )
+  )
+  # if ("try-error" %in% class(rdk_active)) {
+  #   log_it("warn", "Something is wrong with RDKit.")
+  # } else {
+  #   log_it("success", "RDKit active.")
+  # }
+  
+  # if (!exists("empty_variable")) source(file.path("src", "app_functions.R"))
+  # env_name <- ifelse(empty_variable(PYENV_NAME), "rdkit", PYENV_NAME)
+  # env_mods <- if (empty_variable(PYENV_MODULE)) "rdkit" else PYENV_MODULE
+  # env_ref <- ifelse(empty_variable(PYENV_REF), "rdk", PYENV_REF)
+  # require(reticulate)
+  # log_it("trace", "Discovering python installations...")
+  # py_settings <- py_discover_config(required_module = env_mods[1])
+  # if (!length(py_settings$pythonhome) == 1) {
+  #   log_it("warn", "Python was not discoverable on this system. Installing miniconda...")
+  #   install_miniconda(force = FALSE)
+  #   py_settings <- py_discover_config(required_module = env_mods[1])
+  # }
+  # log_it("trace", "Checking for environment name match...")
+  # py_envs <- py_settings$python_versions %>%
+  #   stringr::str_remove_all("python.exe") %>%
+  #   stringr::str_sub(1, nchar(.) - 1) %>%
+  #   basename()
+  # if (env_name %in% py_envs) {
+  #   log_it("trace", glue::glue('Environment "{env_name}" located.'))
+  # } else {
+  #   log_it("info", glue::glue('Environment "{env_name}" could not be found; creating...'))
+  #   create_rdkit_conda_env(env_name)
+  # }
+  # use_condaenv(condaenv = env_name)
+  # log_it("trace", "Activating environment...")
+  # py_config()
+  # if (!py_available()) {
+  #   log_it("error", "Unknown error. RDKit will not be available.")
+  # } else {
+  #   log_it("trace", "Checking module compliance...")
+  #   env_mods <- c(env_mods, "rpytools")
+  #   module_available <- env_mods %>%
+  #     lapply(py_module_available) %>%
+  #     unlist()
+  #   if (!all(module_available)) {
+  #     missing_modules <- env_mods[!module_available]
+  #     log_it("error",
+  #            sprintf("Modules %s %s not available.",
+  #                    format_list_of_names(missing_modules),
+  #                    ifelse(length(missing_modules) > 1, "were", "was")
+  #            )
+  #     )
+  #     rm(missing_modules)
+  #   } else {
+  #     log_it("trace", glue::glue("Assigning RDKit to {env_ref}..."))
+  #     assign(
+  #       x = env_ref,
+  #       value = import("rdkit"),
+  #       envir = .GlobalEnv
+  #     )
+  #   }
+  #   rm(module_available)
+  # }
+  # rm(env_name, env_mods, env_ref, py_settings, py_envs)
+  
+  # if (!exists(PYENV_NAME)) {
+  #   if (exists("PYENV_NAME")) {
+  #     if (!exists("PYENV_REF")) {
+  #       PYENV_REF <- PYENV_NAME
+  #     }
+  #     setup_rdkit(PYENV_NAME, PYENV_REF)
+  #   }
+  # }
+  # } else {
+  #   log_it("trace", "RDKit not requested according to USE_RDKIT setting in env_glob.txt settings.")
 }
 
 # _Clean up --------------------------------------------------------------------
