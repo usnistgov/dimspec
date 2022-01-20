@@ -39,6 +39,4 @@ CONDA_CHANNELS <- "conda-forge"
 # ------------------------------------------------------------------------------
 CONDA_PATH <- "auto"
 # CONDA_PATH = "~/miniforge3/bin/conda'
-# The command line interface alias for your installation of conda.
-CONDA_CLI <- "conda"
 # ------------------------------------------------------------------------------

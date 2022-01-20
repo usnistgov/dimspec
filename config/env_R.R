@@ -18,9 +18,6 @@ DB_VERSION     <- sprintf("%s.%s",
                                  format(Sys.Date(), "%Y%m%d"))
 )
 
-# Connect immediately on sourcing compliance.R
-INIT_CONNECT   <- FALSE
-
 # Supplemental information about working with this database
 DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
@@ -88,8 +85,6 @@ IMPORT_HEADERS <- list(
   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
 )
 
-# Whether to activate plumber integration.
-ACTIVATE_API   = FALSE
 # Plumber host options. [ADVANCED USE ONLY]
 if (ACTIVATE_API) {
   PLUMBER_HOST   <- "127.0.0.1"

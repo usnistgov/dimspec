@@ -21,5 +21,14 @@ DB_DATA        = "populate_pfas.sql"
 SQLITE_CLI     = "sqlite3"
 SUS_LIST_URL   = "https://data.nist.gov/od/ds/mds2-2387/PFAS%20Suspect%20List_v1.xlsx"
 
-# RDKit integration
+# Connect immediately on sourcing compliance.R (requires R)
+INIT_CONNECT   = FALSE
+
+# Whether to activate plumber integration. (requires R)
+ACTIVATE_API   = FALSE
+
+# RDKit integration (requires R and python)
 USE_RDKIT      = TRUE
+
+# The command line interface alias for your installation of conda.
+CONDA_CLI      = "conda"
