@@ -1,4 +1,4 @@
-require(xlsx)
+# require(xlsx)
 
 xlsx_to_list <- function(xlsx_file) {
   wb <- loadWorkbook(xlsx_file)

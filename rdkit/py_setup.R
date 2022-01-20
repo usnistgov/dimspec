@@ -31,7 +31,7 @@ activate_py_env <- function(env_name = NULL) {
       log_it("info", glue('Attemping to bind to python environment "{PYENV_NAME}".'))
       env_name <- PYENV_NAME
     } else {
-      log_it("warn", "No environment name available. Searching for installed environments...")
+      log_it("warn", "No environment name available at PYENV_NAME. Searching for installed environments...")
     }
     py_envs <- c(
       conda_list()$name,
@@ -115,7 +115,7 @@ create_rdkit_conda_env <- function(env_name = NULL) {
     )
   }
   env_mods <- if (exists("PYENV_MODULE")) PYENV_MODULE else "rdkit"
-  if (!"r-reticulate" %in% env_mods) env_modes <- c("r-reticulate", env_mods)
+  if (!"r-reticulate" %in% env_mods) env_mods <- c("r-reticulate", env_mods)
   if (!env_name %in% conda_list()$name) {
     conda_create(envname = env_name, packages = env_mods)
   }
@@ -160,17 +160,17 @@ rdkit_active <- function(rdkit_ref = NULL) {
     cat('RDKit assigned to .GlobalEnv as "', rdkit_ref, '".\n', sep = "")
   }
   rdk <- .GlobalEnv[[rdkit_ref]]
-  if ("Chem" %in% names(rdk)) {
-    from_smiles <- rdk$Chem$MolFromSmiles
-  } else if ("MolFromSmiles" %in% names(rdk)) {
-    from_smiles <- rdk$MolFromSmiles
+  caffeine <- "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
+  active <- try(rdk$Chem$MolFromSmiles(caffeine))
+  if ("try-error" %in% class(active)) {
+    active <- try(rdk$MolFromSmiles(caffeine))
   }
-  active <- try(from_smiles("CN1C=NC2=C1C(=O)N(C(=O)N2C)C"))
   success <- !"try-error" %in% class(active)
   return(success)
 }
 
 setup_rdkit <- function(env_name, env_ref) {
+  if (TRY_AUTOCON)
   can_activate <- activate_py_env(env_name)
   success <- rdkit_active(env_ref)
   if (!success) stop("Unable to set up RDKit.")

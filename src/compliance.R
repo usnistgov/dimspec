@@ -37,7 +37,8 @@ source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
-# - here all are from CRAN 
+# - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the
+# set value of USE_RDKIT
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
@@ -105,10 +106,10 @@ if (ACTIVATE_API) {
 
 # _RDKit set up ----------------------------------------------------------------
 if (USE_RDKIT) {
-  # log_it("info", "Using RDKit for this session. Setting up...")
-  # if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
+  log_it("info", "Using RDKit for this session. Setting up...")
+  if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
   source(file.path("rdkit", "env_py.R"))
-  # source(file.path("rdkit", "py_setup.R"))
+  source(file.path("rdkit", "py_setup.R"))
   
   # ---- try some stuff from icpmsflow
   # source(file.path("rdkit", "py_setup_icpmsflow.R"))
@@ -118,23 +119,23 @@ if (USE_RDKIT) {
   # }
   # rdk <- import("rdkit")
   
-  # ---- try simplistic
-  library(reticulate)
-  use_condaenv(USE_PY_ENV)
-  rdk <- import(CONDA_PACKAGE)
-  rdkit_active <- !"try-error" %in% class(
-    invisible(
-      try(
-        rdk$Chem$inchi$MolToInchi(
-          rdk$Chem$MolFromSmiles('C1CC1[C@H](F)C1CCC1')
-        )
-      )
-    )
-  )
-  # if ("try-error" %in% class(rdk_active)) {
-  #   log_it("warn", "Something is wrong with RDKit.")
+  # --- try simplistic - this works
+  # library(reticulate)
+  # use_condaenv(PYENV_NAME)
+  # rdk <- import("rdkit")
+  # rdkit_active <- !"try-error" %in% class(
+  #   invisible(
+  #     try(
+  #       rdk$Chem$inchi$MolToInchi(
+  #         rdk$Chem$MolFromSmiles('C1CC1[C@H](F)C1CCC1')
+  #       )
+  #     )
+  #   )
+  # )
+  # if (rdkit_active) {
+  #   log_it("success", "RDKit initialized.")
   # } else {
-  #   log_it("success", "RDKit active.")
+  #   log_it("warn", "Something went wrong initializing RDKit.")
   # }
   
   # if (!exists("empty_variable")) source(file.path("src", "app_functions.R"))
@@ -192,16 +193,20 @@ if (USE_RDKIT) {
   # }
   # rm(env_name, env_mods, env_ref, py_settings, py_envs)
   
-  # if (!exists(PYENV_NAME)) {
-  #   if (exists("PYENV_NAME")) {
-  #     if (!exists("PYENV_REF")) {
-  #       PYENV_REF <- PYENV_NAME
-  #     }
-  #     setup_rdkit(PYENV_NAME, PYENV_REF)
-  #   }
-  # }
-  # } else {
-  #   log_it("trace", "RDKit not requested according to USE_RDKIT setting in env_glob.txt settings.")
+  # --- Ideally, just do this simply here by abstraction ---
+  if (!exists(PYENV_NAME)) {
+    if (exists("PYENV_NAME")) {
+      if (!exists("PYENV_REF")) {
+        PYENV_REF <- PYENV_NAME
+      }
+      setup_rdkit(PYENV_NAME, PYENV_REF)
+    }
+  } else {
+    log_it("trace", "RDKit not requested according to USE_RDKIT setting in env_glob.txt settings.")
+  }
+  # ---
+} else {
+  log_it("info", "Using ChemmineR for this session.")
 }
 
 # _Clean up --------------------------------------------------------------------

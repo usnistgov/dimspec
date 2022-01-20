@@ -1,4 +1,4 @@
-require(xlsx)
+# require(xlsx)
 
 list_to_xlsx <- function(inputlist, file = "output.xlsx", rowNames = FALSE) {
   wb <- createWorkbook(type = "xlsx")
