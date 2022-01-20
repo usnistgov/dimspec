@@ -1,4 +1,4 @@
-name: test
+name: nist_hrms_db
 channels:
   - conda-forge
   - defaults
@@ -125,4 +125,4 @@ dependencies:
   - xz=5.2.5=h62dcd97_1
   - zlib=1.2.11=h8ffe710_1013
   - zstd=1.5.1=h6255e5f_0
-prefix: C:\Users\jmr3\Miniconda3\envs\test
+prefix: C:\Users\jmr3\Miniconda3\envs\nist_hrms_db

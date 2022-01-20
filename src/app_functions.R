@@ -222,7 +222,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   if (rlang::is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
   log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
-  check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN")
+  check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN", "not_empty")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
   mode_types   <- mode_checks()
   out          <- list(
@@ -370,6 +370,10 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                  } else {
                    rslt <- TRUE
                  }
+               },
+               "not_empty" = {
+                 msg  <- glue("Object contained nothing but NAs, NULLs, or empty character strings.")
+                 rslt <- !empty_variable(val)
                },
                {
                  rslt <- FALSE
