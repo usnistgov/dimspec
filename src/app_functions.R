@@ -187,6 +187,7 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   if (exists("VERIFY_ARGUMENTS")) {
     if (!VERIFY_ARGUMENTS) {
+      log_it("warn", "Argument verification is currently off.")
       return(list(valid = TRUE))
     }
   }
@@ -205,11 +206,11 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       if (n_con_names == 0) {
         log_it("trace", "Arguments and conditions are unnamed. Order will be inferred by index.")
       } else {
-        log_it("trace", "Arguments provided are unnamed, order will be inferred from conditions.")
+        log_it("trace", "Arguments provided are unnamed. Order will be inferred from the order of conditions.")
         names(args) <- names(conditions)
       }
     } else if (n_con_names == 0) {
-      log_it("trace", "Conditions provided are unnamed, order will be inferred from arguments.")
+      log_it("trace", "Conditions provided are unnamed. Order will be inferred from the order of arguments.")
       names(conditions) <- names(args)
     } else if (!n_arg_names == n_con_names) {
       stop("Length of named arguments did not match the length of named conditions.")
