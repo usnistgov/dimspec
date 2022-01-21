@@ -476,19 +476,22 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' test_log()
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg) {
-  log_func  <- sprintf("log_%s", tolower(log_level))
-  n_call    <- sys.nframe() * -1 + 1
-  if (exists(log_func)) {
-    log_level(level    = toupper(log_level),
-              .topcall = sys.call(n_call),
-              msg)
-  } else {
-    msg <- sprintf("%s [%s] in %s(): %s",
-                   toupper(log_level),
-                   format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
-                   deparse(sys.call(n_call)[[1]]),
-                   msg)
-    cat(msg)
+  if (interactive()) {
+    log_func  <- sprintf("log_%s", tolower(log_level))
+    log_level <- toupper(log_level)
+    n_call    <- sys.nframe() * -1 + 1
+    if (exists(log_func)) {
+      log_level(level    = log_level,
+                .topcall = sys.call(n_call),
+                msg)
+    } else {
+      msg <- sprintf("%s [%s] in %s(): %s",
+                     log_level,
+                     format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
+                     deparse(sys.call(n_call)[[1]]),
+                     msg)
+      cat(msg)
+    }
   }
 }
 
