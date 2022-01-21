@@ -256,8 +256,12 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       } else {
         switch(type,
                "class"   = {
-                 rslt <- check %in% class(val)
-                 msg  <- glue('Parameter "{names(arg)}" must be of class "{check}" rather than "{class(val)}".')
+                 rslt <- all(check %in% class(val))
+                 class_real <- class(val)
+                 class_need <- check[!check %in% class_real]
+                 class_real <- glue('{ifelse(length(class_real) == 1, "", "es")} {format_list_of_names(class_real, add_quotes = TRUE)}')
+                 class_need <- glue('{ifelse(length(class_need) == 1, "", "es")} {format_list_of_names(class_need, add_quotes = TRUE)}')
+                 msg  <- glue('Parameter "{names(arg)}" of class{class_real} was missing required class{class_need}.')
                },
                "mode"    = {
                  mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
@@ -417,6 +421,8 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #' width = Inf, and last = ", and ".
 #'
 #' @param namelist vector of values to format
+#' @param add_quotes LGL scalar of whether to enclose individual values in
+#'   quotation marks
 #'
 #' @return CHR vector of length one
 #' @export
@@ -426,14 +432,24 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #' format_list_of_names(c("apples", "bananas"))
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
-format_list_of_names <- function(namelist) {
+format_list_of_names <- function(namelist, add_quotes = FALSE) {
   require(glue)
-  if (length(namelist) == 1)
-    return(glue::glue("{paste0(namelist, collapse = '')}"))
-  res <- glue::glue(
-    "{paste0(namelist[1:length(namelist) - 1], collapse = ', ')}\\
+  if (length(namelist) == 1) {
+    res <- glue::glue("{paste0(namelist, collapse = '')}")
+  } else {
+    res <- glue::glue(
+      "{paste0(namelist[1:length(namelist) - 1], collapse = ', ')}\\
      {ifelse(length(namelist) > 2, ',', '')} \\
      {ifelse(length(namelist) > 1, paste('and ', namelist[length(namelist)], sep = ''), '')}")
+  }
+  if (add_quotes) {
+    res <- str_c('"',
+                 res %>%
+                   str_replace_all(', ', '", "') %>%
+                   str_replace_all(' and ', '" and "') %>%
+                   str_replace_all(' "and ', ' and "'),
+                 '"')
+  }
   return(res)
 }
 
