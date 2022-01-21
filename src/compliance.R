@@ -58,12 +58,7 @@ sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
-layout <- layout_glue_generator(format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
-                                               "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]", 
-                                               "in {fn}(): {grayscale_by_log_level(msg, levelr)}")) 
-log_threshold(LOG_THRESHOLD)
-log_layout(layout)
-log_formatter(formatter_glue)
+source(file.path("config", "env_logger.R"))
 
 # _Build database if it doesn't exist ------------------------------------------
 if (!DB_BUILT) build_db()
@@ -80,7 +75,7 @@ if (INIT_CONNECT) {
 }
 
 # _Plumber set up --------------------------------------------------------------
-if (ACTIVATE_API) {
+if (USE_API) {
   log_it("trace", "Activating plumber API...")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(file.path("plumber", "api_control.R"))
@@ -95,13 +90,13 @@ if (ACTIVATE_API) {
   )
   plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   if (plumber_service$is_alive()) {
-    log_it("info", glue::glue("Running plumber API at {plumber_url}"))
+    log_it("success", glue::glue("Running plumber API at {plumber_url}"))
     log_it("info", glue::glue("View plumber docs at {plumber_url}/__docs__/ or by calling `api_open_doc(plumber_url)`"))
   } else {
     log_it("warn", "There was a problem launching the plumber API.")
   }
 } else {
-  log_it("trace", "Plumber API not requested according to ACTIVATE_API setting in env_R.R settings.")
+  log_it("trace", "Plumber API not requested according to USE_API setting in env_R.R settings.")
 }
 
 # _RDKit set up ----------------------------------------------------------------

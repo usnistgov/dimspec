@@ -25,7 +25,7 @@ SUS_LIST_URL   = "https://data.nist.gov/od/ds/mds2-2387/PFAS%20Suspect%20List_v1
 INIT_CONNECT   = FALSE
 
 # Whether to activate plumber integration. (requires R)
-ACTIVATE_API   = FALSE
+USE_API   = FALSE
 
 # RDKit integration (requires R and python)
 USE_RDKIT      = TRUE

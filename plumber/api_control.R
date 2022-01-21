@@ -19,7 +19,9 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
       on_host <- PLUMBER_HOST
     } else {
       if (exists("log_it")) {
-        log_it("error", 'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "plumber/env_plumb.R" file.')
+        log_it("error",
+               'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "plumber/env_plumb.R" file.',
+               ns = "api")
         return(invisible(NULL))
       }
     }
@@ -29,11 +31,14 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
       on_port <- PLUMBER_PORT
     } else {
       if (exists("log_it")) {
-        log_it("error", 'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "plumber/env_plumb.R" file.')
+        log_it("error",
+               'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "plumber/env_plumb.R" file.',
+               ns = "api")
         return(invisible(NULL))
       }
     }
   }
+  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
   
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -41,7 +46,7 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
       args       = as.list(environment()),
       conditions = list(
         on_host      = list(c("mode", "character"), c("length", 1)),
-        on_port      = list(c("length", 1)),
+        on_port      = list(c("mode", "numeric"), c("length", 1), "no_na"),
         plumber_file = list(c("mode", "character"), "file_exists", c("length", 1))
       ),
       from_fn = "api_start"
@@ -119,21 +124,22 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        pr           = list(c("length", 1), c("class", "r_process", "process", "R6")),
-        on_port      = list(c("length", 1)),
-        plumber_file = list(c("mode", "character"), "file_exists", c("length", 1))
+        pr                 = list(c("class", "r_process", "process", "R6")),
+        flush              = list(c("mode", "logical"), c("length", 1)),
+        db_conn            = list(c("mode", "character"), "file_exists", c("length", 1)),
+        remove_service_obj = list(c("mode", "logical"), c("length", 1))
       ),
-      from_fn = "api_start"
+      from_fn = "api_stop"
     )
     stopifnot(arg_check$valid)
   } else {
-    stopifnot(is.character(on_host))
-    stopifnot(length(on_host) == 1)
-    stopifnot(is.character(on_port))
-    stopifnot(length(on_port) == 1)
-    stopifnot(is.character(plumber_file))
-    stopifnot(length(plumber_file) == 1)
-    stopifnot(file.exists(plumber_file))
+    stopifnot(all(c("r_process", "process", "R6") %in% class(pr)))
+    stopifnot(is.character(db_conn))
+    stopifnot(length(db_conn) == 1)
+    stopifnot(is.logical(flush))
+    stopifnot(length(flush) == 1)
+    stopifnot(is.logical(remove_service_obj))
+    stopifnot(length(remove_service_obj) == 1)
   }
   
   pr$kill()
@@ -150,7 +156,9 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 
 #' Reloads the plumber API
 #'
-#' @param pr Rterm process object of class "r_process", "process", and "R6" created from [plumber::pr_run]
+#' @param pr Rterm process object of class "r_process", "process", and "R6"
+#'   created from [plumber::pr_run] if NULL it will be assumed that no plumber
+#'   instance is currently running
 #' @param background LGL scalar of whether to load the plumber server as a
 #'   background service (default: TRUE); set to FALSE for testing
 #'
@@ -161,17 +169,45 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL) {
   if (is.null(on_host)) on_host <- PLUMBER_HOST
   if (is.null(on_port)) on_port <- PLUMBER_PORT
-  pr_name <- obj_name_check(pr)
-  if (all(c("r_process", "process", "R6") %in% class(pr))) {
-    if (pr$is_alive()) api_stop(pr)
+  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  # Argument validation relies on verify_args
+  check_args <- as.list(environment())
+  check_args <- check_args[!unlist(lapply(check_args, is.null))]
+  check_conds <- list(
+    if (is.null(pr)) {
+      NULL
+    } else {
+      pr       = list(c("class", "r_process", "process", "R6"))
+    },
+    background = list(c("mode", "logical"), c("length", 1)),
+    on_host    = list(c("mode", "character"), c("length", 1)),
+    on_port    = list(c("mode", "numeric"), "no_na", c("length", 1))
+  )
+  check_conds <- check_conds[!unlist(lapply(check_conds, is.null))]
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = check_args,
+      conditions = check_conds,
+      from_fn = "api_stop"
+    )
+    stopifnot(arg_check$valid)
+  } else {
+    stopifnot(is.character(on_host))
+    stopifnot(length(on_host) == 1)
+    stopifnot(is.character(on_port))
+    stopifnot(length(on_port) == 1)
+    stopifnot(is.character(plumber_file))
+    stopifnot(length(plumber_file) == 1)
+    stopifnot(file.exists(plumber_file))
   }
+  if (!is.null(pr) && pr$is_alive()) api_stop(pr)
+  pr_name <- obj_name_check(pr, "plumber_service")
   if (background) {
     assign(
       x = pr_name,
       value = callr::r_bg(
         function() {
           source(file.path("plumber", "env_plumb.R"))
-          source(file.path("plumber", "api_control.R"))
           api_start(
             on_host = on_host,
             on_port = on_port
@@ -204,7 +240,7 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
   } else {
     log_it("error",
            sprintf(
-             'Unknown error restarting the plumber API. Inspect the object named "%s" for details.',
+             'Unknown error restarting the plumber API. Inspect "%s" for details.',
              pr_name
            )
     )
@@ -234,15 +270,23 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #'   }
 #' }}
 obj_name_check <- function(obj, default_name = NULL) {
-  obj_name <- deparse(substitute(obj)) %>%
-    str_remove_all('"')
+  if (is.null(obj) || is.na(obj)) {
+    if (is.null(default_name) || is.na(default_name)) {
+      return(NULL)
+    } else {
+      obj_name <- default_name
+    }
+  } else {
+    obj_name <- deparse(substitute(obj)) %>%
+      str_remove_all('"')
+  }
   if (exists(obj_name)) {
     # Placeholder to do maybe do something like preservation/backup of current
     # object or suggest a new name
     
     # pr <- eval(sym(obj_name))
   } else {
-    log_it("warn", glue('No object named "{obj_name}" exists. Defaulting to "{default_name}"'))
+    log_it("warn", glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
     if (is.null(default_name)) {
       log_it("warn", "No default name provided. Name given back as-is.")
     } else {

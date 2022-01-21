@@ -1282,9 +1282,29 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
 #'   FALSE).
 #'
 #' @return None, modifies the current global environment in place
+#' 
+#' @export
+#' 
+#' @example 
+#' \notrun {
+#' manage_connection()
+#' close_up_shop(TRUE)
+#' }
 close_up_shop <- function(back_up_connected_tbls = FALSE) {
-  # Kill plumber instances
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(back_up_connected_tbls),
+      conditions = list(
+        back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
+      ),
+      from_fn = "close_up_shop"
+    )
+    stopifnot(arg_check$valid)
+  }
+  
   tmp <- lapply(as.list(.GlobalEnv), class)
+  # Kill plumber instances
   api_services <- names(tmp)[
     which(
       lapply(

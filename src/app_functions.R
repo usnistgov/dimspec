@@ -28,16 +28,46 @@ support_info <- function(app_info = TRUE) {
     packs_active    = sort((.packages()))
   )
   if (app_info) {
+    global <- as.list(.GlobalEnv)
     app <- list(
-      DB_DATE         = DB_DATE,
-      DB_VERSION      = DB_VERSION,
-      BUILD_FILE      = DB_BUILD_FILE,
-      BUILD_FILE_FULL = DB_BUILD_FULL,
-      POPULATED_WITH  = POPULATED_WITH,
-      LAST_DB_SCHEMA  = LAST_DB_SCHEMA,
-      LAST_MODIFIED   = LAST_MODIFIED,
-      DEPENDS_ON      = DEPENDS_ON,
-      EXCLUSIONS      = EXCLUSIONS,
+      DB_NAME         = if (exists("DB_NAME")) DB_NAME else "Not set",
+      DB_DATE         = if (exists("DB_DATE")) DB_DATE else "Not set",
+      DB_VERSION      = if (exists("DB_VERSION")) DB_VERSION else "Not set",
+      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grepl("DB_", names(global))] else "Not set",
+      BUILD_FILE      = if (exists("DB_BUILD_FILE")) {
+        c(file = DB_BUILD_FILE, exists = file.exists(DB_BUILD_FILE))
+      } else {
+        "Not set"
+      },
+      BUILD_FILE_FULL = if (exists("DB_BUILD_FULL")) {
+        c(file = DB_BUILD_FULL, exists = file.exists(DB_BUILD_FULL))
+      } else {
+        "Not set"
+      },
+      POPULATED_WITH  = if (exists("DB_DATA")) {
+        c(file = DB_DATA, exists = file.exists(DB_DATA))
+      } else {
+        "Not set"
+      },
+      LAST_DB_SCHEMA  = if (exists("LAST_DB_SCHEMA")) LAST_DB_SCHEMA else "Not set",
+      LAST_MODIFIED   = if (exists("LAST_MODIFIED")) LAST_MODIFIED else "Not set",
+      DEPENDS_ON      = if (exists("DEPENDS_ON")) DEPENDS_ON else "Not set",
+      EXCLUSIONS      = if (exists("EXCLUSIONS")) EXCLUSIONS else "Not set",
+      EXPLICIT_PATHS  = if (exists("EXPLICIT_PATHS")) EXPLICIT_PATHS else "Not set",
+      RUNNING         = c(
+        "API" = if (exists("USE_API")) USE_API else "Not set",
+        "RDK" = if (exists("USE_RDKIT")) USE_RDKIT else "Not set",
+        "SHINY" = if (exists("USE_SHINY")) USE_SHINY else "Not set",
+        "DB" = if (exists("INIT_CONNECT")) INIT_CONNECT else "Not set"
+      ),
+      LOGGER          = c(global[grepl("^LOG[G_]", names(global))],
+                          FILES_EXIST <- lapply(
+                            global[grepl("LOG_FILE", names(global))],
+                            file.exists) %>%
+                            setNames(sprintf("%s_EXISTS", grep("LOG_FILE", names(global), value = TRUE)))
+      ),
+      CLI_AVAILABLE   = lapply(global[grepl("CLI", names(global))],
+                               Sys.which),
       PID             = ifelse(exists("con"), tbl(con, "config") %>% pull(code), NA)
     )
     out <- c(app, sys_info)
@@ -475,17 +505,18 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' }
 #' test_log()
 #' # Try it with and without logger loaded.
-log_it <- function(log_level, msg) {
-  if (interactive()) {
+log_it <- function(log_level, msg, ns = NA_character_) {
+  if (exists("LOGGING_ON") && LOGGING_ON) {
     log_func  <- sprintf("log_%s", tolower(log_level))
     log_level <- toupper(log_level)
     n_call    <- sys.nframe() * -1 + 1
     if (exists(log_func)) {
       log_level(level    = log_level,
+                namespace = ns,
                 .topcall = sys.call(n_call),
                 msg)
     } else {
-      msg <- sprintf("%s [%s] in %s(): %s",
+      msg <- sprintf("%s [%s] in %s(): %s\n",
                      log_level,
                      format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
                      deparse(sys.call(n_call)[[1]]),

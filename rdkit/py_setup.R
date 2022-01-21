@@ -353,7 +353,6 @@ rdkit_active <- function(rdkit_ref = NULL) {
       import(PYENV_MODULE),
       envir = .GlobalEnv
     )
-    cat('RDKit assigned to .GlobalEnv as "', rdkit_ref, '".\n', sep = "")
   }
   rdk <- .GlobalEnv[[rdkit_ref]]
   caffeine <- "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
@@ -362,6 +361,11 @@ rdkit_active <- function(rdkit_ref = NULL) {
     active <- try(rdk$MolFromSmiles(caffeine))
   }
   success <- !"try-error" %in% class(active)
+  if (success) {
+    log_it("success", sprintf('RDKit assigned to .GlobalEnv as "%s".', rdkit_ref))
+  } else {
+    log_it("error", "An unknown error occurred. See log for details.")
+  }
   return(success)
 }
 

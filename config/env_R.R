@@ -1,7 +1,9 @@
 # Environment variables specific to R.
 
 # Several settings reference project variables defined in env_glob.txt
+if (!exists("DB_NAME")) source(file.path("config", "env_glob.txt"))
 
+# Database ---------------------------------------------------------------------
 # Current version of the database and the date it was created (if present)
 DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME), recursive = !EXPLICIT_PATHS))$ctime
 DB_BUILT       <- length(DB_DATE) > 0
@@ -30,10 +32,7 @@ LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = !EXP
 # The last time any file in this project was modified.
 LAST_MODIFIED  <- max(file.info(list.files(recursive = !EXPLICIT_PATHS))$mtime)
 
-# Set logger threshold.
-LOG_THRESHOLD  <- "INFO"
-LOGGING_ON     <- TRUE
-
+# Dependencies -----------------------------------------------------------------
 # These are the packages on which the project depends and must be loaded.
 DEPENDS_ON     <- c("base64enc",
                     "logger",
@@ -73,6 +72,7 @@ EXCLUSIONS     <- c(".RDS",
                     "generate_db",
                     "metadata_xml")
 
+# Runtime quality assurance ----------------------------------------------------
 # Whether to use function argument verification. Set to FALSE to serve as a
 # global cut off and increase execution speed.
 VERIFY_ARGUMENTS <- TRUE
@@ -85,12 +85,48 @@ IMPORT_HEADERS <- list(
   data     = c("peak", "compounddata", "annotation", "msdata", "qc")
 )
 
+# Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]
-if (ACTIVATE_API) {
+if (USE_API) {
   PLUMBER_HOST   <- "127.0.0.1"
-  # PLUMBER_PORT   <- getOption("plumber.port", NULL)
   PLUMBER_PORT   <- 8080
 }
 
 # A collection of the items above is available from `support_info()` as a
 # troubleshooting convenience once `source("compliance.R")` is complete.
+
+# Shiny options ----------------------------------------------------------------
+USE_SHINY        <- FALSE
+SHINY_APPS       <- list.dirs("apps", full.names = TRUE)
+# Placeholder for shiny app options in future development
+
+# Logging options --------------------------------------------------------------
+# Whether or not to log actions throughout this project. LOGGING_ON == FALSE
+# will override individual settings and prevent logging.
+LOGGING_ON     <- TRUE
+LOGGING_GLOBAL <- TRUE
+LOGGING_DB     <- TRUE
+LOGGING_API    <- TRUE
+LOGGING_RDK    <- TRUE
+LOGGING_SHINY  <- FALSE
+# Destination of logging messages. Set "console" for console only, "file" for
+# file only which will write to "logs/logger.txt", or "both" to do both. If it
+# is not an interactive session, these will default to the file option.
+LOG_GLOBAL_TO  <- "both"
+LOG_API_TO     <- "file"
+LOG_DB_TO      <- "both"
+LOG_RDK_TO     <- "both"
+LOG_FILE_GLOBAL<- file.path("logs", "log.txt")
+LOG_FILE_DB    <- file.path("logs", "log_db.txt")
+LOG_FILE_API   <- file.path("logs", "log_api.txt")
+LOG_FILE_RDK   <- file.path("logs", "log_rdk.txt")
+LOG_FILE_SHINY <- file.path("logs", "log_shiny.txt")
+# Set the logging threshold, which if using the logger package, should be a
+# valid logging level (e.g. TRACE, DEBUG, INFO, SUCCESS, WARN, ERROR, or FATAL).
+# If not using the logger package, or if you issue a custom logging level to
+# `log_it` it will still include in the log.
+LOG_THR_GLOBAL <- "INFO"
+LOG_THR_DB     <- "INFO"
+LOG_THR_API    <- "INFO"
+LOG_THR_RDK    <- "INFO"
+LOG_THR_SHINY  <- "INFO"
