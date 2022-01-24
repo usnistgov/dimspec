@@ -19,6 +19,7 @@
 #' @export
 #' 
 activate_py_env <- function(env_name = NULL) {
+  if (exists("log_it")) log_it("debug", "Run activate_py_env().", "rdk")
   stopifnot(require(reticulate))
   if (!is.null(env_name)) {
     # Argument validation relies on verify_args
@@ -32,34 +33,34 @@ activate_py_env <- function(env_name = NULL) {
       )
       stopifnot(arg_check$valid)
     }
-    log_it("info", glue('Attemping to bind to python environment "{env_name}".'))
+    if (exists("log_it")) log_it("info", glue('Attemping to bind to python environment "{env_name}".'), "rdk")
   } else {
     if (exists("PYENV_NAME")) {
-      log_it("info", glue('Attemping to bind to python environment "{PYENV_NAME}".'))
+      if (exists("log_it")) log_it("info", glue('Attemping to bind to python environment "{PYENV_NAME}".'), "rdk")
       env_name <- PYENV_NAME
     } else {
-      log_it("warn", "No environment name available at PYENV_NAME. Searching for installed environments...")
+      if (exists("log_it")) log_it("warn", "No environment name available at PYENV_NAME. Searching for installed environments...", "rdk")
     }
     py_envs <- c(
       conda_list()$name,
       virtualenv_list()
     )
     if (length(py_envs) == 0) {
-      log_it("error", "No python environments were located on this system.")
+      if (exists("log_it")) log_it("error", "No python environments were located on this system.", "rdk")
       stop()
     } else if (length(py_envs) == 1) {
-      log_it("info", glue::glue('Only one python environment named "{py_envs}" was located.'))
+      if (exists("log_it")) log_it("info", glue::glue('Only one python environment named "{py_envs}" was located.'), "rdk")
       if (interactive()) {
         do_bind <- select.list(
           title = "Is this the correct environment?",
           choices = c("Yes", "No", "Abort")
         )
         if (!do_bind == "Yes") {
-          log_it("Python binding aborted.")
+          if (exists("log_it")) log_it("error", "Python binding aborted.", "rdk")
           return(FALSE)
         }
       } else {
-        log_it("warn", "Automatic binding may cause failures if the python environment is not set up correctly.")
+        log_it("warn", "Automatic binding may cause failures if the python environment is not set up correctly.", "rdk")
       }
       env_name <- py_envs
     } else {
@@ -67,10 +68,14 @@ activate_py_env <- function(env_name = NULL) {
         if (interactive()) {
           env_name <- select.list(
             title = "Select an existing python environment to activate.",
-            choices = py_envs
+            choices = c("(Abort)", py_envs)
           )
+          if (env_name == "(Abort)") {
+            log_it("info", "Environment activation aborted.", "rdk")
+            return(FALSE)
+          }
         } else {
-          log_it("error", 'Global variable "PYENV_NAME" was not defined. Please provide a python environment name to use.')
+          if (exists("log_it")) log_it("error", 'Global variable "PYENV_NAME" was not defined. Please provide a python environment name to use.', "rdk")
           return(FALSE)
         }
       }
@@ -85,15 +90,24 @@ activate_py_env <- function(env_name = NULL) {
     use_condaenv(condaenv = env_name, required = TRUE)
   }
   if (any(virt_env, conda_env)) {
-    log_it("success", glue::glue('Python environment "{env_name}" activated.'))
+    if (exists("log_it")) log_it("success", glue::glue('Python environment "{env_name}" activated.'), "rdk")
   } else {
-    log_it("warn", glue::glue('Cannot identify a virtual or conda environment named "{env_name}".'))
+    if (exists("log_it")) log_it("warn", glue::glue('Cannot identify a virtual or conda environment named "{env_name}".'), "rdk")
     if (interactive()) {
-      log_it("info", "Building environment...")
-      create_rdkit_conda_env(env_name)
-      activate_py_env(env_name)
+      create <- select.list(
+        title = "Create a new python environment for running rdkit?",
+        choices = c("Yes", "No")
+      )
+      if (create == "Yes") { 
+        if (exists("log_it")) log_it("info", "Building environment...", "rdk")
+        create_rdkit_conda_env(env_name)
+        activate_py_env(env_name)
+      } else {
+        if (exists("log_it")) log_it("info", "Environment creation aborted.", "rdk")
+        return(FALSE)
+      }
     } else {
-      log_it("error", "Non-interactive session, terminating python binding. RDKit will not be available.")
+      if (exists("log_it")) log_it("error", "Non-interactive session, terminating python binding. RDKit will not be available.", "rdk")
       return(FALSE)
     }
   }
@@ -101,9 +115,10 @@ activate_py_env <- function(env_name = NULL) {
   py_config()
   # Ensure availability
   if (!py_available()) {
-    log_it("error", "There was a problem binding to python.")
+    if (exists("log_it")) log_it("error", "There was a problem binding to python.")
     return(FALSE)
   }
+  if (exists("log_it")) log_it("debug", "Exiting completed setup_rdkit().", "rdk")
   return(any(virt_env, conda_env))
 }
 
@@ -131,6 +146,7 @@ activate_py_env <- function(env_name = NULL) {
 #'
 #' @examples
 update_conda_env <- function(env_name, requirements_file, conda_alias = NULL) {
+  if (exists("log_it")) log_it("debug", "Run update_conda_env().", "rdk")
   # Argument validation relies on verify_args
   if (is.null(conda_alias)) {
     conda_alias <- ifelse(exists("CONDA_CLI"), CONDA_CLI, "conda")
@@ -156,8 +172,9 @@ update_conda_env <- function(env_name, requirements_file, conda_alias = NULL) {
     env_name,
     requirements_file
   )
-  log_it("trace", sprintf("Issuing system command '%s'", sys_cmd))
+  if (exists("log_it")) log_it("trace", sprintf("Issuing system command '%s'", sys_cmd), "rdk")
   system(sys_cmd)
+  if (exists("log_it")) log_it("debug", "Exiting update_conda_env().", "rdk")
 }
 
 #' Create a python environment for RDKit
@@ -185,6 +202,7 @@ update_conda_env <- function(env_name, requirements_file, conda_alias = NULL) {
 #' @examples
 #' create_rdkit_conda_env()
 create_rdkit_conda_env <- function(env_name = NULL) {
+  if (exists("log_it")) log_it("debug", "Run create_rdkit_conda_env().", "rdk")
   require(reticulate)
   if (is.null(env_name)) {
     env_name <- ifelse(
@@ -206,9 +224,9 @@ create_rdkit_conda_env <- function(env_name = NULL) {
         if (file.exists(INSTALL_FROM_FILE)) {
           if (!length(INSTALL_FROM_FILE) == 1) {
             install_from <- "conda"
-            log_it("warn", "More than one environment file found; defaulting to conda build.")
+            if (exists("log_it")) log_it("warn", "More than one environment file found; defaulting to conda build.", "rdk")
           } else {
-            log_it("info",
+            if (exists("log_it")) log_it("info",
                    sprintf('Building from %s...',
                            basename(INSTALL_FROM_FILE))
             )
@@ -217,27 +235,29 @@ create_rdkit_conda_env <- function(env_name = NULL) {
             update_conda_env(env_name, INSTALL_FROM_FILE)
           }
         } else {
-          log_it("warn",
+          if (exists("log_it")) log_it("warn",
                  sprintf('Environment file "%s" does not exist; defaulting to conda build.',
-                         INSTALL_FROM_FILE)
+                         INSTALL_FROM_FILE),
+                 "rdk"
           )
           install_from == "conda"
         }
       } else {
-        log_it("warn", "No environment file defined (INSTALL_FROM_FILE); defaulting to conda build.")
+        if (exists("log_it")) log_it("warn", "No environment file defined (INSTALL_FROM_FILE); defaulting to conda build.", "rdk")
         install_from == "conda"
       }
     }
     if (install_from == "conda") {
       if (!exists("CONDA_PATH")) CONDA_PATH <- "auto"
-      log_it("info",
+      if (exists("log_it")) log_it("info",
              sprintf("Building using `conda_create(env_name = %s, forge = TRUE, conda = %s, packages = %s)`.",
                      paste0('"', env_name, '"'),
                      paste0('"', CONDA_PATH, '"'),
                      sprintf('c("%s")',
                              paste0(env_mods, collapse = '", "')
                              )
-                     )
+                     ),
+             "rdk"
       )
       conda_create(
         envname = env_name,
@@ -247,6 +267,7 @@ create_rdkit_conda_env <- function(env_name = NULL) {
       )
     }
   }
+  if (exists("log_it")) log_it("debug", "Exiting create_rdkit_conda_env().", "rdk")
 }
 
 #' Picture a molecule from structural notation
@@ -278,6 +299,7 @@ create_rdkit_conda_env <- function(env_name = NULL) {
 #' caffeine <- "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12"
 #' molecule_picture(caffeine, show = TRUE)
 molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_name = "rdk", show = FALSE) {
+  if (exists("log_it")) log_it("debug", "Run molecule_picture().", "rdk")
   if (!is.character(rdkit_name)) rdkit_name <- deparse(substitute(rdkit_name))
   stopifnot(exists(rdkit_name))
   rdk <- .GlobalEnv[[rdkit_name]]
@@ -303,16 +325,17 @@ molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_n
     picture <- try(rdk$Chem$Draw$MolToFile(molecule, filepath))
     successful <- !"try-error" %in% class(picture)
     if (successful) {
-      log_it("success", sprintf('File created at "%s"', filepath))
+      if (exists("log_it")) log_it("success", sprintf('File created at "%s"', filepath))
       if (show) file.show(filepath)
     } else {
-      log_it("error", "There was a problem drawing this molecule.")
+      if (exists("log_it")) log_it("error", "There was a problem drawing this molecule.", "rdk")
       filepath <- NA
     }
     out <- list(structure = mol,
                 notation = mol_type,
                 valid = successful,
                 file = filepath)
+    if (exists("log_it")) log_it("debug", "Exiting molecule_picture().", "rdk")
     return(out)
   }
 }
@@ -330,6 +353,7 @@ molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_n
 #' @export
 #' 
 rdkit_active <- function(rdkit_ref = NULL) {
+  if (exists("log_it")) log_it("debug", "Run rdkit_active().", "rdk")
   if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
   if (is.null(rdkit_ref)) {
     rdkit_ref <- PYENV_REF
@@ -362,10 +386,11 @@ rdkit_active <- function(rdkit_ref = NULL) {
   }
   success <- !"try-error" %in% class(active)
   if (success) {
-    log_it("success", sprintf('RDKit assigned to .GlobalEnv as "%s".', rdkit_ref))
+    if (exists("log_it")) log_it("success", sprintf('RDKit assigned to .GlobalEnv as "%s".', rdkit_ref), "rdk")
   } else {
-    log_it("error", "An unknown error occurred. See log for details.")
+    if (exists("log_it")) log_it("error", "An unknown error occurred. See log for details.", "rdk")
   }
+  if (exists("log_it")) log_it("debug", "Exiting rdkit_active().", "rdk")
   return(success)
 }
 
@@ -380,6 +405,7 @@ rdkit_active <- function(rdkit_ref = NULL) {
 #' @export
 #'
 setup_rdkit <- function(env_name, env_ref) {
+  if (exists("log_it")) log_it("debug", "Run setup_rdkit().", "rdk")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -395,4 +421,5 @@ setup_rdkit <- function(env_name, env_ref) {
   can_activate <- activate_py_env(env_name)
   success <- rdkit_active(env_ref)
   if (!success) stop("Unable to set up RDKit.")
+  if (exists("log_it")) log_it("debug", "Exiting setup_rdkit().", "rdk")
 }

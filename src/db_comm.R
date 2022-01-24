@@ -27,8 +27,13 @@
 #' @examples
 pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE) {
   require(dplyr)
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("trace",
+           sprintf('Getting table definition for "%s".', format_list_of_names(db_table)),
+           ns = "db")
+  }
   # Argument validation relies on verify_args
-  log_it("trace", sprintf('Getting table definition for "%s".', format_list_of_names(db_table)))
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -77,6 +82,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
     out <- dplyr::bind_rows(out) %>%
       select(cid, table_name, name:pk)
   }
+  if (exists("log_it")) log_fn("end")
   # Return data frame object representing SQLite db_table schema(s)
   return(out)
 }
@@ -125,7 +131,10 @@ pragma_table_info <- function(db_table,
                               include_comments = FALSE,
                               names_only       = FALSE) {
   # Argument validation relies on verify_args
-  log_it("trace", glue('Getting table definition for "{db_table}".'))
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("trace", glue('Getting table definition for "{db_table}".'), "db")
+  }
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = list(db_table, db_conn, include_comments, names_only),
@@ -197,6 +206,7 @@ pragma_table_info <- function(db_table,
   out <- out[out_rows, ]
   # Return data frame object representing PRAGMA table_info columns matching the
   # requested properties
+  if (exists("log_it")) log_fn("end")
   return(out)
 }
 
@@ -243,8 +253,12 @@ build_db <- function(db            = DB_NAME,
                      sqlite_cli    = SQLITE_CLI,
                      connect       = FALSE) {
   require(glue)
+  logger <- exists("log_it")
+  if (exists(logger)) {
+    log_fn("start")
+    log_it("trace", glue('Starting build of "{db}".'), "db")
+  }
   # Argument validation
-  log_it("trace", glue('Starting build of "{db}".'))
   if (exists("arg_check")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -261,7 +275,7 @@ build_db <- function(db            = DB_NAME,
     )
     stopifnot(arg_check$valid)
   }
-  log_it("trace", glue('Attempting to connect to "{db_table}".'))
+  if (exists(logger)) log_it("trace", glue('Attempting to connect to "{db_table}".'), "db")
   manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
   build_file    <- list.files(pattern = build_from,
                               full.names = TRUE,
@@ -272,32 +286,32 @@ build_db <- function(db            = DB_NAME,
   sqlite_available <- length(Sys.which(sqlite_cli) > 1)
   # Do it the short way (with CLI)
   if (sqlite_available) {
-    log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'))
+    if (exists(logger)) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'), "db")
     sqlite_call <- glue('{sqlite_cli} {db}')
     if (!file.exists(build_file)) {
       stop(glue('Cannot locate file "{build_file}" in this directory.'))
     }
     build_cmd   <- glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
     if (file.exists(db)) remove_db(db = db, archive = archive)
-    log_it("info", glue('Building database "{db}".'))
-    log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'))
+    if (exists(logger)) log_it("info", glue('Building database "{db}".'), "db")
+    if (exists(logger)) log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
     shell(build_cmd)
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
-        log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'))
+        if (exists(logger)) log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
         populate_cmd <- ""
       } else {
-        log_it("info", glue('Populating from "{populate_file}".'))
+        if (exists(logger)) log_it("info", glue('Populating from "{populate_file}".'), "db")
         populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
-        log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'))
+        if (exists(logger)) log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
         shell(populate_cmd)
       }
     }
-    log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'))
+    if (exists(logger)) log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
   } else {
     # Do it the long way
-    log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'))
+    if (exists(logger)) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'), "db")
     # -- Ensure packages are available
     reqs <- c("stringr", "magrittr", "readr", "DBI")
     packs_available <- reqs %in% installed.packages()
@@ -307,11 +321,11 @@ build_db <- function(db            = DB_NAME,
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
     if (file.exists(db)) {
-      log_it("trace", glue('Removing "{db}".'))
+      if (exists(logger)) log_it("trace", glue('Removing "{db}".'))
       remove_db(db = db, archive = archive)
     }
     # -- Create the build commands in R to pass through RSQLite::SQLite()
-    log_it("trace", glue('Creating build statements.'))
+    if (exists(logger)) log_it("trace", glue('Creating build statements.'), "db")
     build_path <- list.files(pattern = build_file,
                              full.names = TRUE,
                              recursive = TRUE)
@@ -322,9 +336,9 @@ build_db <- function(db            = DB_NAME,
     build_statement <- create_fallback_build(build_path)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
-    log_it("trace", glue('Creating new database as "{db}".'))
+    if (exists(logger)) log_it("trace", glue('Creating new database as "{db}".'), "db")
     con <- dbConnect(RSQLite::SQLite(), db)
-    log_it("trace", glue('Building "{db}"...'))
+    if (exists(logger)) log_it("trace", glue('Building "{db}"...'), "db")
     invisible(
       lapply(build_statement,
              function(x) dbSendStatement(con, str_trim(x, "both")))
@@ -333,9 +347,10 @@ build_db <- function(db            = DB_NAME,
     dbDisconnect(con)
   }
   if (connect) {
-    log_it("trace", 'Connecting to "{db}".')
+    if (exists(logger)) log_it("trace", glue('Connecting to "{db}".'), "db")
     manage_connection(db = db, reconnect = TRUE)
   }
+  if (exists(logger)) log_fn("end")
 }
 
 #' Remove an existing database
@@ -358,7 +373,11 @@ build_db <- function(db            = DB_NAME,
 #' @examples
 remove_db <- function(db = DB_NAME, archive = FALSE) {
   require(tools)
-  log_it("trace", glue('Starting removal of "{db}"'))
+  logger <- exists("log_it")
+  if (exists(logger)) {
+    log_fn("start")
+    log_it("trace", glue('Starting removal of "{db}"...'), "db")
+  }
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -370,14 +389,14 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     stopifnot(arg_check$valid)
   }
   # Resolve database file location
-  log_it("trace", glue('Finding database file "{db}"'))
+  if (exists(logger)) log_it("trace", glue('Finding database file "{db}"'), "db")
   db_path  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
   db_path  <- db_path[basename(db_path) == db]
   if (length(db_path) == 0) {
-    log_it("error", sprintf('Database "%s" does not exist in this directory tree.', db))
+    if (exists(logger)) log_it("error", sprintf('Database "%s" does not exist in this directory tree.', db), "db")
     return(NULL)
   } else if (length(db_path) > 1) {
-    log_it("warn", glue('Multiple files found for "{db}" in this directory.'))
+    if (exists(logger)) log_it("warn", glue('Multiple files found for "{db}" in this directory.'), "db")
     # correct_path <- select.list(db_path, title = "Please select one.")
     correct_path <- resolve_multiple_values(db_path, db)
   }
@@ -392,15 +411,16 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
                         sprintf("%s_archive_%s",fname, now),
                         db)
       file.copy(db_path, new_fname)
-      log_it("success", sprintf('Archive created as "%s"', new_fname))
+      if (exists(logger)) log_it("success", sprintf('Archive created as "%s"', new_fname), "db")
     }
     result <- try(file.remove(db_path))
     if (class(result) == "try-error") {
-      log_it("error", sprintf('Database "%s" could not be removed; another connection is likely open.', db))
+      if (exists(logger)) log_it("error", sprintf('Database "%s" could not be removed; another connection is likely open.', db), "db")
     } else {
-      log_it("success", sprintf('Database "%s" removed.', db))
+      if (exists(logger)) log_it("success", sprintf('Database "%s" removed.', db), "db")
     }
   }
+  if (exists(logger)) log_fn("end")
 }
 
 #' Check presence of a database table
@@ -416,12 +436,16 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #'
 #' @examples
 table_exists <- function(db_table, db_conn = con) {
+  if (exists("log_it")) log_fn("start")
   tables_exist <- db_table %in% dbListTables(db_conn)
   if (!all(tables_exist)) {
-    log_it("warn", sprintf('No table named "%s" was found in this schema.', db_table[!tables_exist]))
+    if (exists("log_it")) {
+      log_it("warn", sprintf('No table named "%s" was found in this schema.', db_table[!tables_exist]), "db")
+    }
     db_table <- db_table[tables_exist]
   }
   if (length(db_table) == 0) stop("No valid tables were found in this schema.")
+  if (exists("log_it")) log_fn("end")
   return(db_table)
 }
 
@@ -439,6 +463,7 @@ table_exists <- function(db_table, db_conn = con) {
 #'
 #' @examples
 data_dictionary <- function(db_conn = con) {
+  if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
   tabls <- dbListTables(db_conn)
@@ -446,16 +471,16 @@ data_dictionary <- function(db_conn = con) {
   out <- vector('list', length(tabls))
   names(out) <- tabls
   failures <- character(0)
-  log_it("info", "Adding tables to the dictionary...one moment please...")
+  if (exists("log_it")) log_it("info", "Adding tables to the dictionary...one moment please...", "db")
   for (tabl in tabls) {
     tmp <- try(pragma_table_info(db_table = tabl,
                                  db_conn = con,
                                  include_comments = TRUE))
     if (class(tmp) == "try-error") {
-      log_it("warn", sprintf('Dictionary failure on "%s"', tabl))
+      if (exists("log_it")) log_it("warn", sprintf('Dictionary failure on "%s"', tabl), "db")
       failures <- c(failures, tabl)
     } else {
-      log_it("trace", sprintf('"%s" added to dictionary', tabl))
+      if (exists("log_it")) log_it("trace", sprintf('"%s" added to dictionary', tabl), "db")
     }
     out[[tabl]] <- tmp
   }
@@ -464,14 +489,19 @@ data_dictionary <- function(db_conn = con) {
     msg <- sprintf("Dictionary was not available for %s: %s",
                    ifelse(length(failures) > 1, "tables", "table"),
                    format_list_of_names(failures))
-    log_it("warn", msg)
+    if (exists("log_it")) {
+      log_it("warn", msg, "db")
+    } else {
+      cat("WARN", has_failues, "\n")
+    }
   } else {
     has_failures <- FALSE
     failures <- "Dictionary available for all tables."
-    log_it("success", failures)
+    if (exists("log_it")) log_it("success", failures, "db")
   }
   attr(out, "has_failures") <- has_failures
   attr(out, "failures")     <- failures
+  if (exists("log_it")) log_fn("end")
   return(out)
 }
 
@@ -490,6 +520,7 @@ data_dictionary <- function(db_conn = con) {
 #'
 #' @examples
 tidy_comments <- function(obj) {
+  if (exists("log_it")) log_fn("start")
   # Argument validation
   if (exists("arg_check")) {
     arg_check <- verify_args(
@@ -501,7 +532,7 @@ tidy_comments <- function(obj) {
     stopifnot(arg_check$valid)
   }
   if (!all(c("sql", "table_name") %in% names(obj))) {
-    log_it("error", 'Object must contain both "sql" and "table_name" entries. Returning as provided.')
+    if (exists("log_it")) log_it("error", 'Object must contain both "sql" and "table_name" entries. Returning as provided.', "db")
     out <- obj
   } else {
     comments <- obj$sql %>%
@@ -517,6 +548,7 @@ tidy_comments <- function(obj) {
     }
     names(out) <- obj$db_table
   }
+  if (exists("log_it")) log_fn("end")
   return(out)
 }
 
@@ -545,6 +577,7 @@ save_data_dictionary <- function(db_conn            = con,
                                  output_format      = "json",
                                  output_file        = NULL,
                                  overwrite_existing = TRUE) {
+  if (exists("log_it")) log_fn("start")
   # Argument validation
   if (exists("arg_check")) {
     arg_check <- verify_args(
@@ -570,7 +603,7 @@ save_data_dictionary <- function(db_conn            = con,
   if (is.null(output_file)) {
     can_construct <- sapply(c("DB_TITLE", "DB_VERSION", "DICT_FILE_NAME"), exists)
     if (!all(can_construct)) {
-      log_it("warn", "Not enough values provided to construct a file name. Using defaults.")
+      if (exists("log_it")) log_it("warn", "Not enough values provided to construct a file name. Using defaults.", "db")
       if (!exists("DB_TITLE"))       DB_TITLE <- "hrams_database"
       if (!exists("DB_VERSION"))     DB_VERSION <- NULL
       if (!exists("DICT_FILE_NAME")) DICT_FILE_NAME <- "dictionary"
@@ -605,14 +638,20 @@ save_data_dictionary <- function(db_conn            = con,
   }
   out <- data_dictionary(db_conn)
   if (attr(out, "has_failures")) {
-    log_it("error",
-           sprintf('This dictionary failed on %s. No file will be saved.',
-                   format_list_of_names(attr(out, "failures"))))
+    if (exists("log_it")) {
+      log_it("error",
+             sprintf('This dictionary failed on %s. No file will be saved.',
+                     format_list_of_names(attr(out, "failures"))),
+             "db")
+    }
   } else {
     if (is.null(output_file)) {
-      log_it("warn",
-             sprintf('No file name provided to "output_file", saving as "%s".',
-                     f_name))
+      if (exists("log_it")) {
+        log_it("warn",
+               sprintf('No file name provided to "output_file", saving as "%s".',
+                       f_name),
+               "db")
+      }
     }
     switch(output_format,
            "json"       = out %>%
@@ -627,7 +666,10 @@ save_data_dictionary <- function(db_conn            = con,
            "list"       = out %>%
              write_rds(f_name)
     )
-    log_it("success", "Dictionary created.")
+    if (exists("log_it")) {
+      log_it("success", "Dictionary created.", "db")
+      log_fn("end")
+    }
   }
 }
 
@@ -653,6 +695,7 @@ save_data_dictionary <- function(db_conn            = con,
 #'
 #' @examples
 er_map <- function(db_conn = con) {
+  if (exists("log_it")) log_fn("start")
   # Verify arguments
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -667,6 +710,7 @@ er_map <- function(db_conn = con) {
   # Check connection
   stopifnot(active_connection(db_conn))
   
+  if (exists("log_it")) log_it("debug", "Parsing build statements...", "db")
   build_statements <- pragma_table_def(db_conn = db_conn, db_table = dbListTables(db_conn), get_sql = TRUE)
   build_statements <- build_statements[-grep("^sqlite", build_statements$table_name), ]
   n_tables <- nrow(build_statements)
@@ -686,6 +730,7 @@ er_map <- function(db_conn = con) {
     lapply(str_replace_all, "\\) ", " ")
   used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
     lapply(str_remove_all, "(JOIN|FROM) ")
+  if (exists("log_it")) log_it("debug", "Reading table and view relationships...", "db")
   for (i in 1:n_tables) {
     z <- which(t_names %in% ref_tables[[i]])
     if (length(z) > 0) {
@@ -731,6 +776,7 @@ er_map <- function(db_conn = con) {
   er_map$tables_with_normalization_dependency <- dependent_add
   er_map$is_table <- all_tables
   er_map$is_view  <- all_views
+  if (exists("log_it")) log_fn("end")
   return(er_map)
 }
 
@@ -783,6 +829,8 @@ manage_connection <- function(db          = DB_NAME,
                               disconnect  = TRUE,
                               .environ    = .GlobalEnv,
                               ...) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect),
@@ -802,7 +850,6 @@ manage_connection <- function(db          = DB_NAME,
     stopifnot(arg_check$valid)
   }
   require(drv_pack, character.only = TRUE)
-  logger           <- "logger" %in% (.packages())
   global_env       <- as.list(.environ)
   global_env_names <- names(global_env)
   connection_object_classes <- sprintf("%sConnection", conn_class)
@@ -824,7 +871,7 @@ manage_connection <- function(db          = DB_NAME,
         connection <- ""
       }
       if (class(connection) == "try-error") {
-        if (logger) log_warn('Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.')
+        if (logger) log_warn('Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.', "db")
         connection <- ""
       }
       if (
@@ -835,7 +882,7 @@ manage_connection <- function(db          = DB_NAME,
         )
       ){
         connected <- dbIsValid(this_obj)
-        log_it("trace", glue('Database "{db}" is currently open.'))
+        if (logger) log_it("trace", glue('Database "{db}" is currently open.'), "db")
         if (all(connected, disconnect)) {
           check <- try(invisible(dbDisconnect(this_obj)))
           status <- ifelse(class(check)[1] == "try-error",
@@ -845,7 +892,7 @@ manage_connection <- function(db          = DB_NAME,
           connected <- dbIsValid(this_obj)
         }
       }
-      log_it("trace", glue('Closing and removing "{env}"...'))
+      if (logger) log_it("trace", glue('Closing and removing "{env}"...'), "db")
       if (all(rm_objects, disconnect, !connection == "")) {
         rm(list = env, pos = ".GlobalEnv")
       }
@@ -854,7 +901,7 @@ manage_connection <- function(db          = DB_NAME,
   if (reconnect) {
     if (is_local) {
       # Resolve database file location
-      log_it("trace", glue('Finding local database file "{db}"'))
+      if (logger) log_it("trace", glue('Finding local database file "{db}"'), "db")
       db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
@@ -876,9 +923,10 @@ manage_connection <- function(db          = DB_NAME,
                    drv,
                    paste0(args, collapse = ", ")))
     } else {
-      if (dbIsValid(eval(sym(conn_name)))) log_it("trace", glue('"{db}" connected as "{conn_name}".'))
+      if (dbIsValid(eval(sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'))
     }
   }
+  if (logger) log_fn("end")
 }
 
 #' Parse SQL build statements
@@ -913,6 +961,7 @@ sqlite_parse_build <- function(sql_statements,
                                magicsplit = "/\\*magicsplit\\*/",
                                header     = "/\\*\\=+\\r*\\n[[:print:][:cntrl:]]+\\r*\\n\\=+\\*/",
                                section    = "/\\* -* [[:print:][:cntrl:]]+ -* \\*/") {
+  if (exists("log_it")) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -926,9 +975,9 @@ sqlite_parse_build <- function(sql_statements,
     )
     stopifnot(arg_check$valid)
   }
-  log_it("trace", glue('Parsing \n{sql_statements}\n\tfor build commands.'))
+  if (exists("log_it")) log_it("trace", glue('Parsing \n{sql_statements}\n\tfor build commands.'), "db")
   to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
-  out        <- sql_statements %>%
+  out       <- sql_statements %>%
     str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
     str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
     str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
@@ -942,6 +991,7 @@ sqlite_parse_build <- function(sql_statements,
     lapply(str_squish) %>%
     lapply(function(x) x[! x %in% c("", " ")])
   out        <- out[unlist(lapply(out, length)) > 0]
+  if (exists("log_it")) log_fn("end")
   return(out)
 }
 
@@ -963,6 +1013,8 @@ sqlite_parse_build <- function(sql_statements,
 #'   sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
 #' }
 sqlite_parse_import <- function(build_statements) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -976,7 +1028,7 @@ sqlite_parse_import <- function(build_statements) {
   regex_import  <- ".import (--[[:alnum:]]+)? "
   regex_skip    <- "(--skip [[:number:]]+) ?"
   regex_prefix  <- paste0(c(regex_import, regex_skip), collapse = "?")
-  log_it("trace", glue('Parsing \n{build_statements}\n for import modification.'))
+  if (logger) log_it("trace", glue('Parsing \n{build_statements}\n for import modification.'), "db")
   out           <- lapply(build_statements,
                           function(x) {
                             if (grepl("\\.import", x)) {
@@ -985,7 +1037,7 @@ sqlite_parse_import <- function(build_statements) {
                                 str_squish()
                               if (data_type == "") {
                                 data_type_read <- FALSE
-                                log_it("warn", 'No data type identified. Assuming a ".csv" extension.')
+                                if (logger) log_it("warn", 'No data type identified. Assuming a ".csv" extension.', "db")
                                 data_type <- "csv"
                               } else {
                                 data_type_read <- TRUE
@@ -995,14 +1047,14 @@ sqlite_parse_import <- function(build_statements) {
                                 str_squish()
                               skip_rows <- try(as.numeric(skip_rows))
                               if (class(skip_rows) == 'try-error') {
-                                log_it("warn", glue('Could not convert "{skip_rows}" to numeric in "{x}".'))
+                                if (logger) log_it("warn", glue('Could not convert "{skip_rows}" to numeric in "{x}".'), "db")
                                 return(x)
                               }
                               tmp <- str_remove(x, regex_prefix) %>%
                                 str_split(" ") %>%
                                 .[[1]]
                               if (length(tmp) != 2) {
-                                log_it("warn", glue('Could not parse "{x}" to identify both a target file and database target table.'))
+                                if (logger) log_it("warn", glue('Could not parse "{x}" to identify both a target file and database target table.'), "db")
                                 return(x)
                               }
                               data_file <- tmp[1]
@@ -1031,14 +1083,14 @@ sqlite_parse_import <- function(build_statements) {
                                                                   data_type)),
                                                    x
                                     )
-                                    log_it("warn", msg)
+                                    if (logger) log_it("warn", msg, "db")
                                   }
                                 } else {
-                                  log_it("warn", glue('Cannot read file "{data_file}". Function "{read_func}" is not available.'))
+                                  if (logger) log_it("warn", glue('Cannot read file "{data_file}". Function "{read_func}" is not available.'), "db")
                                   return(x)
                                 }
                               } else {
-                                log_it("warn", glue('Could not find file "{data_file}".'))
+                                if (logger) log_it("warn", glue('Could not find file "{data_file}".'), "db")
                                 return(x)
                               }
                               target    <- tmp[2]
@@ -1056,6 +1108,7 @@ sqlite_parse_import <- function(build_statements) {
                               return(x)
                             }
                           })
+  if (logger) log_fn("end")
   return(out)
 }
 
@@ -1088,6 +1141,7 @@ create_fallback_build <- function(build_file    = NULL,
                                   populate_with = NULL,
                                   driver        = "SQLite",
                                   out_file      = NULL) {
+  if (exists("log_it")) log_fn("start")
   if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
   if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
   build_files <- list.files(pattern = build_file,
@@ -1126,12 +1180,12 @@ create_fallback_build <- function(build_file    = NULL,
   if (!file.exists(build_file)) {
     stop(sprintf('Could not locate file "%s".', build_file))
   }
-  log_it("info", "Creating fall back build schema...")
+  if (exists("log_it")) log_it("info", "Creating fall back build schema...", "db")
   build   <- read_file(build_file) %>%
     sqlite_parse_build()
   
   if (populate) {
-    log_it("info", "Adding data insert reads...")
+    if (exists("log_it")) log_it("info", "Adding data insert reads...", "db")
     populate_file <- list.files(pattern = populate_with,
                                 full.names = TRUE,
                                 recursive = TRUE)
@@ -1141,7 +1195,7 @@ create_fallback_build <- function(build_file    = NULL,
   }
   
   # Make SQL build statements
-  log_it("info", "Expanding .build statements...")
+  if (exists("log_it")) log_it("info", "Expanding .build statements...", "db")
   build   <- unlist(build) %>%
     as.list()
   index_read   <- grep("^.read", build)
@@ -1167,7 +1221,7 @@ create_fallback_build <- function(build_file    = NULL,
     })
   build <- unlist(build) %>% as.list()
   index_import <- grep("^.import", build)
-  log_it("info", "Expanding .import statements...")
+  if (exists("log_it")) log_it("info", "Expanding .import statements...", "db")
   temp_import  <- lapply(build[index_import],
                          function(x) {
                            if (grepl(comments, x)) return(x)
@@ -1179,12 +1233,16 @@ create_fallback_build <- function(build_file    = NULL,
   build <- unlist(build) %>%
     paste0(collapse = "\n")
   write_file(build, out_file)
-  log_it("info", sprintf('Fallback build file created as "%s".',
-                         out_file))
+  if (exists("log_it")) {
+    log_it("info", sprintf('Fallback build file created as "%s".',
+                           out_file), "db")
+    log_fn("end")
+  }
 }
 
 # TODO early sketch for construction of automatic logging triggers
 build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_table_name = "log") {
+  if (exists("log_it")) log_fn("start")
   # According to the current environment setup, exclude logging to save space
   if (!exists("DB_LOGGING")) {
     DB_LOGGING <- FALSE
@@ -1217,6 +1275,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
       )
     }
   }
+  if (exists("log_it")) log_fn("end")
 }
 
 #' Convenience function to rebuild all database related files
@@ -1237,6 +1296,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @examples
 update_all <- function(api_running = TRUE, api_monitor = NULL) {
+  if (exists("log_it")) log_it("debug", "Run update_all().", "db")
   if (api_running) {
     pr_name <- obj_name_check(api_monitor)
     plumber_service_existed <- exists(pr_name)
@@ -1267,6 +1327,7 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
       api_reload(background = TRUE)
     }
   }
+  if (exists("log_it")) log_fn("end")
 }
 
 #' Conveniently close all database connections
@@ -1291,6 +1352,7 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
 #' close_up_shop(TRUE)
 #' }
 close_up_shop <- function(back_up_connected_tbls = FALSE) {
+  if (exists("log_it")) log_it("debug", "Run close_up_shop().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1343,6 +1405,7 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
       manage_connection(conn_name = db_conn, reconnect = FALSE)
     }
   }
+  if (exists("log_it")) log_fn("end")
 }
 
 # Database utility functions ---------------------------------------------------
@@ -1360,6 +1423,7 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
 #'
 #' @examples
 active_connection <- function(db_conn = con) {
+  if (exists("log_it")) log_it("debug", "Run active_connection().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1372,7 +1436,10 @@ active_connection <- function(db_conn = con) {
     stopifnot(arg_check$valid)
   }
   status <- DBI::dbIsValid(db_conn)
-  if (!status) log_it("error", "Connection is no longer available.")
+  if (exists("log_it"))  {
+    if (!status) log_it("error", "Connection is no longer available.", "db")
+    log_fn("end")
+  }
   return(status)
 }
 
@@ -1393,6 +1460,7 @@ active_connection <- function(db_conn = con) {
 #'
 #' @examples
 add_normalization_value <- function(db_table, ..., db_conn = con) {
+  if (exists("log_it")) log_fn("start")
   new_values <- list(...)
   if (length(names(new_values)) != length(new_values)) {
     stop("All values provided to this function must be named.")
@@ -1432,14 +1500,17 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
   if (!all(needed %in% names(new_values))) {
     msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
     if (interactive()) {
-      log_it("warn",
-             sprintf("%s Please provide the following values associated with %s to continue.",
-                     msg,
-                     format_list_of_names(
-                       sprintf('"%s = %s"', names(new_values), unlist(new_values))
-                     )
-             )
-      )
+      if (exists("log_it")) {
+        log_it("warn",
+               sprintf("%s Please provide the following values associated with %s to continue.",
+                       msg,
+                       format_list_of_names(
+                         sprintf('"%s = %s"', names(new_values), unlist(new_values))
+                       )
+               ),
+               "db"
+        )
+      }
       for (need_this in needed) {
         if (!need_this %in% names(new_values)) {
           new_value <- ""
@@ -1478,30 +1549,38 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
         }
       }
     } else {
-      log_it("error", msg)
+      if (exists("log_it")) {
+        log_it("error", msg, "db")
+      } else {
+        cat("ERROR", msg, "\n")
+      }
       return(NULL)
     }
   }
-  log_it("trace", sprintf('Addding normalization values to table "%s"', db_table))
+  if (exists("log_it")) log_it("trace", sprintf('Addding normalization values to table "%s"', db_table), "db")
   res <- try(
     build_db_action("insert", db_table, values = list(new_values))
   )
   if (class(res) == "try-error") {
-    log_it(
-      "warn",
-      sprintf(
-        'Unable to add normalization values (%s) to table "%s": %s',
-        lapply(names(new_values),
-               function(x) {
-                 sprintf('%s = "%s"', x, new_values[[x]])
-               }) %>%
-          paste0(collapse = ", "),
-        db_table,
-        str_remove_all(res[[1]], "^[[:alpha:]]* : |\n")
-      )
+    msg <- sprintf(
+      'Unable to add normalization values (%s) to table "%s": %s',
+      lapply(names(new_values),
+             function(x) {
+               sprintf('%s = "%s"', x, new_values[[x]])
+             }) %>%
+        paste0(collapse = ", "),
+      db_table,
+      str_remove_all(res[[1]], "^[[:alpha:]]* : |\n")
     )
+    if (exists("log_it")) {
+      log_it("error", msg, "db")
+    } else {
+      cat("ERROR", msg, "\n")
+      return(NULL)
+    }
   }
   this_id <- build_db_action("get_id", db_table, match_criteria = new_values, and_or = "AND")
+  if (exists("log_it")) log_fn("end")
   return(this_id)
 }
 
@@ -1540,6 +1619,7 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
 #'
 #' ## End(Not run)
 check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con) {
+  if (exists("log_it")) log_it("debug", "Run check_for_value().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1568,6 +1648,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
     exists = found,
     values = if (found) existing_values else NULL
   )
+  if (exists("log_it")) log_fn("end")
   return(out)
 }
 
@@ -1583,6 +1664,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 #'
 #' @examples
 resolve_multiple_values <- function(values, search_value, db_table = "") {
+  if (exists("log_it")) log_it("debug", "Run resolve_multiple_values().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1617,10 +1699,12 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
       }
     }
   }
+  if (exists("log_it")) log_fn("end")
   return(chosen_value)
 }
 
 resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, ...) {
+  if (exists("log_it")) log_it("debug", "Run resolve_normalization_value().", "db")
   # Check connection
   stopifnot(active_connection(db_conn))
   fields <- dbListFields(db_conn = db_conn, db_table)
@@ -1668,14 +1752,22 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       }
       return(this_id)
     } else {
-      log_it("error", glue('Multiple entries in "{db_table}" match value "{this_value}'))
+      msg <- glue('Multiple entries in "{db_table}" match value "{this_value}')
+      if (exists("log_it"))  {
+        log_it("error", msg, "db")
+      } else {
+        cat("ERROR", msg, "\n")
+      }
       return(NULL)
     }
   }
 }
 
 ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_refs_in = "references") {
-  log_it("trace", sprintf('Getting normalization table reference for column  "%s" in table "%s"', table_column, table_name) )
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("trace", sprintf('Getting normalization table reference for column  "%s" in table "%s"', table_column, table_name), "db")
+  }
   refs <- this_map[[table_name]][[fk_refs_in]]
   table_column <- sprintf("^%s", table_column)
   refers_to <- grep(table_column, refs, value = TRUE)
@@ -1684,6 +1776,7 @@ ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_r
       str_remove_all("^[[:alnum:]-_]* REFERENCES |\\([[:alpha:]]*\\)$") %>%
       str_trim()
   }
+  if (exists("log_it")) log_fn("end")
   return(refers_to)
 }
 
@@ -1719,6 +1812,7 @@ add_contributor <- function(user_value  = "",
                             affiliation = "",
                             orcid       = "",
                             db_conn     = con) {
+  if (exists("log_it")) log_it("debug", "Run add_contributor().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1776,7 +1870,7 @@ add_contributor <- function(user_value  = "",
     if (orcid == "")       orcid       <- readline("ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ")
     while (all(!grepl("^([0-9]{4}-){3}[0-9]{3}[0-9X]$", orcid),
                nchar(orcid) > 1)) {
-      log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.')
+      log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
       orcid <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
     }
   } else {
@@ -1788,12 +1882,14 @@ add_contributor <- function(user_value  = "",
       affiliation = affiliation
     )
     if (any(unfilled == "")) {
-      log_it(
-        "error",
-        sprintf('Values must be provided for all required fields (%s were not provided).',
-                format_list_of_names(names(unfilled)[unfilled == ""])
-        )
+      msg <- sprintf('Values must be provided for all required fields (%s were not provided).',
+                     format_list_of_names(names(unfilled)[unfilled == ""])
       )
+      if (exists("log_it")) {
+        log_it("error", msg, "db")
+      } else {
+        cat("ERROR", msg, "\n")
+      }
       return(NULL)
     }
   }
@@ -1823,6 +1919,7 @@ add_contributor <- function(user_value  = "",
     db_conn           = db_conn,
     match_criteria = list(username = username)
   )
+  if (exists("log_it")) log_fn("end")
   return(user_id)
 }
 
@@ -1854,6 +1951,8 @@ add_contributor <- function(user_value  = "",
 #'
 #' @examples
 verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
+  logger <- exists("log_it")
+  if (logger) log_it("debug", "Run verify_sample_class().", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1880,27 +1979,52 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
   if (is.numeric(sample_class)) {
     if (sample_class %in% sample_classes$id) {
       sample_class_id <- sample_class
-      log_it("trace", sprintf('Sample class "%s" identified from provided integer "%s".',
-                              sample_classes$name[sample_classes$id == sample_class],
-                              sample_class))
+      msg <- sprintf('Sample class "%s" identified from provided integer "%s".',
+                     sample_classes$name[sample_classes$id == sample_class],
+                     sample_class)
+      if (logger) {
+        log_it("info", msg, "db")
+      } else {
+        cat("INFO", msg, "\n")
+      }
     } else {
       sample_class_id <- NULL
-      log_it("warn", sprintf('No sample class with ID = "%s" currently exists.',
-                             sample_class))
+      msg <- sprintf('No sample class with ID = "%s" currently exists.',
+                     sample_class)
+      if (logger) {
+        log_it("warn", msg, "db")
+      } else {
+        cat("WARN", msg, "\n")
+      }
     }
   } else if (is.character(sample_class)) {
     if (sample_class %in% sample_classes$name) {
       sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
-      log_it("trace", sprintf('Sample class id "%s" identified from direct name match to "%s".',
+      msg <- sprintf('Sample class id "%s" identified from direct name match to "%s".',
                               sample_class_id,
-                              sample_class))
+                              sample_class)
+      if (logger) {
+        log_it("info", msg, "db")
+      } else {
+        cat("INFO", msg, "\n")
+      }
     } else {
       sample_class_id <- NULL
-      log_it("warn", sprintf('No sample class with name "%s" currently exists.',
-                             sample_class))
+      msg <- sprintf('No sample class with name "%s" currently exists.',
+                             sample_class)
+      if (logger) {
+        log_it("info", msg, "db")
+      } else {
+        cat("INFO", msg, "\n")
+      }
       if (interactive()) {
         new_flag <- "\\(New\\) "
-        log_it("trace", 'Cannot automatically identify a sample class. Selecting a sample class interactively.')
+        msg <- 'Cannot automatically identify a sample class. Selecting a sample class interactively.'
+        if (logger) {
+          log_it("info", msg, "db")
+        } else {
+          cat("INFO", msg, "\n")
+        }
         create_it  <- resolve_multiple_values(sample_classes$name, sample_class)
         if (str_detect(create_it, new_flag)) {
           create_it <- str_remove(create_it, new_flag)
@@ -1915,19 +2039,30 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
           )
           if (class(sample_class_id) == "try-error") {
             sample_class_id <- NULL
-            log_it("error",
-                   sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+            msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
                            create_it)
-            )
+            if (logger) {
+              log_it("error", msg, "db")
+            } else {
+              cat("ERROR", msg, "\n")
+            }
           } else {
-            log_it("success",
-                   sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+            msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
                            create_it)
-            )
+            if (logger) {
+              log_it("success", msg, "db")
+            } else {
+              cat("SUCCESS", msg, "\n")
+            }
           }
         } else if (create_it == "(Abort)") {
           sample_class_id <- NULL
-          log_it("info", 'Sample class selection aborted.')
+          msg <- 'Sample class selection aborted.'
+          if (logger) {
+            log_it("info", msg, "db")
+          } else {
+            cat("INFO", msg, "\n")
+          }
         } else {
           sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
         }
@@ -1936,26 +2071,43 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
           sample_class_id <- try(add_normalization_value("norm_sample_classes", sample_class))
           if (class(sample_class_id) == "try-error") {
             sample_class_id <- NULL
-            log_it("error",
-                   sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+            msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
                            sample_class)
-            )
+            if (logger) {
+              log_it("error", msg, "db")
+            } else {
+              cat("ERROR", msg, "\n")
+            }
           } else {
-            log_it("success",
-                   sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+            msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
                            sample_class)
-            )
+            if (logger) {
+              log_it("success", msg, "db")
+            } else {
+              cat("SUCCESS", msg, "\n")
+            }
           }
         } else {
           sample_class_id <- NULL
-          log_it("info", 'No new sample class added because "auto_add" is FALSE.')
+          msg <- 'No new sample class added because "auto_add" is FALSE.'
+          if (logger) {
+            log_it("info", msg, "db")
+          } else {
+            cat("INFO", msg, "\n")
+          }
         }
       }
     }
   } else {
-    log_it("error", sprintf('Only character or numeric types are accepted for parameter "sample_class".'))
+    msg <- sprintf('Only character or numeric types are accepted for parameter "sample_class".')
+    if (logger) {
+      log_it("error", msg, "db")
+    } else {
+      cat("ERROR", msg, "\n")
+    }
     sample_class_id <- NULL
   }
+  if (logger) log_fn("end")
   return(sample_class_id)
 }
 
@@ -1970,6 +2122,8 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
 #'
 #' @examples
 verify_contributor <- function(contributor_text, db_conn = con, ...) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
   # Check contributor - do not check for internal id number
@@ -1985,9 +2139,14 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
     collect()
   contributor_exists <- nrow(possible_matches) > 0
   if (!contributor_exists) {
-    log_it("warn", sprintf('No contributor matching "%s" was located.', contributor_text))
+    msg <- sprintf('No contributor matching "%s" was located.', contributor_text)
+    if (logger) {
+      log_it("warn", msg, "db")
+    } else {
+      cat("WARN", msg, "\n")
+    }
     if (interactive()) {
-      log_it("trace", "Getting user information from an interactive session.")
+      if (exists("log_it")) log_it("trace", "Getting user information from an interactive session.")
       if (db_contributors %>% collect() %>% nrow() > 1) {
         associate_with <- menu(choices = c("Yes", "No"), title = "Associate with a current user?") == 1
       } else {
@@ -2037,7 +2196,11 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
                                        last_name,
                                        contact,
                                        affiliation))
-        log_it("info", "Multiple contributors found.")
+        if (logger) {
+          log_it("info", "Multiple contributors found.")
+        } else {
+          cat("INFO", "Multiple contributors found.\n")
+        }
         verified_match <- resolve_multiple_values(possibles$Contributor, contributor_text)
         if (str_detect(verified_match, "\\(New\\) ")) {
           make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
@@ -2051,7 +2214,12 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
           return(possible_matches$id[which(possibles$Contributor == verified_match)])
         }
       } else {
-        log_it("trace", "Non interactive session and multiple matches identified.")
+        msg <- "Non interactive session and multiple matches identified."
+        if (logger) {
+          log_it("trace", msg, "db")
+        } else {
+          cat("TRACE", msg, "\n")
+        }
         stop("Unable to discretely identify a contributor. Please try again.")
       }
     }
@@ -2060,9 +2228,12 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
 
 # TODO - abstract the appropriate ms_n - 1 scan to associate with ms_data
 associated_scan <- function(df, scan_time) {
+  if (exists("log_it")) log_fn("start")
   scan_msn  <- df$msn[which(df$scantime == scan_time)] - 1
-  df$scantime[
+  out <- df$scantime[
     which(all(df$scantime < scan_time,
               df$msn == scan_msn))
   ]
+  if (exists("log_it")) log_fn("end")
+  return(out)
 }

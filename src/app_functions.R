@@ -11,6 +11,7 @@
 #'
 #' @example support_info()
 support_info <- function(app_info = TRUE) {
+  log_fn("start")
   arg_check <- verify_args(
     args       = as.list(environment()),
     conditions = list(list(c("mode", "logical"),
@@ -20,6 +21,7 @@ support_info <- function(app_info = TRUE) {
     stop(cat(paste0(arg_check$messages, collapse = "\n")))
   }
   if (!exists("DB_VERSION")) source(list.files(pattern = "env.R", recursive = TRUE))
+  if (exists("log_it")) log_it("debug", "Gathering system information...")
   sys_info <- list(
     system          = sessionInfo(),
     project_dir     = getwd(),
@@ -28,6 +30,7 @@ support_info <- function(app_info = TRUE) {
     packs_active    = sort((.packages()))
   )
   if (app_info) {
+    if (exists("log_it")) log_it("debug", "Gathering application information...")
     global <- as.list(.GlobalEnv)
     app <- list(
       DB_NAME         = if (exists("DB_NAME")) DB_NAME else "Not set",
@@ -74,6 +77,7 @@ support_info <- function(app_info = TRUE) {
   } else {
     out <- sys_info
   }
+  log_fn("end")
   return(out)
 }
 
@@ -96,10 +100,12 @@ support_info <- function(app_info = TRUE) {
 #' @examples
 #' mode_checks()
 mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
+  log_fn("start")
   funcs        <- unlist(lapply(paste0("package:", (.packages())), ls))
   mode_types   <- grep(paste0("^", prefix, "[\\._]"), funcs, value = TRUE)
   mode_types   <- mode_types[-grep("<-", mode_types)]
   mode_types   <- sort(mode_types)
+  log_fn("end")
   return(mode_types)
 }
 
@@ -215,16 +221,17 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("choices", list("a", "b")))))
 #' }
 verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
+  log_fn("start")
   if (exists("VERIFY_ARGUMENTS")) {
     if (!VERIFY_ARGUMENTS) {
-      log_it("warn", "Argument verification is currently off.")
+      if (exists("log_it")) log_it("warn", "Argument verification is currently off.")
       return(list(valid = TRUE))
     }
   }
   if (length(args) != length(conditions)) {
-    log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
-                            length(args),
-                            length(conditions)))
+    if (exists("log_it")) log_it("error", sprintf('Length of "args" [%s] must match the length of "conditions" [%s]',
+                                                  length(args),
+                                                  length(conditions)))
   }
   if (is.environment(args)) {
     args <- as.list(args)
@@ -234,13 +241,13 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
     n_con_names <- length(names(conditions))
     if (n_arg_names == 0) {
       if (n_con_names == 0) {
-        log_it("trace", "Arguments and conditions are unnamed. Order will be inferred by index.")
+        if (exists("log_it")) log_it("trace", "Arguments and conditions are unnamed. Order will be inferred by index.")
       } else {
-        log_it("trace", "Arguments provided are unnamed. Order will be inferred from the order of conditions.")
+        if (exists("log_it")) log_it("trace", "Arguments provided are unnamed. Order will be inferred from the order of conditions.")
         names(args) <- names(conditions)
       }
     } else if (n_con_names == 0) {
-      log_it("trace", "Conditions provided are unnamed. Order will be inferred from the order of arguments.")
+      if (exists("log_it")) log_it("trace", "Conditions provided are unnamed. Order will be inferred from the order of arguments.")
       names(conditions) <- names(args)
     } else if (!n_arg_names == n_con_names) {
       stop("Length of named arguments did not match the length of named conditions.")
@@ -251,7 +258,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
     stop("Parameter 'args' must be either an environment or a list of values.")
   }
   if (rlang::is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
-  log_it("trace", glue('Verifying arguments for "{from_fn}".'))
+  if (exists("log_it")) log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN", "not_empty", "file_exists")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -272,7 +279,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       names(arg) <- glue("argument_{i}")
     }
     needs <- conditions[[i]]
-    log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
+    if (exists("log_it")) log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -408,7 +415,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                },
                "not_empty" = {
                  msg  <- glue("Object contained nothing but NAs, NULLs, or empty character strings.")
-                 rslt <- !empty_variable(val)
+                 rslt <- !has_empty_elements(val)
                },
                "file_exists" = {
                  msg  <- glue("Could not locate file '{val}'.")
@@ -429,17 +436,18 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
         log_it("trace", glue('{log_msg} - FAIL'))
         if (!silent) log_it("error", glue("    {msg}"))
       } else {
-        log_it("trace", glue('{log_msg} - PASS'))
+        if (exists("log_it")) log_it("trace", glue('{log_msg} - PASS'))
       }
     }
   }
   if (out$valid) {
-    log_it("trace", glue("Arguments verified for '{from_fn}'"))
+    if (exists("log_it")) log_it("trace", glue("Arguments verified for '{from_fn}'"))
   } else {
-    log_it("error", glue("Arguments could not be verified",
-                         ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
-                         " See return for details."))
+    if (exists("log_it")) log_it("error", glue("Arguments could not be verified",
+                                               ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
+                                               " See return for details."))
   }
+  log_fn("end")
   return(out)
 }
 
@@ -464,6 +472,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
 format_list_of_names <- function(namelist, add_quotes = FALSE) {
+  log_fn("start")
   require(glue)
   if (length(namelist) == 1) {
     res <- glue::glue("{paste0(namelist, collapse = '')}")
@@ -481,20 +490,24 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
                    str_replace_all(' "and ', ' and "'),
                  '"')
   }
+  log_fn("end")
   return(res)
 }
 
 #' Conveniently log a message to the console
 #'
-#' Use this to log messages of various level in the console for situations where
-#' package [logger] may not be available.
+#' Use this to log messages of arbitrary level and message. It works best with
+#' [logger] but will also print directly to the console to support setups where
+#' package [logger] may not be available.If using with [logger] and "file" or
+#' "both" is selected for the namespace `LOG_X_TO` parameter in `env_R.R` logs
+#' will be written to disk as well as the console.
 #'
 #' @param log_level CHR scalar of the level at which to log a given statement.
 #'   If using the [logger] package, must match one of [logger:::log_levels]
 #' @param msg CHR scalar of the message to accompany the log.
 #'
-#' @return Adds to the logger log (if enabled) and prints to the console in all
-#'   cases
+#' @return Adds to the logger file (if enabled) and/or prints to the console if
+#'   enabled. See
 #' @export
 #'
 #' @examples
@@ -506,24 +519,69 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' test_log()
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg, ns = NA_character_) {
-  if (exists("LOGGING_ON") && LOGGING_ON) {
-    log_func  <- sprintf("log_%s", tolower(log_level))
-    log_level <- toupper(log_level)
-    n_call    <- sys.nframe() * -1 + 1
-    if (exists(log_func)) {
-      log_level(level    = log_level,
-                namespace = ns,
-                .topcall = sys.call(n_call),
-                msg)
+  if (!exists("LOGGING_ON")) {
+    env_r <- file.path("config", "env_R.R")
+    if (file.exists(env_r)) {
+      source(file.path("config", "env_R.R"))
     } else {
-      msg <- sprintf("%s [%s] in %s(): %s\n",
-                     log_level,
-                     format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
-                     deparse(sys.call(n_call)[[1]]),
-                     msg)
-      cat(msg)
+      stop(sprintf('Logging variables not configured and file "%s" not available.', env_r))
     }
   }
+  call_func <- sys.call(-1)[[1]]
+  if (sys.nframe() > 1) {
+    from_log_it <- call_func == "log_it"
+  } else {
+    from_log_it <- TRUE
+    call_func <- rlang::sym("log_it")
+  }
+  # if (!from_log_it) log_it("debug", "Run log_it().")
+  if (LOGGING_ON) {
+    if (is.na(ns)) {
+      do_log <- TRUE
+    } else {
+      this_log <- sprintf("LOGGING_%s", toupper(ns))
+      if (exists(this_log)) {
+        do_log <- .GlobalEnv[[this_log]]
+      } else {
+        log_it("warn", sprintf('Namespace "%s" is not set up; log only available in the console.', ns))
+        do_log <- TRUE
+      }
+    }
+    if (do_log) {
+      log_func  <- sprintf("log_%s", tolower(log_level))
+      log_level <- toupper(log_level)
+      n_call    <- ifelse(sys.nframe() > 1, -1, 1)
+      if (exists(log_func)) {
+        log_level(level    = log_level,
+                  namespace = ns,
+                  .topcall = sys.call(n_call),
+                  msg)
+      } else {
+        msg <- sprintf("%s [%s] [%s] in %s(): %s\n",
+                       log_level,
+                       ifelse(is.na(ns), "global", ns),
+                       format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
+                       deparse(sys.call(n_call)[[1]]),
+                       msg)
+        cat(msg)
+      }
+    } else {
+      if (!from_log_it) {
+        log_it("trace",
+               sprintf('Logging is currently turned off for namespace "%s". Set %s to TRUE in "config/env_R.R" to activate logging functionality.',
+                       ns,
+                       this_log)
+        )
+      }
+    }
+  } else {
+    if (!from_log_it)  {
+      log_it("trace", 'Logging is currently turned off. Set LOGGING_ON to TRUE in "config/env_R.R" to activate logging functionality.')
+    }
+  }
+  # if (!from_log_it)  {
+  #   log_it("debug", "Exiting log_it().")
+  # }
 }
 
 #' Simple acronym generator
@@ -541,22 +599,106 @@ log_it <- function(log_level, msg, ns = NA_character_) {
 #' make_acronym("test me")
 #' make_acronym(paste("department of ", c("commerce", "energy", "defense")))
 make_acronym <- function(text) {
-  text %>%
+  log_fn("start")
+  acronym <- text %>%
     str_to_lower() %>%
     str_replace_all("[[:punct:]]", " ") %>%
     str_to_title() %>%
     str_extract_all("[A-Z]") %>%
     lapply(function(x) paste0(x, collapse = "")) %>%
     unlist()
+  log_fn("end")
+  return(acronym)
 }
 
-empty_variable <- function(x) {
-  return(
-    any(
+#' Simple check for if an object is empty
+#'
+#' Checks for empty vectors, a blank character string, NULL, and NA values. If
+#' fed a list object, returns TRUE if any element is is the "empty" set. For
+#' data.frames checks that nrow is not 0. [rlang:::is_empty] only checks for
+#' length 0.
+#'
+#' @param x Object to be checked
+#'
+#' @return LGL scalar of whether `x` is empty
+#' @export
+#'
+#' @examples
+#' has_empty_elements("a")
+#' has_empty_elements(c(NULL, 1:5))
+#' has_empty_elements(list(NULL, 1:5))
+#' has_empty_elements(data.frame(a = character(0)))
+has_empty_elements <- function(x) {
+  log_fn("start")
+  if (is.function(x)) {
+    out <- FALSE
+    log_it("trace", sprintf("%s is a function, not a variable.", deparse(substitute(x))))
+  } else if (is.data.frame(x)) {
+    log_it("trace", sprintf("%s is a data frame; result checks whether it has 0 rows.", deparse(substitute(x))))
+    out <- nrow(x) == 0
+  } else if (is.list(x)) {
+    log_it("trace", sprintf("%s is a list; result checks whether any element of that list is empty.", deparse(substitute(x))))
+    out <- any(
+      unlist(
+        lapply(x,
+               function(y) {
+                 any(
+                   y == "",
+                   is.null(y),
+                   is.na(y),
+                   length(y) == 0
+                 )
+               })
+      )
+    )
+  } else {
+    out <- any(
       x == "",
       is.null(x),
       is.na(x),
       length(x) == 0
     )
+  }
+  log_fn("end")
+  return(out)
+}
+
+log_as_dataframe <- function(file = NULL) {
+  log_fn("start")
+  if (is.null(file)) {
+    file <- file.path("logs", "logger.txt")
+  }
+  stopifnot(file.exists(file))
+  if (exists("verify_args")) {
+    
+  }
+  log_fn("end")
+}
+
+#' Simple logging convenience
+#'
+#' Conveniently add a log message at the trace level. Typically this would be
+#' called twice bookending the body of a function along the lines of "Start
+#' fn()" and "End fn()" when calling a function. This can help provided
+#' traceability to deeply nested function calls within a log.
+#'
+#' @param status CHR scalar to prefix the log message; will be coerced to
+#'   sentence case. Typically "start" or "end" but anything is accepted (default
+#'   "start").
+#' @param level CHR scalar of the logging level to be passed to [log_it]
+#'   (default "trace")
+#'
+#' @return None, hands logging messages to [log_it]
+#' @export
+#'
+#' @examples
+#' fn <- function() {log_fn("start"); 1+1; log_fn("end")}
+#' fn()
+log_fn <- function(status = "start", level = "debug") {
+  log_it(level,
+         sprintf("%s %s()",
+                 stringr::str_to_sentence(status),
+                 as.character(sys.call(-1)[[1]])
+         )
   )
 }

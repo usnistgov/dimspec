@@ -58,7 +58,10 @@ sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
-source(file.path("config", "env_logger.R"))
+if (LOGGING_ON) {
+  log_it("trace", "Setting up logger...")
+  source(file.path("config", "env_logger.R"))
+}
 
 # _Build database if it doesn't exist ------------------------------------------
 if (!DB_BUILT) build_db()
@@ -76,7 +79,7 @@ if (INIT_CONNECT) {
 
 # _Plumber set up --------------------------------------------------------------
 if (USE_API) {
-  log_it("trace", "Activating plumber API...")
+  log_it("trace", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(file.path("plumber", "api_control.R"))
   plumber_service <- callr::r_bg(
@@ -93,15 +96,15 @@ if (USE_API) {
     log_it("success", glue::glue("Running plumber API at {plumber_url}"))
     log_it("info", glue::glue("View plumber docs at {plumber_url}/__docs__/ or by calling `api_open_doc(plumber_url)`"))
   } else {
-    log_it("warn", "There was a problem launching the plumber API.")
+    log_it("warn", "There was a problem launching the plumber API.", "api")
   }
 } else {
-  log_it("trace", "Plumber API not requested according to USE_API setting in env_R.R settings.")
+  log_it("trace", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
 }
 
 # _RDKit set up ----------------------------------------------------------------
 if (USE_RDKIT) {
-  log_it("info", "Using RDKit for this session. Setting up...")
+  log_it("info", "Using RDKit for this session. Setting up...", "rdk")
   if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
   source(file.path("rdkit", "env_py.R"))
   source(file.path("rdkit", "py_setup.R"))
@@ -109,7 +112,7 @@ if (USE_RDKIT) {
   if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
   setup_rdkit(PYENV_NAME, PYENV_REF)
 } else {
-  log_it("info", "Using ChemmineR for this session.")
+  log_it("info", "Using ChemmineR for this session.", "rdk")
 }
 
 # _Clean up --------------------------------------------------------------------
