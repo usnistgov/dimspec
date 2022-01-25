@@ -1,12 +1,13 @@
 # Universal settings
 layout_console <- layout_glue_generator(
-  format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
-                 "{ns}",
+  format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}",
+                 "[{ns}]",
                  '[{crayon::italic(format(time, "%Y-%m-%d %H:%M:%OS3"))}]', 
                  "in {fn}(): {grayscale_by_log_level(msg, levelr)}")
 )
 layout_file <- layout_glue_generator(
-  format = paste('{level} {ns} [{format(time, "%Y-%m-%d %H:%M:%OS3")}]', 
+  format = paste('{level} [{format(time, "%Y-%m-%d %H:%M:%OS3")}]', 
+                 '[{ns}]',
                  "in {fn}(): {msg}")
 )
 log_formatter(formatter_glue)

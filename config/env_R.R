@@ -90,6 +90,7 @@ IMPORT_HEADERS <- list(
 if (USE_API) {
   PLUMBER_HOST   <- "127.0.0.1"
   PLUMBER_PORT   <- 8080
+  PLUMBER_URL    <- sprintf("%s:%s", PLUMBER_HOST, PLUMBER_PORT)
 }
 
 # A collection of the items above is available from `support_info()` as a
@@ -102,8 +103,9 @@ SHINY_APPS       <- list.dirs("apps", full.names = TRUE)
 
 # Logging options --------------------------------------------------------------
 # Whether or not to log actions throughout this project. LOGGING_ON == FALSE
-# will override individual settings and prevent logging.
-LOGGING_ON     <- TRUE
+# will override individual settings and prevent logging. Set LOGGING_ON in
+# env_glob.txt to control broadly, or override that setting here as needed.
+LOGGING_ON     <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
 LOGGING_GLOBAL <- TRUE
 LOGGING_DB     <- TRUE
 LOGGING_API    <- TRUE
@@ -113,7 +115,7 @@ LOGGING_SHINY  <- FALSE
 # file only which will write to "logs/logger.txt", or "both" to do both. If it
 # is not an interactive session, these will default to the file option.
 LOG_GLOBAL_TO  <- "both"
-LOG_API_TO     <- "file"
+LOG_API_TO     <- "both"
 LOG_DB_TO      <- "both"
 LOG_RDK_TO     <- "both"
 LOG_FILE_GLOBAL<- file.path("logs", "log.txt")

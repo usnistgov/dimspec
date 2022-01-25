@@ -22,10 +22,13 @@ SQLITE_CLI     = "sqlite3"
 SUS_LIST_URL   = "https://data.nist.gov/od/ds/mds2-2387/PFAS%20Suspect%20List_v1.xlsx"
 
 # Connect immediately on sourcing compliance.R (requires R)
-INIT_CONNECT   = FALSE
+INIT_CONNECT   = TRUE
+
+# Use application logging (requires R: settings in env_R.R and env_logger.R)
+LOGGING_ON     = TRUE
 
 # Whether to activate plumber integration. (requires R)
-USE_API   = FALSE
+USE_API        = TRUE
 
 # RDKit integration (requires R and python)
 USE_RDKIT      = TRUE
