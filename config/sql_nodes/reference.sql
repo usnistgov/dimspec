@@ -90,21 +90,38 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_element_isotopes AS
 	/* A view of all elemental isotopes and their relative abundances joining reference tables "elements" and "isotopes". */
-	SELECT
-		e.atomic_number,
-			/* elemental atomic number */
-		e.symbol,
-			/* periodic table symbol */
-		cast(round(exact_mass) as int)||symbol as isotope,
-			/* "human readable" isotopic notation */
-		e.common_name AS "element",
-			/* element common name */
-		i.exact_mass,
-			/* element nominal exact mass */
-		i.abundance
-			/* relative "natural" isotopic abundance */
-	FROM isotopes i
-	INNER JOIN elements e ON i.atomic_number = e.atomic_number;
+  	SELECT
+  		e.atomic_number,
+  			/* elemental atomic number */
+  		e.symbol,
+  			/* periodic table symbol */
+  		cast(round(exact_mass) as int)||symbol as isotope,
+  			/* "human readable" isotopic notation */
+  		e.common_name AS "element",
+  			/* element common name */
+  		i.exact_mass,
+  			/* element nominal exact mass */
+  		i.abundance
+  			/* relative "natural" isotopic abundance */
+  	FROM isotopes i
+  	INNER JOIN elements e ON i.atomic_number = e.atomic_number;
+	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_exact_masses AS
+	/* Exact monoisotopic masses for elements */
+	  SELECT
+	    element,
+  			/* element common name */
+	    exact_mass
+  			/* monisotopic nominal exact mass */
+	  FROM (
+	    SELECT
+	      element,
+	      exact_mass,
+	      abundance,
+	      MAX(abundance) OVER (PARTITION BY atomic_number) AS q01
+	      FROM view_element_isotopes
+	  )
+	  WHERE abundance = q01;
 	/*magicsplit*/
 
 /* Triggers */
