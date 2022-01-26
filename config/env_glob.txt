@@ -33,5 +33,8 @@ USE_API        = TRUE
 # RDKit integration (requires R and python)
 USE_RDKIT      = TRUE
 
+# Spin up shiny apps
+USE_SHINY      = FALSE
+
 # The command line interface alias for your installation of conda.
 CONDA_CLI      = "conda"

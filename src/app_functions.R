@@ -520,9 +520,11 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg, ns = NA_character_) {
   if (!exists("LOGGING_ON")) {
-    env_r <- file.path("config", "env_R.R")
+    env_r <- file.path("config", "env_glob.txt")
     if (file.exists(env_r)) {
+      source(file.path("config", "env_glob.txt"))
       source(file.path("config", "env_R.R"))
+      source(file.path("config", "env_logger.R"))
     } else {
       stop(sprintf('Logging variables not configured and file "%s" not available.', env_r))
     }
@@ -534,7 +536,6 @@ log_it <- function(log_level, msg, ns = NA_character_) {
     from_log_it <- TRUE
     call_func <- rlang::sym("log_it")
   }
-  # if (!from_log_it) log_it("debug", "Run log_it().")
   if (LOGGING_ON) {
     if (is.na(ns)) {
       do_log <- TRUE
@@ -557,31 +558,24 @@ log_it <- function(log_level, msg, ns = NA_character_) {
                   .topcall = sys.call(n_call),
                   msg)
       } else {
-        msg <- sprintf("%s [%s] [%s] in %s(): %s\n",
+        msg <- sprintf("%s <%s> [%s] in %s(): %s\n",
                        log_level,
                        ifelse(is.na(ns), "global", ns),
                        format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
                        deparse(sys.call(n_call)[[1]]),
                        msg)
-        cat(msg)
+        cat(msg, "\n")
       }
     } else {
-      if (!from_log_it) {
-        log_it("trace",
-               sprintf('Logging is currently turned off for namespace "%s". Set %s to TRUE in "config/env_R.R" to activate logging functionality.',
-                       ns,
-                       this_log)
-        )
-      }
+      msg <- sprintf('Logging is currently turned off for namespace "%s". Set %s to TRUE in "config/env_R.R" to activate logging functionality.',
+                     ns,
+                     this_log)
+      cat(msg)
     }
   } else {
-    if (!from_log_it)  {
-      log_it("trace", 'Logging is currently turned off. Set LOGGING_ON to TRUE in "config/env_R.R" to activate logging functionality.')
-    }
+    msg <- 'Logging is currently turned off. Set LOGGING_ON to TRUE (project setting in "config/env_R.R") to activate logging functionality.'
+    cat(msg, "\n")
   }
-  # if (!from_log_it)  {
-  #   log_it("debug", "Exiting log_it().")
-  # }
 }
 
 #' Simple acronym generator
@@ -694,11 +688,87 @@ log_as_dataframe <- function(file = NULL) {
 #' @examples
 #' fn <- function() {log_fn("start"); 1+1; log_fn("end")}
 #' fn()
-log_fn <- function(status = "start", level = "debug") {
+log_fn <- function(status = "start", level = "trace") {
   log_it(level,
          sprintf("%s %s()",
                  stringr::str_to_sentence(status),
                  as.character(sys.call(-1)[[1]])
          )
   )
+}
+
+#' Update logger settings
+#'
+#' This is a simple action wrapper to update any settings that may have been
+#' changed with regard to logger. If, for instance, something is not logging the
+#' way you expect it to, change the relevant setting and then run
+#' `update_logger_settings()` to reflect the current environment.
+#'
+#' @param reload LGL scalar indicating (if TRUE) whether or not to refresh from
+#'   `env_R.R` or (if FALSE) to use the current environment settings (e.g. for
+#'   testing purposes) (default: FALSE)
+#'
+#' @return None
+#' @export
+#'
+#' @examples 
+update_logger_settings <- function(reload = FALSE) {
+  if (reload) source(file.path("config", "env_R.R"))
+  source(file.path("config", "env_logger.R"))
+}
+
+#' Flush a directory with archive
+#'
+#' Clear a directory and archive those files if desired in any directory
+#' matching any pattern.
+#'
+#' @param archive LGL scalar on whether to archive current logs
+#' @param directory CHR scalar path to the directory to flush
+#'
+#' @return
+#' @export
+#'
+#' @examples
+flush_dir <- function(archive = FALSE, directory, pattern) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
+  if (dir.exists(directory)) {
+    files <- list.files(directory, full.names = TRUE)
+    files <- grep(pattern = pattern, x = files, value = TRUE)
+    if (archive) {
+      archive_dir <- file.path(directory, "archive", format(Sys.time(), "%Y%m%d%H%M"))
+      if (!dir.exists(archive_dir)) dir.create(archive_dir, recursive = TRUE)
+      res <- lapply(files, 
+                    function(x) {
+                      file.rename(
+                        from = x,
+                        to = gsub(directory, archive_dir, x)
+                      )
+                    })
+    } else {
+      res <- lapply(files, file.remove)
+    }
+    success <- all(unlist(res))
+    if (logger) {
+      if (success) {
+        log_it("success",
+               sprintf("Files in '%s' were successfully %s",
+                       directory,
+                       ifelse(archive, sprintf("archived to '%s'", archive_dir), "removed")
+               )
+        )
+      } else {
+        log_it("error",
+               sprintf("Could not %s all files in '%s'.",
+                       ifelse(archive, "archive", "remove"),
+                       directory)
+        )
+      }
+    }
+  } else {
+    if (logger) {
+      log_it("warn", sprintf("The specified directory at '%s' was not found.", directory))
+    }
+  }
+  if (logger) log_fn("end")
 }

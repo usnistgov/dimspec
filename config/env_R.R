@@ -1,5 +1,8 @@
 # Environment variables specific to R.
 
+# A collection of these items is available using `support_info()` as a
+# troubleshooting convenience once `source("compliance.R")` is complete.
+
 # Several settings reference project variables defined in env_glob.txt
 if (!exists("DB_NAME")) source(file.path("config", "env_glob.txt"))
 
@@ -88,18 +91,19 @@ IMPORT_HEADERS <- list(
 # Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]
 if (USE_API) {
-  PLUMBER_HOST   <- "127.0.0.1"
-  PLUMBER_PORT   <- 8080
-  PLUMBER_URL    <- sprintf("%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+  PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
+  PLUMBER_PORT <- getOption("plumber.port", 8080)
+  PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
+  PLUMBER_FILE <- file.path("plumber", "plumber.R")
 }
 
-# A collection of the items above is available from `support_info()` as a
-# troubleshooting convenience once `source("compliance.R")` is complete.
-
 # Shiny options ----------------------------------------------------------------
-USE_SHINY        <- FALSE
-SHINY_APPS       <- list.dirs("apps", full.names = TRUE)
 # Placeholder for shiny app options in future development
+if (USE_SHINY) {
+  USE_SHINY    <- ifelse(exists("USE_SHINY"), USE_SHINY, FALSE)
+  SHINY_APPS   <- list.dirs("apps", full.names = TRUE)
+  SHINY_HOST   <- getOption("shiny.host", "127.0.0.1")
+}
 
 # Logging options --------------------------------------------------------------
 # Whether or not to log actions throughout this project. LOGGING_ON == FALSE
@@ -111,6 +115,8 @@ LOGGING_DB     <- TRUE
 LOGGING_API    <- TRUE
 LOGGING_RDK    <- TRUE
 LOGGING_SHINY  <- FALSE
+LOGGING_WARNS  <- TRUE
+LOGGING_ERRORS <- TRUE
 # Destination of logging messages. Set "console" for console only, "file" for
 # file only which will write to "logs/logger.txt", or "both" to do both. If it
 # is not an interactive session, these will default to the file option.
@@ -118,11 +124,13 @@ LOG_GLOBAL_TO  <- "both"
 LOG_API_TO     <- "both"
 LOG_DB_TO      <- "both"
 LOG_RDK_TO     <- "both"
-LOG_FILE_GLOBAL<- file.path("logs", "log.txt")
-LOG_FILE_DB    <- file.path("logs", "log_db.txt")
-LOG_FILE_API   <- file.path("logs", "log_api.txt")
-LOG_FILE_RDK   <- file.path("logs", "log_rdk.txt")
-LOG_FILE_SHINY <- file.path("logs", "log_shiny.txt")
+LOG_SHINY_TO   <- "file"
+LOG_DIRECTORY  <- file.path("logs")
+LOG_FILE_GLOBAL<- file.path(LOG_DIRECTORY, "log.txt")
+LOG_FILE_DB    <- file.path(LOG_DIRECTORY, "log_db.txt")
+LOG_FILE_API   <- file.path(LOG_DIRECTORY, "log_api.txt")
+LOG_FILE_RDK   <- file.path(LOG_DIRECTORY, "log_rdk.txt")
+LOG_FILE_SHINY <- file.path(LOG_DIRECTORY, "log_shiny.txt")
 # Set the logging threshold, which if using the logger package, should be a
 # valid logging level (e.g. TRACE, DEBUG, INFO, SUCCESS, WARN, ERROR, or FATAL).
 # If not using the logger package, or if you issue a custom logging level to

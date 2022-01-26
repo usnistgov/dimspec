@@ -254,7 +254,7 @@ build_db <- function(db            = DB_NAME,
                      connect       = FALSE) {
   require(glue)
   logger <- exists("log_it")
-  if (exists(logger)) {
+  if (logger) {
     log_fn("start")
     log_it("trace", glue('Starting build of "{db}".'), "db")
   }
@@ -275,7 +275,7 @@ build_db <- function(db            = DB_NAME,
     )
     stopifnot(arg_check$valid)
   }
-  if (exists(logger)) log_it("trace", glue('Attempting to connect to "{db_table}".'), "db")
+  if (logger) log_it("trace", glue('Attempting to connect to "{db_table}".'), "db")
   manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
   build_file    <- list.files(pattern = build_from,
                               full.names = TRUE,
@@ -286,32 +286,32 @@ build_db <- function(db            = DB_NAME,
   sqlite_available <- length(Sys.which(sqlite_cli) > 1)
   # Do it the short way (with CLI)
   if (sqlite_available) {
-    if (exists(logger)) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'), "db")
+    if (logger) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'), "db")
     sqlite_call <- glue('{sqlite_cli} {db}')
     if (!file.exists(build_file)) {
       stop(glue('Cannot locate file "{build_file}" in this directory.'))
     }
     build_cmd   <- glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
     if (file.exists(db)) remove_db(db = db, archive = archive)
-    if (exists(logger)) log_it("info", glue('Building database "{db}".'), "db")
-    if (exists(logger)) log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
+    if (logger) log_it("info", glue('Building database "{db}".'), "db")
+    if (logger) log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
     shell(build_cmd)
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
-        if (exists(logger)) log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
+        if (logger) log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
         populate_cmd <- ""
       } else {
-        if (exists(logger)) log_it("info", glue('Populating from "{populate_file}".'), "db")
+        if (logger) log_it("info", glue('Populating from "{populate_file}".'), "db")
         populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
-        if (exists(logger)) log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
+        if (logger) log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
         shell(populate_cmd)
       }
     }
-    if (exists(logger)) log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
+    if (logger) log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
   } else {
     # Do it the long way
-    if (exists(logger)) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'), "db")
+    if (logger) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'), "db")
     # -- Ensure packages are available
     reqs <- c("stringr", "magrittr", "readr", "DBI")
     packs_available <- reqs %in% installed.packages()
@@ -321,11 +321,11 @@ build_db <- function(db            = DB_NAME,
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
     if (file.exists(db)) {
-      if (exists(logger)) log_it("trace", glue('Removing "{db}".'))
+      if (logger) log_it("trace", glue('Removing "{db}".'))
       remove_db(db = db, archive = archive)
     }
     # -- Create the build commands in R to pass through RSQLite::SQLite()
-    if (exists(logger)) log_it("trace", glue('Creating build statements.'), "db")
+    if (logger) log_it("trace", glue('Creating build statements.'), "db")
     build_path <- list.files(pattern = build_file,
                              full.names = TRUE,
                              recursive = TRUE)
@@ -336,9 +336,9 @@ build_db <- function(db            = DB_NAME,
     build_statement <- create_fallback_build(build_path)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
-    if (exists(logger)) log_it("trace", glue('Creating new database as "{db}".'), "db")
+    if (logger) log_it("trace", glue('Creating new database as "{db}".'), "db")
     con <- dbConnect(RSQLite::SQLite(), db)
-    if (exists(logger)) log_it("trace", glue('Building "{db}"...'), "db")
+    if (logger) log_it("trace", glue('Building "{db}"...'), "db")
     invisible(
       lapply(build_statement,
              function(x) dbSendStatement(con, str_trim(x, "both")))
@@ -347,10 +347,10 @@ build_db <- function(db            = DB_NAME,
     dbDisconnect(con)
   }
   if (connect) {
-    if (exists(logger)) log_it("trace", glue('Connecting to "{db}".'), "db")
+    if (logger) log_it("trace", glue('Connecting to "{db}".'), "db")
     manage_connection(db = db, reconnect = TRUE)
   }
-  if (exists(logger)) log_fn("end")
+  if (logger) log_fn("end")
 }
 
 #' Remove an existing database
@@ -374,13 +374,13 @@ build_db <- function(db            = DB_NAME,
 remove_db <- function(db = DB_NAME, archive = FALSE) {
   require(tools)
   logger <- exists("log_it")
-  if (exists(logger)) {
+  if (logger) {
     log_fn("start")
     log_it("trace", glue('Starting removal of "{db}"...'), "db")
   }
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(db, archive),
       conditions = list(
         db      = list(c("mode", "character"), c("length", 1)),
         archive = list(c("mode", "logical"), c("length", 1))
@@ -389,14 +389,14 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     stopifnot(arg_check$valid)
   }
   # Resolve database file location
-  if (exists(logger)) log_it("trace", glue('Finding database file "{db}"'), "db")
+  if (logger) log_it("trace", glue('Finding database file "{db}"'), "db")
   db_path  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
   db_path  <- db_path[basename(db_path) == db]
   if (length(db_path) == 0) {
-    if (exists(logger)) log_it("error", sprintf('Database "%s" does not exist in this directory tree.', db), "db")
+    if (logger) log_it("error", sprintf('Database "%s" does not exist in this directory tree.', db), "db")
     return(NULL)
   } else if (length(db_path) > 1) {
-    if (exists(logger)) log_it("warn", glue('Multiple files found for "{db}" in this directory.'), "db")
+    if (logger) log_it("warn", glue('Multiple files found for "{db}" in this directory.'), "db")
     # correct_path <- select.list(db_path, title = "Please select one.")
     correct_path <- resolve_multiple_values(db_path, db)
   }
@@ -411,16 +411,16 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
                         sprintf("%s_archive_%s",fname, now),
                         db)
       file.copy(db_path, new_fname)
-      if (exists(logger)) log_it("success", sprintf('Archive created as "%s"', new_fname), "db")
+      if (logger) log_it("success", sprintf('Archive created as "%s"', new_fname), "db")
     }
     result <- try(file.remove(db_path))
     if (class(result) == "try-error") {
-      if (exists(logger)) log_it("error", sprintf('Database "%s" could not be removed; another connection is likely open.', db), "db")
+      if (logger) log_it("error", sprintf('Database "%s" could not be removed; another connection is likely open.', db), "db")
     } else {
-      if (exists(logger)) log_it("success", sprintf('Database "%s" removed.', db), "db")
+      if (logger) log_it("success", sprintf('Database "%s" removed.', db), "db")
     }
   }
-  if (exists(logger)) log_fn("end")
+  if (logger) log_fn("end")
 }
 
 #' Check presence of a database table
@@ -975,7 +975,7 @@ sqlite_parse_build <- function(sql_statements,
     )
     stopifnot(arg_check$valid)
   }
-  if (exists("log_it")) log_it("trace", glue('Parsing \n{sql_statements}\n\tfor build commands.'), "db")
+  if (exists("log_it")) log_it("trace", glue('Parsing sql_statements for build commands.'), "db")
   to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
   out       <- sql_statements %>%
     str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
@@ -1017,7 +1017,7 @@ sqlite_parse_import <- function(build_statements) {
   if (logger) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(build_statements),
       conditions = list(
         build_statements = list(c("mode", "character"), c("length", 1))
       ),
@@ -1296,13 +1296,16 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @examples
 update_all <- function(api_running = TRUE, api_monitor = NULL) {
-  if (exists("log_it")) log_it("debug", "Run update_all().", "db")
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("debug", "Updating database, fallback build, and data dictionary files.", "db")
+  }
   if (api_running) {
-    pr_name <- obj_name_check(api_monitor)
+    pr_name <- obj_name_check(api_monitor, default_name = "plumber_service")
     plumber_service_existed <- exists(pr_name)
     if (plumber_service_existed) {
       api_monitor <- eval(sym(pr_name))
-      if (api_monitor$is_alive()) api_stop(pr = api_monitor)
+      if (api_monitor$is_alive()) api_stop(pr = api_monitor, remove_service_obj = FALSE)
     }
   }
   manage_connection(reconnect = FALSE)
@@ -1352,7 +1355,14 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
 #' close_up_shop(TRUE)
 #' }
 close_up_shop <- function(back_up_connected_tbls = FALSE) {
-  if (exists("log_it")) log_it("debug", "Run close_up_shop().", "db")
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("debug",
+           sprintf("Closing connections %s backing up connected tibbles.",
+                   ifelse(back_up_connected_tbls, "and", "without"),
+           "db")
+    )
+  }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1377,7 +1387,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
   ]
   for (api in api_services) {
     if (.GlobalEnv[[api]]$is_alive()) {
-      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = TRUE)
+      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = FALSE)
+      rm(list = api, envir = .GlobalEnv)
     }
   }
   # Kill db connected objects
@@ -1423,7 +1434,7 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
 #'
 #' @examples
 active_connection <- function(db_conn = con) {
-  if (exists("log_it")) log_it("debug", "Run active_connection().", "db")
+  if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1619,7 +1630,7 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
 #'
 #' ## End(Not run)
 check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con) {
-  if (exists("log_it")) log_it("debug", "Run check_for_value().", "db")
+  if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1664,7 +1675,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 #'
 #' @examples
 resolve_multiple_values <- function(values, search_value, db_table = "") {
-  if (exists("log_it")) log_it("debug", "Run resolve_multiple_values().", "db")
+  if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1704,7 +1715,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
 }
 
 resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, ...) {
-  if (exists("log_it")) log_it("debug", "Run resolve_normalization_value().", "db")
+  if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
   fields <- dbListFields(db_conn = db_conn, db_table)
@@ -1717,9 +1728,7 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       }
     }
   }
-  if (length(this_id) == 1) {
-    return(this_id)
-  } else {
+  if (!length(this_id) == 1) {
     if (interactive()) {
       if (length(this_id) == 0) {
         tmp$values <- build_db_action("select", db_table)
@@ -1750,7 +1759,6 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       } else {
         this_id <- build_db_action("get_id", db_table, match_criteria = to_add)
       }
-      return(this_id)
     } else {
       msg <- glue('Multiple entries in "{db_table}" match value "{this_value}')
       if (exists("log_it"))  {
@@ -1758,9 +1766,11 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       } else {
         cat("ERROR", msg, "\n")
       }
-      return(NULL)
+      this_id <- NULL
     }
   }
+  if (exists("log_it")) log_fn("end")
+  return(this_id)
 }
 
 ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_refs_in = "references") {
@@ -1812,7 +1822,10 @@ add_contributor <- function(user_value  = "",
                             affiliation = "",
                             orcid       = "",
                             db_conn     = con) {
-  if (exists("log_it")) log_it("debug", "Run add_contributor().", "db")
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("debug", "Run add_contributor().", "db")
+  }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1952,7 +1965,10 @@ add_contributor <- function(user_value  = "",
 #' @examples
 verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
   logger <- exists("log_it")
-  if (logger) log_it("debug", "Run verify_sample_class().", "db")
+  if (logger) {
+    log_fn("start")
+    log_it("debug", "Run verify_sample_class().", "db")
+  }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(

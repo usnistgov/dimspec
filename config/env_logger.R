@@ -1,18 +1,17 @@
 # Universal settings
 layout_console <- layout_glue_generator(
-  format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}",
-                 "[{ns}]",
-                 '[{crayon::italic(format(time, "%Y-%m-%d %H:%M:%OS3"))}]', 
+  format = paste('[{crayon::italic(format(time, "%Y-%m-%d %H:%M:%OS3"))}]', 
+                 "<{crayon::bold(ns)}>",
+                 "{crayon::bold(colorize_by_log_level(level, levelr))}",
                  "in {fn}(): {grayscale_by_log_level(msg, levelr)}")
 )
 layout_file <- layout_glue_generator(
-  format = paste('{level} [{format(time, "%Y-%m-%d %H:%M:%OS3")}]', 
-                 '[{ns}]',
+  format = paste('[{format(time, "%Y-%m-%d %H:%M:%OS3")}] <{ns}> {level}',
                  "in {fn}(): {msg}")
 )
 log_formatter(formatter_glue)
-log_warnings()
-log_errors()
+if (LOGGING_WARNS) log_warnings()
+if (LOGGING_ERRORS) log_errors()
 
 # Namespace settings
 # _Global ----------------------------------------------------------------------
@@ -158,22 +157,4 @@ if (LOGGING_RDK) {
   )
   log_threshold(level = LOG_THR_RDK, namespace = "rdk")
   log_layout(layout = layout, namespace = "rdk")
-}
-
-#' Update logger settings
-#'
-#' This is a simple action wrapper to update any settings that may have been
-#' changed wrt logger.
-#'
-#' @param reload LGL scalar indicating whether or not to refresh from `env_R.R`
-#'   (default: TRUE) or to use the current environment settings (e.g. for
-#'   testing purposes)
-#'
-#' @return None
-#' @export
-#'
-#' @examples 
-update_logger_settings <- function(reload = TRUE) {
-  if (reload) source(file.path("config", "env_R.R"))
-  source(file.path("config", "env_logger.R"))
 }

@@ -59,8 +59,10 @@ invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
 if (LOGGING_ON) {
-  log_it("trace", "Setting up logger...")
   source(file.path("config", "env_logger.R"))
+  log_it("info", "Setting up logger for use with this session...")
+} else {
+  log_it("info", "Logging not requested according to LOGGING_ON in env_glob.txt or env_R.R settings.", "api")
 }
 
 # _Build database if it doesn't exist ------------------------------------------
@@ -79,27 +81,23 @@ if (INIT_CONNECT) {
 
 # _Plumber set up --------------------------------------------------------------
 if (USE_API) {
-  log_it("trace", "Activating plumber API...", "api")
+  log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(file.path("plumber", "api_control.R"))
-  plumber_service <- callr::r_bg(
-    function() {
-      source(file.path("plumber", "env_plumb.R"))
-      api_start(
-        on_host = PLUMBER_HOST,
-        on_port = PLUMBER_PORT
-      )
-    }
+  api_reload(
+    pr = "plumber_service",
+    background = TRUE,
+    on_host = PLUMBER_HOST,
+    on_port = PLUMBER_PORT
   )
-  plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   if (plumber_service$is_alive()) {
-    log_it("success", glue::glue("Running plumber API at {plumber_url}"))
-    log_it("info", glue::glue("View plumber docs at {plumber_url}/__docs__/ or by calling `api_open_doc(plumber_url)`"))
+    log_it("success", glue::glue("Running plumber API at {PLUMBER_URL}"))
+    log_it("info", glue::glue("View plumber docs at {PLUMBER_URL}/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`"))
   } else {
     log_it("warn", "There was a problem launching the plumber API.", "api")
   }
 } else {
-  log_it("trace", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
+  log_it("info", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
 }
 
 # _RDKit set up ----------------------------------------------------------------
@@ -116,5 +114,5 @@ if (USE_RDKIT) {
 }
 
 # _Clean up --------------------------------------------------------------------
-rm(sources, exclusions, fragments, exactmasschart)
+rm(sources, exclusions)
 

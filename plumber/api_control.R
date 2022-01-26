@@ -1,29 +1,49 @@
 #' Start the plumber API
 #'
-#' This is a thin wrapper to [plumber::pr_run] pointing to a project's plumber
-#' file by default at "plumber/plumber.R" with some error trapping. It also
-#' provides some infrastructure support for set ups with a "plumber/env_plumb.R"
-#' file containing environment variables that will be used as defaults
-#' supporting NULL assignments.
+#' This is a wrapper to [plumber::pr_run] pointing to a project's opinionated
+#' plumber settings with some error trapping. The host, port, and plumber file
+#' are set in the "config/env_R.R" location as PLUMBER_HOST, PLUMBER_PORT, and
+#' PLUMBER_FILE respectively.
 #'
-#' @param on_host CHR scalar of the host IP address
-#' @param on_port CHR or INT scalar of the host port to use
+#' @note If either of `on_host` or `on_port` are NULL they will default first to
+#'   any existing environment values of PLUMBER_HOST and PLUMBER_PORT, then to
+#'   getOption("plumber.host", "127.0.0.1") and getOption("plumber.port", 8080)
+#'
+#' @note This will fail if the requested port is in use.
+#'
 #' @param plumber_file CHR scalar of the path to a plumber API to launch
-#'   (default: `file.path("plumber", "plumber.R")`)
+#'   (default: NULL)
+#' @param on_host CHR scalar of the host IP address (default: NULL)
+#' @param on_port CHR or INT scalar of the host port to use (default: NULL)
 #'
 #' @return LGL scalar with success status
 #' @export
-api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("plumber", "plumber.R")) {
-  if (exists("log_it")) log_it("debug", "Run api_start().", "api")
+api_start <- function(plumber_file = NULL,
+                      on_host = NULL,
+                      on_port = NULL) {
+  if (exists("log_it")) log_fn("start")
+  if (is.null(plumber_file)) {
+    if (exists("PLUMBER_FILE")) {
+      plumber_file <- PLUMBER_FILE
+    } else {
+      msg <- 'Provide a file path to a plumber file for "plumber_file" or set variable "PLUMBER_FILE" in the "config/env_R.R" file.'
+      if (exists("log_it")) {
+        log_it("error", msg, ns = "api")
+      } else {
+        stop(msg)
+      }
+      stop()
+    }
+  }
   if (is.null(on_host)) {
     if (exists("PLUMBER_HOST")) {
       on_host <- PLUMBER_HOST
     } else {
       if (exists("log_it")) {
         log_it("error",
-               'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "plumber/env_plumb.R" file.',
+               'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "config/env_R.R" file.',
                ns = "api")
-        return(FALSE)
+        on_host <- getOption("plumber.host", "127.0.0.1")
       }
     }
   }
@@ -33,9 +53,9 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
     } else {
       if (exists("log_it")) {
         log_it("error",
-               'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "plumber/env_plumb.R" file.',
+               'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "config/env_R.R" file.',
                ns = "api")
-        return(FALSE)
+        on_port <- getOption("plumber.port", 8080)
       }
     }
   }
@@ -44,12 +64,12 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(plumber_file, on_host, on_port),
       conditions = list(
+        plumber_file = list(c("mode", "character"), "file_exists", c("length", 1)),
         on_host      = list(c("mode", "character"), c("length", 1)),
-        on_port      = list(c("mode", "numeric"), c("length", 1), "no_na"),
-        plumber_file = list(c("mode", "character"), "file_exists", c("length", 1))
-      ),
+        on_port      = list(c("mode", "numeric"), c("length", 1), "no_na")
+        ),
       from_fn = "api_start"
     )
     stopifnot(arg_check$valid)
@@ -71,7 +91,7 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
     )
   )
   url <- sprintf("%s:%s", on_host, on_port)
-  success <- inherits(attempt, "try-error")
+  success <- inherits(attempt, "try-error") && attempt$is_alive()
   if (success) {
     if (exists("log_it")) {
       log_it("success", sprintf("Plumber API started from api_start() on %s.", url), "api")
@@ -81,7 +101,7 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
       log_it("error", sprintf("Could not start plumber API using api_start() on %s.", url), "api")
     }
   }
-  if (exists("log_it")) log_it("debug", "Exiting api_start().")
+  if (exists("log_it")) log_fn("end")
   return(success)
 }
 
@@ -91,12 +111,12 @@ api_start <- function(on_host = NULL, on_port = NULL, plumber_file = file.path("
 #' will be automatically added if not part of the host URL accepted as `url`.
 #'
 #' @param url CHR URL/URI of the plumber documentation host (default:
-#'   environment variable "plumber_url")
+#'   environment variable "PLUMBER_URL")
 #'
 #' @return None, opens a browser to the requested URL
 #' @export
-api_open_doc <- function(url = plumber_url) {
-  if (exists("log_it")) log_it("debug", "Run api_open_doc().", "api")
+api_open_doc <- function(url = PLUMBER_URL) {
+  if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -108,8 +128,8 @@ api_open_doc <- function(url = plumber_url) {
     )
     stopifnot(arg_check$valid)
   } else {
-    stopifnot(is.character(plumber_url))
-    stopifnot(length(plumber_url) == 1)
+    stopifnot(is.character(url))
+    stopifnot(length(url) == 1)
   }
   docs <- "__docs__"
   if (!stringi::stri_detect(str = url, regex = docs)) {
@@ -117,7 +137,7 @@ api_open_doc <- function(url = plumber_url) {
   }
   if (exists("log_it")) log_it("debug", sprintf("Open swagger docs at %s.", url), "api")
   utils::browseURL(url)
-  if (exists("log_it")) log_it("debug", "Exiting api_open_doc().")
+  if (exists("log_it")) log_fn("end")
 }
 
 #' Stop the plumber API
@@ -137,7 +157,10 @@ api_open_doc <- function(url = plumber_url) {
 #' @return None, stops the plumber server
 #' @export
 api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove_service_obj = TRUE) {
-  if (exists("log_it")) log_it("debug", "Run api_stop().", "api")
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("trace", "Run api_stop().", "api")
+  }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -169,10 +192,10 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
   if (flush) {
     if (exists("log_it")) log_it("debug", "Flushing database connections and reconnecting.", "api")
     if (active_connection(eval(sym(db_conn))))
-    manage_connection(conn_name = db_conn, reconnect = F)
+      manage_connection(conn_name = db_conn, reconnect = F)
     manage_connection(conn_name = db_conn)
   }
-  if (exists("log_it")) log_it("debug", "Exiting api_stop().")
+  if (exists("log_it")) log_fn("end")
 }
 
 #' Reloads the plumber API
@@ -188,12 +211,20 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 #'
 #' @examples
 api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL) {
-  if (exists("log_it")) log_it("debug", "Run api_reload().", "api")
+  if (exists("log_it")) {
+    log_fn("start")
+    log_it("debug", "Run api_reload().", "api")
+  }
   if (is.null(on_host)) on_host <- PLUMBER_HOST
   if (is.null(on_port)) on_port <- PLUMBER_PORT
+  if (!exists("PLUMBER_URL")) PLUMBER_URL <- sprintf("%s:%s", on_host, on_port)
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  if (is.character(pr)) {
+    pr_name <- pr
+    pr <- NULL
+  }
   # Argument validation relies on verify_args
-  check_args <- as.list(environment())
+  check_args <- list(pr, background, on_host, on_port)
   check_args <- check_args[!unlist(lapply(check_args, is.null))]
   check_conds <- list(
     if (is.null(pr)) {
@@ -224,8 +255,15 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
   }
   if (!is.null(pr) && pr$is_alive()) api_stop(pr)
   pr_name <- obj_name_check(pr, "plumber_service")
-  url <- sprintf("%s:%s", on_host, on_port)
+  url <- sprintf("http://%s:%s", on_host, on_port)
   if (exists("log_it")) {
+    if (!url == PLUMBER_URL) {
+      log_it("warn",
+             sprintf("Plumber was launched on a url (%s) other than that defined in the environment (%s).",
+                     url, PLUMBER_URL),
+             "api"
+      )
+    }
     log_it("debug", "Calling api_start() from api_reload()", "api")
   }
   if (background) {
@@ -235,8 +273,9 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
         function() {
           source(file.path("plumber", "env_plumb.R"))
           api_start(
-            on_host = on_host,
-            on_port = on_port
+            on_host = PLUMBER_HOST,
+            on_port = PLUMBER_PORT,
+            plumber_file = PLUMBER_FILE
           )
         }
       ),
@@ -251,19 +290,18 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
   this_pr <- eval(sym(pr_name))
   if (exists("log_it")) log_it("trace", "Evaluating service...", "api")
   if (this_pr$is_alive()) {
-    plumber_url <- sprintf("http://%s:%s", on_host, on_port)
     if (exists("log_it")) {
       log_it("info",
              sprintf(
                "\nRunning plumber API at %s",
-               plumber_url
-             )
+               url
+             ), "api"
       )
       log_it("info",
              sprintf(
-               "\nView docs at %s/__docs__/ or by calling `api_open_doc(plumber_url)`",
-               plumber_url
-             )
+               "\nView docs at %s/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`",
+               url
+             ), "api"
       )
     }
   } else {
@@ -272,11 +310,14 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
              sprintf(
                'Unknown error restarting the plumber API. Inspect "%s" for details.',
                pr_name
-             )
+             ), "api"
       )
     }
   }
-  if (exists("log_it")) log_it("debug", "Exiting api_reload().")
+  if (exists("log_it")) {
+    log_fn("end")
+    log_it("debug", "Exiting api_reload().", "api")
+  }
 }
 
 #' Sanity check for plumber service name
