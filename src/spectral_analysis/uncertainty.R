@@ -178,7 +178,7 @@ getmergedind <- function(masses, addms, masserror, minerror) {
 #' @examples
 #'
 
-get_cms <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "sum", cormethod = "pearson") {
+get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "sum", cormethod = "pearson") {
   
   if (attr(peaktable, "mslevel") == 2) {eic <- peaktable$EIC$intensity[which(peaktable$ms1scans %in% (peaktable$ms2scans - 1))]}
   if (attr(peaktable, "mslevel") == 1) {eic <- peaktable$EIC$intensity}
