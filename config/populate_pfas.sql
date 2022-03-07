@@ -15,6 +15,7 @@
 /* To build in console, use each of the following as needed. */
 
 DELETE FROM solvent_mixes;
+DELETE FROM solvent_additives;
 DELETE FROM solvent_mix_collections;
 DELETE FROM solvent_aliases;
 DELETE FROM additive_aliases;
@@ -46,6 +47,7 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/pfas/solvent_aliases.csv solvent_aliases
 .import --csv --skip 1 config/data/pfas/additive_aliases.csv additive_aliases
 .import --csv --skip 1 config/data/pfas/solvent_mixes.csv solvent_mixes
+.import --csv --skip 1 config/data/pfas/solvent_additives.csv solvent_additives
 .import --csv --skip 1 config/data/pfas/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds
 .import --csv --skip 1 config/data/pfas/compound_aliases.csv compound_aliases

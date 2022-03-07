@@ -1,5 +1,5 @@
-library("ChemmineR")
-library("rcdk")
+# library("ChemmineR")
+# library("rcdk")
 
 smilestoformula <- function(SMILES) {
   molecule <- parse.smiles(SMILES)[[1]]
