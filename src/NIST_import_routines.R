@@ -595,7 +595,8 @@ get_uniques <- function(import_obj, aspect) {
 #' Delete a sample
 #'
 #' Removes a sample from the database and associated records in ms_methods,
-#' conversion_software_settings, and conversion_software_linkage.
+#' conversion_software_settings, and conversion_software_linkage. Associated
+#' peak and mass spectrometric signals will also be removed.
 #'
 #' @param sample_ids INT vector of IDs to remove from the samples table.
 #' @param db_conn connection object (default: con)
@@ -603,8 +604,9 @@ get_uniques <- function(import_obj, aspect) {
 #' @return
 #' @export
 remove_sample <- function(sample_ids, db_conn = con) {
-  log_it("info", glue('Removing samples with ids "format_list_of_names{sample_ids}" with remove_sample().'))
+  log_fn("start")
   if (sample_ids != as.integer(sample_ids)) stop('Parameter "sample_ids" cannot be safely coerced to integer.')
+  log_it("info", glue('Removing samples with ids "{format_list_of_names(sample_ids)}".'), "db")
   sample_ids <- as.integer(sample_ids)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -620,10 +622,11 @@ remove_sample <- function(sample_ids, db_conn = con) {
   }
   stopifnot(active_connection(db_conn))
   dat <- tbl(con, "samples") %>% filter(id %in% sample_ids) %>% collect()
-  build_db_action('delete', 'samples', match_criteria = list(id = sample_ids))
-  build_db_action('delete', 'ms_methods', match_criteria = list(id = unique(dat$ms_methods_id)))
-  build_db_action('delete', 'conversion_software_settings', match_criteria = list(linkage_id = unique(dat$software_conversion_settings_id)))
-  build_db_action('delete', 'conversion_software_linkage', match_criteria = list(id = unique(dat$software_conversion_settings_id)))
+  build_db_action("delete", "samples", match_criteria = list(id = sample_ids))
+  build_db_action("delete", "ms_methods", match_criteria = list(id = unique(dat$ms_methods_id)))
+  build_db_action("delete", "conversion_software_settings", match_criteria = list(linkage_id = unique(dat$software_conversion_settings_id)))
+  build_db_action("delete", "conversion_software_linkage", match_criteria = list(id = unique(dat$software_conversion_settings_id)))
+  log_fn("end")
 }
 
 #' Make import requirements file

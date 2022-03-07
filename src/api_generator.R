@@ -221,19 +221,19 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
       out[[m]]$query <- sqlInterpolate(db_conn, "? = ?", column, checks)
     } else {
       out[[m]]$query <- paste0(column, " IN (",
-                         paste0(
-                           lapply(checks,
-                                  function(x) {
-                                    if (is.character(x)) {
-                                      dbQuoteString(db_conn, x)
-                                    } else {
-                                      dbQuoteLiteral(db_conn, x)
-                                    }
-                                    
-                                  }) %>%
-                             unlist(),
-                           collapse = ", "),
-                         ")")
+                               paste0(
+                                 lapply(checks,
+                                        function(x) {
+                                          if (is.character(x)) {
+                                            dbQuoteString(db_conn, x)
+                                          } else {
+                                            dbQuoteLiteral(db_conn, x)
+                                          }
+                                          
+                                        }) %>%
+                                   unlist(),
+                                 collapse = ", "),
+                               ")")
     }
     
     # Negate clause
@@ -402,7 +402,7 @@ build_db_action <- function(action,
     check_fields <- c(column_names, names(match_criteria), group_by, names(order_by), names(values)) %>%
       tolower()
     if (!is_ansi) {
-        validate_column_names(db_conn = db_conn, table_names = table_name, column_names = check_fields)
+      validate_column_names(db_conn = db_conn, table_names = table_name, column_names = check_fields)
     }
   }
   
@@ -535,22 +535,24 @@ build_db_action <- function(action,
   
   if (action == "DELETE") {
     select_version <- str_replace(query, "^DELETE FROM", "SELECT * FROM")
-    rows_affected <- nrow(dbGetQuery(db_conn, select_version))
-    cat(sprintf("Your constructed action\n'%s'\n%s\n\n",
-                query,
-                ifelse(rows_affected > 0,
-                       sprintf("will delete %s %s.",
-                               rows_affected,
-                               ifelse(rows_affected == 1, "row", "rows")),
-                       "does not match any rows")))
-    if (rows_affected > 0) {
-      confirm <- select.list(choices   = c("CONFIRM", "abort"),
-                             preselect = "abort",
-                             multiple  = FALSE,
-                             title     = "Please confirm.")
-      if (!confirm == "CONFIRM") {
-        cat("Query construction aborted.\n")
-        query <- NA
+    if (execute) {
+      rows_affected <- nrow(dbGetQuery(db_conn, select_version))
+      cat(sprintf("Your constructed action\n'%s'\n%s\n\n",
+                  query,
+                  ifelse(rows_affected > 0,
+                         sprintf("will delete %s %s.",
+                                 rows_affected,
+                                 ifelse(rows_affected == 1, "row", "rows")),
+                         "does not match any rows")))
+      if (rows_affected > 0) {
+        confirm <- select.list(choices   = c("CONFIRM", "abort"),
+                               preselect = "abort",
+                               multiple  = FALSE,
+                               title     = "Please confirm.")
+        if (!confirm == "CONFIRM") {
+          cat("Query construction aborted.\n")
+          query <- NA
+        }
       }
     }
   }
@@ -560,7 +562,7 @@ build_db_action <- function(action,
     query <- query %>%
       str_replace_all(catch_null, " IS NULL")
   }
- 
+  
   if (execute) {
     if (grepl("^SELECT", query)) {
       tmp <- dbGetQuery(db_conn, query)
