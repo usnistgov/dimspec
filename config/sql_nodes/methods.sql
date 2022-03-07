@@ -363,6 +363,26 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS instrument_properties
+	  /* Expandable properties describing performance properties of the ms at the time the method was run. */
+	(
+	  ms_methods_id
+			INTEGER NOT NULL,
+			/* foreign key to ms_methods */
+		name
+		  TEXT NOT NULL,
+		  /* performance property name */
+		value
+		  TEXT NOT NULL,
+		  /* property value, either in numerical form or in text description */
+		value_unit
+		  TEXT,
+		  /* units associated with this value; open text */
+		/* Check constraints */
+		/* Foreign key relationships */
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS chromatography_descriptions
 		/* Full description of all chromatography types used for a given entry in ms_methods. */
 	(

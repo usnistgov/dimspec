@@ -25,6 +25,7 @@ DELETE FROM norm_additives;
 DELETE FROM norm_peak_confidence;
 DELETE FROM samples;
 DELETE FROM norm_sample_classes;
+DELETE FROM instrument_properties;
 DELETE FROM ms_methods;
 DELETE FROM ms_descriptions;
 .read config/populate_common.sql
@@ -39,6 +40,7 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/demo/norm_sample_classes.csv norm_sample_classes
 .import --csv --skip 1 config/data/demo/ms_methods.csv ms_methods
+.import --csv --skip 1 config/data/demo/instrument_properties.csv instrument_properties
 .import --csv --skip 1 config/data/demo/ms_descriptions.csv ms_descriptions
 .import --csv --skip 1 config/data/demo/chromatography_descriptions.csv chromatography_descriptions
 .import --csv --skip 1 config/data/demo/affiliations.csv affiliations
