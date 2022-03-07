@@ -930,6 +930,12 @@ manage_connection <- function(db          = DB_NAME,
     assign(x     = conn_name,
            value = try(do.call("dbConnect", args = c(drv = do.call(drv, list()), args))),
            envir = .GlobalEnv)
+    if (drv == "SQLite") {
+      invisible(
+        res <- do.call(dbSendStatement, args = list(conn = .GlobalEnv[[conn_name]], statement = "pragma foreign_keys = on"))
+      )
+      dbClearResult(res)
+    }
     if (class(eval(sym(conn_name))) == "try-error") {
       stop(sprintf('Unable to connect to "%s".\nCall attempted was "assign(x = %s, value = try(do.call("dbConnect", args = c(drv = do.call(%s, list()), %s)))',
                    db,
