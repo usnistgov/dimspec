@@ -150,6 +150,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		rt_end
 			REAL NOT NULL,
 			/* peak retention time end point (constrained to positive numbers) */
+		identification_confidence
+		  INTEGER,
+		  /* confidence in this peak's identification */
 		/* Check constraints */
 		CHECK (precursor_mz > 0),
 		CHECK (charge IN (-1, 1)),
@@ -158,9 +161,29 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE,
+		FOREIGN KEY (identification_confidence) REFERENCES norm_peak_confidence(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_peak_confidence
+  	/* Normalization levels for peak identification confidence */
+  (
+  	id
+  		INTEGER PRIMARY KEY AUTOINCREMENT,
+  		/* primary key */
+  	level1
+  		TEXT NOT NULL,
+  		/* primary level of confidence */
+  	level2
+  		TEXT,
+  		/* confidence sublevel */
+  	confidence
+  		TEXT
+  		/* description of the confidence level */
+  	/* Check constraints */
+  	/* Foreign key relationships */
+  );
+  /*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_data
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(

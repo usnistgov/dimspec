@@ -1,0 +1,14 @@
+﻿id,level1,level2,confidence
+1,NA,,Not assigned
+2,1,a,Confirmed by reference standard
+3,1,b,Indistinguishable from reference standard
+4,2,a,Probable by library spectrum match
+5,2,b,Probable by diagnostic fragmentation evidence
+6,2,c,Probable by diagnostic homologue evidence
+7,3,a,Positional isomer candidates
+8,3,b,Fragmentation-basedcandidate
+9,3,c,Circumstantial candidate
+10,4,,Unequivocal molecular formula
+11,5,a,PFAS suspect screening exact mass match
+12,5,b,Nontarget PFAS exact mass of interest
+13,NA,,Non-PFAS Related Feature

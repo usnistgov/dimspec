@@ -22,6 +22,7 @@ DELETE FROM additive_aliases;
 DELETE FROM mobile_phases;
 DELETE FROM norm_solvents;
 DELETE FROM norm_additives;
+DELETE FROM norm_peak_confidence;
 DELETE FROM samples;
 DELETE FROM norm_sample_classes;
 DELETE FROM ms_methods;
@@ -53,3 +54,4 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases
 .import --csv --skip 1 config/data/demo/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/demo/samples.csv samples
+.import --csv --skip 1 config/data/demo/norm_peak_confidence.csv norm_peak_confidence
