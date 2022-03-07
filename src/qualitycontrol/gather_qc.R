@@ -1,9 +1,3 @@
-source('src/qualitycontrol/elementalcomposition_calc.R')
-source('src/base/peaktable2.R')
-source('src/qualitycontrol/check_isotopedist.R')
-source('src/qualitycontrol/smilestoformula.R')
-source('src/misc/dotproduct_ms.R')
-
 exactmasschart <- readRDS('src/qualitycontrol/exactmasschart.RDS')
 
 gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {
@@ -24,12 +18,9 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   check[[length(check)+1]] <- data.frame(parameter = "measurederror", reportedmz = as.numeric(gather_peak$peak$mz), compoundmz = true_compound_mz, value = measurederror, limit = as.numeric(gather_peak$massspectrometry$msaccuracy), result = result)
   
   #check 2: calculate the match score of the MS1 isotopic pattern
-  ms1list <- apply(gather_peak$msdata, 1, function(x) {if (as.integer(x["msn"]) == 1) {cbind(as.numeric(unlist(strsplit(x["masses"], split = " "))), as.numeric(unlist(strsplit(x["intensities"], split = " "))))}})
-  ms1list <- lapply(ms1list, function(x) x[which(x[,1] >= as.numeric(gather_peak$peak$mz) - ms1range[1] & x[,1] <= as.numeric(gather_peak$peak$mz) + ms1range[2]),])
-  ms1list <- ms1list[-which(sapply(lapply(ms1list, nrow), is.null))]
-  ms1list <- lapply(ms1list, zipms)
-  ms1empirical <- peaktable(ms1list, masserror = as.numeric(gather_peak$massspectrometry$msaccuracy))
-  ms1empirical <- data.frame(mz = rowMeans(ms1empirical$mass, na.rm = TRUE), int = rowMeans(ms1empirical$int, na.rm = TRUE))
+  peaklist <- create_peak_list(gather_peak$msdata)
+  ms1empirical <- create_peak_table_ms1(peaklist, mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
+  ms1empirical <- data.frame(mz = rowMeans(ms1empirical$peaktable_mass, na.rm = TRUE), int = rowMeans(ms1empirical$peaktable_int, na.rm = TRUE))
   ms1match <- check_isotopedist(ms1empirical, true_compound_ion_form, exactmasschart, error = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, max.dist = ms1range[2], min.int = 0.001, charge = charge, m = 1, n = 0.5)
   matchscore <- as.numeric(ms1match[2])
   result <- matchscore >= ms1isomatchlimit
@@ -51,10 +42,8 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   #check 4: do the annotated fragments appear in the MS2 spectra (average)
   if (is.null(gather_peak$annotation)) {check[[length(check) + 1]] <- data.frame(parameter = "annfragments_detected", value = NA, result = NA)}
   if (!is.null(gather_peak$annotation)) {
-    ms2list <- apply(gather_peak$msdata, 1, function(x) {if (as.integer(x["msn"] == 2)) {zipms(cbind(as.numeric(unlist(strsplit(x["masses"], split = " "))), as.numeric(unlist(strsplit(x["intensities"], split = " ")))))}})
-    ms2list <- ms2list[-which(sapply(ms2list, function(x) length(nchar(x)) == 0))]
-    ms2empirical <- peaktable(ms2list, masserror = as.numeric(gather_peak$massspectrometry$msaccuracy))
-    ms2empirical <- data.frame(mz = rowMeans(ms2empirical$mass, na.rm = TRUE), int = rowMeans(ms2empirical$int, na.rm = TRUE))
+    ms2empirical <- create_peak_table_ms2(peaklist,mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
+    ms2empirical <- data.frame(mz = rowMeans(ms2empirical$peaktable_mass, na.rm = TRUE), int = rowMeans(ms2empirical$peaktable_int, na.rm = TRUE))
     matched_ind <- sapply(gather_peak$annotation$fragment_mz, function(x) which(ms2empirical$mz >= x - max(x*as.numeric(gather_peak$massspectrometry$msaccuracy)*1E-6,minerror) & ms2empirical$mz <= x + max(x*as.numeric(gather_peak$massspectrometry$msaccuracy)*1E-6,minerror))[1]) #sometimes two match.
     value <- sapply(matched_ind, function(x) length(x) > 0)
     result <- TRUE

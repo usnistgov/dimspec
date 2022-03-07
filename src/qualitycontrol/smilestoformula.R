@@ -1,8 +1,8 @@
-# library("ChemmineR")
-# library("rcdk")
+library("ChemmineR")
+library("rcdk")
 
 smilestoformula <- function(SMILES) {
-  molecule <- parse.smiles(SMILES)[[1]]
+  molecule <- rcdk::parse.smiles(SMILES)[[1]]
   FIXEDMASS <- get.exact.mass(molecule)
   NETCHARGE <- get.total.charge(molecule)
   FORMULA <- get.mol2formula(molecule, NETCHARGE)@string

@@ -29,10 +29,10 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     }
     all_scans <- which(times >= as.numeric(methodjson$peaks[[i]]$peak_starttime) & times <= as.numeric(methodjson$peaks[[i]]$peak_endtime))
     ms1scans <- all_scans[which(mslevels[all_scans] == 1)]
-    if (out[[i]]$massspectrometry$ms2exp == "DIA") {
+    if (out[[i]]$massspectrometry$ms2exp == "data-independent acquisition (DIA/AIF)") {
       ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
     }
-    if (out[[i]]$massspectrometry$ms2exp == "DDA") {
+    if (out[[i]]$massspectrometry$ms2exp == "data-dependent acquisition (DDA/TopN)") {
       ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(out[[i]]$peak$mz) - as.numeric(out[[i]]$massspectrometry$isowidth) & precursors[all_scans] <= as.numeric(out[[i]]$peak$mz) + as.numeric(out[[i]]$massspectrometry$isowidth))]
     }
     if (out[[i]]$massspectrometry$ms2exp == "SWATH") {
@@ -40,11 +40,11 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     }
     ms1data <- table_msdata(mzml, ms1scans, mz = as.numeric(out[[i]]$peak$mz), zoom = zoom, masserror = as.numeric(out[[i]]$massspectrometry$msaccuracy), minerror = minerror)
     ms2data <- table_msdata(mzml, ms2scans)
-    ms1data <- cbind(msn = rep(1, nrow(ms1data)), ms1data)
-    ms2data <- cbind(msn = rep(2, nrow(ms2data)), ms2data)
+    ms1data <- cbind(mslevel = rep(1, nrow(ms1data)), ms1data)
+    ms2data <- cbind(mslevel = rep(2, nrow(ms2data)), ms2data)
     msdata <- rbind(ms1data, ms2data)
     msdata <- msdata[order(msdata$scantime),]
-    out[[i]]$msdata <- do.call(rbind, lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], msn = msdata$msn[x], baseion = msdata$baseion[x], baseint = msdata$baseint[x], masses = msdata$masses[x], intensities = msdata$intensities[x])))
+    out[[i]]$msdata <- do.call(rbind, lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], ms_n = msdata$mslevel[x], baseion = msdata$baseion[x], base_int = msdata$base_int[x], measured_mz = msdata$masses[x], measured_intensity = msdata$intensities[x])))
   }
   out
 }

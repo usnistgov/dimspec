@@ -7,7 +7,7 @@ table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerr
                                         data.frame(scan = x, 
                                                  scantime = gettime(mzml, x),
                                                  baseion = ms[which.max(ms[,2]),1],
-                                                 baseint = ms[which.max(ms[,2]),2],
+                                                 base_int = ms[which.max(ms[,2]),2],
                                                  masses = paste(ms[,1], collapse = " "),
                                                  intensities = paste(ms[,2], collapse = " "))}))
   }
@@ -20,7 +20,7 @@ table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerr
                             data.frame(scan = x, 
                                        scantime = gettime(mzml, x),
                                        baseion = mean(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),1], na.rm = TRUE),
-                                       baseint = sum(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),2], na.rm = TRUE),
+                                       base_int = sum(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),2], na.rm = TRUE),
                                        masses = paste(ms[,1], collapse = " "),
                                        intensities = paste(ms[,2], collapse = " "))}))
     }
