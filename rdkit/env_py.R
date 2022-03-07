@@ -8,35 +8,38 @@ PYENV_NAME <- "nist_hrms_db"
 # only be changed for interactive use.
 PYENV_REF <- "rdk"
 
-# The name of the modules for installation from conda. This should always include
-# "rdkit"; if additional modules or libraries are needed, list them here as a
-# character vector.PYENV_MODULE <- "rdkit"
+# Set the python version from which to build the environment.
+USE_PY_VER <- 3.9
 
-# Set the minimum python version from which to build the environment.
-MIN_PY_VER <- 3.9
-
-# Set the option to install the python environment.
-# Must be one of "conda", "git", or "local" 
+# Set the option to install the python environment. Must be one of "conda", 
+# "git", or "local", with "local" being recommended.
 #  ** GIT IS NOT SUPPORTED IN THIS VERSION FOR AUTOMATIC CONFIGURATION **
-INSTALL_FROM <- "conda"
+INSTALL_FROM <- "local"
 
 # [REQUIRED IF INSTALL_FROM == "local"] Set the file from which the python
 # environment will be built.
-# ------------------------------------------------------------------------------
+# INSTALL_FROM_FILE <- file.path(
+#   "rdkit",
+#   switch(.Platform$OS.type,
+#          "windows" = "environment_windows.yml",
+#          "unix"    = "environment_ubuntu.yml")
+# )
 INSTALL_FROM_FILE <- file.path("rdkit", "environment.yml")
+
+# [OPTIONAL]--------------------------------------------------------------------
+# [ADVANCED] Set required conda libraries to install, depending on it to define
+# its dependencies. This will be used if INSTALL_FROM = "conda". Note that the
+# r-reticulate python package will automatically be added to this list during
+# installation.
+# ------------------------------------------------------------------------------
+PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
+PYENV_MODULES <- "rdkit"
+# Channel from which to install packages.
+PYENV_CHANNELS <- "conda-forge"
 # ------------------------------------------------------------------------------
 
-# [OPTIONAL, ADVANCED, COMMAND LINE BUILD] Set the main conda packages
-# to install, depending on it to define its dependencies. This will be used if
-# INSTALL_FROM = "conda"
-# ------------------------------------------------------------------------------
-CONDA_MODULES <- c("r-reticulate", "rdkit")
-# Channel from which to install packages
-CONDA_CHANNELS <- "conda-forge"
-# ------------------------------------------------------------------------------
-
-# [OPTIONAL, ADVANCED] set the local path for advanced conda setups
+# [ADVANCED] Set the path for advanced conda setups.
 # ------------------------------------------------------------------------------
 CONDA_PATH <- "auto"
-# CONDA_PATH = "~/miniforge3/bin/conda'
+# CONDA_PATH <- "~/miniforge3/bin/conda" # Example
 # ------------------------------------------------------------------------------

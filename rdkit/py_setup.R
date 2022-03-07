@@ -4,122 +4,115 @@
 #' a standard script. Given the name of a Python environment, it either (1)
 #' checks the provided `env_name` against currently installed environments and
 #' binds the current session to it if found OR (2) installs a new environment
-#' with [create_rdkit_conda_env] and activates it by calling itself.
+#' with [create_py_env] and activates it by calling itself.
 #'
-#' It is recommended that project variables in `env_py.R` and `env_glob.txt` be
-#' used to control most of the behavior of this function. This works with both
-#' virtual and conda environments, though creation of new environments is done
-#' in conda.
+#' It is recommended that project variables in `../config/env_py.R` and
+#' `../config/env_glob.txt` be used to control most of the behavior of this
+#' function. This works with both virtual and conda environments, though
+#' creation of new environments is done in conda.
 #'
-#' @param env_name CHR scalar of a python environment name to bind. The
-#'   default, NULL, will look for a global environment variable named
-#'   `PYENV_NAME`
+#' @note Where parameters are NULL, [rectify_null_from_env] will be used to get
+#'   a value associated with it if they exist.
+#'
+#' @param env_name CHR scalar of a python environment name to bind. The default,
+#'   NULL, will look for an environment variable named `PYENV_NAME`
+#' @param required_libraries CHR vector of python libraries to include in the
+#'   environment, if building a new environment. Ignored if `env_name` is an
+#'   existing environment. The defaul, NULL, will look for an environment
+#'   variable named `PYENV_LIBRARIES`.
+#' @param required_modules CHR vector of modules to be checked for availability
+#'   once the environment is activated. The default, NULL, will look for an
+#'   environment variable named `PYENV_MODULES`.
+#' @param log_ns CHR scalar of the logging namespace to use, if any.
 #'
 #' @return LGL scalar of whether or not activate was successful
 #' @export
 #' 
-activate_py_env <- function(env_name = NULL) {
-  if (exists("log_it")) log_it("debug", "Run activate_py_env().", "rdk")
+activate_py_env <- function(env_name = NULL, required_libraries = NULL, required_modules = NULL, log_ns = NULL, conda_path = NULL) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
+  log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  env_name <- rectify_null_from_env(env_name, PYENV_NAME, NULL, log_ns)
+  required_libraries <- rectify_null_from_env(required_libraries, PYENV_LIBRARIES, NULL, log_ns)
+  required_modules <- rectify_null_from_env(required_modules, PYENV_MODULES, NULL, log_ns)
+  conda_path <- rectify_null_from_env(conda_path, CONDA_PATH, NULL, log_ns)
   stopifnot(require(reticulate))
-  if (!is.null(env_name)) {
-    # Argument validation relies on verify_args
-    if (exists("verify_args")) {
-      arg_check <- verify_args(
-        args       = as.list(environment()),
-        conditions = list(
-          env_name = list(c("mode", "character"), c("length", 1))
-        ),
-        from_fn = "activate_py_env"
-      )
-      stopifnot(arg_check$valid)
-    }
-    if (exists("log_it")) log_it("info", glue('Attemping to bind to python environment "{env_name}".'), "rdk")
-  } else {
-    if (exists("PYENV_NAME")) {
-      if (exists("log_it")) log_it("info", glue('Attemping to bind to python environment "{PYENV_NAME}".'), "rdk")
-      env_name <- PYENV_NAME
-    } else {
-      if (exists("log_it")) log_it("warn", "No environment name available at PYENV_NAME. Searching for installed environments...", "rdk")
-    }
-    py_envs <- c(
-      conda_list()$name,
-      virtualenv_list()
+  # if (!is.null(env_name)) {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(env_name, log_ns),
+      conditions = list(
+        env_name = list(c("mode", "character"), c("length", 1)),
+        log_ns   = list(c("mode", "character"), c("length", 1))
+      ),
+      from_fn = "activate_py_env"
     )
-    if (length(py_envs) == 0) {
-      if (exists("log_it")) log_it("error", "No python environments were located on this system.", "rdk")
-      stop()
-    } else if (length(py_envs) == 1) {
-      if (exists("log_it")) log_it("info", glue::glue('Only one python environment named "{py_envs}" was located.'), "rdk")
-      if (interactive()) {
-        do_bind <- select.list(
-          title = "Is this the correct environment?",
-          choices = c("Yes", "No", "Abort")
-        )
-        if (!do_bind == "Yes") {
-          if (exists("log_it")) log_it("error", "Python binding aborted.", "rdk")
-          return(FALSE)
-        }
-      } else {
-        log_it("warn", "Automatic binding may cause failures if the python environment is not set up correctly.", "rdk")
-      }
-      env_name <- py_envs
-    } else {
-      if (!exists("PYENV_NAME")) {
-        if (interactive()) {
-          env_name <- select.list(
-            title = "Select an existing python environment to activate.",
-            choices = c("(Abort)", py_envs)
-          )
-          if (env_name == "(Abort)") {
-            log_it("info", "Environment activation aborted.", "rdk")
-            return(FALSE)
-          }
-        } else {
-          if (exists("log_it")) log_it("error", 'Global variable "PYENV_NAME" was not defined. Please provide a python environment name to use.', "rdk")
-          return(FALSE)
-        }
-      }
-    }
+    stopifnot(arg_check$valid)
+  }
+  if (logger) {
+    log_it("info",
+           glue::glue('Attemping to bind to python environment "{env_name}".'),
+           log_ns)
   }
   
+  if (logger) log_it("info", "Checking for python installations...this may take a moment...", log_ns)
+  py_discover_config(required_module = required_modules, use_environment = env_name)
+  
   virt_env  <- virtualenv_exists(env_name)
-  conda_env <- env_name %in% conda_list()$name
+  conda_env <- env_name %in% conda_list(conda = conda_path)$name
   if (virt_env) {
     use_virtualenv(virtualenv = env_name, required = TRUE)
   } else if (conda_env) {
-    use_condaenv(condaenv = env_name, required = TRUE)
+    use_condaenv(condaenv = env_name, conda = conda_path, required = TRUE)
   }
   if (any(virt_env, conda_env)) {
-    if (exists("log_it")) log_it("success", glue::glue('Python environment "{env_name}" activated.'), "rdk")
+    if (logger) log_it("success", glue::glue('Python environment "{env_name}" activated.'), log_ns)
   } else {
-    if (exists("log_it")) log_it("warn", glue::glue('Cannot identify a virtual or conda environment named "{env_name}".'), "rdk")
+    if (logger) log_it("warn", glue::glue('Cannot identify a virtual or conda environment named "{env_name}".'), log_ns)
     if (interactive()) {
       create <- select.list(
-        title = "Create a new python environment for running rdkit?",
-        choices = c("Yes", "No")
+        title = sprintf('Create a new python environment named "%s"?', env_name),
+        choices = c("Yes", "No"),
+        preselect = "Yes"
       )
       if (create == "Yes") { 
-        if (exists("log_it")) log_it("info", "Building environment...", "rdk")
-        create_rdkit_conda_env(env_name)
-        activate_py_env(env_name)
+        if (logger) {
+          if (is.null(required_libraries)) {
+            log_it("warn", "No required libraries were defined. You will need to manually add libraries.")
+          }
+          log_it("info", "Building environment...", log_ns)
+        }
+        create_py_env(env_name, required_libraries, log_ns, conda_path, activate = TRUE)
       } else {
-        if (exists("log_it")) log_it("info", "Environment creation aborted.", "rdk")
-        return(FALSE)
+        if (logger) log_it("info", "Environment creation aborted.", log_ns)
+        return(invisible(FALSE))
       }
     } else {
-      if (exists("log_it")) log_it("error", "Non-interactive session, terminating python binding. RDKit will not be available.", "rdk")
-      return(FALSE)
+      if (logger) log_it("error", "Non-interactive session, terminating python binding.", log_ns)
+      return(invisible(FALSE))
     }
   }
   # Force binding here
   py_config()
   # Ensure availability
   if (!py_available()) {
-    if (exists("log_it")) log_it("error", "There was a problem binding to python.")
-    return(FALSE)
+    if (logger) {
+      log_it("error", "There was a problem binding to python.", log_ns)
+      if (exists("create") && create == "Yes") {
+        log_it("info", sprintf('A new environment named "%s" was created but "%s" is currently active.', env_name, py_config()$name))
+      }
+    }
+    return(invisible(FALSE))
   }
-  if (exists("log_it")) log_it("debug", "Exiting completed setup_rdkit().", "rdk")
-  return(any(virt_env, conda_env))
+  if (!py_modules_available(required_modules)) {
+    return(invisible(FALSE))
+  }
+  if (logger) {
+    log_it("success", "Python environment activated.", log_ns)
+    log_fn("end", log_ns)
+  }
+  return(invisible(TRUE))
 }
 
 #' Update a conda environment from a requirements file
@@ -129,6 +122,9 @@ activate_py_env <- function(env_name = NULL) {
 #' environment.yml, etc) that is understood by conda. Relative file paths are
 #' fine, but the file will not be discovered (e.g. by `list.files`) so
 #' specificity is always better.
+#'
+#' This is a helper function, largely to support versions of reticulate prior to
+#' the introduction of the environment argument in version 1.24+.
 #'
 #' @note This requires conda CLI tools to be installed.
 #' @note A default installation alias of "conda" is assumed.
@@ -145,36 +141,45 @@ activate_py_env <- function(env_name = NULL) {
 #' @export
 #'
 #' @examples
-update_conda_env <- function(env_name, requirements_file, conda_alias = NULL) {
-  if (exists("log_it")) log_it("debug", "Run update_conda_env().", "rdk")
-  # Argument validation relies on verify_args
-  if (is.null(conda_alias)) {
-    conda_alias <- ifelse(exists("CONDA_CLI"), CONDA_CLI, "conda")
+update_env_from_file <- function(env_name, requirements_file, conda_alias = NULL, log_ns = NULL) {
+  logger <- exists("log_it")
+  if (logger) {
+    log_ns <- rectify_null_from_env(log_ns, PYENV_REF, "rdk")
+    log_fn("start", log_ns)
   }
+  # Argument validation relies on verify_args
+  conda_alias <- rectify_null_from_env(conda_alias, CONDA_CLI, "conda")
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(env_name, requirements_file, conda_alias),
       conditions = list(
         env_name          = list(c("mode", "character"), c("length", 1)),
         requirements_file = list(c("mode", "character"), c("length", 1)),
         conda_alias       = list(c("mode", "character"), "not_empty")
       ),
-      from_fn = "update_conda_env"
+      from_fn = "update_env_from_file"
     )
     stopifnot(arg_check$valid)
   }
   stopifnot(file.exists(requirements_file))
   if (Sys.which(conda_alias) == "") {
-    stop("CLI alias '", conda_alias, "' not recognized.")
+    if (logger) log_it("warn", "CLI alias '", conda_alias, "' not recognized. There may be a PATH issue. Attempting fallback update...")
+    # TODO fall back if conda alias is not available...not sure what a good option is here other than activating and installing dependencies manually...
+  } else {
+    sys_cmd <- sprintf(
+      '%s env update --name %s --file "%s" --prune',
+      conda_alias,
+      env_name,
+      requirements_file
+    )
+    if (logger) log_it("trace", sprintf("Issuing shell command '%s'", sys_cmd), log_ns)
+    if (.Platform$OS.type == "windows") {
+      shell(sys_cmd)
+    } else {
+      system(sys_cmd)
+    }
   }
-  sys_cmd <- sprintf(
-    "conda env update --name %s --file %s",
-    env_name,
-    requirements_file
-  )
-  if (exists("log_it")) log_it("trace", sprintf("Issuing system command '%s'", sys_cmd), "rdk")
-  system(sys_cmd)
-  if (exists("log_it")) log_it("debug", "Exiting update_conda_env().", "rdk")
+  if (logger) log_it("end", log_ns)
 }
 
 #' Create a python environment for RDKit
@@ -200,79 +205,140 @@ update_conda_env <- function(env_name, requirements_file, conda_alias = NULL) {
 #' @export
 #'
 #' @examples
-#' create_rdkit_conda_env()
-create_rdkit_conda_env <- function(env_name = NULL) {
-  if (exists("log_it")) log_it("debug", "Run create_rdkit_conda_env().", "rdk")
+#' create_py_env()
+create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = NULL, conda_path = NULL, activate = TRUE) {
   require(reticulate)
-  if (is.null(env_name)) {
-    env_name <- ifelse(
-      exists(PYENV_NAME),
-      PYENV_NAME,
-      "reticulated_rdkit"
-    )
+  if (is.null(required_libraries)) {
+    if (exists("PYENV_LIBRARIES")) {
+      required_libraries <- PYENV_LIBRARIES
+    }
   }
-  env_mods <- if (exists("CONDA_MODULES")) CONDA_MODULES else "rdkit"
-  if (!"r-reticulate" %in% env_mods) env_mods <- c("r-reticulate", env_mods)
-  if (!env_name %in% conda_list()$name) {
-    install_from <- ifelse(
-      exists("INSTALL_FROM"),
-      INSTALL_FROM,
-      "conda"
+  env_name <- rectify_null_from_env(env_name, PYENV_NAME, NULL)
+  required_libraries <- unique(
+    c(
+      rectify_null_from_env(required_libraries, PYENV_LIBRARIES, "r-reticulate"),
+      "r-reticulate"
     )
+  )
+  conda_path <- rectify_null_from_env(conda_path, CONDA_PATH, "auto")
+  log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  if (is.null(env_name)) {
+    if (length(required_libraries) == 1 && required_libraries == "r-reticulate") {
+      env_name <- "r-reticulate"
+    } else {
+      env_name <- sprintf("r-%s", required_libraries[1])
+    }
+  }
+  
+  logger <- exists("log_it")
+  if (logger) log_fn("start", log_ns)
+  env_names <- c(
+    conda_list()$name,
+    virtualenv_list()
+  )
+  if (env_name %in% env_names) {
+    stop("A python environment named", env_name, "already exists on this system.")
+  } else {
+    use_py_ver <- rectify_null_from_env(NULL, USE_PY_VER, "3.9")
+    if (logger) {
+      log_it("info",
+             sprintf("Creating through reticulate using python %s and conda path %s",
+                     use_py_ver, conda_path),
+             log_ns)
+    }
+    install_from <- rectify_null_from_env(NULL, INSTALL_FROM, "conda")
     if (install_from == "local") {
-      if (exists("INSTALL_FROM_FILE")) {
-        if (file.exists(INSTALL_FROM_FILE)) {
-          if (!length(INSTALL_FROM_FILE) == 1) {
+      install_from_file <- rectify_null_from_env(NULL, INSTALL_FROM_FILE, NULL)
+      if (!is.null(install_from_file)) {
+        if (file.exists(install_from_file)) {
+          if (!length(install_from_file) == 1) {
             install_from <- "conda"
-            if (exists("log_it")) log_it("warn", "More than one environment file found; defaulting to conda build.", "rdk")
+            if (logger) {
+              log_it("warn",
+                     "More than one requirements file found; defaulting to conda build.",
+                     log_ns)
+            }
           } else {
-            if (exists("log_it")) log_it("info",
-                   sprintf('Building from %s...',
-                           basename(INSTALL_FROM_FILE))
-            )
-            if (!exists("MIN_PY_VER")) MIN_PY_VER <- 3.9
-            conda_create(env_name, python_version = MIN_PY_VER)
-            update_conda_env(env_name, INSTALL_FROM_FILE)
+            if (packageVersion("reticulate") >= 1.23) {
+              if (logger) {
+                cmd <- sprintf('conda_create(envname = "%s", environment = "%s")',
+                               env_name,
+                               install_from_file)
+                log_it("info",
+                       sprintf('Building using `%s`. This may take a moment...', cmd),
+                       log_ns)
+              }
+              conda_create(envname = env_name, environment = install_from_file, conda = conda_path)
+            } else {
+              conda_cli <- rectify_null_from_env(NULL, CONDA_CLI, "conda")
+              if (logger) {
+                cmd <- sprintf('conda_create(envname = "%s", python_version = %s, conda = "%s")',
+                               env_name,
+                               use_py_ver,
+                               conda_path)
+                cmd2 <- sprintf('update_env_from_file(env_name = "%s", requirements_file = "%s", conda_alias = "%s", log_ns = "%s")',
+                                env_name,
+                                install_from_file,
+                                conda_cli,
+                                log_ns)
+                log_it("info",
+                       sprintf('Reticulate version %s was detected (1.23+ is recommended). Building with `%s` and then updating with `%s`. This may take a moment...',
+                               packageVersion("reticulate"),
+                               cmd,
+                               cmd2),
+                       log_ns)
+              }
+              conda_create(envname = env_name, python_version = use_py_ver, conda = conda_path)
+              update_env_from_file(env_name = env_name, requirements_file = install_from_file, conda_alias = conda_cli, log_ns = log_ns)
+            }
           }
         } else {
-          if (exists("log_it")) log_it("warn",
-                 sprintf('Environment file "%s" does not exist; defaulting to conda build.',
-                         INSTALL_FROM_FILE),
-                 "rdk"
-          )
-          install_from == "conda"
+          if (logger) {
+            log_it("warn",
+                   sprintf('Environment file "%s" does not exist; defaulting to conda build.',
+                           install_from_file),
+                   log_ns)
+          }
+          install_from <- "conda"
         }
       } else {
-        if (exists("log_it")) log_it("warn", "No environment file defined (INSTALL_FROM_FILE); defaulting to conda build.", "rdk")
-        install_from == "conda"
+        if (logger) {
+          log_it("warn",
+                 "No environment file defined as INSTALL_FROM_FILE in env_py.R; defaulting to conda build.",
+                 log_ns)
+        }
+        install_from <- "conda"
       }
     }
     if (install_from == "conda") {
-      if (!exists("CONDA_PATH")) CONDA_PATH <- "auto"
-      if (exists("log_it")) log_it("info",
-             sprintf("Building using `conda_create(env_name = %s, forge = TRUE, conda = %s, packages = %s)`.",
-                     paste0('"', env_name, '"'),
-                     paste0('"', CONDA_PATH, '"'),
-                     sprintf('c("%s")',
-                             paste0(env_mods, collapse = '", "')
-                             )
-                     ),
-             "rdk"
-      )
+      if (logger) {
+        cmd <- sprintf('conda_create(env_name = "%s", forge = TRUE, conda = "%s", packages = %s)',
+                       env_name,
+                       conda_path,
+                       sprintf('c("%s")',
+                               paste0(required_libraries, collapse = '", "')))
+        log_it("info",
+               sprintf("Building using `%s`. This may take a moment.", cmd),
+               log_ns)
+      }
       conda_create(
         envname = env_name,
         forge = TRUE,
-        conda = CONDA_PATH,
-        packages = env_mods
+        conda = conda_path,
+        python_version = use_py_ver,
+        packages = required_libraries
       )
     }
   }
-  if (exists("log_it")) log_it("debug", "Exiting create_rdkit_conda_env().", "rdk")
+  if (activate) {
+    use_condaenv(condaenv = env_name, conda = conda_path, required = TRUE)
+  }
+  if (logger) log_fn("end", log_ns)
 }
 
 #' Picture a molecule from structural notation
 #'
-#' This is a thin wrapper to RDkit.Chem.MolFromX methods to generate molecular
+#' This is a thin wrapper to rdkit.Chem.MolFromX methods to generate molecular
 #' models from common structure notation such as InChI or SMILES. All picture
 #' files produced will be in portable network graphics (.png) format.
 #'
@@ -298,8 +364,12 @@ create_rdkit_conda_env <- function(env_name = NULL) {
 #' @examples
 #' caffeine <- "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12"
 #' molecule_picture(caffeine, show = TRUE)
-molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_name = "rdk", show = FALSE) {
-  if (exists("log_it")) log_it("debug", "Run molecule_picture().", "rdk")
+molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_name = "rdk", show = FALSE, log_ns = NULL) {
+  if (exists("log_it")) {
+    logging <- TRUE
+    log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  }
+  if (logging) log_fn("start", log_ns)
   if (!is.character(rdkit_name)) rdkit_name <- deparse(substitute(rdkit_name))
   stopifnot(exists(rdkit_name))
   rdk <- .GlobalEnv[[rdkit_name]]
@@ -325,19 +395,65 @@ molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_n
     picture <- try(rdk$Chem$Draw$MolToFile(molecule, filepath))
     successful <- !"try-error" %in% class(picture)
     if (successful) {
-      if (exists("log_it")) log_it("success", sprintf('File created at "%s"', filepath))
+      if (logging) log_it("success", sprintf('File created at "%s"', filepath), log_ns)
       if (show) file.show(filepath)
     } else {
-      if (exists("log_it")) log_it("error", "There was a problem drawing this molecule.", "rdk")
+      if (logging) log_it("error", "There was a problem drawing this molecule.", log_ns)
       filepath <- NA
     }
     out <- list(structure = mol,
                 notation = mol_type,
                 valid = successful,
                 file = filepath)
-    if (exists("log_it")) log_it("debug", "Exiting molecule_picture().", "rdk")
+    if (logging) log_fn("end", log_ns)
     return(out)
   }
+}
+
+#' Are all conda modules available in the active environment
+#'
+#' Checks that all defined modules are available in the currently active python
+#' binding. Supports error logging
+#'
+#' @param required_modules CHR vector of required modules
+#'
+#' @return
+#' @export
+#'
+#' @examples
+py_modules_available <- function(required_modules, log_ns = NULL) {
+  log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  logging <- exists("log_it")
+  if (logging) log_fn("start", log_ns)
+  if (!py_available()) {
+    msg <- "Python is not available. Bind a python environment first, perhaps with reticulate::py_config()."
+    if (logging) {
+      log_it("error", msg, log_ns)
+    } else {
+      cat("\n", paste0(msg, collapse = "\n"))
+    }
+    return(FALSE)
+  }
+  required_modules <- unique(c("rpytools", required_modules))
+  modules_available <- sapply(required_modules, py_module_available)
+  if (any(modules_available)) {
+    msg <- sprintf("Module '%s' is available.", required_modules[modules_available])
+    if (logging) {
+      sapply(msg, function(x) log_it("trace", x, log_ns))
+    } else {
+      cat("\n", paste0(msg, collapse = "\n"))
+    }
+  }
+  if (!all(modules_available)) {
+    msg <- sprintf("Module '%s' is not available.", required_modules[!modules_available])
+    if (logging) {
+      sapply(msg, function(x) log_it("error", x, log_ns))
+    } else {
+      cat("\n", paste0(msg, collapse = "\n"))
+    }
+  }
+  if (logging) log_fn("end", log_ns)
+  return(all(modules_available))
 }
 
 #' Sanity check on RDKit binding
@@ -348,49 +464,54 @@ molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_n
 #'
 #' @param rdkit_ref CHR scalar OR R object of an RDKit binding (default NULL
 #'   goes to "rdk" for convenience with other pipelines in this project)
+#' @param log_ns 
 #'
 #' @return LGL scalar of whether or not the test of RDKit was successful
 #' @export
 #' 
-rdkit_active <- function(rdkit_ref = NULL) {
-  if (exists("log_it")) log_it("debug", "Run rdkit_active().", "rdk")
-  if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
-  if (is.null(rdkit_ref)) {
-    rdkit_ref <- PYENV_REF
-  } else {
-    if (!is.character(rdkit_ref)) {
-      rdkit_ref <- deparse(substitute(rdkit_ref))
+rdkit_active <- function(rdkit_ref = NULL, log_ns = NULL, make_if_not = FALSE) {
+  if (!is.character(rdkit_ref)) rdkit_ref <- deparse(substitute(rdkit_ref))
+  if (rdkit_ref == "NULL") rdkit_ref <- NULL
+  rdkit_ref <- rectify_null_from_env(rdkit_ref, PYENV_REF, "rdk")
+  log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  logging <- exists("log_it")
+  if (logging) log_fn("start", log_ns)
+  if (!rdkit_ref %in% names(.GlobalEnv)) {
+    msg <- sprintf('Object "%s" not found.', rdkit_ref)
+    if (logging) {
+      log_it("warn", msg, log_ns)
+    } else {
+      cat(msg)
     }
-  }
-  if (!exists("PYENV_MODULE")) PYENV_MODULE <- "rdkit"
-  if (!py_available()) {
-    stop("Python is not available.")
-  }
-  for (mod in PYENV_MODULE) {
-    if (!py_module_available(mod)) {
-      stop(mod, " is not available.")
+    if (make_if_not) {
+      if (logging) {
+        log_it("info", sprintf('Tying object "%s" to rdkit in this environment.', rdkit_ref), log_ns)
+      }
+      assign(rdkit_ref, import("rdkit"), envir = .GlobalEnv)
+      return(rdkit_active(rdkit_ref = rdkit_ref, log_ns = log_ns))
+    } else {
+      if (logging) {
+        log_it("error", sprintf('"%s" was not added to the environment (rdkit_active was called with "make_if_not" = FALSE)', rdkit_ref), log_ns)
+      }
+      return(FALSE)
     }
-  }
-  if (!exists(eval(rdkit_ref))) {
-    assign(
-      PYENV_REF,
-      import(PYENV_MODULE),
-      envir = .GlobalEnv
-    )
   }
   rdk <- .GlobalEnv[[rdkit_ref]]
+  if (!py_modules_available("rdkit")) return(FALSE)
   caffeine <- "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
   active <- try(rdk$Chem$MolFromSmiles(caffeine))
   if ("try-error" %in% class(active)) {
     active <- try(rdk$MolFromSmiles(caffeine))
   }
   success <- !"try-error" %in% class(active)
-  if (success) {
-    if (exists("log_it")) log_it("success", sprintf('RDKit assigned to .GlobalEnv as "%s".', rdkit_ref), "rdk")
-  } else {
-    if (exists("log_it")) log_it("error", "An unknown error occurred. See log for details.", "rdk")
+  if (logging) {
+    if (success) {
+      log_it("success", sprintf('RDKit is assigned to .GlobalEnv as "%s".', rdkit_ref), log_ns)
+    } else {
+      log_it("error", "An unknown error occurred. See log for details.", log_ns)
+    }
+    log_fn("end", log_ns)
   }
-  if (exists("log_it")) log_it("debug", "Exiting rdkit_active().", "rdk")
   return(success)
 }
 
@@ -400,26 +521,39 @@ rdkit_active <- function(rdkit_ref = NULL) {
 #' @param env_ref CHR scalar of the name of an R expression bound to a python
 #'   library OR an R object reference by name to an existing object that should be
 #'   bound to RDKit (e.g. from [reticulate::import])
+#' @param ns CHR scalar
 #'
 #' @return None, though calls to utility functions will give their own returns
 #' @export
 #'
-setup_rdkit <- function(env_name, env_ref) {
-  if (exists("log_it")) log_it("debug", "Run setup_rdkit().", "rdk")
+setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NULL, log_ns = NULL, conda_path = NULL) {
+  logger <- exists("log_it")
+  if (logger) {
+    log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+    log_fn("start", log_ns)
+  }
+  env_name <- rectify_null_from_env(env_name, PYENV_NAME, NULL)
+  required_libraries <- rectify_null_from_env(required_libraries, PYENV_LIBRARIES, "rdkit")
+  env_ref <- rectify_null_from_env(env_ref, PYENV_REF, "rdk")
+  conda_path <- rectify_null_from_env(conda_path, CONDA_PATH, "auto")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(env_name, required_libraries, env_ref, log_ns, conda_path),
       conditions = list(
-        env_name = list(c("mode", "character"), c("length", 1)),
-        env_ref  = list(c("mode", "character"), c("length", 1))
+        env_name           = list(c("mode", "character"), c("length", 1)),
+        required_libraries = list(c("mode", "character"), c("n>=", 1)),
+        env_ref            = list(c("mode", "character"), c("length", 1)),
+        log_ns             = list(c("mode", "character"), c("length", 1)),
+        conda_path         = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "setup_rdkit"
     )
     stopifnot(arg_check$valid)
   }
-  can_activate <- activate_py_env(env_name)
-  success <- rdkit_active(env_ref)
+  can_activate <- activate_py_env(env_name = env_name, required_libraries = required_libraries, log_ns = log_ns, conda_path = conda_path)
+  if (!can_activate && logger) log_it("warn", sprintf('There was a problem activating environment "%s". Searching for suitable environments...', env_name), log_ns)
+  success <- rdkit_active(rdkit_ref = env_ref, log_ns = log_ns, make_if_not = TRUE)
   if (!success) stop("Unable to set up RDKit.")
-  if (exists("log_it")) log_it("debug", "Exiting setup_rdkit().", "rdk")
+  if (exists("log_it")) log_fn("end", log_ns)
 }

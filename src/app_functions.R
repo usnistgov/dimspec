@@ -2,7 +2,7 @@
 #'
 #' Several items of interest for this particular project including:
 #' - DB_DATE, DB_VERSION, BUILD_FILE, LAST_DB_SCHEMA, LAST_MODIFIED, DEPENDS_ON,
-#'   and EXCLUSIONS as defined in \code{\link{env.R}}
+#'   and EXCLUSIONS as defined in the project's ../config/env_R.R file.
 #'
 #' @param app_info BOOL scalar on whether to return this application's properties
 #'
@@ -415,7 +415,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                },
                "not_empty" = {
                  msg  <- glue("Object contained nothing but NAs, NULLs, or empty character strings.")
-                 rslt <- !has_empty_elements(val)
+                 rslt <- !has_missing_elements(val)
                },
                "file_exists" = {
                  msg  <- glue("Could not locate file '{val}'.")
@@ -498,9 +498,13 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #'
 #' Use this to log messages of arbitrary level and message. It works best with
 #' [logger] but will also print directly to the console to support setups where
-#' package [logger] may not be available.If using with [logger] and "file" or
-#' "both" is selected for the namespace `LOG_X_TO` parameter in `env_R.R` logs
-#' will be written to disk as well as the console.
+#' package [logger] may not be available or custom log levels are desired.
+#'
+#' When using [logger], create settings for each namespace in file
+#' `config/env_logger.R` as a list (see examples there) and make sure it is
+#' sourced. If using with [logger] and "file" or "both" is selected for the
+#' namespace `LOGGING[[x]]$TO` parameter in `env_logger.R` logs will be written
+#' to disk at the file defined in `LOGGING[[x]]$file` as well as the console.
 #'
 #' @param log_level CHR scalar of the level at which to log a given statement.
 #'   If using the [logger] package, must match one of [logger:::log_levels]
@@ -518,16 +522,17 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' }
 #' test_log()
 #' # Try it with and without logger loaded.
-log_it <- function(log_level, msg, ns = NA_character_) {
+log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FALSE, logger_settings = file.path("config", "env_logger.R"), add_unknown_ns = FALSE, clone_settings_from = NULL) {
+  if (is.null(msg) || is.na(msg)) msg <- "[no message provided]"
   if (!exists("LOGGING_ON")) {
-    env_r <- file.path("config", "env_glob.txt")
-    if (file.exists(env_r)) {
-      source(file.path("config", "env_glob.txt"))
-      source(file.path("config", "env_R.R"))
-      source(file.path("config", "env_logger.R"))
-    } else {
-      stop(sprintf('Logging variables not configured and file "%s" not available.', env_r))
+    if (reload_logger_settings) {
+      if (file.exists(logger_settings)) {
+        source(logger_settings)
+      } else {
+        stop(sprintf('Logging settings not configured. File "%s" not available.', logger_settings))
+      }
     }
+    LOGGING_ON <- TRUE
   }
   call_func <- sys.call(-1)[[1]]
   if (sys.nframe() > 1) {
@@ -536,18 +541,51 @@ log_it <- function(log_level, msg, ns = NA_character_) {
     from_log_it <- TRUE
     call_func <- rlang::sym("log_it")
   }
+  do_log <- TRUE
   if (LOGGING_ON) {
-    if (is.na(ns)) {
-      do_log <- TRUE
+    if (is.na(ns) || is.null(ns)) {
+      ns <- NA_character_
     } else {
-      this_log <- sprintf("LOGGING_%s", toupper(ns))
-      if (exists(this_log)) {
-        do_log <- .GlobalEnv[[this_log]]
+      if (!exists("LOGGING")) {
+        log_it("warn", sprintf('Logging is not set up for namespace "%s".', ns))
+        if (add_unknown_ns) {
+          log_it("warn", "Setting up a default namespace for interactive logging only.")
+          assign(x = "LOGGING", value = setNames(list(list(log = TRUE, ns = ns, threshold = "trace")), toupper(ns)), envir = .GlobalEnv)
+        } else {
+          log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace.', ns))
+        }
       } else {
-        log_it("warn", sprintf('Namespace "%s" is not set up; log only available in the console.', ns))
-        do_log <- TRUE
+        logging_set <- toupper(ns) %in% names(LOGGING)
+        if (logging_set) {
+          do_log <- LOGGING[[toupper(ns)]]$log
+        } else {
+          log_it("warn", sprintf('Logging namespace "%s" is not set up.', ns))
+          clone_exists <- !is.null(clone_settings_from) && toupper(clone_settings_from) %in% names(LOGGING)
+          if (clone_exists) {
+            i <- grep(toupper(clone_settings_from), names(LOGGING))
+          } else {
+            clone_settings_from <- names(LOGGING)[1]
+            i <- 1
+          }
+          settings_from <- LOGGING[[i]]$ns
+          if (add_unknown_ns) {
+            if (clone_exists) {
+              log_it("info", sprintf('Copying settings for "%s" from LOGGING[["%s"]]. Access settings at LOGGING[["%s"]]', ns, toupper(settings_from), toupper(ns)))
+            } else {
+              log_it("warn", sprintf('Clone namespace "%s" is not set up. Settings for "%s" will be used instead.', tolower(clone_settings_from), settings_from))
+            }
+            LOGGING[[toupper(ns)]] <<- LOGGING[[i]]
+            LOGGING[[toupper(ns)]]$ns <<- ns
+            if (exists("update_logger_settings")) update_logger_settings()
+          } else {
+            log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace with the same settings as "%s".', ns, settings_from))
+            log_it("info", sprintf('Logs for "%s" will only be available in the console.', ns))
+          }
+          do_log <- TRUE
+        }
       }
     }
+    if (!exists("do_log")) browser()
     if (do_log) {
       log_func  <- sprintf("log_%s", tolower(log_level))
       log_level <- toupper(log_level)
@@ -558,23 +596,44 @@ log_it <- function(log_level, msg, ns = NA_character_) {
                   .topcall = sys.call(n_call),
                   msg)
       } else {
-        msg <- sprintf("%s <%s> [%s] in %s(): %s\n",
-                       log_level,
-                       ifelse(is.na(ns), "global", ns),
+        # # See below comment about package "cli"...if that reoute is desired, it is necessary to uncomment this block.
+        #
+        # log_level <- switch(log_level,
+        #                     "WARN" = "WARNING",
+        #                     "ERROR" = "DANGER",
+        #                     log_level)
+        msg <- sprintf("[%s] <%s> %s in fn %s(): %s\n",
                        format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
+                       ifelse(is.na(ns), "global", ns),
+                       log_level,
                        deparse(sys.call(n_call)[[1]]),
                        msg)
-        cat(msg, "\n")
+        # # Possible integration of package "cli" for this, but it's getting very close to recreating some aspects of "logger", so just use logger.
+        # 
+        # use_func <- sprintf("cli_alert_%s", tolower(log_level))
+        # if (!exists(use_func)) {
+        #   use_func <- "cli_alert" 
+        # }
+        # if (exists(use_func)) {
+        #   do.call(use_func, args = list(msg))
+        # } else {
+        cat(msg)
+        # }
       }
     } else {
-      msg <- sprintf('Logging is currently turned off for namespace "%s". Set %s to TRUE in "config/env_R.R" to activate logging functionality.',
-                     ns,
-                     this_log)
-      cat(msg)
+      if (!LOGGING[[toupper(ns)]]$log) {
+        msg <- sprintf('Logging is currently turned off for namespace "%s". Set LOGGING$%s$log to TRUE to begin logging.\n',
+                       ns,
+                       toupper(ns))
+        log_it("warn", msg)
+      }
     }
   } else {
-    msg <- 'Logging is currently turned off. Set LOGGING_ON to TRUE (project setting in "config/env_R.R") to activate logging functionality.'
-    cat(msg, "\n")
+    if (!LOGGING_ON && (!exists("LOG_IS_OFF") || !LOG_IS_OFF)) {
+      assign(x = "LOG_IS_OFF", value = TRUE, envir = .GlobalEnv)
+      msg <- 'Set LOGGING_ON to TRUE to activate logging functionality. This message will only appear once.\n'
+      cat(msg)
+    }
   }
 }
 
@@ -612,17 +671,24 @@ make_acronym <- function(text) {
 #' data.frames checks that nrow is not 0. [rlang:::is_empty] only checks for
 #' length 0.
 #'
+#' @note Reminder that vectors created with NULL values will be automatically
+#'   reduced by R.
+#'
 #' @param x Object to be checked
 #'
 #' @return LGL scalar of whether `x` is empty
 #' @export
 #'
 #' @examples
-#' has_empty_elements("a")
-#' has_empty_elements(c(NULL, 1:5))
-#' has_empty_elements(list(NULL, 1:5))
-#' has_empty_elements(data.frame(a = character(0)))
-has_empty_elements <- function(x) {
+#' has_missing_elements("a")
+#' # FALSE
+#' has_missing_elements(c(NULL, 1:5))
+#' # FALSE
+#' has_missing_elements(list(NULL, 1:5))
+#' # TRUE
+#' has_missing_elements(data.frame(a = character(0)))
+#' # TRUE
+has_missing_elements <- function(x) {
   log_fn("start")
   if (is.function(x)) {
     out <- FALSE
@@ -657,18 +723,6 @@ has_empty_elements <- function(x) {
   return(out)
 }
 
-log_as_dataframe <- function(file = NULL) {
-  log_fn("start")
-  if (is.null(file)) {
-    file <- file.path("logs", "logger.txt")
-  }
-  stopifnot(file.exists(file))
-  if (exists("verify_args")) {
-    
-  }
-  log_fn("end")
-}
-
 #' Simple logging convenience
 #'
 #' Conveniently add a log message at the trace level. Typically this would be
@@ -679,6 +733,7 @@ log_as_dataframe <- function(file = NULL) {
 #' @param status CHR scalar to prefix the log message; will be coerced to
 #'   sentence case. Typically "start" or "end" but anything is accepted (default
 #'   "start").
+#' @param log_ns CHR scalar of the logger namespace to use (default NA_character_)
 #' @param level CHR scalar of the logging level to be passed to [log_it]
 #'   (default "trace")
 #'
@@ -688,13 +743,137 @@ log_as_dataframe <- function(file = NULL) {
 #' @examples
 #' fn <- function() {log_fn("start"); 1+1; log_fn("end")}
 #' fn()
-log_fn <- function(status = "start", level = "trace") {
-  log_it(level,
-         sprintf("%s %s()",
-                 stringr::str_to_sentence(status),
+log_fn <- function(status = "start", log_ns = NA_character_, level = "trace") {
+  require(stringr)
+  msg <- sprintf("%s %s()",
+                 str_to_sentence(status),
                  as.character(sys.call(-1)[[1]])
-         )
   )
+  log_it(level, msg, log_ns)
+  if (!is.na(log_ns)) {
+    log_it(level, msg, NA_character_)
+  }
+}
+
+#' Flush a directory with archive
+#'
+#' Clear a directory and archive those files if desired in any directory
+#' matching any pattern.
+#'
+#' @param archive LGL scalar on whether to archive current logs
+#' @param directory CHR scalar path to the directory to flush
+#'
+#' @return
+#' @export
+#'
+#' @examples
+flush_dir <- function(directory, pattern, archive = FALSE) {
+  logger <- exists("log_it")
+  if (logger) log_fn("start")
+  if (dir.exists(directory)) {
+    files <- list.files(directory, full.names = TRUE)
+    files <- grep(pattern = pattern, x = files, value = TRUE)
+    if (archive) {
+      archive_dir <- file.path(directory, "archive", format(Sys.time(), "%Y%m%d%H%M"))
+      if (!dir.exists(archive_dir)) dir.create(archive_dir, recursive = TRUE)
+      res <- lapply(files, 
+                    function(x) {
+                      file.rename(
+                        from = x,
+                        to = gsub(directory, archive_dir, x)
+                      )
+                    })
+    } else {
+      res <- lapply(files, file.remove)
+    }
+    success <- all(unlist(res))
+    if (logger) {
+      if (success) {
+        log_it("success",
+               sprintf("Files in '%s' were %s.",
+                       directory,
+                       ifelse(archive, sprintf("archived to '%s'", archive_dir), "flushed")
+               )
+        )
+      } else {
+        log_it("error",
+               sprintf("Could not %s all files in '%s'.",
+                       ifelse(archive, "archive", "remove"),
+                       directory)
+        )
+      }
+    }
+  } else {
+    if (logger) {
+      log_it("warn", sprintf("The specified directory at '%s' was not found.", directory))
+    }
+  }
+  if (logger) log_fn("end")
+}
+
+#' Rectify NULL values provided to functions
+#'
+#' To support redirection of sensible parameter reads from an environment,
+#' either Global or System, functions in this package may include NULL as their
+#' default value. This returns values in precedence of `parameter`,
+#' `env_parameter` and `default`.
+#'
+#' @note `log_ns` is only applicable if logging is set up in this project (see
+#'   project settings in env_glob.txt, env_R.R, and env_logger.R for details).
+#'
+#' @note Both [base::.GlobalEnv] and [base::Sys.getenv] are checked, and can be
+#'   provided as a character scalar or as an object reference
+#'
+#' @param parameter the object being evaluated
+#' @param env_parameter the name or object of a value to use from the
+#'   environment if `parameter` is NULL
+#' @param default the fallback value to use if `parameter` is NULL and
+#'   `env_parameter` does not exist
+#' @param log_ns the namespace to use with [log_it] if available
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rectify_null_from_env <- function(parameter, env_parameter, default, log_ns = NA_character_) {
+  logger <- exists("log_it") && LOGGING_ON
+  if (logger) log_fn("start", log_ns)
+  if (!is.null(parameter)) {
+    par_name <- deparse(substitute(parameter))
+    par_ref  <- ""
+    suffix   <- "as provided"
+    out <- parameter
+  } else {
+    env_par_name <- deparse(substitute(env_parameter))
+    par_name <- env_par_name
+    suffix   <- ""
+    if (exists(env_par_name)) {
+      par_ref  <- " environment"
+      out      <- env_parameter
+    } else {
+      if (!Sys.getenv(env_par_name) == "") {
+        par_ref <- " environment"
+        out <- Sys.getenv(env_par_name)
+      } else {
+        par_ref <- " default"
+        out <- default
+        suffix <- sprintf(" as no environment parameter named '%s' is set", par_name)
+      }
+    }
+  }
+  par_value_str <- ifelse(length(out) > 1,
+                          paste0('c("', paste0(out, collapse = '", "'), '")'),
+                          paste0('"', out, '"'))
+  if (par_ref == "") {
+    feedback <- sprintf("%s ", par_value_str)
+  } else if (par_ref == " default") {
+    feedback <- sprintf("%s", par_value_str)
+  } else {
+    feedback <- sprintf("'%s = %s'", par_name, par_value_str)
+  }
+  if (logger) log_it("trace", sprintf("Returning%s parameter %s%s.", par_ref, feedback, suffix), log_ns)
+  if (logger) log_fn("end", log_ns)
+  return(out)
 }
 
 #' Update logger settings

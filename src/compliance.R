@@ -60,22 +60,44 @@ invisible(sapply(sources, source))
 # _Set up logger ---------------------------------------------------------------
 if (LOGGING_ON) {
   source(file.path("config", "env_logger.R"))
+  update_logger_settings()
   log_it("info", "Setting up logger for use with this session...")
 } else {
-  log_it("info", "Logging not requested according to LOGGING_ON in env_glob.txt or env_R.R settings.", "api")
+  cat('\nLogging not requested according to LOGGING_ON in "env_glob.txt" settings.\n')
 }
 
 # _Build database if it doesn't exist ------------------------------------------
 if (!DB_BUILT) build_db()
 if (INIT_CONNECT) {
-  manage_connection()
-  db_map <- er_map()
+  status <- try(manage_connection())
+  if ("try-error" %in% class(status)) {
+    if (LOGGING_ON) log_it("error", "Could not establish a connection to the database.")
+  } else {
+    if (LOGGING_ON) log_it("success", 'Interactive database connection is live as object "con"')
+  }
+  db_map <- try(er_map())
+  if ("try-error" %in% class(db_map)) {
+    if (LOGGING_ON) log_it("error", 'There was an error loading the database map using "er_map()".')
+  } else {
+    if (LOGGING_ON) log_it("success", 'A database map is available as object "db_map".')
+  }
   db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
   if (length(db_dict) == 1) {
-    db_dict <- read_json(db_dict) %>%
-      lapply(bind_rows)
+    if (LOGGING_ON) log_it("info", sprintf('Dictionary file located at %s', db_dict))
+    db_dict <- try(lapply(read_json(db_dict), bind_rows))
+    if ("try-error" %in% class(db_dict)) {
+      if (LOGGING_ON) log_it("error", 'There was an error reading in the data dictionary.')
+    } else {
+      if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
+    }
   } else {
-    db_dict <- data_dictionary()
+    if (LOGGING_ON) log_it("info", "No database dictionary file located. Building...")
+    db_dict <- try(data_dictionary())
+    if ("try-error" %in% class(db_dict)) {
+      if (LOGGING_ON) log_it("error", 'There was an error building the data dictionary with "data_dictionary()".')
+    } else {
+      if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
+    }
   }
 }
 
@@ -101,16 +123,27 @@ if (USE_API) {
 }
 
 # _RDKit set up ----------------------------------------------------------------
-if (USE_RDKIT) {
-  log_it("info", "Using RDKit for this session. Setting up...", "rdk")
-  if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
-  source(file.path("rdkit", "env_py.R"))
-  source(file.path("rdkit", "py_setup.R"))
-  if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
-  if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
-  setup_rdkit(PYENV_NAME, PYENV_REF)
-} else {
-  log_it("info", "Using ChemmineR for this session.", "rdk")
+if (INFORMATICS) {
+  if (USE_RDKIT) {
+    log_it("info", "Using RDKit for this session. Setting up...", "rdk")
+    if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
+    require(reticulate)
+    source(file.path("rdkit", "env_py.R"))
+    source(file.path("rdkit", "py_setup.R"))
+    if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
+    if (!exists("PYENV_LIBRARIES")) PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
+    if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
+    if (!exists("CONDA_PATH")) CONDA_PATH <- "rdk"
+    setup_rdkit(
+      env_name           = PYENV_NAME,
+      required_libraries = PYENV_LIBRARIES,
+      env_ref            = PYENV_REF,
+      log_ns             = "rdk",
+      conda_path         = CONDA_PATH
+    )
+  } else {
+    log_it("info", "Using ChemmineR for this session.", "rdk")
+  }
 }
 
 # _Clean up --------------------------------------------------------------------

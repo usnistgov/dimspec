@@ -275,7 +275,7 @@ build_db <- function(db            = DB_NAME,
     )
     stopifnot(arg_check$valid)
   }
-  if (logger) log_it("trace", glue('Attempting to connect to "{db_table}".'), "db")
+  if (logger) log_it("trace", glue('Attempting to connect to "{db}".'))
   manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
   build_file    <- list.files(pattern = build_from,
                               full.names = TRUE,
@@ -295,7 +295,11 @@ build_db <- function(db            = DB_NAME,
     if (file.exists(db)) remove_db(db = db, archive = archive)
     if (logger) log_it("info", glue('Building database "{db}".'), "db")
     if (logger) log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
-    shell(build_cmd)
+    if (.Platform$OS.type == "windows") {
+      shell(build_cmd)
+    } else {
+      system(build_cmd)
+    }
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
@@ -305,7 +309,11 @@ build_db <- function(db            = DB_NAME,
         if (logger) log_it("info", glue('Populating from "{populate_file}".'), "db")
         populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
         if (logger) log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
-        shell(populate_cmd)
+        if (.Platform$OS.type == "windows") {
+          shell(populate_cmd)
+        } else {
+          system(populate_cmd)
+        }
       }
     }
     if (logger) log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
@@ -808,6 +816,8 @@ er_map <- function(db_conn = con) {
 #'   first be disconnected before reconnecting. (default: TRUE)
 #' @param disconnect LGL scalar indicating whether or not to terminate and
 #'   remove the connection from the current global environment (default: TRUE)
+#' @param log_ns CHR scalar of the namespace (if any) to use for logging
+#' @param .environ environment within which to place this connection object
 #' @param ... named list of any other connection parameters required for your
 #'   database driver (e.g. postgres username/password)
 #'
@@ -827,13 +837,15 @@ manage_connection <- function(db          = DB_NAME,
                               rm_objects  = TRUE,
                               reconnect   = TRUE,
                               disconnect  = TRUE,
+                              log_ns      = "db",
                               .environ    = .GlobalEnv,
                               ...) {
   logger <- exists("log_it")
+  if (is.null(log_ns) || is.na(log_ns)) log_ns <- NA_character_
   if (logger) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect),
+      args       = list(db, drv_pack, drv, conn_class, conn_name, is_local, rm_objects, reconnect, disconnect, log_ns),
       conditions = list(
         db         = list(c("mode", "character"), c("length", 1)),
         drv_pack   = list(c("mode", "character"), c("length", 1)),
@@ -843,7 +855,8 @@ manage_connection <- function(db          = DB_NAME,
         is_local   = list(c("mode", "logical"), c("length", 1)),
         rm_objects = list(c("mode", "logical"), c("length", 1)),
         reconnect  = list(c("mode", "logical"), c("length", 1)),
-        disconnect = list(c("mode", "logical"), c("length", 1))
+        disconnect = list(c("mode", "logical"), c("length", 1)),
+        log_ns     = list(c("mode", "character"), c("length", 1))
       ),
       from_fn    = "manage_connection"
     )
@@ -871,7 +884,7 @@ manage_connection <- function(db          = DB_NAME,
         connection <- ""
       }
       if (class(connection) == "try-error") {
-        if (logger) log_warn('Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.', "db")
+        if (logger) log_it("warn", 'Could not automatically identify the connection properties for object "{env}". To avoid hanging connections, it should be removed explicitly.', log_ns)
         connection <- ""
       }
       if (
@@ -882,17 +895,17 @@ manage_connection <- function(db          = DB_NAME,
         )
       ){
         connected <- dbIsValid(this_obj)
-        if (logger) log_it("trace", glue('Database "{db}" is currently open.'), "db")
+        if (logger) log_it("trace", glue('Database "{db}" is currently open.'), log_ns)
         if (all(connected, disconnect)) {
           check <- try(invisible(dbDisconnect(this_obj)))
           status <- ifelse(class(check)[1] == "try-error",
                            "unable to be disconnected",
                            "disconnected")
-          log_it("trace", glue('Database "{db}" {status}.'))
+          log_it("trace", glue('Database "{db}" {status}.'), log_ns)
           connected <- dbIsValid(this_obj)
         }
       }
-      if (logger) log_it("trace", glue('Closing and removing "{env}"...'), "db")
+      if (logger) log_it("trace", glue('Closing and removing "{env}"...'), log_ns)
       if (all(rm_objects, disconnect, !connection == "")) {
         rm(list = env, pos = ".GlobalEnv")
       }
@@ -901,7 +914,7 @@ manage_connection <- function(db          = DB_NAME,
   if (reconnect) {
     if (is_local) {
       # Resolve database file location
-      if (logger) log_it("trace", glue('Finding local database file "{db}"'), "db")
+      if (logger) log_it("trace", glue('Finding local database file "{db}"'), log_ns)
       db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
@@ -923,7 +936,7 @@ manage_connection <- function(db          = DB_NAME,
                    drv,
                    paste0(args, collapse = ", ")))
     } else {
-      if (dbIsValid(eval(sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'))
+      if (dbIsValid(eval(sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'), log_ns)
     }
   }
   if (logger) log_fn("end")
@@ -1320,9 +1333,13 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
     arrange(desc(ctime)) %>%
     slice(1) %>%
     rownames()
-  db_dict <<- dict_file %>%
-    jsonlite::read_json() %>%
-    lapply(bind_rows)
+  if (length(dict_file) == 0) {
+    if (exists("log_it")) log_it("warn", "Unable to locate a data dictionary file.")
+  } else {
+    db_dict <<- dict_file %>%
+      jsonlite::read_json() %>%
+      lapply(bind_rows)
+  }
   if (api_running) {
     if (plumber_service_existed) {
       api_reload(pr = api_monitor, background = TRUE)
@@ -1359,8 +1376,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     log_fn("start")
     log_it("debug",
            sprintf("Closing connections %s backing up connected tibbles.",
-                   ifelse(back_up_connected_tbls, "and", "without"),
-           "db")
+                   ifelse(back_up_connected_tbls, "and", "without")),
+           "db"
     )
   }
   # Argument validation relies on verify_args
@@ -1416,6 +1433,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
       manage_connection(conn_name = db_conn, reconnect = FALSE)
     }
   }
+  manage_connection(reconnect = T)
+  manage_connection(reconnect = F)
   if (exists("log_it")) log_fn("end")
 }
 
@@ -1648,7 +1667,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
   }
   # Check connection
   stopifnot(active_connection(db_conn))
-  existing_values <- build_db_action(con            = db_conn,
+  existing_values <- build_db_action(db_conn        = db_conn,
                                      action         = "SELECT",
                                      table_name     = db_table,
                                      match_criteria = setNames(list(values), db_column),
@@ -1714,6 +1733,33 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
   return(chosen_value)
 }
 
+#' Resolve a normalization value against the database
+#'
+#' Normalized SQL databases often need to resolve primary keys. This function
+#' checks for a given value in a given table and either returns the matching
+#' index value or, if a value is not found and `interactive()` is TRUE, it will
+#' add that value to the table and return the new index value. It will look for
+#' the first matching value in all columns of the requested table to support
+#' loose finding of identifiers and is meant to operate only on normalization
+#' tables (i.e. look up tables).
+#'
+#' The search itself is done using [check_for_value].
+#'
+#' @note This is mostly a DRY convenience function to avoid having to write the
+#'   loookup and add logic each time.
+#' @note Interactive sessions are required to add new values
+#'
+#' @param this_value CHR (or coercible to) scalar value to look up
+#' @param db_table CHR scalar of the table name in which to search
+#' @param case_sensitive LGL scalar of whether or not to match case exactly
+#'   (TRUE) or to search all case manipulations (FALSE) (default: FALSE)
+#' @param db_conn connection object (default: con)
+#' @param ... other values to add to the normalization table, where names must
+#'   match the table schema
+#'
+#' @return
+#' @export
+#' 
 resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, ...) {
   if (exists("log_it")) log_fn("start")
   # Check connection
@@ -1773,6 +1819,28 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
   return(this_id)
 }
 
+#' Get the name of a linked normalization table
+#'
+#' Extract the name of a normalization table from the database given a table and
+#' column reference.
+#'
+#' @note This requires an object of the same shape and properties as those
+#'   resulting from [er_map] as `this_map`.
+#'
+#' @param table_name CHR scalar name of the database table
+#' @param table_column CHR scalar name of the foreign key table column
+#' @param this_map LIST object containing the schema representation from
+#'   `er_map` (default: an object named "db_map" created as part of the package
+#'   spin up)
+#' @param fk_refs_in CHR scalar name of the item in `this_map` containing the
+#'   SQL "REFERENCES" statements extracted from the schema
+#'
+#' @return CHR scalar name of the table to which a FK column is linked or an
+#'   empty character string if no match is located (i.e. `table_column` is not a
+#'   defined foreign key).
+#' @export
+#'
+#' @examples
 ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_refs_in = "references") {
   if (exists("log_it")) {
     log_fn("start")

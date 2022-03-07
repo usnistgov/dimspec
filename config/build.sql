@@ -38,18 +38,18 @@ Details:		Build files are located in the "config" directory and subdirectories a
 
 PRAGMA journal_mode=WAL;
 /* Reference node */
-.read config/sql_nodes/reference.SQL
-.read config/sql_nodes/reference_data.SQL 
+.read config/sql_nodes/reference.sql
+.read config/sql_nodes/reference_data.sql 
 /* Method node */
-.read config/sql_nodes/methods.SQL 
+.read config/sql_nodes/methods.sql 
 /* Analyte node */
-.read config/sql_nodes/analyte.SQL 
+.read config/sql_nodes/analyte.sql 
 /* Data node */
-.read config/sql_nodes/data.SQL
+.read config/sql_nodes/data.sql
 /* Contributors node */
-.read config/sql_nodes/contributors.SQL 
-.read config/sql_nodes/contributors_data.SQL 
+.read config/sql_nodes/contributors.sql 
+.read config/sql_nodes/contributors_data.sql 
 /* Logging node */
-.read config/sql_nodes/logging.SQL
-/* .read config/sql_nodes/auto_logs.SQL */
+.read config/sql_nodes/logging.sql
+/* .read config/sql_nodes/auto_logs.sql */
 PRAGMA foreign_keys=on;

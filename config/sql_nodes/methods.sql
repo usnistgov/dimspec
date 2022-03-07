@@ -25,7 +25,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_ionization
+	CREATE TABLE IF NOT EXISTS norm_voltage
 		/* Normalization table for mass spectrometer ionization source types */
 	(
 		id
@@ -132,7 +132,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_ionization_units
+	CREATE TABLE IF NOT EXISTS norm_voltage_units
 		/* Normalization table for ionization energy units. */
 	(
 		id
@@ -252,6 +252,54 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_duration_units
+	  /* Normalization table for mobile phase duration units */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE,
+			/* duration units full text */
+		abbreviation
+			TEXT NOT NULL UNIQUE
+			/* duration units abbreviation */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_additive_units
+	  /* Normalization table for mobile phase additive units */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE,
+			/* duration units full text */
+		abbreviation
+			TEXT NOT NULL UNIQUE
+			/* duration units abbreviation */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_flow_units
+	  /* Normalization table for mobile phase flow rate units */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE,
+			/* duration units full text */
+		abbreviation
+			TEXT NOT NULL UNIQUE
+			/* duration units abbreviation */
+		/* Check constraints */
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS solvent_mix_collections
 		/* An intermediary identification table linking mobile_phases and solvent_mixes */
 	(
@@ -268,40 +316,31 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	CREATE TABLE IF NOT EXISTS mobile_phases
 		/* Description of mobile phases used during a chromatographic separation. */
 	(
-		methods_id
+		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to methods */
-		carrier
+		solvent_mix_collection_id
 			INTEGER NOT NULL,
-			/* informal foreign key to solvent_mixes */
-		additive1_id
-			INTEGER,
-			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
-		additive2_id
-			INTEGER,
-			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
-		additive3_id
-			INTEGER,
-			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
-		additive4_id
-			INTEGER,
-			/* buffer/salt/acid addition to mobile phase; foreign key to norm_additives */
+			/* foreign key to solvent_mixes */
+		flow
+		  REAL,
+		  /* flow rate of carrier described in solvent_mix_collection_id */
+		flow_units
+		  INTEGER,
+		  /* foreign key to norm_flow_units */
 		duration
 			REAL,
 			/* time duration mobile phase was applied */
 		duration_units
-			TEXT DEFAULT "minutes",
-			/* time duration units, constrained to one of "second" or "minutes" */
+			INTEGER,
+			/* foreign key to norm_duration_units */
 		/* Check constraints */
-		CHECK (duration_units IN ("seconds", "minutes")),
 		CHECK (duration > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (additive1_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (additive2_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (additive3_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (additive4_id) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (carrier) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
+		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
+		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE,
+		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_descriptions
@@ -360,13 +399,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		ionization
 			INTEGER,
-			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */
+			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_voltage */
 		voltage
 			REAL,
 			/* ionization voltage/current (depending on mode) */
 		voltage_units
 			INTEGER,
-			/* foreign key to norm_ionization_units */
+			/* foreign key to norm_voltage_units */
 		polarity
 			INTEGER NOT NULL,
 			/* ionization polarity (negative, positive, or negative/positive); foreign key to norm_polarity */
@@ -394,8 +433,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (has_qc_method IN (0, 1))
 		/* Foreign key relationships */
-		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE,
-		FOREIGN KEY (voltage_units) REFERENCES norm_ionization_units(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ionization) REFERENCES norm_voltage(id) ON UPDATE CASCADE,
+		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE,
 		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
 		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
@@ -464,15 +503,38 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* mixture identifier to gather discrete components; foreign key to solvent_mix_collections */
 		component
 			INTEGER NOT NULL,
-			/* foreign key to solvent_fractions */
+			/* foreign key to norm_solvents */
 		fraction
 			REAL NOT NULL,
-			/* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */
+			/* amount fraction of this solvent in the mixture, contrained from 0 - 1 */
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
 		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
 		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS solvent_additives
+		/* Mobile phase additives mixture for a given solvent mix collection */
+	(
+		mix_id
+			INTEGER NOT NULL,
+			/* mixture identifier to gather discrete additives; foreign key to solvent_mix_collections */
+		component
+			INTEGER NOT NULL,
+			/* foreign key to norm_additives */
+		amount
+			REAL NOT NULL,
+			/* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */
+		units
+		  INTEGER NOT NULL,
+		  /* additive units, foreign key to norm_additive_units */
+		/* Check constraints */
+		CHECK (amount > 0),
+		/* Foreign key relationships */
+		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE,
+		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 /* Data */
@@ -505,17 +567,97 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM chromatography_descriptions cd
 		INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
 	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_mobile_phase AS
+	CREATE VIEW IF NOT EXISTS view_solvent_mix AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
-			sm.mix_id,
+			sm.mix_id AS "mix_id",
 				/* solvent mix id */
-			s.name AS solvent,
+			ns.name AS "component",
 				/* solvent name */
-			sm.fraction
+			sm.fraction * 100 AS "amount",
 				/* solvent fraction in this mix */
+			"percent" AS "unit_name",
+			  /* full name of solvent amount unit */
+			"%" AS "unit"
+			  /* solvent unit abbreviation */
 		FROM solvent_mixes sm
-		INNER JOIN norm_solvents s ON s.id = sm.component;
+		INNER JOIN norm_solvents ns ON ns.id = sm.component;
+	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_solvent_additives AS
+		/* View complete mobile phase used in a mixture */
+		SELECT
+			sa.mix_id AS "mix_id",
+				/* solvent mix id */
+			na.name AS "component",
+				/* additive name */
+			sa.amount,
+				/* additive amount in this mix */
+			nau.name AS "unit_name",
+			  /* full name of additive units */
+			nau.abbreviation AS "unit"
+			  /* additive units abbreviation */
+		FROM solvent_additives sa
+		INNER JOIN norm_additive_units nau ON sa.units = nau.id
+		INNER JOIN norm_additives na ON sa.component = na.id;
+	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_solvent_mix_collection AS
+		/* Tabular view of solvent mix components by mixture ID */
+  	SELECT
+  	  smc.id,
+  	    /* solvent mix collection id */
+  	  vst.component,
+  	    /* solvent mix component name */
+  	  vst.component_type,
+  	    /* solvent mix component type, whether a solvent or an additive */
+  	  vst.amount,
+  	    /* solvent mix component amount */
+  	  vst.unit
+  	    /* solvent mix component units associated with the amount */
+  		FROM solvent_mix_collections smc JOIN
+  			(SELECT
+  				*,
+  				"solvent" AS "component_type"
+  				FROM view_solvent_mix vsm
+  			UNION
+  			SELECT
+  				*,
+  				"additive" AS "component_type"
+  				FROM view_solvent_additives vsa
+  			) AS vst
+  		ON mix_id = smc.id
+  		ORDER BY id, component_type DESC, amount DESC;
+  /*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_mobile_phase_narrative AS
+    /* A print convenience view creating a narrative from the elution profile of each ms_methods_id, with one row for each profile stage. */
+    SELECT
+    	mp.ms_methods_id,
+    	  /* MS Methods ID, foreign key to ms_methods.id */
+    	solvents ||
+    		CASE ifnull(additives, "nullval") WHEN "nullval" THEN "" ELSE " with " || additives || " amendment" END ||
+    		" for " || mp.duration || 
+    		" " || ndu.abbreviation ||
+    		" at " || mp.flow ||
+    		" " || nfu.abbreviation || "."
+    		AS narrative
+    		/* Summary narrative of this elution profile */
+  	FROM 
+  		mobile_phases mp
+  		JOIN norm_duration_units ndu ON mp.duration_units = ndu.id 
+  		JOIN norm_flow_units nfu ON mp.flow_units = nfu.id
+  	LEFT JOIN (
+  	    (SELECT
+  	    	mix_id,
+  		    REPLACE(group_concat(vsm.component || " (" || vsm.amount || " " || vsm.unit || ")"), ",", "/") AS "solvents"
+  		    FROM view_solvent_mix vsm    
+  	        GROUP BY vsm.mix_id)
+  	    LEFT JOIN
+  	   	(SELECT
+  	    	mix_id as mix2,
+  		    REPLACE(group_concat(vsa.component || " (" || vsa.amount || " " || vsa.unit || ")"), ",", "/") AS "additives"
+  		    FROM view_solvent_additives vsa
+  	        GROUP BY vsa.mix_id)
+  	    ON mix_id = mix2
+      ) ON mp.solvent_mix_collection_id = mix_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_detectors AS
 		/* Convenience view to build view_method_as by providing a single character string for detectors used in this method */
@@ -587,7 +729,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			ncd.name AS "collision_energy_description"
 			/* Collision energy description */
 		FROM ms_methods msm 
-		LEFT JOIN norm_ionization ni ON msm.ionization = ni.id
+		LEFT JOIN norm_voltage ni ON msm.ionization = ni.id
 		LEFT JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
 		LEFT JOIN norm_vendors nv ON msd.vendor_id = nv.id
 		LEFT JOIN view_detectors vd ON msm.id = vd.ms_methods_id
@@ -595,7 +737,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		LEFT JOIN chromatography_descriptions cd ON msm.id = cd.ms_methods_id
 		LEFT JOIN view_separation_types vst ON msm.id = vst.ms_methods_id
 		LEFT JOIN view_column_chemistries vcc ON msm.id = vcc.ms_methods_id
-		LEFT JOIN norm_ionization_units niu ON msm.voltage_units = niu.id
+		LEFT JOIN norm_voltage_units niu ON msm.voltage_units = niu.id
 		LEFT JOIN norm_ce_units ncu ON msm.ce_units = ncu.id
 		LEFT JOIN norm_fragmentation_types nft ON msm.fragmentation = nft.id
 		LEFT JOIN norm_ce_desc ncd ON msm.ce_desc = ncd.id

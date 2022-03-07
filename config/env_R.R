@@ -56,16 +56,18 @@ DEPENDS_ON     <- c("base64enc",
 # in env_glob.txt by default. Reticulate and the "rcdk" package often cause
 # conflicts due to the "rJava" package, making "rpytools" unavailable to
 # reticulate.
-if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, TRUE)) {
-  if (!requireNamespace("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
+if (ifelse(exists("INFORMATICS"), INFORMATICS, TRUE)) {
+  if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, TRUE)) {
+    if (!requireNamespace("BiocManager", quietly = TRUE)) {
+      install.packages("BiocManager")
+    }
+    if (!requireNamespace("ChemmineR", quiety = TRUE)) {
+      BiocManager::install("ChemmineR")
+    }
+    library("ChemmineR")
+    if (!"rcdk" %in% installed.packages()) install.packages("rcdk")
+    library("rcdk")
   }
-  if (!requireNamespace("ChemmineR", quiety = TRUE)) {
-    BiocManager::install("ChemmineR")
-  }
-  library("ChemmineR")
-  if (!"rcdk" %in% installed.packages()) install.packages("rcdk")
-  library("rcdk")
 }
 
 # Files matching these patterns will be excluded from sourcing at startup.
@@ -75,10 +77,23 @@ EXCLUSIONS     <- c(".RDS",
                     "generate_db",
                     "metadata_xml")
 
-# Runtime quality assurance ----------------------------------------------------
+# Runtime quality assurance/control --------------------------------------------
+# Whether to use application logging to print or record log messages during use.
+# Settings are in the config/env_logger.R file.
+# Whether to activate logging for this session. [SET IN env_glob.txt, override here if necessary.]
+LOGGING_ON       <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
+
 # Whether to use function argument verification. Set to FALSE to serve as a
 # global cut off and increase execution speed.
 VERIFY_ARGUMENTS <- TRUE
+
+# Set speed and performance boost. Setting this to true will turn off function
+# argument verification, logging,
+MINIMIZE         <- FALSE
+if (MINIMIZE) {
+  VERIFY_ARGUMENTS <- FALSE
+  LOGGING_ON       <- FALSE
+}
 
 # WIP: Import namespace checks
 IMPORT_HEADERS <- list(
@@ -90,6 +105,8 @@ IMPORT_HEADERS <- list(
 
 # Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]
+# Whether to activate plumber integration. [SET IN env_glob.txt]
+USE_API <- ifelse(exists("USE_API"), USE_API, TRUE)
 if (USE_API) {
   PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
   PLUMBER_PORT <- getOption("plumber.port", 8080)
@@ -99,44 +116,10 @@ if (USE_API) {
 
 # Shiny options ----------------------------------------------------------------
 # Placeholder for shiny app options in future development
+# Whether to spin up Shiny apps. [SET IN env_glob.txt]
+USE_SHINY <- ifelse(exists("USE_SHINY"), USE_SHINY, TRUE)
 if (USE_SHINY) {
   USE_SHINY    <- ifelse(exists("USE_SHINY"), USE_SHINY, FALSE)
   SHINY_APPS   <- list.dirs("apps", full.names = TRUE)
   SHINY_HOST   <- getOption("shiny.host", "127.0.0.1")
 }
-
-# Logging options --------------------------------------------------------------
-# Whether or not to log actions throughout this project. LOGGING_ON == FALSE
-# will override individual settings and prevent logging. Set LOGGING_ON in
-# env_glob.txt to control broadly, or override that setting here as needed.
-LOGGING_ON     <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
-LOGGING_GLOBAL <- TRUE
-LOGGING_DB     <- TRUE
-LOGGING_API    <- TRUE
-LOGGING_RDK    <- TRUE
-LOGGING_SHINY  <- FALSE
-LOGGING_WARNS  <- TRUE
-LOGGING_ERRORS <- TRUE
-# Destination of logging messages. Set "console" for console only, "file" for
-# file only which will write to "logs/logger.txt", or "both" to do both. If it
-# is not an interactive session, these will default to the file option.
-LOG_GLOBAL_TO  <- "both"
-LOG_API_TO     <- "both"
-LOG_DB_TO      <- "both"
-LOG_RDK_TO     <- "both"
-LOG_SHINY_TO   <- "file"
-LOG_DIRECTORY  <- file.path("logs")
-LOG_FILE_GLOBAL<- file.path(LOG_DIRECTORY, "log.txt")
-LOG_FILE_DB    <- file.path(LOG_DIRECTORY, "log_db.txt")
-LOG_FILE_API   <- file.path(LOG_DIRECTORY, "log_api.txt")
-LOG_FILE_RDK   <- file.path(LOG_DIRECTORY, "log_rdk.txt")
-LOG_FILE_SHINY <- file.path(LOG_DIRECTORY, "log_shiny.txt")
-# Set the logging threshold, which if using the logger package, should be a
-# valid logging level (e.g. TRACE, DEBUG, INFO, SUCCESS, WARN, ERROR, or FATAL).
-# If not using the logger package, or if you issue a custom logging level to
-# `log_it` it will still include in the log.
-LOG_THR_GLOBAL <- "INFO"
-LOG_THR_DB     <- "INFO"
-LOG_THR_API    <- "INFO"
-LOG_THR_RDK    <- "INFO"
-LOG_THR_SHINY  <- "INFO"

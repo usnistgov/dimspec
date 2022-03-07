@@ -168,7 +168,7 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
       conditions = list(
         pr                 = list(c("class", "r_process", "process", "R6")),
         flush              = list(c("mode", "logical"), c("length", 1)),
-        db_conn            = list(c("mode", "character"), "file_exists", c("length", 1)),
+        db_conn            = list(c("mode", "character"), c("length", 1)),
         remove_service_obj = list(c("mode", "logical"), c("length", 1))
       ),
       from_fn = "api_stop"

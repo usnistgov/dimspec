@@ -12,10 +12,16 @@
 	this script as appropriate.
 =============================================================================*/
 
-DELETE FROM norm_ionization;
-.import --csv --skip 1 config/data/norm_ionization.csv norm_ionization
-DELETE FROM norm_ionization_units;
-.import --csv --skip 1 config/data/norm_ionization_units.csv norm_ionization_units
+DELETE FROM norm_voltage;
+.import --csv --skip 1 config/data/norm_voltage.csv norm_voltage
+DELETE FROM norm_voltage_units;
+.import --csv --skip 1 config/data/norm_voltage_units.csv norm_voltage_units
+DELETE FROM norm_duration_units;
+.import --csv --skip 1 config/data/norm_duration_units.csv norm_duration_units
+DELETE FROM norm_flow_units;
+.import --csv --skip 1 config/data/norm_flow_units.csv norm_flow_units
+DELETE FROM norm_additive_units;
+.import --csv --skip 1 config/data/norm_additive_units.csv norm_additive_units
 DELETE FROM norm_source_types;
 .import --csv --skip 1 config/data/norm_source_types.csv norm_source_types
 DELETE FROM norm_ms_types;
