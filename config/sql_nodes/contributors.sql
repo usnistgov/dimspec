@@ -56,7 +56,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		CHECK (length(last_name) = length(replace(replace(replace(replace(replace(replace(last_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
 		CHECK (length(username) = length(replace(replace(replace(replace(replace(replace(username, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
 		/* Foreign key relationships */
-		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
+		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS affiliations

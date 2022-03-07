@@ -53,7 +53,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL UNIQUE,
 			/* plain text of the type of database action */
 		/* Check constraints */
-		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema"))
+		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema", "insert", "update", "delete"))
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
@@ -120,8 +120,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (executed_on==strftime("%Y-%m-%d %H:%M:%S", executed_on)),
 		/* Foreign key relationships */
-		FOREIGN KEY (effect) REFERENCES norm_log_effect(id),
-		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id)
+		FOREIGN KEY (effect) REFERENCES norm_log_effect(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Data */

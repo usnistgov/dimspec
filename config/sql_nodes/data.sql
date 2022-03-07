@@ -50,6 +50,25 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* name of the sample class */
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_peak_confidence
+  	/* Normalization levels for peak identification confidence */
+  (
+  	id
+  		INTEGER PRIMARY KEY AUTOINCREMENT,
+  		/* primary key */
+  	level1
+  		TEXT NOT NULL,
+  		/* primary level of confidence */
+  	level2
+  		TEXT,
+  		/* confidence sublevel */
+  	confidence
+  		TEXT
+  		/* description of the confidence level */
+  	/* Check constraints */
+  	/* Foreign key relationships */
+  );
+  /*magicsplit*/
 	CREATE TABLE IF NOT EXISTS sample_aliases
 		/* Alternative names by which this sample may be identified e.g. laboratory or repository names, external reference IDs, URIs, etc. */
 	(
@@ -64,7 +83,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	    /* source of the name, e.g. external database pointer or PID */
 	  /* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS samples
@@ -100,9 +119,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
@@ -117,7 +136,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* value of the software setting */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id)
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS peaks
@@ -160,30 +179,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (rt_centroid > 0),
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE,
-		FOREIGN KEY (identification_confidence) REFERENCES norm_peak_confidence(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (identification_confidence) REFERENCES norm_peak_confidence(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_peak_confidence
-  	/* Normalization levels for peak identification confidence */
-  (
-  	id
-  		INTEGER PRIMARY KEY AUTOINCREMENT,
-  		/* primary key */
-  	level1
-  		TEXT NOT NULL,
-  		/* primary level of confidence */
-  	level2
-  		TEXT,
-  		/* confidence sublevel */
-  	confidence
-  		TEXT
-  		/* description of the confidence level */
-  	/* Check constraints */
-  	/* Foreign key relationships */
-  );
-  /*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_data
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(
@@ -216,7 +216,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (base_int >= 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
 		/* Foreign key relationships */
-		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE
+		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_spectra
@@ -235,7 +235,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (mz > 0),
 		CHECK (intensity >= 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id)
+		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS qc_data
@@ -255,7 +255,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  /* Value associated with parameter and name */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id)
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 /* Views */

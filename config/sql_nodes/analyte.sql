@@ -75,7 +75,26 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* self referential to compound_categories */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id)
+		FOREIGN KEY (subclass_of) REFERENCES compound_categories(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_analyte_alias_references
+		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
+	(
+		id
+			INTEGER PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL,
+			/* name of the source for the compound alias */
+		description
+			TEXT NOT NULL,
+			/* text describing the reference name/acronym */
+		reference
+			TEXT NOT NULL
+			/* reference URL for the alias */
+		/* Check constraints */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS compounds
@@ -126,28 +145,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
-		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE,
-		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
-	);
-	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_analyte_alias_references
-		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
-	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL,
-			/* name of the source for the compound alias */
-		description
-			TEXT NOT NULL,
-			/* text describing the reference name/acronym */
-		reference
-			TEXT NOT NULL
-			/* reference URL for the alias */
-		/* Check constraints */
-		/* Foreign key relationships */
+		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS compound_aliases
@@ -164,8 +164,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* Text name of the alias for a compound */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE,
-		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS compound_fragments
@@ -182,9 +182,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to fragments */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (peak_id) REFERENCES peaks(id),
-		FOREIGN KEY (compound_id) REFERENCES compounds(id),
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id)
+		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE SET NULL,
+		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragments
@@ -232,8 +232,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* Text name of the alias for a compound */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE,
-		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE
+		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_sources
@@ -250,8 +250,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* DOI, etc. */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id),
-		FOREIGN KEY (generated_by) REFERENCES norm_generation_type(id)
+		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (generated_by) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Views */

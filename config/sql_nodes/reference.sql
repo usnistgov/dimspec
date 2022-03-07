@@ -82,7 +82,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (abundance BETWEEN 0 AND 1),
 		CHECK (exact_mass > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE
+		FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/	
 

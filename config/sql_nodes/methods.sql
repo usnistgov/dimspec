@@ -337,10 +337,10 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (duration > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_descriptions
@@ -359,8 +359,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		UNIQUE(ms_methods_id, ms_types_id, vendor_id),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS instrument_properties
@@ -380,7 +380,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  /* units associated with this value; open text */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS chromatography_descriptions
@@ -404,11 +404,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id, column_position_id, vendor_id),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE CASCADE
-		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_methods
@@ -453,13 +453,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (has_qc_method IN (0, 1))
 		/* Foreign key relationships */
-		FOREIGN KEY (ionization) REFERENCES norm_voltage(id) ON UPDATE CASCADE,
-		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE
+		FOREIGN KEY (ionization) REFERENCES norm_voltage(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS qc_methods
@@ -482,9 +482,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS solvent_aliases
@@ -498,7 +498,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* human meaningful name(s) associated with a solvent */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS additive_aliases
@@ -512,7 +512,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* human meaningful name(s) associated with an additive */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS solvent_mixes
@@ -530,8 +530,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
+		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS solvent_additives
@@ -552,9 +552,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (amount > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE
+		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Data */
