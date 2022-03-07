@@ -1,2 +1,4 @@
-methods_id,carrier,additive1_id,additive2_id,additive3_id,additive4_id,duration,duration_units
-1,1,0,0,0,0,60,minutes
+methods_id,carrier,flow,flow_units,duration,duration_units
+1,1,2,1,60,2
+1,2,1,1,20,2
+1,3,5,1,15,2

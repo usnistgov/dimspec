@@ -16,6 +16,7 @@
 
 DELETE FROM solvent_mixes;
 DELETE FROM solvent_mix_collections;
+DELETE FROM solvent_additives;
 DELETE FROM solvent_aliases;
 DELETE FROM additive_aliases;
 DELETE FROM mobile_phases;
@@ -46,6 +47,7 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/solvent_aliases.csv solvent_aliases
 .import --csv --skip 1 config/data/demo/additive_aliases.csv additive_aliases
 .import --csv --skip 1 config/data/demo/solvent_mixes.csv solvent_mixes
+.import --csv --skip 1 config/data/demo/solvent_additives.csv solvent_additives
 .import --csv --skip 1 config/data/demo/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
 .import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases

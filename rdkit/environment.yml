@@ -1,0 +1,7 @@
+name: nist_hrms_db
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - r-reticulate=1.24
+  - rdkit=2021.09.4

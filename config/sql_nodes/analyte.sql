@@ -114,9 +114,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		netcharge
 			INTEGER NOT NULL DEFAULT 0,
 			/* total formal charge of compound, derived */
-		ion_state
-			INTEGER NOT NULL,
-			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
 		inspected_by
 			INTEGER,
 			/* user inspection id */
@@ -131,8 +128,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE,
 		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE,
-		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_analyte_alias_references

@@ -135,6 +135,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		precursor_mz
 			REAL NOT NULL,
 			/* precursor ion mass to charge ratio (constrained to positive numbers) */
+		ion_state
+			INTEGER NOT NULL,
+			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
 		charge
 			INTEGER NOT NULL,
 			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
@@ -154,7 +157,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (rt_centroid > 0),
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE,
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_data

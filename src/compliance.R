@@ -37,7 +37,8 @@ source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
-# - here all are from CRAN 
+# - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the
+# set value of USE_RDKIT
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
@@ -57,153 +58,94 @@ sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 
 # _Set up logger ---------------------------------------------------------------
-layout <- layout_glue_generator(format = paste("{crayon::bold(colorize_by_log_level(level, levelr))}", 
-                                               "[{crayon::italic(format(time, \"%Y-%m-%d %H:%M:%OS3\"))}]", 
-                                               "in {fn}(): {grayscale_by_log_level(msg, levelr)}")) 
-log_threshold(LOG_THRESHOLD)
-log_layout(layout)
-log_formatter(formatter_glue)
+if (LOGGING_ON) {
+  source(file.path("config", "env_logger.R"))
+  update_logger_settings()
+  log_it("info", "Setting up logger for use with this session...")
+} else {
+  cat('\nLogging not requested according to LOGGING_ON in "env_glob.txt" settings.\n')
+}
 
 # _Build database if it doesn't exist ------------------------------------------
 if (!DB_BUILT) build_db()
 if (INIT_CONNECT) {
-  manage_connection()
-  db_map <- er_map()
+  status <- try(manage_connection())
+  if ("try-error" %in% class(status)) {
+    if (LOGGING_ON) log_it("error", "Could not establish a connection to the database.")
+  } else {
+    if (LOGGING_ON) log_it("success", 'Interactive database connection is live as object "con"')
+  }
+  db_map <- try(er_map())
+  if ("try-error" %in% class(db_map)) {
+    if (LOGGING_ON) log_it("error", 'There was an error loading the database map using "er_map()".')
+  } else {
+    if (LOGGING_ON) log_it("success", 'A database map is available as object "db_map".')
+  }
   db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
   if (length(db_dict) == 1) {
-    db_dict <- read_json(db_dict) %>%
-      lapply(bind_rows)
+    if (LOGGING_ON) log_it("info", sprintf('Dictionary file located at %s', db_dict))
+    db_dict <- try(lapply(read_json(db_dict), bind_rows))
+    if ("try-error" %in% class(db_dict)) {
+      if (LOGGING_ON) log_it("error", 'There was an error reading in the data dictionary.')
+    } else {
+      if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
+    }
   } else {
-    db_dict <- data_dictionary()
+    if (LOGGING_ON) log_it("info", "No database dictionary file located. Building...")
+    db_dict <- try(data_dictionary())
+    if ("try-error" %in% class(db_dict)) {
+      if (LOGGING_ON) log_it("error", 'There was an error building the data dictionary with "data_dictionary()".')
+    } else {
+      if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
+    }
   }
 }
 
 # _Plumber set up --------------------------------------------------------------
-if (ACTIVATE_API) {
-  log_it("trace", "Activating plumber API...")
+if (USE_API) {
+  log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(file.path("plumber", "api_control.R"))
-  plumber_service <- callr::r_bg(
-    function() {
-      source(file.path("plumber", "env_plumb.R"))
-      api_start(
-        on_host = PLUMBER_HOST,
-        on_port = PLUMBER_PORT
-      )
-    }
+  api_reload(
+    pr = "plumber_service",
+    background = TRUE,
+    on_host = PLUMBER_HOST,
+    on_port = PLUMBER_PORT
   )
-  plumber_url <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   if (plumber_service$is_alive()) {
-    log_it("info", glue::glue("Running plumber API at {plumber_url}"))
-    log_it("info", glue::glue("View plumber docs at {plumber_url}/__docs__/ or by calling `api_open_doc(plumber_url)`"))
+    log_it("success", glue::glue("Running plumber API at {PLUMBER_URL}"))
+    log_it("info", glue::glue("View plumber docs at {PLUMBER_URL}/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`"))
   } else {
-    log_it("warn", "There was a problem launching the plumber API.")
+    log_it("warn", "There was a problem launching the plumber API.", "api")
   }
 } else {
-  log_it("trace", "Plumber API not requested according to ACTIVATE_API setting in env_R.R settings.")
+  log_it("info", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
 }
 
 # _RDKit set up ----------------------------------------------------------------
-if (USE_RDKIT) {
-  # log_it("info", "Using RDKit for this session. Setting up...")
-  # if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
-  source(file.path("rdkit", "env_py.R"))
-  # source(file.path("rdkit", "py_setup.R"))
-  
-  # ---- try some stuff from icpmsflow
-  # source(file.path("rdkit", "py_setup_icpmsflow.R"))
-  # python_enabled <- py_setup()
-  # if (!python_enabled) {
-  #   stop("Unable to establish python environment.")
-  # }
-  # rdk <- import("rdkit")
-  
-  # ---- try simplistic
-  library(reticulate)
-  use_condaenv(USE_PY_ENV)
-  rdk <- import(CONDA_PACKAGE)
-  rdkit_active <- !"try-error" %in% class(
-    invisible(
-      try(
-        rdk$Chem$inchi$MolToInchi(
-          rdk$Chem$MolFromSmiles('C1CC1[C@H](F)C1CCC1')
-        )
-      )
+if (INFORMATICS) {
+  if (USE_RDKIT) {
+    log_it("info", "Using RDKit for this session. Setting up...", "rdk")
+    if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
+    require(reticulate)
+    source(file.path("rdkit", "env_py.R"))
+    source(file.path("rdkit", "py_setup.R"))
+    if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
+    if (!exists("PYENV_LIBRARIES")) PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
+    if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
+    if (!exists("CONDA_PATH")) CONDA_PATH <- "rdk"
+    setup_rdkit(
+      env_name           = PYENV_NAME,
+      required_libraries = PYENV_LIBRARIES,
+      env_ref            = PYENV_REF,
+      log_ns             = "rdk",
+      conda_path         = CONDA_PATH
     )
-  )
-  # if ("try-error" %in% class(rdk_active)) {
-  #   log_it("warn", "Something is wrong with RDKit.")
-  # } else {
-  #   log_it("success", "RDKit active.")
-  # }
-  
-  # if (!exists("empty_variable")) source(file.path("src", "app_functions.R"))
-  # env_name <- ifelse(empty_variable(PYENV_NAME), "rdkit", PYENV_NAME)
-  # env_mods <- if (empty_variable(PYENV_MODULE)) "rdkit" else PYENV_MODULE
-  # env_ref <- ifelse(empty_variable(PYENV_REF), "rdk", PYENV_REF)
-  # require(reticulate)
-  # log_it("trace", "Discovering python installations...")
-  # py_settings <- py_discover_config(required_module = env_mods[1])
-  # if (!length(py_settings$pythonhome) == 1) {
-  #   log_it("warn", "Python was not discoverable on this system. Installing miniconda...")
-  #   install_miniconda(force = FALSE)
-  #   py_settings <- py_discover_config(required_module = env_mods[1])
-  # }
-  # log_it("trace", "Checking for environment name match...")
-  # py_envs <- py_settings$python_versions %>%
-  #   stringr::str_remove_all("python.exe") %>%
-  #   stringr::str_sub(1, nchar(.) - 1) %>%
-  #   basename()
-  # if (env_name %in% py_envs) {
-  #   log_it("trace", glue::glue('Environment "{env_name}" located.'))
-  # } else {
-  #   log_it("info", glue::glue('Environment "{env_name}" could not be found; creating...'))
-  #   create_rdkit_conda_env(env_name)
-  # }
-  # use_condaenv(condaenv = env_name)
-  # log_it("trace", "Activating environment...")
-  # py_config()
-  # if (!py_available()) {
-  #   log_it("error", "Unknown error. RDKit will not be available.")
-  # } else {
-  #   log_it("trace", "Checking module compliance...")
-  #   env_mods <- c(env_mods, "rpytools")
-  #   module_available <- env_mods %>%
-  #     lapply(py_module_available) %>%
-  #     unlist()
-  #   if (!all(module_available)) {
-  #     missing_modules <- env_mods[!module_available]
-  #     log_it("error",
-  #            sprintf("Modules %s %s not available.",
-  #                    format_list_of_names(missing_modules),
-  #                    ifelse(length(missing_modules) > 1, "were", "was")
-  #            )
-  #     )
-  #     rm(missing_modules)
-  #   } else {
-  #     log_it("trace", glue::glue("Assigning RDKit to {env_ref}..."))
-  #     assign(
-  #       x = env_ref,
-  #       value = import("rdkit"),
-  #       envir = .GlobalEnv
-  #     )
-  #   }
-  #   rm(module_available)
-  # }
-  # rm(env_name, env_mods, env_ref, py_settings, py_envs)
-  
-  # if (!exists(PYENV_NAME)) {
-  #   if (exists("PYENV_NAME")) {
-  #     if (!exists("PYENV_REF")) {
-  #       PYENV_REF <- PYENV_NAME
-  #     }
-  #     setup_rdkit(PYENV_NAME, PYENV_REF)
-  #   }
-  # }
-  # } else {
-  #   log_it("trace", "RDKit not requested according to USE_RDKIT setting in env_glob.txt settings.")
+  } else {
+    log_it("info", "Using ChemmineR for this session.", "rdk")
+  }
 }
 
 # _Clean up --------------------------------------------------------------------
-rm(sources, exclusions, fragments, exactmasschart)
+rm(sources, exclusions)
 

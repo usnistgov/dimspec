@@ -1,3 +1,4 @@
+# TODO Add logging statements rather than stop/warning/etc. throughout this file.
 
 queries <- list(
   NROW   = "SELECT COUNT(*) FROM ?table_name",

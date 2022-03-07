@@ -1,28 +1,60 @@
-# Title of this database
+# Title of this database -------------------------------------------------------
 DB_TITLE       = "NIST HRAMS Database for PFAS"
 
-# Treat DB_NAME, DB_BUILD_FILE, DB_BUILD_FULL, and DB_DATA as file names (FALSE) or explicit file locations (TRUE).
-# If TRUE, R will treat these as specific locations for files to use (safer).
-# If FALSE, R will search all project directories for files matching the supplied names (flexible for prototyping or multi-project builds).
+
+# Database build and data ------------------------------------------------------
+# Treat DB_NAME, DB_BUILD_FILE, DB_BUILD_FULL, and DB_DATA as file names (FALSE) 
+# or explicit file locations (TRUE). If TRUE, R will treat these as specific
+# locations for files to use (safer). If FALSE, R will search all project 
+# directories for files matching the names supplied below (this provides more 
+# flexibility for prototyping or multi-project builds).
 EXPLICIT_PATHS = FALSE
 
-# Text name to use for this project's database file
+# Text name to use for this project's database file.
 DB_NAME        = "nist_pfas_nta_dev.sqlite"
 
-# Build file used for the database
+# Build file used for the database.
 DB_BUILD_FILE  = "build.sql"
 DB_BUILD_FULL  = "build_full.sql"
 
-# File containing data from which to populate the database
+# File containing data from which to populate the database (set as NULL to build
+# only the structure and populate no data).
 DB_DATA        = "populate_pfas.sql"
 
-# Environment reference to sqlite3 command line interface, if any. This should
-# be the terminal reference to start sqlite3 on the deployment (e.g. $ sqlite3).
-SQLITE_CLI     = "sqlite3"
+# The official NIST PFAS Suspect List URL, used to simplify downloads. This
+# could be a reference to any downloadable resource, but only the NIST PFAS list
+# is supported by this project.
 SUS_LIST_URL   = "https://data.nist.gov/od/ds/mds2-2387/PFAS%20Suspect%20List_v1.xlsx"
 
-# Plumber integration (requires R)
-ACTIVATE_API   = TRUE
 
-# RDKit integration
-USE_RDKIT      = FALSE
+# System interface settings ----------------------------------------------------
+# The command line interface alias for your installation of sqlite3, if any. 
+# i.e. the command used in a terminal to start sqlite3 (e.g. $ sqlite3).
+SQLITE_CLI     = "sqlite3"
+
+# The command line interface alias for your installation of ana/miniconda, if any.
+# i.e. the command used in a terminal to start ana/miniconda (e.g. $ conda).
+CONDA_CLI      = "conda"
+
+
+# Activate features on load ----------------------------------------------------
+# All features are available within the package, settings here are whether to
+# start them when sourcing config/compliance.R to start a session.
+
+# Create a database connection when starting a session (requires R).
+INIT_CONNECT   = TRUE
+
+# Whether to activate logging for this session. (requires R)
+LOGGING_ON     = TRUE
+
+# Whether to activate plumber integration. (requires R)
+USE_API        = TRUE
+
+# RDKit integration (requires R and python) Set INFORMATICS to determine whether
+# this session will provide support for RDKit or ChemMineR, and set USE_RDKIT
+# to determine which (if false, ChemMineR) will be used.
+INFORMATICS    = TRUE
+USE_RDKIT      = TRUE
+
+# Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
+USE_SHINY      = FALSE

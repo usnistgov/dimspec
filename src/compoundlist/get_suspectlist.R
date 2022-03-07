@@ -381,7 +381,7 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
     stop('Column "source_types" must be either character or numeric.')
   }
   
-  sqlite_available <- length(Sys.which(SQLITE_CLI) > 1)
+  sqlite_available <- Sys.which(SQLITE_CLI) != ""
   
   # Write new compounds with aliases
   if (nrow(new_comps) > 0) {
@@ -437,7 +437,11 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
         log_it("info", glue("There were previously {scales::comma(build_db_action('nrow', 'compounds'))} compounds."))
         sqlite_call <- glue('{SQLITE_CLI} {DB_NAME} -cmd ".import --csv --skip 1 {f_name} compounds" -cmd ".exit"')
         log_it("trace", glue('Issuing shell command {sqlite_call}'))
-        shell(sqlite_call)
+        if (.Platform$OS.type == "windows") {
+          shell(sqlite_call)
+        } else {
+          system(sqlite_call)
+        }
         log_it("info", glue("There are now {scales::comma(build_db_action('nrow', 'compounds'))} compounds."))
         log_it("trace", glue("Removing temporary compounds file at ./{f_name}"))
         file.remove(f_name)
@@ -452,7 +456,11 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
         log_it("info", glue("There were previously {scales::comma(build_db_action('nrow', 'compound_aliases'))} aliases."))
         sqlite_call <- glue('{SQLITE_CLI} {DB_NAME} -cmd ".import --csv --skip 1 {f_name} compound_aliases" -cmd ".exit"')
         log_it("trace", glue('Issuing shell command {sqlite_call}'))
-        shell(sqlite_call)
+        if (.Platform$OS.type == "windows") {
+          shell(sqlite_call)
+        } else {
+          system(sqlite_call)
+        }
         log_it("info", glue("There are now {scales::comma(build_db_action('nrow', 'compound_aliases'))} aliases."))
         log_it("trace", glue("Removing temporary aliases file at ./{f_name}"))
         file.remove(f_name)
@@ -527,7 +535,11 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
       } else {
         sqlite_call <- glue('{SQLITE_CLI} {DB_NAME} -cmd ".import --csv --skip 1 {f_name} compound_aliases" -cmd ".exit"')
         log_it("trace", glue('Issuing shell command {sqlite_call}'))
-        shell(sqlite_call)
+        if (.Platform$OS.type == "windows") {
+          shell(sqlite_call)
+        } else {
+          system(sqlite_call)
+        }
         file.remove(f_name)
       }
     } else {
@@ -753,7 +765,11 @@ update_data_sources <- function(project,
       sql_cmd <- glue("{sqlite_cli} {db_name}", '".output {f_name}"', '".dump"', '".exit"',
                       .sep = " -cmd ")
       log_it("trace", glue("Issuing shell command\n{sql_cmd}"))
-      shell(sql_cmd)
+      if (.Platform$OS.type == "windows") {
+        shell(sql_cmd)
+      } else {
+        system(sql_cmd)
+      }
     }
   }
   project_dir <- file.path(data_dir, project)
