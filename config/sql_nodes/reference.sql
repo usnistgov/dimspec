@@ -107,14 +107,17 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
   	INNER JOIN elements e ON i.atomic_number = e.atomic_number;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_exact_masses AS
-	/* Exact monoisotopic masses for elements */
+	/* Exact monoisotopic masses for elements at their highest abundance */
 	  SELECT
+	  	symbol,
+	  		/* element symbol */
 	    element,
   			/* element common name */
 	    exact_mass
   			/* monisotopic nominal exact mass */
 	  FROM (
 	    SELECT
+	    	symbol,
 	      element,
 	      exact_mass,
 	      abundance,
