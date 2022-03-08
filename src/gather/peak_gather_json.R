@@ -1,8 +1,22 @@
-source('src/gather/table_msdata.R')
+#' Import File Data Extraction
+
+#' Extract peak data and metadata
+#' 
+#' gathers metadata from methodjson and extracts the MS1 and MS2 data from the mzml
+#'
+#' @param methodjson list of JSON generated from `parse_method_json` function
+#' @param mzml list of msdata from `mzMLtoR` function
+#' @param compoundtable data.frame containing compound identities [should be extractable from SQL later]
+#' @param zoom numeric vector specifying the range around the precursor ion to include, from m/z - zoom[1] to m/z + zoom[2]
+#' @param minerror numeric the minimum error (in Da) of the instrument
+#'
+#' @return list of peak objects
+#' @export
+#'
+#' @examples
 
 peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), minerror = 0.002) {
-  #gathers metadata from methodjson and extracts the MS1 and MS2 data from the mzml
-  #crosslists the compound ID's and extract compound data for QC checking
+  
   out <- list()
   annotated_cmpds <- sapply(methodjson$annotation, function(x) x$name)
   scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
@@ -47,4 +61,105 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     out[[i]]$msdata <- do.call(rbind, lapply(1:nrow(msdata), function(x) data.frame(scantime = msdata$scantime[x], ms_n = msdata$mslevel[x], baseion = msdata$baseion[x], base_int = msdata$base_int[x], measured_mz = msdata$masses[x], measured_intensity = msdata$intensities[x])))
   }
   out
+}
+
+#' Extract msconvert metadata
+#' 
+#' Extracts relevant Proteowizard MSConvert metadata from mzml file.
+#' Used for `peak_gather_json` function
+#'
+#' @param mzml list of msdata from `mzMLtoR` function
+#'
+#' @return list of msconvert parameters
+#' @export
+#'
+#' @examples
+
+get_msconvert_data <- function(mzml) {
+  output <- list()
+  if ("dataProcessingList" %in% names(mzml$mzML)) {
+    output <- lapply(which(names(mzml$mzML$dataProcessingList$dataProcessing) == "processingMethod"), function(y) {
+      x <- mzml$mzML$dataProcessingList$dataProcessing[[y]]
+      n <- NULL
+      u <- NULL
+      sw <- NULL
+      if ("cvParam" %in% names(x)) {n <- x$cvParam["name"]}
+      if ("userParam" %in% names(x)) {
+        nam <- NULL
+        v <- NULL
+        if ("name" %in% names(x$userParam)) {nam <- x$userParam["name"]}
+        if ("value" %in% names(x$userParam)) {v <- x$userParam["value"]}
+        u <- paste(nam, v, collapse = " ")
+      }
+      if ("softwareRef" %in% names(x$.attrs)) {
+        sw <- x$.attrs["softwareRef"]
+      }
+      trimws(gsub("  ", " ", paste(n,u,sw, collapse = " ")))
+    })
+  }
+  output
+}
+
+#' Tabulate MS Data
+#' 
+#' Pulls specified MS Data from mzML and converts it into table format for further processing
+#' Internal function for `peak_gather_json` function
+#'
+#' @param mzml list of msdata from `mzMLtoR` function
+#' @param scans integer vector containing scan numbers to extract MS data
+#' @param mz numeric targeted m/z 
+#' @param zoom numeric vector specifying the range around m/z, from m/z - zoom[1] to m/z + zoom[2]
+#' @param masserror numeric relative mass error (in ppm) of the instrument
+#' @param minerror numeric minimum mass error (in Da) of the instrument
+#'
+#' @return data.frame containing MS data
+#' @export
+#'
+#' @examples
+
+table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerror = NA) {
+  if (length(scans) == 0) return(NULL)
+  out <- NULL
+  if (is.na(zoom[1])) {
+    out <- do.call(rbind, lapply(scans, 
+                                 function(x) {ms <- extract.ms(mzml, x);
+                                 data.frame(scan = x, 
+                                            scantime = gettime(mzml, x),
+                                            baseion = ms[which.max(ms[,2]),1],
+                                            base_int = ms[which.max(ms[,2]),2],
+                                            masses = paste(ms[,1], collapse = " "),
+                                            intensities = paste(ms[,2], collapse = " "))}))
+  }
+  if (!is.na(zoom[1]) & !is.na(mz) & !is.na(masserror) & !is.na(minerror)) {
+    if (length(zoom) == 2) {
+      out <- do.call(rbind, lapply(scans, 
+                                   function(x) {ms <- extract.ms(mzml, x);
+                                   ms <- ms[which(ms[,1] >= mz - zoom[1] & ms[,1] <= mz + zoom[2]),];
+                                   if (length(ms) == 0) {return(NULL)};
+                                   data.frame(scan = x, 
+                                              scantime = gettime(mzml, x),
+                                              baseion = mean(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),1], na.rm = TRUE),
+                                              base_int = sum(ms[which(ms[,1] >= mz - max(mz*masserror*1E-6,minerror) & ms[,1] <= mz + max(mz*masserror*1E-6,minerror)),2], na.rm = TRUE),
+                                              masses = paste(ms[,1], collapse = " "),
+                                              intensities = paste(ms[,2], collapse = " "))}))
+    }
+  }
+  out
+}
+
+#' Replace NaN
+#' 
+#' Replace all NaN values with a specified value
+#'
+#' @param x vector of values
+#' @param repl value to replace NaN contained in `x`
+#'
+#' @return vector with all NaN replaced with `repl`
+#' @export
+#'
+#' @examples
+
+repl_nan <- function(x, repl = NULL) {
+  if (is.nan(x)) {return(repl)}
+  if (!is.nan(x)) {return(x)}
 }

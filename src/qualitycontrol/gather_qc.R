@@ -1,3 +1,18 @@
+#' Quality Control Check of Import Data
+#' 
+#' Performs the quality control check on the imported data from the peak gather function.
+#'
+#' @param gather_peak peak object generated from `peak_gather_json` function
+#' @param exactmasses exactmasses list
+#' @param ms1range 2-component vector containing stating the range to evaluate the isotopic pattern of the precursor ion, from mass - ms1range[1] to mass + ms1range[2]
+#' @param ms1isomatchlimit the reverse dot product minimum score for the isotopic pattern match
+#' @param minerror the minimum mass error (in Da) allowable for the instrument
+#'
+#' @return nested list of quality control check results
+#' @export
+#'
+#' @examples
+
 exactmasschart <- readRDS('src/qualitycontrol/exactmasschart.RDS')
 
 gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {

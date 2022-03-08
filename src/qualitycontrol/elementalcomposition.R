@@ -1,0 +1,183 @@
+#' Elemental Formula Functions
+
+#' Extract elements from formula
+#' 
+#' Converts elemental formula into list of `elements` and `counts` corresponding to the composition
+#'
+#' @param composition.str  character string elemental formula
+#' @param remove.elements character vector containing elements to remove from 
+#'
+#' @return list with `elements` and `counts`
+#' @export
+#'
+#' @examples
+#' extract.elements("C2H5O")
+#' 
+#' extract.elements("C2H5ONa", remove.elements = c("Na", "Cl"))
+
+extract.elements <- function(composition.str, remove.elements = c()) {
+  single.elem <- gregexpr("[A-Z]", composition.str)[[1]]
+  double.elem <- gregexpr("[A-Z][a-z]", composition.str)[[1]]
+  single.elem <- single.elem[! single.elem %in% double.elem]
+  if (length(single.elem) > 0) {
+    elements <- substring(composition.str, single.elem, single.elem)
+  }
+  if (double.elem[1] != -1) {
+    elements <- c(elements, substring(composition.str, double.elem, double.elem + 1))
+  }
+  ecounts <- rep(1, length(elements))
+  nums <- gregexpr("[0-9]+", composition.str)[[1]]
+  nums.count <- attr(nums, "match.length")
+  for (i in 1:length(nums)) {
+    if (substr(composition.str, nums[i] - 1, nums[i] - 1) %in% elements) {
+      ecounts[which(elements == substr(composition.str, nums[i] - 1, nums[i] - 1))] <- substr(composition.str, nums[i], nums[i] + nums.count[i] - 1)
+    }
+    if (substr(composition.str, nums[i] - 2, nums[i] - 1) %in% elements) {
+      ecounts[which(elements == substr(composition.str, nums[i] - 2, nums[i] - 1))] <- substr(composition.str, nums[i], nums[i] + nums.count[i] - 1)
+    }
+  }
+  results <- c()
+  results$elements <- elements
+  results$counts <- as.integer(ecounts)
+  results$counts <- results$counts[which(!results$elements %in% remove.elements)]
+  results$elements <- results$elements[which(!results$elements %in% remove.elements)]
+  results
+}
+
+#' Calculate the monoisotopic mass of an elemental formula list
+#'
+#' @param elementlist list of elemental formula from `extract.elements` function
+#' @param exactmasses list of exact masses of elements
+#' @param adduct character string adduct/charge state to add to the elemental formula, options are `neutral`, `+H`, `-H`, `+Na`, `+K`, `+`, `-`, `-radical`, `+radical`
+#'
+#' @return numeric monoisotopic exact mass
+#' @export
+#'
+#' @examples
+#' elementlist <- extract.elements("C2H5O")
+#' calculate.monoisotope(elementalist, exactmasses, adduct = "neutral")
+#'
+
+calculate.monoisotope <- function(elementlist, exactmasses, adduct = "neutral") {
+  mass <- 0
+  for (i in 1:length(elementlist$elements)) {
+    mass <- mass + as.numeric(exactmasses[which(exactmasses[,1] == elementlist$elements[i]),2])*elementlist$counts[i]
+  }
+  if (adduct != "neutral") {
+    if (adduct == "+H") {mass.adj = -1.0072767}
+    if (adduct == "-H") {mass.adj = 1.0072766}
+    if (adduct == "+Na") {mass.adj = -22.9892213}
+    if (adduct == "+K") {mass.adj = -38.9631585}
+    if (adduct == "+") {mass.adj = 0.0005484}
+    if (adduct == "-") {mass.adj = -0.0005484}
+    if (adduct == "-radical") {mass.adj = 2*-0.0005484}
+    if (adduct == "+radical") {mass.adj = 0}
+    mass <- mass - mass.adj
+  }
+  mass
+}
+
+#' Calculate the monoisotopic mass of a elemental formulas in 
+#'
+#' @param df data.frame with at least one column with elemental formulas
+#' @param column integer indicating the column containing the elemental formulas
+#' @param exactmasses list of exact masses
+#' @param remove.elements elements to remove from the elemental formulas
+#' @param adduct character string adduct/charge state to add to the elemental formula, options are `neutral`, `+H`, `-H`, `+Na`, `+K`, `+`, `-`, `-radical`, `+radical`
+#'
+#' @return data.frame with column of exact masses appended to it
+#' @export
+#'
+#' @examples
+
+monoisotope.list <- function(df, column, exactmasses, remove.elements = c(), adduct = "neutral") {
+  formulas <- df[,column]
+  masslist <- c()
+  for (i in 1:length(formulas)) {
+    elements <- extract.elements(composition.str = formulas[i], remove.elements = remove.elements)
+    addmass <- calculate.monoisotope(elements, exactmasses, adduct)
+    masslist <- c(masslist, addmass)
+  }
+  cbind(df, masslist)
+}
+
+#' Add Adduct to Formula
+#'
+#' @param elementalformula character string elemental formula
+#' @param adduct character string adduct state to add to the elemental formula, must contain an element, options are `+H`, `-H`, `+Na`, `+K`
+#'
+#' @return character string containing elemental formula with adduct
+#' @export
+#'
+#' @examples
+#' adduct_formula("C2H5O", adduct = "+H")
+
+adduct_formula <- function(elementalformula, adduct = "+H") {
+  elist <- extract.elements(elementalformula, remove.elements = c())
+  element <- gsub("\\+", "", gsub("-", "", adduct))
+  change <- unlist(strsplit(adduct, split = ""))[1]
+  if (element %in% elist$elements) {
+    if (change  == "+") {
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] + 1
+    }
+    if (change  == "-") {
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] - 1
+      if (elist$counts[which(elist$elements == element)] == 0) {
+        elist$counts <- elist$counts[-which(elist$elements == element)]
+        elist$elements <- elist$elements[-which(elist$elements == element)]
+      }
+    }
+  }
+  if (!element %in% elist$elements) {
+    if (change == "+") {
+      elist$elements <- c(elist$elements, element)
+      elist$counts <- c(elist$counts, 1)
+    }
+  }
+  paste(sapply(1:length(elist$elements), function(x) paste(elist$elements[x], elist$counts[x], sep = "")), collapse = "")
+}
+
+#' Checks if two elemental formulas match
+#'
+#' @param testformula character string of elemental formula to test
+#' @param trueformula character string of elemental formula to check against (truth)
+#'
+#' @return logical
+#' @export 
+#'
+#' @examples
+
+is_elemental_match <- function(testformula, trueformula) {
+  test_list <- extract.elements(testformula, remove.elements = c())
+  true_list <- extract.elements(trueformula, remove.elements = c())
+  if (length(which(test_list$elements %in% true_list$elements)) < length(test_list$elements)) {return(FALSE)}
+  if (length(which(test_list$elements %in% true_list$elements)) == length(test_list$elements)) {
+    count_check <- sapply(test_list$elements, function(x) test_list$counts[which(test_list$elements == x)] == true_list$counts[which(true_list$elements == x)])
+    if (FALSE %in% count_check) {return(FALSE)}
+    if (!FALSE %in% count_check) {return(TRUE)}
+  }
+}
+
+#' Check if elemental formula is a subset of another formula
+#'
+#' @param fragmentformula character string of elemental formula subset to test
+#' @param parentformula character string of elemental formula to check for subset
+#'
+#' @return logical
+#' @export
+#'
+#' @examples
+#' is_elemental_subset("C2H2", "C2H5O")
+#' 
+#' is_elemental_subset("C2H2", "C2H1O")
+
+is_elemental_subset <- function(fragmentformula, parentformula) {
+  frag_list <- extract.elements(fragmentformula, remove.elements = c())
+  par_list <- extract.elements(parentformula, remove.elements = c())
+  if (length(which(frag_list$elements %in% par_list$elements)) < length(frag_list$elements)) {return(FALSE)}
+  if (length(which(frag_list$elements %in% par_list$elements)) == length(frag_list$elements)) {
+    count_check <- sapply(frag_list$elements, function(x) frag_list$counts[which(frag_list$elements == x)] <= par_list$counts[which(par_list$elements == x)])
+    if (FALSE %in% count_check) {return(FALSE)}
+    if (!FALSE %in% count_check) {return(TRUE)}
+  }
+}
