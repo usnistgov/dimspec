@@ -552,7 +552,7 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
           log_it("warn", "Setting up a default namespace for interactive logging only.")
           assign(x = "LOGGING", value = setNames(list(list(log = TRUE, ns = ns, threshold = "trace")), toupper(ns)), envir = .GlobalEnv)
         } else {
-          log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace.', ns))
+          log_it("info", sprintf('Call log_it() again with "add_unknown_ns = TRUE" to establish the "%s" namespace.', ns))
         }
       } else {
         logging_set <- toupper(ns) %in% names(LOGGING)
