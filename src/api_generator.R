@@ -486,7 +486,7 @@ build_db_action <- function(action,
   )
   
   # Safely escape where clauses
-  if (all(!is.null(match_criteria), !action %in% c("NROW", "INSERT"))) {
+  if (all(!is.null(match_criteria), !action == "INSERT")) {
     query <- paste(query, "WHERE",
                    clause_where(db_conn        = db_conn,
                                 table_names    = table_name,
@@ -494,7 +494,7 @@ build_db_action <- function(action,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
   } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT", "SELECT"))) {
-    log_it("error", 'Only "NROW" and "INSERT" actions are valid when argument "match_criteria" is not provided.')
+    log_it("error", 'Only "NROW", "INSERT", and "SELECT" actions are valid when argument "match_criteria" is not provided.')
     stop()
   }
   
@@ -537,32 +537,43 @@ build_db_action <- function(action,
     select_version <- str_replace(query, "^DELETE FROM", "SELECT * FROM")
     if (execute) {
       rows_affected <- nrow(dbGetQuery(db_conn, select_version))
-      cat(sprintf("Your constructed action\n'%s'\n%s\n\n",
+      msg <- sprintf("Your constructed action '%s' %s.",
                   query,
                   ifelse(rows_affected > 0,
-                         sprintf("will delete %s %s.",
+                         sprintf("will delete %s %s",
                                  rows_affected,
                                  ifelse(rows_affected == 1, "row", "rows")),
-                         "does not match any rows")))
+                         "does not match any rows"))
+      log_it("info", msg, "db")
+      if (interactive() && !LOGGING_ON) {
+        cat(msg, "\n")
+      }
       if (rows_affected > 0) {
-        confirm <- select.list(choices   = c("CONFIRM", "abort"),
-                               preselect = "abort",
-                               multiple  = FALSE,
-                               title     = "Please confirm.")
-        if (!confirm == "CONFIRM") {
-          cat("Query construction aborted.\n")
-          query <- NA
+        if (interactive()) {
+          confirm <- select.list(choices   = c("CONFIRM", "abort"),
+                                 preselect = "abort",
+                                 multiple  = FALSE,
+                                 title     = "Please confirm.")
+          if (!confirm == "CONFIRM") {
+            log_it("info", "Delete query construction aborted.")
+            query <- NA
+          } else {
+            log_it("info", "Delete query confirmed by user.")
+          }
+        } else {
+          log_it("warn", "Delete statement issued from non-interactive session.", "db")
         }
       }
     }
   }
+  
+  if (is.na(query)) return(NULL)
   
   catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
   if (str_detect(query, catch_null)) {
     query <- query %>%
       str_replace_all(catch_null, " IS NULL")
   }
-  
   if (execute) {
     if (grepl("^SELECT", query)) {
       tmp <- dbGetQuery(db_conn, query)
