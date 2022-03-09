@@ -26,7 +26,6 @@
 #'
 #' @examples
 pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE) {
-  require(dplyr)
   if (exists("log_it")) {
     log_fn("start")
     log_it("trace",
@@ -68,7 +67,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
   # Shape up the return
   if (get_sql) {
     out <- dplyr::bind_rows(out) %>%
-      select(table_name, type, sql)
+      dplyr::select(table_name, type, sql)
     if ("stringr" %in% installed.packages()) {
       if (!pretty) {
         out$sql <- stringr::str_replace_all(out$sql, "\n|\t", " ")
@@ -80,7 +79,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
     }
   } else {
     out <- dplyr::bind_rows(out) %>%
-      select(cid, table_name, name:pk)
+      dplyr::select(cid, table_name, name:pk)
   }
   if (exists("log_it")) log_fn("end")
   # Return data frame object representing SQLite db_table schema(s)
@@ -252,11 +251,10 @@ build_db <- function(db            = DB_NAME,
                      archive       = FALSE,
                      sqlite_cli    = SQLITE_CLI,
                      connect       = FALSE) {
-  require(glue)
   logger <- exists("log_it")
   if (logger) {
     log_fn("start")
-    log_it("trace", glue('Starting build of "{db}".'), "db")
+    log_it("trace", glue::glue('Starting build of "{db}".'), "db")
   }
   # Argument validation
   if (exists("arg_check")) {
@@ -275,26 +273,50 @@ build_db <- function(db            = DB_NAME,
     )
     stopifnot(arg_check$valid)
   }
-  if (logger) log_it("trace", glue('Attempting to connect to "{db}".'))
-  manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
+  if (!tools::file_ext(build_from) != "sql")
   build_file    <- list.files(pattern = build_from,
                               full.names = TRUE,
                               recursive = TRUE)
+  if (length(build_file) == 0) {
+    stop(sprintf('Could not find build file "%s" in this directory.',
+                 build_from))
+  } else if (length(build_file) > 1) {
+    msg <- sprintf('Multiple files match "%s" in this directory.')
+    if (interactive()) {
+      if (logger) log_it("warn", glue::glue("{msg} Querying user to choose..."))
+      use_file <- select.list(
+        choices = c("(Abort)", build_file),
+        title = sprintf("%s Please choose a single build file or abort.")
+      )
+      if (use_file == "(Abort)") {
+        if (logger) log_it("warn", "Database build aborted by user.")
+        stop("Database build aborted by user (build only supported from a single sql file).")
+      } else {
+        build_file <- use_file
+      }
+    } else {
+      stop(sprintf('Multiple files match "%s" in this directory (%s). Argument "build_from" must apply only to a single file.',
+                   build_from,
+                   format_list_of_names(build_file)))
+    }
+  }
+  if (logger) log_it("trace", glue('Attempting to connect to "{db}".'))
+  manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
   # Populate with all data sources
   # -- RSQLite does not allow for the CLI [.DOT] commands
   # -- If sqlite3 CLI is installed, use that by preference
   sqlite_available <- length(Sys.which(sqlite_cli) > 1)
   # Do it the short way (with CLI)
   if (sqlite_available) {
-    if (logger) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'), "db")
-    sqlite_call <- glue('{sqlite_cli} {db}')
+    if (logger) log_it("trace", glue::glue('SQLite CLI under alias "{sqlite_cli}" is available. Building directly...'), "db")
+    sqlite_call <- glue::glue('{sqlite_cli} {db}')
     if (!file.exists(build_file)) {
-      stop(glue('Cannot locate file "{build_file}" in this directory.'))
+      stop(glue::glue('Cannot locate file "{build_file}" in this directory.'))
     }
-    build_cmd   <- glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
+    build_cmd   <- glue::glue('{sqlite_call} -cmd ".read {build_file}" -cmd ".exit"')
     if (file.exists(db)) remove_db(db = db, archive = archive)
-    if (logger) log_it("info", glue('Building database "{db}".'), "db")
-    if (logger) log_it("trace", glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
+    if (logger) log_it("info", glue::glue('Building database "{db}".'), "db")
+    if (logger) log_it("trace", glue::glue('Issuing shell command to build the database as\n{build_cmd}'), "db")
     if (.Platform$OS.type == "windows") {
       shell(build_cmd)
     } else {
@@ -303,12 +325,12 @@ build_db <- function(db            = DB_NAME,
     if (populate) {
       populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
       if (!file.exists(populate_file)) {
-        if (logger) log_it("warn", glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
+        if (logger) log_it("warn", glue::glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
         populate_cmd <- ""
       } else {
-        if (logger) log_it("info", glue('Populating from "{populate_file}".'), "db")
-        populate_cmd <- glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
-        if (logger) log_it("trace", glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
+        if (logger) log_it("info", glue::glue('Populating from "{populate_file}".'), "db")
+        populate_cmd <- glue::glue('{sqlite_call} -cmd ".read {populate_file}" -cmd ".exit"')
+        if (logger) log_it("trace", glue::glue('Issuing shell command to populate the database as\n{populate_cmd}'), "db")
         if (.Platform$OS.type == "windows") {
           shell(populate_cmd)
         } else {
@@ -316,10 +338,10 @@ build_db <- function(db            = DB_NAME,
         }
       }
     }
-    if (logger) log_it("info", glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
+    if (logger) log_it("info", glue::glue('Finished attempted build of "{db}" as specified. Check console for any failure details.'), "db")
   } else {
     # Do it the long way
-    if (logger) log_it("trace", glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'), "db")
+    if (logger) log_it("trace", glue::glue('SQLite CLI under alias "{sqlite_cli}" is not available. Building through R...'), "db")
     # -- Ensure packages are available
     reqs <- c("stringr", "magrittr", "readr", "DBI")
     packs_available <- reqs %in% installed.packages()
@@ -329,33 +351,26 @@ build_db <- function(db            = DB_NAME,
     invisible(lapply(reqs, require, character.only = TRUE))
     # -- Remove the existing database
     if (file.exists(db)) {
-      if (logger) log_it("trace", glue('Removing "{db}".'))
+      if (logger) log_it("trace", glue::glue('Removing "{db}".'))
       remove_db(db = db, archive = archive)
     }
     # -- Create the build commands in R to pass through RSQLite::SQLite()
-    if (logger) log_it("trace", glue('Creating build statements.'), "db")
-    build_path <- list.files(pattern = build_file,
-                             full.names = TRUE,
-                             recursive = TRUE)
-    if (!length(build_path) == 1) {
-      stop(sprintf('Could not find build file "%s" in this directory.',
-                   build_path))
-    }
-    build_statement <- create_fallback_build(build_path)
+    if (logger) log_it("trace", "Creating build statements.", "db")
+    build_statement <- create_fallback_build(build_file)
     build_statement <- build_statement[nchar(build_statement) > 1]
     # -- Create the database and read in the build statements
-    if (logger) log_it("trace", glue('Creating new database as "{db}".'), "db")
-    con <- dbConnect(RSQLite::SQLite(), db)
+    if (logger) log_it("trace", glue::glue('Creating new database as "{db}".'), "db")
+    con <- DBI::dbConnect(RSQLite::SQLite(), db)
     if (logger) log_it("trace", glue('Building "{db}"...'), "db")
     invisible(
       lapply(build_statement,
-             function(x) dbSendStatement(con, str_trim(x, "both")))
+             function(x) DBI::dbSendStatement(con, str_trim(x, "both")))
     )
     # Disconnect
-    dbDisconnect(con)
+    DBI::dbDisconnect(con)
   }
   if (connect) {
-    if (logger) log_it("trace", glue('Connecting to "{db}".'), "db")
+    if (logger) log_it("trace", glue::glue('Connecting to "{db}".'), "db")
     manage_connection(db = db, reconnect = TRUE)
   }
   if (logger) log_fn("end")
@@ -384,7 +399,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
   logger <- exists("log_it")
   if (logger) {
     log_fn("start")
-    log_it("trace", glue('Starting removal of "{db}"...'), "db")
+    log_it("trace", glue::glue('Starting removal of "{db}"...'), "db")
   }
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -397,7 +412,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     stopifnot(arg_check$valid)
   }
   # Resolve database file location
-  if (logger) log_it("trace", glue('Finding database file "{db}"'), "db")
+  if (logger) log_it("trace", glue::glue('Finding database file "{db}"'), "db")
   db_path  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
   db_path  <- db_path[basename(db_path) == db]
   if (length(db_path) == 0) {
@@ -405,13 +420,13 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
     return(NULL)
   } else if (length(db_path) > 1) {
     if (logger) log_it("warn", glue('Multiple files found for "{db}" in this directory.'), "db")
-    # correct_path <- select.list(db_path, title = "Please select one.")
     correct_path <- resolve_multiple_values(db_path, db)
   }
   if (length(db_path) == 1) {
     # Ensure no current connection from R
-    check <- try(manage_connection(db = db, reconnect = FALSE, disconnect = TRUE))
-    if (class(check) == "try-error") stop("Unable to automatically stop the connection to '", db, "'.")
+    # check <- try(manage_connection(db = db, reconnect = FALSE, disconnect = TRUE))
+    # if (class(check) == "try-error") stop("Unable to automatically stop the connection to '", db, "'.")
+    close_up_shop()
     if (archive) {
       now       <- format(Sys.time(), "%Y%m%d%H%M%S%Z")
       fname     <- file_path_sans_ext(db)
@@ -664,15 +679,15 @@ save_data_dictionary <- function(db_conn            = con,
     switch(output_format,
            "json"       = out %>%
              jsonlite::toJSON() %>%
-             write_file(f_name),
+             readr::write_file(f_name),
            "csv"        = out %>%
              dplyr::bind_rows() %>%
              readr::write_csv(f_name),
            "data.frame" = out %>%
              dplyr::bind_rows() %>%
-             write_rds(f_name),
+             readr::write_rds(f_name),
            "list"       = out %>%
-             write_rds(f_name)
+             readr::write_rds(f_name)
     )
     if (exists("log_it")) {
       log_it("success", "Dictionary created.", "db")
@@ -731,13 +746,13 @@ er_map <- function(db_conn = con) {
     lapply(str_remove_all, "CREATE ")
   tables_and_views <- which(unlist(er_type) %in% c("TABLE", "VIEW"))
   build_statements <- build_statements[tables_and_views, ]
-  ref_tables <- str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
-    lapply(str_remove_all, "REFERENCES ")
-  refs     <- str_extract_all(build_statements$sql, "(FOREIGN KEY \\([:word:]+\\) )?REFERENCES [:word:]+\\([:word:]+\\)") %>%
-    lapply(str_remove_all, "FOREIGN KEY \\(") %>%
-    lapply(str_replace_all, "\\) ", " ")
-  used_in  <- str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
-    lapply(str_remove_all, "(JOIN|FROM) ")
+  ref_tables <- stringr::str_extract_all(build_statements$sql, "REFERENCES [:word:]+") %>%
+    lapply(stringr::str_remove_all, "REFERENCES ")
+  refs     <- stringr::str_extract_all(build_statements$sql, "(FOREIGN KEY \\([:word:]+\\) )?REFERENCES [:word:]+\\([:word:]+\\)") %>%
+    lapply(stringr::str_remove_all, "FOREIGN KEY \\(") %>%
+    lapply(stringr::str_replace_all, "\\) ", " ")
+  used_in  <- stringr::str_extract_all(build_statements$sql, "(JOIN|FROM) [:word:]+") %>%
+    lapply(stringr::str_remove_all, "(JOIN|FROM) ")
   if (exists("log_it")) log_it("debug", "Reading table and view relationships...", "db")
   for (i in 1:n_tables) {
     z <- which(t_names %in% ref_tables[[i]])
@@ -895,17 +910,17 @@ manage_connection <- function(db          = DB_NAME,
         )
       ){
         connected <- dbIsValid(this_obj)
-        if (logger) log_it("trace", glue('Database "{db}" is currently open.'), log_ns)
+        if (connected && logger) log_it("trace", glue::glue('Database "{db}" is currently open.'), log_ns)
         if (all(connected, disconnect)) {
           check <- try(invisible(dbDisconnect(this_obj)))
           status <- ifelse(class(check)[1] == "try-error",
                            "unable to be disconnected",
                            "disconnected")
-          log_it("trace", glue('Database "{db}" {status}.'), log_ns)
+          log_it("trace", glue::glue('Database "{db}" {status}.'), log_ns)
           connected <- dbIsValid(this_obj)
         }
       }
-      if (logger) log_it("trace", glue('Closing and removing "{env}"...'), log_ns)
+      if (logger) log_it("trace", glue::glue('Closing and removing "{env}"...'), log_ns)
       if (all(rm_objects, disconnect, !connection == "")) {
         rm(list = env, pos = ".GlobalEnv")
       }
@@ -914,7 +929,7 @@ manage_connection <- function(db          = DB_NAME,
   if (reconnect) {
     if (is_local) {
       # Resolve database file location
-      if (logger) log_it("trace", glue('Finding local database file "{db}"'), log_ns)
+      if (logger) log_it("trace", glue::glue('Finding local database file "{db}"'), log_ns)
       db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
@@ -994,7 +1009,7 @@ sqlite_parse_build <- function(sql_statements,
     )
     stopifnot(arg_check$valid)
   }
-  if (exists("log_it")) log_it("trace", glue('Parsing sql_statements for build commands.'), "db")
+  if (exists("log_it")) log_it("trace", 'Parsing sql_statements for build commands.', "db")
   to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
   out       <- sql_statements %>%
     str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
@@ -1047,13 +1062,14 @@ sqlite_parse_import <- function(build_statements) {
   regex_import  <- ".import (--[[:alnum:]]+)? "
   regex_skip    <- "(--skip [[:number:]]+) ?"
   regex_prefix  <- paste0(c(regex_import, regex_skip), collapse = "?")
-  if (logger) log_it("trace", glue('Parsing \n{build_statements}\n for import modification.'), "db")
+  if (logger) log_it("trace", glue::glue('Parsing \n{build_statements}\n for import modification.'), "db")
   out           <- lapply(build_statements,
                           function(x) {
                             if (grepl("\\.import", x)) {
-                              data_type <- str_extract(x, regex_import) %>%
-                                str_remove(".import( --)?") %>%
-                                str_squish()
+                              data_type <- x %>%
+                                stringr::str_extract(regex_import) %>%
+                                stringr::str_remove(".import( --)?") %>%
+                                stringr::str_squish()
                               if (data_type == "") {
                                 data_type_read <- FALSE
                                 if (logger) log_it("warn", 'No data type identified. Assuming a ".csv" extension.', "db")
@@ -1061,19 +1077,21 @@ sqlite_parse_import <- function(build_statements) {
                               } else {
                                 data_type_read <- TRUE
                               }
-                              skip_rows <- str_extract(x, regex_skip) %>%
-                                str_remove("--skip ") %>%
-                                str_squish()
+                              skip_rows <- x %>%
+                                stringr::str_extract(regex_skip) %>%
+                                stringr::str_remove("--skip ") %>%
+                                stringr::str_squish()
                               skip_rows <- try(as.numeric(skip_rows))
                               if (class(skip_rows) == 'try-error') {
                                 if (logger) log_it("warn", glue('Could not convert "{skip_rows}" to numeric in "{x}".'), "db")
                                 return(x)
                               }
-                              tmp <- str_remove(x, regex_prefix) %>%
-                                str_split(" ") %>%
+                              tmp <- x %>%
+                                stringr::str_remove(regex_prefix) %>%
+                                stringr::str_split(" ") %>%
                                 .[[1]]
                               if (length(tmp) != 2) {
-                                if (logger) log_it("warn", glue('Could not parse "{x}" to identify both a target file and database target table.'), "db")
+                                if (logger) log_it("warn", glue::glue('Could not parse "{x}" to identify both a target file and database target table.'), "db")
                                 return(x)
                               }
                               data_file <- tmp[1]
@@ -1105,18 +1123,18 @@ sqlite_parse_import <- function(build_statements) {
                                     if (logger) log_it("warn", msg, "db")
                                   }
                                 } else {
-                                  if (logger) log_it("warn", glue('Cannot read file "{data_file}". Function "{read_func}" is not available.'), "db")
+                                  if (logger) log_it("warn", glue::glue('Cannot read file "{data_file}". Function "{read_func}" is not available.'), "db")
                                   return(x)
                                 }
                               } else {
-                                if (logger) log_it("warn", glue('Could not find file "{data_file}".'), "db")
+                                if (logger) log_it("warn", glue::glue('Could not find file "{data_file}".'), "db")
                                 return(x)
                               }
                               target    <- tmp[2]
                               insert_values <- sprintf('("%s")',
                                                        read_data %>%
-                                                         unite(col = "statement", sep = '", "') %>%
-                                                         pull(statement) %>%
+                                                         tidyr::unite(col = "statement", sep = '", "') %>%
+                                                         dplyr::pull(statement) %>%
                                                          paste0(collapse = '"), ("')
                               )
                               insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
@@ -1208,7 +1226,7 @@ create_fallback_build <- function(build_file    = NULL,
     populate_file <- list.files(pattern = populate_with,
                                 full.names = TRUE,
                                 recursive = TRUE)
-    populate <- read_file(populate_file) %>%
+    populate <- readr::read_file(populate_file) %>%
       sqlite_parse_build()
     build <- c(build, populate)
   }
@@ -1227,7 +1245,7 @@ create_fallback_build <- function(build_file    = NULL,
   source_read  <- str_remove(unlist(build[index_read]), ".read ")
   names(temp_read) <- source_read %>%
     basename() %>%
-    file_path_sans_ext()
+    tools::file_path_sans_ext()
   for (i in 1:length(temp_read)) {
     source_comment <- sprintf("/* Sourced from ./%s */", source_read[i])
     temp_read[[i]] <- c(source_comment, temp_read[[i]])
@@ -1251,7 +1269,7 @@ create_fallback_build <- function(build_file    = NULL,
   build[index_import] <- temp_import
   build <- unlist(build) %>%
     paste0(collapse = "\n")
-  write_file(build, out_file)
+  readr::write_file(build, out_file)
   if (exists("log_it")) {
     log_it("info", sprintf('Fallback build file created as "%s".',
                            out_file), "db")
@@ -1271,7 +1289,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
     require(glue)
     require(magrittr)
     if (!exists(connection)) {
-      con <- dbConnect(RSQLite::SQLite(), db)
+      con <- DBI::dbConnect(RSQLite::SQLite(), db)
     }
     tables  <- dbListTables(con)
     tables  <- tables[!tables == log_table_name]
@@ -1644,15 +1662,14 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
 #' @export
 #'
 #' @examples
-#'
-#' ## Not run:
-#' con <- dbConnect(RSQLite::SQLite(), ":memory:")
+#' \dontrun{
+#' con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #' alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
 #' dplyr::copy_to(con, alphabet)
 #' check_for_value("A", "alphabet", "upper", con)
 #' check_for_value("A", "alphabet", "lower", con)
 #' check_for_value(letters[1:10], "alphabet", "lower", con)
-#'
+#' }
 #' ## End(Not run)
 check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con) {
   if (exists("log_it")) log_fn("start")

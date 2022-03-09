@@ -29,6 +29,7 @@
 #' @export
 #' 
 activate_py_env <- function(env_name = NULL, required_libraries = NULL, required_modules = NULL, log_ns = NULL, conda_path = NULL) {
+  stopifnot(require(reticulate))
   logger <- exists("log_it")
   if (logger) log_fn("start")
   log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
@@ -36,7 +37,6 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
   required_libraries <- rectify_null_from_env(required_libraries, PYENV_LIBRARIES, NULL, log_ns)
   required_modules <- rectify_null_from_env(required_modules, PYENV_MODULES, NULL, log_ns)
   conda_path <- rectify_null_from_env(conda_path, CONDA_PATH, NULL, log_ns)
-  stopifnot(require(reticulate))
   # if (!is.null(env_name)) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -108,10 +108,7 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
   if (!py_modules_available(required_modules)) {
     return(invisible(FALSE))
   }
-  if (logger) {
-    log_it("success", "Python environment activated.", log_ns)
-    log_fn("end", log_ns)
-  }
+  if (logger) log_fn("end", log_ns)
   return(invisible(TRUE))
 }
 
@@ -207,7 +204,7 @@ update_env_from_file <- function(env_name, requirements_file, conda_alias = NULL
 #' @examples
 #' create_py_env()
 create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = NULL, conda_path = NULL, activate = TRUE) {
-  require(reticulate)
+  stopifnot(require(reticulate))
   if (is.null(required_libraries)) {
     if (exists("PYENV_LIBRARIES")) {
       required_libraries <- PYENV_LIBRARIES

@@ -344,7 +344,6 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #' }}
 obj_name_check <- function(obj, default_name = NULL) {
   require(stringr)
-  require(magrittr)
   if (exists("log_it")) log_it("debug", "Run obj_name_check().", "api")
   if (is.null(obj) || is.na(obj)) {
     if (is.null(default_name) || is.na(default_name)) {
@@ -353,8 +352,7 @@ obj_name_check <- function(obj, default_name = NULL) {
       obj_name <- default_name
     }
   } else {
-    obj_name <- deparse(substitute(obj)) %>%
-      str_remove_all('"')
+    obj_name <- stringr::str_remove_all(deparse(substitute(obj)), '"')
   }
   if (exists(obj_name)) {
     # Placeholder to do maybe do something like preservation/backup of current

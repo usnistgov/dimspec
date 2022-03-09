@@ -116,7 +116,9 @@ CREATE TRIGGER IF NOT EXISTS ensure_null_orcid /* When creating a new contributo
 CREATE TRIGGER IF NOT EXISTS affiliation_update /* When updating a contributor's affiliation with an affiliation that does not currently exist, add the affiliation and update the id appropriately, but still allow for direct use of affiliations(id). */ AFTER UPDATE ON contributors WHEN NEW.affiliation NOT IN (SELECT id FROM affiliations) BEGIN INSERT OR IGNORE INTO affiliations (name) VALUES (NEW.affiliation); UPDATE contributors SET affiliation = (SELECT id FROM affiliations WHERE name = NEW.affiliation) WHERE ROWID = NEW.ROWID; END;
 /* Sourced from ./config/sql_nodes/contributors_data.sql */
 DELETE FROM contributors;
-DELETE FROM affiliations; INSERT OR IGNORE INTO affiliations VALUES (1, "system"); INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);
+DELETE FROM affiliations;
+INSERT OR IGNORE INTO affiliations VALUES (1, "system");
+INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);
 /* Logging node */
 /* Sourced from ./config/sql_nodes/logging.sql */
 /* Tables */
