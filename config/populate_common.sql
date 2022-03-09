@@ -12,8 +12,8 @@
 	this script as appropriate.
 =============================================================================*/
 
-DELETE FROM norm_voltage;
-.import --csv --skip 1 config/data/norm_voltage.csv norm_voltage
+DELETE FROM norm_ionization;
+.import --csv --skip 1 config/data/norm_ionization.csv norm_ionization
 DELETE FROM norm_voltage_units;
 .import --csv --skip 1 config/data/norm_voltage_units.csv norm_voltage_units
 DELETE FROM norm_duration_units;

@@ -25,7 +25,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 
 /* Tables */
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_voltage
+	CREATE TABLE IF NOT EXISTS norm_ionization
 		/* Normalization table for mass spectrometer ionization source types */
 	(
 		id
@@ -419,7 +419,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* primary key */
 		ionization
 			INTEGER,
-			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_voltage */
+			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */
 		voltage
 			REAL,
 			/* ionization voltage/current (depending on mode) */
@@ -453,7 +453,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (has_qc_method IN (0, 1))
 		/* Foreign key relationships */
-		FOREIGN KEY (ionization) REFERENCES norm_voltage(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -749,7 +749,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			ncd.name AS "collision_energy_description"
 			/* Collision energy description */
 		FROM ms_methods msm 
-		LEFT JOIN norm_voltage ni ON msm.ionization = ni.id
+		LEFT JOIN norm_ionization ni ON msm.ionization = ni.id
 		LEFT JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
 		LEFT JOIN norm_vendors nv ON msd.vendor_id = nv.id
 		LEFT JOIN view_detectors vd ON msm.id = vd.ms_methods_id
