@@ -1914,8 +1914,7 @@ add_contributor <- function(user_value  = "",
                             orcid       = "",
                             db_conn     = con) {
   if (exists("log_it")) {
-    log_fn("start")
-    log_it("debug", "Run add_contributor().", "db")
+    log_fn("start", "db")
   }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -2229,7 +2228,7 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
 #'
 #' @examples
 verify_contributor <- function(contributor_text, db_conn = con, ...) {
-  logger <- exists("log_it")
+  logger <- exists("log_it") && LOGGING_ON
   if (logger) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -2253,9 +2252,12 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
       cat("WARN", msg, "\n")
     }
     if (interactive()) {
-      if (exists("log_it")) log_it("trace", "Getting user information from an interactive session.")
+      if (logger) log_it("trace", "Getting user information from an interactive session.")
       if (db_contributors %>% collect() %>% nrow() > 1) {
-        associate_with <- menu(choices = c("Yes", "No"), title = "Associate with a current user?") == 1
+        associate_with <- select.list(
+          choices = c("Yes", "No"),
+          title = sprintf('Associate "%s" with a current user?', contributor_text)
+        ) == "Yes"
       } else {
         associate_with <- FALSE
       }
@@ -2266,8 +2268,8 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
         cat("\n")
         new_contrib_prompt <- "Make new contributor"
         new_user <- select.list(
-          title = sprintf('Select a current user from the list above or select "%s" to continue.', new_contrib_prompt),
-          choices = c("Abort", new_contrib_prompt)
+          title = sprintf('Select a username from the list above or "%s" to add a contributor.', new_contrib_prompt),
+          choices = c(db_contributors %>% collect() %>% pull(username), "Abort", new_contrib_prompt)
         )
         if (new_user == "Abort") stop("Operation aborted.")
         if (new_user == new_contrib_prompt) new_user <- NULL

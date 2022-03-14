@@ -744,10 +744,15 @@ has_missing_elements <- function(x) {
 #' fn <- function() {log_fn("start"); 1+1; log_fn("end")}
 #' fn()
 log_fn <- function(status = "start", log_ns = NA_character_, level = "trace") {
+  i <- -1
+  while (is.function(sys.call(i)[[1]])) i <- i - 1
+  if (abs(i) > length(sys.calls())) stop("Cannot locate a named function call in the call stack.")
+  this_call <- as.character(sys.call(i)[[1]])
+  if (this_call == "do.call") this_call <- as.character(sys.call(i)[[2]])
   require(stringr)
   msg <- sprintf("%s %s()",
                  str_to_sentence(status),
-                 as.character(sys.call(-1)[[1]])
+                 this_call
   )
   log_it(level, msg, log_ns)
   if (!is.na(log_ns)) {
