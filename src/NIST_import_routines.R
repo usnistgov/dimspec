@@ -606,7 +606,6 @@ get_uniques <- function(import_obj, aspect) {
 remove_sample <- function(sample_ids, db_conn = con) {
   log_fn("start")
   if (sample_ids != as.integer(sample_ids)) stop('Parameter "sample_ids" cannot be safely coerced to integer.')
-  log_it("info", glue('Removing samples with ids "{format_list_of_names(sample_ids)}".'), "db")
   sample_ids <- as.integer(sample_ids)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -621,11 +620,30 @@ remove_sample <- function(sample_ids, db_conn = con) {
     stopifnot(arg_check$valid)
   }
   stopifnot(active_connection(db_conn))
-  dat <- tbl(con, "samples") %>% filter(id %in% sample_ids) %>% collect()
+  dat <- tbl(con, "samples")
+  target_ms_methods_ids <- dat %>%
+    filter(id %in% sample_ids) %>%
+    distinct(ms_methods_id) %>%
+    pull()
+  log_it("info", glue('Removing samples with id{ifelse(length(sample_ids) > 1, "s", "")} {format_list_of_names(sample_ids)}.'), "db")
   build_db_action("delete", "samples", match_criteria = list(id = sample_ids))
-  build_db_action("delete", "ms_methods", match_criteria = list(id = unique(dat$ms_methods_id)))
-  build_db_action("delete", "conversion_software_settings", match_criteria = list(linkage_id = unique(dat$software_conversion_settings_id)))
-  build_db_action("delete", "conversion_software_linkage", match_criteria = list(id = unique(dat$software_conversion_settings_id)))
+  remaining_ms_methods_ids <- dat %>%
+    filter(ms_methods_id %in% target_ms_methods_ids) %>%
+    distinct(ms_methods_id) %>%
+    pull()
+  remove_methods_ids <- target_ms_methods_ids[!target_ms_methods_ids %in% remaining_ms_methods_ids]
+  if (length(remaining_ms_methods_ids) == 0) {
+    msg_part <- glue('{ifelse(length(remove_methods_ids) > 1, "s", "")} {format_list_of_names(remove_methods_ids)}')
+    log_it("info", glue('No other samples share methods with id{msg_part}.'), "db")
+  } else {
+    msg_part <- glue('{ifelse(length(remaining_ms_methods_ids) > 1, "s", "")} {format_list_of_names(remaining_ms_methods_ids)} {ifelse(length(remaining_ms_methods_ids) > 1, "were", "was")}')
+    log_it("info", glue("Method{msg_part} shared by others and will not be removed."))
+  }
+  if (length(remove_methods_ids) > 0) {
+    msg_part <- glue('{ifelse(length(remove_methods_ids) > 1, "s", "")} {format_list_of_names(remove_methods_ids)}')
+    log_it("info", glue("Removing method{msg_part}."))
+    build_db_action("delete", "ms_methods", match_criteria = list(id = remove_methods_ids))
+  }
   log_fn("end")
 }
 
