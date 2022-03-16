@@ -1338,11 +1338,14 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
     log_it("debug", "Updating database, fallback build, and data dictionary files.", "db")
   }
   if (api_running) {
-    pr_name <- obj_name_check(api_monitor, default_name = "plumber_service")
-    plumber_service_existed <- exists(pr_name)
-    if (plumber_service_existed) {
-      api_monitor <- eval(sym(pr_name))
-      if (api_monitor$is_alive()) api_stop(pr = api_monitor, remove_service_obj = FALSE)
+    if (exists("api_reload")) {
+      pr_name <- obj_name_check(api_monitor, default_name = "plumber_service")
+      plumber_service_existed <- exists(pr_name)
+      if (plumber_service_existed) {
+        if (api_monitor$is_alive()) api_stop(pr = pr_name, remove_service_obj = FALSE)
+      }
+    } else {
+      plumber_service_existed <- FALSE
     }
   }
   manage_connection(reconnect = FALSE)
@@ -1364,9 +1367,9 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
       jsonlite::read_json() %>%
       lapply(bind_rows)
   }
-  if (api_running) {
+  if (api_running && exists("api_reload")) {
     if (plumber_service_existed) {
-      api_reload(pr = api_monitor, background = TRUE)
+      api_reload(pr = pr_name, background = TRUE)
     } else {
       api_reload(background = TRUE)
     }
@@ -1678,7 +1681,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        values         = list(c("mode", "character"), c("n>=", 1)),
+        values         = list(c("n>=", 1)),
         db_table       = list(c("mode", "character"), c("length", 1)),
         db_column      = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
@@ -1787,7 +1790,7 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
-  fields <- dbListFields(db_conn = db_conn, db_table)
+  fields <- dbListFields(conn = db_conn, db_table)
   this_id <- integer(0)
   for (field in fields) {
     if (length(this_id) == 0) {
@@ -2062,7 +2065,7 @@ verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(sample_class, db_conn, auto_add),
       conditions = list(
         sample_class = list(c("length", 1)),
         db_conn      = list(c("length", 1)),
@@ -2236,14 +2239,21 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
   # Prefer username
   db_contributors  <- tbl(db_conn, "contributors")
   contributor_properties <- c(list(...), user_value = contributor_text)
-  possible_matches <- db_contributors %>%
-    filter(username %in% contributor_text |
-             contact %in% contributor_text |
-             first_name %in% contributor_text |
-             last_name %in% contributor_text
-    ) %>%
-    collect()
-  contributor_exists <- nrow(possible_matches) > 0
+  if (is.numeric(contributor_text) && contributor_text == as.integer(contributor_text)) {
+    contributor_exists <- check_for_value(contributor_text, "contributors", "id")$exists
+    possible_matches <- db_contributors %>%
+      filter(id == contributor_text) %>%
+      collect()
+  } else {
+    possible_matches <- db_contributors %>%
+      filter(username %in% contributor_text |
+               contact %in% contributor_text |
+               first_name %in% contributor_text |
+               last_name %in% contributor_text
+      ) %>%
+      collect()
+    contributor_exists <- nrow(possible_matches) > 0
+  }
   if (!contributor_exists) {
     msg <- sprintf('No contributor matching "%s" was located.', contributor_text)
     if (logger) {
@@ -2278,6 +2288,7 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
         new_user <- do.call(add_contributor, contributor_properties)
       }
       if (is.null(new_user)) stop("Could not verify this user.")
+      if (is.character(new_user)) new_user <- verify_contributor(new_user)
       return(new_user)
     } else {
       needed <- dbListFields(db_conn, "contributors")
