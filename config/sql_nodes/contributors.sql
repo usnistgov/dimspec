@@ -26,7 +26,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Contact information for individuals contributing data to this database */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		username
 			TEXT NOT NULL UNIQUE,
@@ -63,7 +63,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Normalization table for contributor.affiliation */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE

@@ -33,7 +33,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for logs(executed_from) */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -47,7 +47,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for logs(effect) */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -82,7 +82,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Placeholder for logs */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		category
 			TEXT NOT NULL,

@@ -23,7 +23,6 @@ DELETE FROM mobile_phases;
 DELETE FROM norm_solvents;
 DELETE FROM norm_additives;
 DELETE FROM norm_peak_confidence;
-DELETE FROM samples;
 DELETE FROM norm_sample_classes;
 DELETE FROM instrument_properties;
 DELETE FROM ms_methods;
@@ -36,6 +35,7 @@ DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_aliases;
 DELETE FROM conversion_software_settings;
+DELETE FROM samples;
 .import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents
 .import --csv --skip 1 config/data/pfas/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes

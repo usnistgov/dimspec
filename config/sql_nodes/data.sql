@@ -29,7 +29,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for fragmenet generation source type */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -43,7 +43,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table linking to samples to hold controlled vocabulary. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -54,7 +54,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
   	/* Normalization levels for peak identification confidence */
   (
   	id
-  		INTEGER PRIMARY KEY AUTOINCREMENT,
+  		INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   		/* primary key */
   	level1
   		TEXT NOT NULL,
@@ -90,7 +90,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		mzml_name
 		  TEXT NOT NULL,
@@ -116,13 +116,17 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ms_methods_id
 			INTEGER,
 			/* foreign key to ms_methods */
+		sample_solvent
+		  INTEGER,
+		  /* foreign key to norm_solvents */
 		/* Check constraints */
 		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_solvent) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS conversion_software_settings
@@ -143,7 +147,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Peaks (or features) identified within the results from a sample. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		sample_id
 			INTEGER NOT NULL,
@@ -188,7 +192,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		peak_id
 			INTEGER NOT NULL,

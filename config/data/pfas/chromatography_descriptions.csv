@@ -1,5 +1,5 @@
-ms_methods_id,chromatography_types_id,column_chemistry_id,column_position_id,vendor_id
-1,1,2,1,5
-1,1,1,2,5
-2,2,3,1,4
-2,2,4,2,4
+ms_methods_id,chromatography_types_id,system_vendor_id,system_vendor_model,column_chemistry_id,column_position_id,column_vendor_id,column_vendor_model,internal_diameter,column_length,particle_diameter,citation
+1,1,1,"great system",2,1,5,,,,,
+1,1,1,"great system",1,2,5,,,,,
+2,2,2,"awesome sauce",3,1,4,,,,,
+2,2,2,"awesome sauce",4,2,4,,,,,

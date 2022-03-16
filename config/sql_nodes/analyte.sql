@@ -33,7 +33,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -52,7 +52,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for the measured ion state as comared with the molecular ion. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -65,7 +65,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for self-hierarchical chemical classes of compounds. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -82,7 +82,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for compound alias sources (e.g. CAS, DTXSID, INCHI, etc.) */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -101,7 +101,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Controlled list of chemical compounds with attributable analytical data. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		category
 			INTEGER,
@@ -191,7 +191,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		mz
 			REAL NOT NULL,

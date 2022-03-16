@@ -54,7 +54,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization list of periodic table elements 1-118. */
 	(
 		atomic_number
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* periodic table atomic number (e.g. 2) */
 		symbol
 			TEXT NOT NULL UNIQUE,
