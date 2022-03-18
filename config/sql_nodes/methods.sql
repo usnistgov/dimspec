@@ -752,7 +752,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* chromatography system vendor */
 			REPLACE(GROUP_CONCAT(DISTINCT(cd.system_vendor_model)), ",", " x ") AS "chrom_model",
 				/* chromatography system vendor */
-			REPLACE(GROUP_CONCAT(DISTINCT(ct.acronym)), ",", " x ") AS "chrom_type"
+			REPLACE(GROUP_CONCAT(ct.acronym), ",", " x ") AS "chrom_type"
 				/* chromatography type (e.g. LC, GC, etc.) */
 		FROM 
 			chromatography_descriptions cd 
