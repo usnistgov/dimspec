@@ -768,6 +768,7 @@ er_map <- function(db_conn = con) {
     setNames(t_names)
   for (i in 1:n_tables) {
     er_map[[i]] <- list(
+      object_name         = t_names[i],
       object_type         = er_type[[i]],
       references_tables   = if (er_type[[i]] == "TABLE") {
         t_names[as.logical(er_mask[i, ])]
