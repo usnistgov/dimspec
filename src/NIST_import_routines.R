@@ -538,12 +538,14 @@ add_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c
 # TODO
 add_qc_data <- function(obj, sample_id, db_conn = con) {
   # Argument validation relies on verify_args
+  if ("qc" %in% names(obj)) obj <- obj$qc
   stopifnot(as.integer(sample_id) == sample_id)
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(sample_id, db_conn),
+      args       = list(obj, sample_id, db_conn),
       conditions = list(
+        obj       = list(c("mode", "list")),
         sample_id = list(c("mode", "integer"), c("length", 1), "no_na"),
         db_conn   = list(c("length", 1))
       )
@@ -554,11 +556,22 @@ add_qc_data <- function(obj, sample_id, db_conn = con) {
   stopifnot(active_connection(db_conn))
   # Sanity check that sample_id exists
   valid_sample_id <- check_for_value(sample_id, "samples", "id", db_conn = db_conn)
+  if (!valid_sample_id$exists) {
+    msg <- sprintf("Sample ID '%s' does not exist.", sample_id)
+    if (exists("log_it") && LOGGING_ON) {
+      log_it("error", msg)
+    } else {
+      cat("\n", msg, "\n")
+    }
+    stop()
+  }
   values <- lapply(obj,
                    function(x) {
                      x %>%
                        mutate_all("as.character") %>%
-                       pivot_longer(cols = -parameter)
+                       mutate(parameter = str_c(parameter, if (nrow(x) > 1) paste0("_", seq.int(1, nrow(x), 1)) else "")) %>%
+                       pivot_longer(cols = -parameter) %>%
+                       mutate(name = ifelse(name == "result", "qc_pass", name))
                    }) %>%
     bind_rows() %>%
     mutate(sample_id = sample_id) %>%
@@ -574,7 +587,7 @@ add_qc_data <- function(obj, sample_id, db_conn = con) {
   if (inherits(res, "try-error")) {
     msg <- 'There was an issue adding records to table "qc_data".'
     log_it("error", msg)
-    stop(msg)
+    return(res)
   }
 }
 
@@ -718,7 +731,11 @@ make_requirements <- function(example_import,
                               retain_in_R = TRUE) {
   if (class(example_import) == "character") {
     log_it("info", sprintf('Assuming "%s" refers to a file name, and that the file is parseable as JSON.', example_import))
-    f_name <- list.files(pattern = example_import, recursive = TRUE, full.names = TRUE)
+    f_name <- ifelse(
+      file.exists(example_import),
+      example_import,
+      list.files(pattern = example_import, recursive = TRUE, full.names = TRUE)
+    )
     if (length(f_name) == 0) {
       log_it("error", sprintf('No file matching "%s" was located in the project directory.', example_import))
       stop()
@@ -1037,4 +1054,54 @@ verify_import_requirements <- function(obj,
     out <- as_tibble(out)
   }
   return(out)
+}
+
+map_it <- function(json_map, import_object) {
+  if ("sample" %in% names(import_object)) {
+    tmp <- list(import_object)
+  } else {
+    tmp <- import_object
+  }
+  out <- lapply(import_object,
+                function(x) {
+                  lapply(x,
+                         parse_map,
+                         json_map = json_map,
+                         import_object = import_object)
+                })
+  return(out)
+}
+
+parse_map <- function(import_object, json_map) {
+  out <- vector('list', length = dplyr::n_distinct(json_map$sql_table)) %>%
+    setNames(unique(json_map$sql_table))
+  not_mapped <- list()
+  for (import_name in names(import_object)) {
+    name_map <- json_map %>%
+      filter(as.logical(mapped),
+             !is.na(mapped),
+             import_category == import_name)
+    for (import_column in names(import_object[[import_name]])) {
+      mapped_to <- name_map %>%
+        filter(!as.logical(pivot_longer),
+               import_parameter == import_column)
+      if (nrow(mapped_to) == 1) {
+        # One to one mapping
+        db_table  <- mapped_to$sql_table
+        db_column <- mapped_to$sql_parameter
+        if (db_table != "" && db_column != "") {
+          out[[db_table]][[db_column]] <- import_object[[import_name]][[import_column]]
+        }
+      } else {
+        # unexpected multirow or zero row input
+      }
+      pivoted_to <- name_map %>%
+        filter(as.logical(pivot_longer),
+               import_parameter == "")
+      if (nrow(pivoted_to) > 0) {
+        out[[]]
+      }
+    }
+  }
+  return(list(mapped = out, unmapped = not_mapped))
 }

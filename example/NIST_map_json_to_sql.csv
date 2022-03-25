@@ -1,0 +1,125 @@
+mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,import_parameter,sql_table,sql_parameter,sql_normalization,alias_lookup,note
+0,0,1,0,1,,,conversion_software_settings,sample_id,,,id from samples
+1,1,1,0,1,msconvertsettings,,conversion_software_settings,setting_value,,,key:value pairs
+0,0,1,0,0,,,sample_aliases,sample_id,,,id from samples
+0,0,0,1,0,,,sample_aliases,name,,,
+0,0,0,1,0,,,sample_aliases,reference,,,
+1,0,0,0,1,sample,name,samples,mzml_name,,,
+1,0,0,0,1,sample,description,samples,description,,,
+1,0,1,0,1,sample,sample_class,samples,sample_class_id,norm_sample_classes,,
+1,0,0,0,1,sample,data_generator,samples,sample_contributor,,,
+1,0,0,0,1,sample,source,samples,source_citation,,,
+0,0,1,1,1,,,samples,generation_type,norm_generation_type,,"default to ""empirical"""
+1,0,0,0,1,sample,starttime,samples,generated_on,,,
+0,0,1,0,1,,,samples,ms_methods_id,,,id from ms_methods
+1,0,1,0,1,chromatography,ssolvent,samples,sample_solvent,norm_solvents,solvent_aliases,
+0,0,1,0,0,,,chromatography_descriptions,ms_methods_id,,,id from ms_methods
+1,0,1,0,0,chromatography,ctype,chromatography_descriptions,chromatography_types_id,norm_chromatography_types,,
+1,0,1,0,0,chromatography,cvendor,chromatography_descriptions,system_vendor_id,norm_vendors,,
+1,0,0,0,0,chromatography,cmodel,chromatography_descriptions,system_vendor_model,,,
+0,0,1,0,0,,,mobile_phases,ms_methods_id,,,id from ms_methods
+0,0,1,0,0,,,mobile_phases,solvent_mix_collection_id,,,mix_id from solvent_mix_collections.id
+0,0,0,0,0,,,mobile_phases,flow,,,(optional)
+0,0,0,0,0,,,mobile_phases,flow_units,norm_flow_units,,(optional)
+0,0,0,0,0,,,mobile_phases,duration,,,(optional)
+0,0,0,0,0,,,mobile_phases,duration_units,norm_duration_units,,(optional)
+0,0,1,0,0,,,solvent_mix_collections,name,,,
+1,1,1,0,0,chromatography,mp1solvent,solvent_mixes,component,norm_solvents,solvent_aliases,mix_id from solvent_mix_collections.id
+1,1,1,0,0,chromatography,mp2solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
+1,1,1,0,0,chromatography,mp3solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
+1,1,1,0,0,chromatography,mp4solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
+0,0,0,0,0,,,solvent_mixes,fraction,,,
+0,0,1,0,0,,,solvent_aliases,,,,add if not present
+1,1,1,0,0,chromatography,mp1add,solvent_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp2add,solvent_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp3add,solvent_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp4add,solvent_additives,component,norm_additives,additive_aliases,
+0,0,0,0,0,,,solvent_additives,amount,,,
+0,0,0,0,0,,,solvent_additives,units,norm_additive_units,,
+0,0,1,0,0,,,additive_aliases,,,,add if not present
+1,0,0,0,0,chromatography,gcolvendor,chromatography_descriptions,column_vendor_id,norm_vendors,,
+1,0,0,0,0,chromatography,gcolname,chromatography_descriptions,column_vendor_model,,,
+1,0,0,0,0,chromatography,gcolchemistry,chromatography_descriptions,column_chemistry_id,norm_column_chemistries,,
+1,0,0,0,0,chromatography,gcolid,chromatography_descriptions,internal_diameter,,,
+1,0,0,0,0,chromatography,gcollen,chromatography_descriptions,column_length,,,
+1,0,0,0,0,chromatography,gcoldp,chromatography_descriptions,particle_diameter,,,
+0,0,1,0,0,,,chromatography_descriptions,column_position_id,norm_column_positions,,always 1 (guard) for this set
+1,0,0,0,0,chromatography,colvendor,chromatography_descriptions,column_vendor_id,norm_vendors,,
+1,0,0,0,0,chromatography,colname,chromatography_descriptions,column_vendor_model,,,
+1,0,0,0,0,chromatography,colchemistry,chromatography_descriptions,column_chemistry_id,norm_column_chemistries,,
+1,0,0,0,0,chromatography,colid,chromatography_descriptions,internal_diameter,,,
+1,0,0,0,0,chromatography,collen,chromatography_descriptions,column_length,,,
+1,0,0,0,0,chromatography,coldp,chromatography_descriptions,particle_diameter,,,
+0,0,1,0,0,,,chromatography_descriptions,column_position_id,norm_column_positions,,always 2 (analytical) for this set
+1,0,0,0,0,chromatography,source,chromatography_descriptions,citation,,,
+0,0,1,0,0,,,ms_descriptions,ms_methods_id,,,id from ms_methods
+1,0,0,0,1,massspectrometry,msvendor,ms_descriptions,vendor_id,norm_vendors,,
+1,0,0,0,1,massspectrometry,msmodel,ms_descriptions,vendor_model,,,
+1,0,0,0,1,massspectrometry,ionization,ms_methods,ionization,norm_ionization,,
+1,0,0,0,1,massspectrometry,polarity,ms_methods,polarity,norm_polarity_types,,
+1,0,0,0,1,massspectrometry,voltage,ms_methods,voltage,,,
+1,0,0,0,1,massspectrometry,vunits,ms_methods,voltage_units,norm_ionization_units,,
+1,0,0,0,1,massspectrometry,massanalyzer1,ms_descriptions,ms_types_id,norm_ms_types,,
+1,0,0,0,1,massspectrometry,massanalyzer2,ms_descriptions,ms_types_id,norm_ms_types,,
+1,0,0,0,1,massspectrometry,fragmode,ms_methods,fragmentation,norm_fragmentation_types,,
+1,0,0,0,1,massspectrometry,ce_value,ms_methods,ce_value,,,
+1,0,0,0,1,massspectrometry,ce_desc,ms_methods,ce_desc,norm_ce_desc,,
+1,0,0,0,1,massspectrometry,ce_units,ms_methods,ce_units,norm_ce_units,,
+1,0,0,0,1,massspectrometry,ms2exp,ms_methods,ms2_type,norm_ms_n_types,,
+0,0,1,0,1,,,ms_methods,has_qc_method,,,integer boolean
+1,1,1,0,1,massspectrometry,isowidth,instrument_properties,,,,key:value pairs
+1,1,0,0,1,massspectrometry,msaccuracy,instrument_properties,,,,key:value pairs
+1,1,0,0,1,massspectrometry,ms1resolution,instrument_properties,,,,key:value pairs
+1,1,0,0,1,massspectrometry,ms2resolution,instrument_properties,,,,key:value pairs
+1,0,0,0,1,massspectrometry,source,ms_descriptions,citation,,,
+1,0,0,0,1,qcmethod,name,qc_methods,name,norm_qc_methods_name,,
+1,0,0,0,1,qcmethod,value,qc_methods,value,,,
+1,0,0,0,1,qcmethod,source,qc_methods,reference,norm_qc_methods_reference,,
+0,0,0,0,0,,,qc_methods,reference_text,,,??
+0,0,1,0,1,,,peaks,sample_id,,,id from samples
+1,0,0,0,1,peak,count,peaks,num_points,,,
+0,0,1,0,1,peak,name,,,,,scrub from import
+0,0,1,0,1,peak,identifier,,,,,scrub from import
+1,0,0,0,1,peak,ionstate,peaks,ion_state,norm_ion_states,,
+1,0,0,0,1,peak,mz,peaks,precursor_mz,,,
+1,0,0,0,1,peak,rt,peaks,rt_centroid,,,
+1,0,0,0,1,peak,peak_starttime,peaks,rt_start,,,
+1,0,0,0,1,peak,peak_endtime,peaks,rt_end,,,
+1,0,0,0,1,peak,verified,peaks,identification_confidence,norm_peak_confidence,,
+0,0,1,1,1,,,compounds,category,compound_categories,,manual for now? Programmatic for later
+1,0,0,0,1,compounddata,NAME,compounds,name,,compound_aliases,
+1,0,0,0,1,compounddata,LOCAL_POS,compounds,local_positive,,,
+1,0,0,0,1,compounddata,LOCAL_NEG,compounds,local_negative,,,
+1,1,0,0,1,compounddata,,compound_aliases,,,,key:value pairs; add only if provided; all other columns
+1,0,0,0,1,compounddata,SOURCE,compounds,obtained_from,,,
+1,0,1,0,1,compounddata,SOURCE_TYPE,compounds,source_type,norm_source_types,,
+1,0,0,0,1,compounddata,FIXEDMASS,compounds,fixedmass,,,
+1,0,0,0,1,compounddata,NETCHARGE,compounds,netcharge,,,
+0,0,1,0,0,,,compounds,inspected_by,contributors,,id from contributors
+0,0,1,0,0,,,compounds,inspected_on,,,default current timestamp
+1,0,0,0,1,annotation,fragment_mz,fragments,mz,,,
+1,0,0,0,1,annotation,fragment_formula,fragments,formula,,,
+1,0,0,0,1,annotation,fragment_SMILES,fragments,smiles,,,
+1,0,0,0,1,annotation,fragment_radical,fragments,radical,,,
+0,0,0,0,0,,,fragments,user_note,,,"optional, future development feature for analyst notes about identity/etc."
+0,0,1,0,0,,,fragments,inspected_by,contributors,,id from contributors
+0,0,1,0,0,,,fragments,inspected_on,,,default current timestamp
+1,0,0,0,1,annotation,fragment_citation,fragment_sources,citation,,,
+0,0,1,0,1,,,fragment_sources,fragment_id,,,id from fragments
+0,0,1,0,1,,,fragment_sources,generated_by,norm_generation_type,,"default to ""empirical"""
+0,0,1,0,0,,,fragment_aliases,fragment_id,,,id from fragments
+0,0,1,0,0,,,fragment_aliases,alias_type,norm_analyte_alias_references,,
+0,0,1,0,0,,,fragment_aliases,alias,,,
+0,0,1,0,1,,,ms_data,peak_id,,,id from peaks
+1,0,0,0,1,msdata,scanttime,ms_data,scantime,,,
+1,0,0,0,1,msdata,msn,ms_data,ms_n,,,
+1,0,0,0,1,msdata,baseion,ms_data,base_ion,,,
+1,0,0,0,1,msdata,baseint,ms_data,base_int,,,
+1,0,0,0,1,msdata,masses,ms_data,measured_mz,,,
+1,0,0,0,1,msdata,intensities,ms_data,measured_intensity,,,
+1,1,0,0,1,qc,,qc_data,sample_id,,,id from samples
+0,0,0,0,1,,,qc_data,parameter,,,
+0,0,0,0,1,,,qc_data,name,,,
+0,0,0,0,1,,,qc_data,value,,,
+,,,,,,,,,,,
+,,,,,,,,,,,"LINK peaks.id, compounds.id, and fragments.id in compound_fragments as appropriate"
