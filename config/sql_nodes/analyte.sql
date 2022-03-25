@@ -199,23 +199,27 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		formula
 			TEXT NOT NULL,
 			/* elemental formula for specific fragment, user submitted */
-		description
+		user_note
 			TEXT,
 			/* user-supplied description of the fragment */
-		charge
-			INTEGER NOT NULL,
-			/* charge of specific fragment,derived */
 		radical
 			TEXT,
 			/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
 		smiles
 			TEXT,
 			/* smiles structure of fragment ion, can be NULL, user submitted */
+		inspected_by
+			INTEGER,
+			/* user inspection id */
+		inspected_on
+			TEXT,
+			/* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */
 		/* Check constraints */
-		CHECK (charge IN (-1, 1)),
 		CHECK (radical IN (0, 1)),
-		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
+		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
+		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
 		/* Foreign key relationships */
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_aliases

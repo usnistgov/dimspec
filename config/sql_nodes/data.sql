@@ -161,9 +161,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ion_state
 			INTEGER NOT NULL,
 			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
-		charge
-			INTEGER NOT NULL,
-			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
 		rt_start
 			REAL NOT NULL,
 			/* peak retention time start point (constrained to positive numbers) */
@@ -178,7 +175,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  /* confidence in this peak's identification */
 		/* Check constraints */
 		CHECK (precursor_mz > 0),
-		CHECK (charge IN (-1, 1)),
 		CHECK (rt_start >= 0),
 		CHECK (rt_centroid > 0),
 		CHECK (rt_end > 0),
