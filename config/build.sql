@@ -52,4 +52,7 @@ PRAGMA journal_mode=WAL;
 /* Logging node */
 .read config/sql_nodes/logging.sql
 /* .read config/sql_nodes/auto_logs.sql */
+/* Additional scripts to run - comment out to skip */
+.read config/sql_nodes/triggers.sql
+.read config/sql_nodes/addl_views.sql
 PRAGMA foreign_keys=on;

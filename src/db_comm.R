@@ -261,22 +261,28 @@ build_db <- function(db            = DB_NAME,
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        db            = list(c("mode", "character"), c("length", 1)),
-        build_from    = list(c("mode", "character"), c("length", 1)),
-        populate      = list(c("mode", "logical"), c("length", 1)),
+        db            = list(c("mode", "character"), c("length", 1), "not_empty"),
+        build_from    = list(c("mode", "character"), c("length", 1), "not_empty"),
+        populate      = list(c("mode", "logical"), c("length", 1), "not_empty"),
         populate_with = list(c("mode", "character"), c("length", 1)),
-        archive       = list(c("mode", "logical"), c("length", 1)),
+        archive       = list(c("mode", "logical"), c("length", 1), "not_empty"),
         sqlite_cli    = list(c("mode", "character"), c("length", 1)),
-        connect       = list(c("mode", "logical"), c("length", 1))
+        connect       = list(c("mode", "logical"), c("length", 1), "not_empty")
       ),
       from_fn    = "build_db"
     )
     stopifnot(arg_check$valid)
   }
-  if (!tools::file_ext(build_from) != "sql")
-  build_file    <- list.files(pattern = build_from,
-                              full.names = TRUE,
-                              recursive = TRUE)
+  if (tools::file_ext(build_from) != "sql") {
+    stop("Only files with the .sql extension are accepted.")
+  } else {
+    build_file <- ifelse(file.exists(build_from),
+                         build_file,
+                         list.files(pattern = build_from,
+                            full.names = TRUE,
+                            recursive = TRUE)
+    )
+  }
   if (length(build_file) == 0) {
     stop(sprintf('Could not find build file "%s" in this directory.',
                  build_from))
@@ -323,7 +329,10 @@ build_db <- function(db            = DB_NAME,
       system(build_cmd)
     }
     if (populate) {
-      populate_file <- list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
+      populate_file <- ifelse(file.exists(populate_with),
+                              populate_with,
+                              list.files(pattern = populate_with, full.names = TRUE, recursive = TRUE)
+      )
       if (!file.exists(populate_file)) {
         if (logger) log_it("warn", glue::glue('Cannot locate file "{populate_file}" in this directory; "{db}" will be created but not populated.'), "db")
         populate_cmd <- ""
@@ -1320,6 +1329,8 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
+#'   
+#' @inheritParams build_db
 #'
 #' @param api_running LGL scalar of whether or not the API service is currently
 #'   running (default: TRUE)
@@ -1350,11 +1361,13 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
     }
   }
   manage_connection(reconnect = FALSE)
-  build_db()
+  tmp <- try(build_db())
+  if (inherits(tmp, "try-error")) {
+    log_it("error", "There was a problem building the database. Build process halted.")
+    return(tmp)
+  }
   manage_connection()
-  create_fallback_build()
   save_data_dictionary()
-  db_map <<- er_map()
   dict_file <- list.files(pattern = "data_dictionary.json",
                           full.names = TRUE) %>%
     file.info() %>%
@@ -1368,6 +1381,13 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
       jsonlite::read_json() %>%
       lapply(bind_rows)
   }
+  tmp <- try(er_map())
+  if (inherits(tmp, "try-error")) {
+    log_it("error", "There was a problem generating the entity relationship map. Build process halted.")
+    return(tmp)
+  }
+  db_map <<- tmp
+  create_fallback_build()
   if (api_running && exists("api_reload")) {
     if (plumber_service_existed) {
       api_reload(pr = pr_name, background = TRUE)
