@@ -2297,12 +2297,12 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
         cat("\nCurrent contributors:\n")
         print(db_contributors)
         cat("\n")
-        new_contrib_prompt <- "Make new contributor"
+        new_contrib_prompt <- "(Make new contributor)"
         new_user <- select.list(
-          title = sprintf('Select a username from the list above or "%s" to add a contributor.', new_contrib_prompt),
-          choices = c(db_contributors %>% collect() %>% pull(username), "Abort", new_contrib_prompt)
+          title = sprintf('Select a username (see the list above) or "%s" to add a contributor.', new_contrib_prompt),
+          choices = c(db_contributors %>% collect() %>% pull(username), "(Abort)", new_contrib_prompt)
         )
-        if (new_user == "Abort") stop("Operation aborted.")
+        if (new_user == "(Abort)") stop("Operation aborted.")
         if (new_user == new_contrib_prompt) new_user <- NULL
       }
       if (is.null(new_user)) {
