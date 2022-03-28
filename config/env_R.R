@@ -95,13 +95,8 @@ if (MINIMIZE) {
   LOGGING_ON       <- FALSE
 }
 
-# WIP: Import namespace checks
-IMPORT_HEADERS <- list(
-  software = "msconvertsettings",
-  samples  = "sample",
-  method   = c("chromatography", "massspectrometry", "qcmethod"),
-  data     = c("peak", "compounddata", "annotation", "msdata", "qc")
-)
+# Import mapping
+IMPORT_MAP     <- readr::read_csv(file.path("config", "map_NTA_MRT.csv"))
 
 # Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]
