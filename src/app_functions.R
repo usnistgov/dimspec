@@ -224,7 +224,12 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   log_fn("start")
   if (exists("VERIFY_ARGUMENTS")) {
     if (!VERIFY_ARGUMENTS) {
-      if (exists("log_it")) log_it("warn", "Argument verification is currently off.")
+      if (exists("reported_verification_warning")) {
+        reported_verification_warning <<- TRUE
+      } else {
+        reported_verification_warning <<- FALSE
+      }
+      if (exists("log_it") && !reported_verification_warning) log_it("warn", "Argument verification is currently off. This warning will only appear once.")
       return(list(valid = TRUE))
     }
   }
