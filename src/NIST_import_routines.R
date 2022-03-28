@@ -1,9 +1,11 @@
-full_import <- function(obj = NULL,
+full_import <- function(import_object = NULL,
                         file_name = NULL,
                         db_conn = con,
-                        ignore_extra = TRUE,
-                        ignore_incomplete = FALSE,
-                        requirements_obj = "import_requirements") {
+                        ignore_missing_required = FALSE,
+                        include_if_missing_recommended = FALSE,
+                        requirements_obj = "import_requirements",
+                        import_map_file = "map_NTA_MRT.csv",
+                        data_headers_includes = "sample") {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
@@ -12,90 +14,132 @@ full_import <- function(obj = NULL,
   }
   if (is.null(obj)) {
     if (all(file.exists(file_name), grepl(".json", file_name))) {
-      obj <- jsonlite::read_json(file_name)
+      import_object <- jsonlite::read_json(file_name)
+    }
+    import_type <- "file"
+  } else {
+    import_type <- "object"
+  }
+  # Get import map
+  if (!exists("IMPORT_MAP")) {
+    if (!file.exists(import_map_file)) {
+      import_map <- list.files(pattern = import_map_file, recursive = TRUE, full.names = TRUE)
+    }
+    assign("IMPORT_MAP", readr::read_csv(import_map), envir = .GlobalEnv)
+  }
+  if (data_headers_includes %in% names(obj)) objs <- list(obj)
+  log_it("trace", glue::glue('Verifying import requirements with verify_import_requirements().'), "db")
+  # import_requirements <- eval(sym(requirements_obj))
+  meets_requirements <- verify_import_requirements(
+    obj = import_object,
+    requirements_obj = requirements_obj,
+    ignore_extra = ignore_extra,
+    log_issues_as = "trace"
+  )
+  to_ignore <- integer(0)
+  if (all(meets_requirements$all_required)) {
+    log_it("success",
+           sprintf("Import %s%s meets all import requirements.",
+                   import_type,
+                   ifelse(nrow(meets_requirements) > 1, "s", "")),
+           "db")
+  } else {
+    missing_reqs <- meets_requirements %>%
+      select(applies_to, all_required, missing_reqs) %>%
+      filter(!all_required) %>%
+      group_by(applies_to) %>%
+      unnest(cols = c(missing_reqs)) %>%
+      mutate(req_msg = stringr::str_c('Required element',
+                                      ifelse(length(missing_reqs) > 1, "s ", " "),
+                                      format_list_of_names(missing_reqs, add_quotes = TRUE),
+                                      ifelse(length(missing_reqs) > 1, " were", " was"),
+                                      ' missing from import ',
+                                      import_type,
+                                      ' "',
+                                      applies_to,
+                                      '". ')) %>%
+      distinct(applies_to, req_msg)
+    for (x in missing_reqs$req_msg) log_it("error", msg = x, "db")
+    if (ignore_missing_required) {
+      to_ignore <- c(to_ignore, which(!meets_requirements$all_required))
+      log_it("warn",
+             sprintf('The import will ignore %s %s%s (%s) which did not contain all required information.',
+                     nrow(missing_reqs),
+                     import_type,
+                     ifelse(nrow(missing_reqs) > 1, "s", ""),
+                     format_list_of_names(missing_reqs$applies_to, add_quotes = TRUE)
+             ))
+    } else {
+      log_it("error",
+             sprintf('The import %s must contain all required information defined in "%s" because ignore_missing_required = FALSE.',
+                     import_type,
+                     requirements_obj),
+             "db")
+      return(invisible(NULL))
     }
   }
-  if ("sample" %in% names(obj)) objs <- list(obj)
-  for (obj in objs) {
-    log_it("trace", glue('Verifying import requirements with verify_import_requirements().'))
-    meets_requirements <- verify_import_requirements(
-      obj = obj,
-      requirements_obj = requirements_obj,
-      ignore_extra = ignore_extra
+  if (all(meets_requirements$full_detail)) {
+    log_it("success",
+           sprintf("Import %s%s contains all expected detail.",
+                   import_type,
+                   ifelse(nrow(meets_requirements) > 1, "s", "")),
+           "db")
+  } else {
+    missing_recc <- meets_requirements %>%
+      select(applies_to, full_detail, missing_detail) %>%
+      filter(!full_detail) %>%
+      group_by(applies_to) %>%
+      unnest(cols = c(missing_detail)) %>%
+      mutate(recc_msg = stringr::str_c('Recommended element',
+                                       ifelse(length(missing_detail) > 1, "s ", " "),
+                                       format_list_of_names(missing_detail, add_quotes = TRUE),
+                                       ifelse(length(missing_detail) > 1, " were", " was"),
+                                       ' missing from import ',
+                                       import_type,
+                                       ' "',
+                                       applies_to,
+                                       '".')) %>%
+      distinct(applies_to, recc_msg)
+    for (x in missing_recc$recc_msg) log_it("error", msg = x, "db")
+    log_it("warn",
+           sprintf('The import will %s %s %s%s (%s) which did not contain all recommended information because ignore_missing_recommended = %s.',
+                   ifelse(include_if_missing_recommended, "include", "ignore"),
+                   nrow(missing_recc),
+                   import_type,
+                   ifelse(nrow(missing_recc) > 1, "s", ""),
+                   format_list_of_names(missing_recc$applies_to, add_quotes = TRUE),
+                   include_if_missing_recommended)
     )
-    import_requirements <- eval(sym(requirements_obj))
-    if (all(meets_requirements$all_required)) {
-      log_it("success", "Import file meets all hard requirements.")
-    } else {
-      log_it("warn", "Not all required elements were present in this import.")
-      n_missing <- sum(!meets_requirements$all_required)
-      msg_start <- sprintf(
-        "%smport file%s",
-        ifelse(n_missing > 1, "Some i", ""),
-        ifelse(n_missing > 1, "s", "")
-      )
-      details <- meets_requirements %>%
-        filter(!all_required) %>%
-        unite(col = "detail", missing_reqs, applies_to, sep = '" from "') %>%
-        pull(detail) %>%
-        paste(collapse = '"\n"')
-      details <- sprintf('\n"%s"', details)
-      log_it("info", sprintf("Required information was missing: %s", details))
-      if (ignore_incomplete) {
-        all_reqs_met <- which(meets_requirements$all_required)
-        obj <- obj[all_reqs_met]
-      } else {
-        stop("The import object must contain all defined IMPORT_HEADERS because ignore_incomplete = FALSE.")
-      }
+    if (!include_if_missing_recommended) {
+      to_ignore <- c(to_ignore, which(!meets_requirements$full_detail))
     }
-    if (all(meets_requirements$full_detail)) {
-      log_it("success", "Import file contains all expected detail.")
+  }
+  if (length(to_ignore) > 0) {
+    import_object <- import_object[-unique(to_ignore)]
+  }
+  # Get all unique relationships to cut down on extraneous database rows
+  import_relationships <- vector("list", length(names(import_requirements)))
+  names(import_relationships) <- names(import_requirements)
+  import_relationships <- import_requirements
+  for (ele in names(import_relationships)) {
+    import_relationships[[ele]] <- get_uniques(to_import, ele)
+  }
+  # Resolve contributor
+  map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
+  for (obj in import_object) {
+    contributor <- obj$sample$data_generator
+    if (contributor %in% map_contributors_to$provided) {
+      contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
     } else {
-      n_missing <- sum(!meets_requirements$full_detail)
-      if ("applies_to" %in% names(meets_requirements)) {
-        msg_start <- sprintf(
-          "%smport file%s",
-          ifelse(n_missing > 1, "Some i", ""),
-          ifelse(n_missing > 1, "s", "")
+      contributor_id <- verify_contributor(contributor)
+      map_contributors_to <- map_contributors_to %>%
+        bind_rows(
+          data.frame(provided = contributor, resolved = contributor_id)
         )
-        details <- meets_requirements %>%
-          filter(!full_detail) %>%
-          unite(col = "detail", missing_detail, applies_to, sep = '" from "') %>%
-          pull(detail) %>%
-          paste(collapse = '"\n"')
-        details <- sprintf('\n"%s"', details)
-      } else {
-        msg_start <- "This import file"
-        details <- meets_requirements$missing_detail
-      }
-      log_it(
-        "warn",
-        sprintf("%s did not contain all recommended information.",
-                msg_start
-        )
-      )
-      log_it("info", sprintf("Recommended information missing included: %s", details))
-      if (interactive()) {
-        continue <- askYesNo("Continue import even with missing recommended information?")
-        if (!continue) {
-          cat("Import aborted.")
-          return(FALSE)
-        }
-      }
     }
-    # Get all unique relationships to cut down on extraneous database rows
-    # import_relationships <- vector("list", length(names(import_requirements)))
-    # names(import_relationships) <- names(import_requirements)
-    # import_relationships <- import_requirements
-    # for (ele in names(import_relationships)) {
-    #   import_relationships[[ele]] <- get_uniques(to_import, ele)
-    # }
-    # Resolve contributor
-    contributor_id <- verify_contributor(obj$sample$data_generator)
-    obj$sample$data_generator <- contributor_id
-    ms_method_id   <- add_method(obj$massspectrometry)
-    obj$method_id  <- ms_method_id
-    sample_id      <- add_sample(obj$sample)
+    # ms_method_id   <- add_method(obj$massspectrometry)
+    # obj$method_id  <- ms_method_id
+    # sample_id      <- add_sample(obj$sample)
     # # Put in methods and append appropriate samples with the method id
     # for (i in 1:length(tmp)) {
     #   method_id <- add_method(obj = tmp[[i]], db_conn = db_conn)
@@ -112,6 +156,7 @@ full_import <- function(obj = NULL,
     # # Add QC if appropriate
     # return(import_relationships)
   }
+  browser()
 }
 
 #' Utility function to add a record
@@ -136,8 +181,8 @@ full_import <- function(obj = NULL,
 #'
 #' @return
 #' @export
-add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
-  log_it("info", glue("Adding a record to {db_table}."))
+add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE, log_ns = "db") {
+  log_it("info", glue("Adding a record to {db_table}."), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -162,22 +207,7 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
     names_only = FALSE,
     db_conn    = con
   )
-  
-  # Try the insertion
-  res <- try(
-    build_db_action(
-      action     = "insert",
-      table_name = db_table,
-      db_conn    = db_conn,
-      values     = values,
-      ignore     = ignore
-    )
-  )
-  if (class(res) == "try-error") {
-    log_it("error", glue('There was an error adding values to table "{db_table}".'))
-    return(res)
-  }
-  
+  # Check for an existing match
   res_id <- try(
     build_db_action(
       action         = "get_id",
@@ -187,7 +217,7 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
       and_or         = "AND"
     )
   )
-  if (class(res_id) == "try-error") {
+  if (inherits(res_id, "try-error")) {
     tmp <- values
     blanks <- tmp %in% c("", "null", "NULL", "NA", "na", NA)
     tmp[!blanks] <- paste0("= ", tmp[!blanks])
@@ -197,16 +227,67 @@ add_and_get_id <- function(db_table, values, db_conn = con, ignore = FALSE) {
            sprintf('Cannot retrieve ID from table "%s" using values:\n\t%s\n',
                    db_table,
                    paste0(msg_text, collapse = "\n\t")
-           )
+           ),
+           log_ns
     )
     stop()
   } else {
-    this_id <- tail(res_id, 1)
     if (length(res_id) > 1) {
-      log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."))
+      this_id <- tail(res_id, 1)
+      log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
     }
-    log_it("success", glue("Record added to {db_table} as ID {this_id}."))
+    log_it("success", glue("Record found in {db_table} as ID {this_id}."), log_ns)
     return(this_id)
+  }
+  if (length(res_id) != 1) {
+    # Try the insertion
+    res <- try(
+      build_db_action(
+        action     = "insert",
+        table_name = db_table,
+        db_conn    = db_conn,
+        values     = values,
+        ignore     = ignore
+      )
+    )
+    if (inherits(res, "try-error")) {
+      log_it("error", glue('There was an error adding values to table "{db_table}".'), log_ns)
+      return(res)
+    }
+    
+    res_id <- try(
+      build_db_action(
+        action         = "get_id",
+        table_name     = db_table,
+        db_conn        = db_conn,
+        match_criteria = as.list(values),
+        and_or         = "AND"
+      )
+    )
+    if (inherits(res_id, "try-error")) {
+      tmp <- values
+      blanks <- tmp %in% c("", "null", "NULL", "NA", "na", NA)
+      tmp[!blanks] <- paste0("= ", tmp[!blanks])
+      tmp[blanks] <- "is null"
+      msg_text <- paste(names(tmp), tmp)
+      log_it("error",
+             sprintf('Cannot retrieve ID from table "%s" using values:\n\t%s\n',
+                     db_table,
+                     paste0(msg_text, collapse = "\n\t")
+             ),
+             log_ns
+      )
+      return(res_id)
+    } else {
+      this_id <- tail(res_id, 1)
+      if (length(res_id) > 1) {
+        log_it("warn",
+               glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."),
+               log_ns)
+      }
+      log_it("success", glue("Record added to {db_table} as ID {this_id}."), log_ns)
+      return(this_id)
+    }
   }
 }
 
@@ -278,10 +359,11 @@ add_software_settings <- function(obj, sample_id, db_conn = con, software_settin
 #' @param obj LIST object containing data formatted from the import generator
 #' @param db_conn connection object (default: con)
 #' @param name_is CHR scalar of the import object name storing sample data
+#' @param method_id INT scalar of the associated ms_methods record
 #'
 #' @return INT scalar if successful, result of the call to [add_and_get_id]
 #'   otherwise
-add_sample <- function(obj, db_conn = con, name_is = "sample") {
+add_sample <- function(obj, db_conn = con, name_is = "samples", method_id = NULL) {
   log_it("info", "Preparing sample entry with add_sample().")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -342,11 +424,7 @@ add_sample <- function(obj, db_conn = con, name_is = "sample") {
     sample_contributor              = this_contributor_id,
     generation_type                 = this_generation_type,
     generated_on                    = obj_sample$starttime,
-    ms_methods_id                   = if ('method_id' %in% names(obj_sample)) {
-      obj_sample$method_id
-    } else {
-      add_method(obj)
-    }
+    ms_methods_id                   = ifelse(is.null(method_id), "NULL", method_id)
   )
   is_single_record <- all(unlist(lapply(sample_values, length)) == 1)
   log_it("info", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."))
@@ -372,7 +450,7 @@ add_sample <- function(obj, db_conn = con, name_is = "sample") {
 #' @return INT scalar if successful, result of the call to [add_and_get_id]
 #'   otherwise
 #'
-add_method <- function(obj, method_in = "massspectrometry", db_conn = con) {
+add_method <- function(obj, method_in = "ms_methods", db_conn = con, json_map = import_map) {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
@@ -389,20 +467,11 @@ add_method <- function(obj, method_in = "massspectrometry", db_conn = con) {
     )
     stopifnot(arg_check$valid)
   }
-  needed <- IMPORT_HEADERS$method
-  if (!all(needed %in% names(obj))) {
-    log_it("error",
-           sprintf("Object does not have children with all defined names (%s).",
-                   paste0(needed, collapse = ", "))
-    )
-    return(NULL)
-  }
   
   if (method_in %in% names(obj)) {
     obj_method <- obj[[method_in]]
   } else {
     log_it("warn", glue('"\t{method_in}" not found in the namespace of this object. Using directly.'))
-    # needed <- dbListFields(con, "ms_methods")[-1]
     needed <- c("ionization", "voltage", "voltage_units", "polarity")
     if (!all(needed %in% names(obj))) {
       stop("Not all needed names are present.")
@@ -413,6 +482,7 @@ add_method <- function(obj, method_in = "massspectrometry", db_conn = con) {
   log_it("trace", "Building methods entry values...", "db")
   verify <- VERIFY_ARGUMENTS
   VERIFY_ARGUMENTS <<- FALSE
+  obj_method <- parse_map(obj_method, json_map)
   ms_method_values <- c(
     ionization    = resolve_normalization_value(
       obj_method$ionization,
@@ -606,7 +676,7 @@ add_qc_data <- function(obj, sample_id, db_conn = con) {
 #' characteristics in a list, with an appended characteristic "applies_to" with
 #' the index number of entries matching those characteristics.
 #'
-#' @param import_obj LIST object
+#' @param objects LIST object
 #' @param aspect CHR scalar name of the aspect from which to generate unique
 #'   combinations
 #'
@@ -617,16 +687,17 @@ add_qc_data <- function(obj, sample_id, db_conn = con) {
 #' @examples
 #' tmp <- list(list(a = 1:10, b = 1:10), list(a = 1:5, b = 1:5), list(a = 1:10, b = 1:5))
 #' get_uniques(tmp)
-get_uniques <- function(import_obj, aspect) {
-  if (!is.list(import_obj[[1]])) import_obj <- list(import_obj)
-  out <- lapply(import_obj, function(x) x[[aspect]])
+get_uniques <- function(objects, aspect) {
+  if (!is.list(objects[[1]])) objects <- list(objects)
+  out <- lapply(objects, function(x) x[[aspect]]) %>%
+    lapply(function(x) x[sort(names(x))])
   out_distinct <- out %>%
     unique() %>%
     lapply(function(x) {
       ind <- unname(which(sapply(out, FUN = identical, x) == TRUE))
       applies_to <- list(
         index = ind,
-        file  = names(import_obj)[ind]
+        file  = names(objects)[ind]
       )
       if (is.null(applies_to$file)) applies_to$file <- "import_file"
       c(x, applies_to = list(applies_to))
@@ -801,6 +872,7 @@ make_requirements <- function(example_import,
   if (retain_in_R) import_requirements <<- out
   out <- toJSON(out, auto_unbox = TRUE, pretty = TRUE)
   write_file(out, f_name)
+  cat("Requirements file written to", f_name)
 }
 
 
@@ -836,7 +908,7 @@ make_requirements <- function(example_import,
 #'   those not matching a database column header) stripped away.
 #' @export
 verify_import_columns <- function(db_table, values, names_only = FALSE, require_all = FALSE, db_conn = con) {
-  log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'))
+  log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'), "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -881,7 +953,7 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
     valid_columns <- provided %in% table_info$name
     if (!all(valid_columns)) {
       extra_columns <- provided[!valid_columns]
-      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'))
+      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'), "db")
       stop()
     }
     return(values[valid_columns])
@@ -935,7 +1007,7 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
 #'   elements or stop the import process (default: TRUE)
 #' @param requirements_obj CHR scalar of the name of an R object holding import
 #'   requirements; this is a convenience shorthand to prevent multiple imports
-#'   from parameter `file_name` (default: import_requirements)
+#'   from parameter `file_name` (default: "import_requirements")
 #' @param file_name CHR scalar of the name of a file holding import
 #'   requirements; if this has already been added to the calling environment,
 #'   `requirements_obj` will be used preferentially as the name of that object
@@ -949,14 +1021,16 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
 verify_import_requirements <- function(obj,
                                        ignore_extra = TRUE,
                                        requirements_obj = "import_requirements",
-                                       file_name = "import_requirements.json") {
+                                       file_name = "import_requirements.json",
+                                       log_issues_as = "warn") {
   # Argument validation relies on verify_args
   if (all(exists("verify_args"))) {
     arg_check <- verify_args(
-      args       = list(obj, ignore_extra),
+      args       = list(obj, ignore_extra, log_issues_as),
       conditions = list(
-        obj          = list(c("mode", "list")),
-        ignore_extra = list(c("mode", "logical"), c("length", 1))
+        obj           = list(c("mode", "list")),
+        ignore_extra  = list(c("mode", "logical"), c("length", 1)),
+        log_issues_as = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "verify_import_requirements"
     )
@@ -978,7 +1052,8 @@ verify_import_requirements <- function(obj,
       } else {
         log_it(
           "error",
-          "Multiple files matching the requirements name were identified. Please be more specific."
+          "Multiple files matching the requirements name were identified. Please be more specific.",
+          "db"
         )
         stop("Cannot identify a single requirements file.")
       }
@@ -1009,23 +1084,24 @@ verify_import_requirements <- function(obj,
     required <- hard_reqs %in% unique(unlist(lapply(obj, names)))
     all_required <- all(required)
     if (all_required) {
-      log_it("info", "The provided object contains a nested list where required names were located.")
+      log_it("info", "The provided object contains a nested list where required names were located.", "db")
       nested <- TRUE
       # Speed this up since it already passed argument verification
       verify <- VERIFY_ARGUMENTS
+      log_it("trace", "Argument verification will be turned off for import requirement verification to speed up the import process.", "db")
       VERIFY_ARGUMENTS <<- FALSE
-      out <- lapply(obj, verify_import_requirements) %>%
+      out <- lapply(obj, verify_import_requirements, log_issues_as = log_issues_as) %>%
         setNames(names(obj))
       VERIFY_ARGUMENTS <<- verify
     } else {
       nested <- FALSE
       missing_reqs <- hard_reqs[!hard_reqs %in% names(obj)]
-      log_it("error",
-             sprintf("Required import element%s %s %s missing from at least one import item.",
+      log_it(log_issues_as,
+             sprintf("Required import element%s %s missing from at least one import item.",
                      ifelse(length(missing_reqs) > 1, "s", ""),
-                     format_list_of_names(missing_reqs),
                      ifelse(length(missing_reqs) > 1, "were", "was")
-             )
+             ),
+             "db"
       )
     }
   }
@@ -1033,14 +1109,15 @@ verify_import_requirements <- function(obj,
     extra_text <- sprintf(" %s will be ignored during import.",
                           ifelse(length(extra_cols) > 1, "These", "It")
     )
-    log_it("warn",
+    log_it("info",
            sprintf('%sxtraneous element%s named %s %s identified.%s',
                    ifelse(length(extra_cols) > 1, "E", "An e"),
                    ifelse(length(extra_cols) > 1, "s", ""),
-                   format_list_of_names(extra_cols),
+                   format_list_of_names(extra_cols, add_quotes = TRUE),
                    ifelse(length(extra_cols) > 1, "were", "was"),
                    ifelse(ignore_extra, extra_text, "")
-           )
+           ),
+           "db"
     )
     if (!ignore_extra) stop("Called with ignore_extra = FALSE. Import aborted.")
     obj <- obj[which(names(obj) %in% names(reqs))]
@@ -1049,7 +1126,7 @@ verify_import_requirements <- function(obj,
     out <- out %>%
       bind_rows() %>%
       mutate(applies_to = names(obj)) %>%
-      relocate(applies_to)
+      relocate(applies_to, .before = )
   } else {
     out <- as_tibble(out)
   }
