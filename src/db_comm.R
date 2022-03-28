@@ -2284,7 +2284,7 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
     }
     if (interactive()) {
       if (logger) log_it("trace", "Getting user information from an interactive session.")
-      if (db_contributors %>% collect() %>% nrow() > 1) {
+      if (db_contributors %>% collect() %>% nrow() > 0) {
         associate_with <- select.list(
           choices = c("Yes", "No"),
           title = sprintf('Associate "%s" with a current user?', contributor_text)
@@ -2319,7 +2319,7 @@ verify_contributor <- function(contributor_text, db_conn = con, ...) {
         do.call(add_contributor, contributor_properties)
       } else {
         stop(sprintf("Unable to automatically add contributor. Please provide contributor properties for %s as arguments to this function.",
-                     format_list_of_names(needed[!properties_present])))
+                     format_list_of_names(needed[!properties_present], add_quotes = TRUE)))
       }
     }
   } else {
