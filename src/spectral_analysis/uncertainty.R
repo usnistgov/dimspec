@@ -139,8 +139,8 @@ mergems <- function(mslist, peakindex, masserror = 5, minerror = 0.001) {
     leftout <- setdiff(1:nrow(mslist[[i]]), leftin)
     if (length(leftout) > 0) {
       extrams <- lapply(leftout, function(x) list(masses = mslist[[i]][x,1], ints = mslist[[i]][x,2], scans = i))
+      mergedms <- append(newms, extrams)
     }
-    mergedms <- append(newms, extrams)
     }
   }
   mergedms
