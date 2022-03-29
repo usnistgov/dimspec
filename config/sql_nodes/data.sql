@@ -120,7 +120,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  INTEGER,
 		  /* foreign key to norm_solvents */
 		/* Check constraints */
-		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
+		CHECK (generated_on IS strftime("%Y-%m-%dT%H:%M:%SZ", generated_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -139,7 +139,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL,
 			/* timestamp of the sample generation to tie in with samples */
 		/* Check constraints */
-		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
+		CHECK (generated_on IS strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
