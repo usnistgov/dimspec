@@ -36,6 +36,7 @@ DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_aliases;
 DELETE FROM conversion_software_settings;
+DELETE FROM conversion_software_peaks_linkage;
 .import --csv --skip 1 config/data/demo/norm_solvents.csv norm_solvents
 .import --csv --skip 1 config/data/demo/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/demo/norm_sample_classes.csv norm_sample_classes
@@ -54,6 +55,7 @@ DELETE FROM conversion_software_settings;
 .import --csv --skip 1 config/data/demo/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
 .import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases
+.import --csv --skip 1 config/data/demo/conversion_software_peaks_linkage.csv conversion_software_peaks_linkage
 .import --csv --skip 1 config/data/demo/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/demo/samples.csv samples
 .import --csv --skip 1 config/data/demo/norm_peak_confidence.csv norm_peak_confidence

@@ -129,18 +129,32 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FOREIGN KEY (sample_solvent) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS conversion_software_peaks_linkage
+		/* Linkage reference tying peaks with the conversion software settings used to generate them. */
+	(
+		id
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		generated_on
+			TEXT NOT NULL,
+			/* timestamp of the sample generation to tie in with samples */
+		/* Check constraints */
+		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS conversion_software_settings
 		/* Settings specific to the software package used to preprocess raw data. */
 	(
-		sample_id
+		linkage_id
 			INTEGER,
-			/* foreign key to samples */
+			/* foreign key to conversion_software_peaks_linkage */
 		setting_value
 			TEXT NOT NULL,
 			/* value of the software setting */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (linkage_id) REFERENCES conversion_software_peaks_linkage(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS peaks
@@ -152,6 +166,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		sample_id
 			INTEGER NOT NULL,
 			/* foreign key to samples */
+		conversion_software_peaks_linkage_id
+			INTEGER NOT NULL,
+			/* foreign key to conversion_software_peaks_linkage */
 		num_points
 		  INTEGER NOT NULL,
 		  /* number of points collected across this peak */
@@ -180,6 +197,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (conversion_software_peaks_linkage_id) REFERENCES conversion_software_peaks_linkage(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (identification_confidence) REFERENCES norm_peak_confidence(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
