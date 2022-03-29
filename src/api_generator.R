@@ -441,11 +441,11 @@ build_db_action <- function(action,
                       lapply(values,
                              function(x) {
                                lapply(x,
-                                      function(x) {
-                                        if (any(tolower(x) == "null", x == "", is.na(x))) {
+                                      function(y) {
+                                        if (any(tolower(y) == "null", y == "", is.na(y))) {
                                           "null"
                                         } else {
-                                          dbQuoteLiteral(db_conn, x)
+                                          dbQuoteLiteral(db_conn, y)
                                         }
                                       }) %>%
                                  unlist() %>%
