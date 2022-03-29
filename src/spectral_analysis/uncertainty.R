@@ -17,7 +17,7 @@ create_peak_list <- function(ms_data) {
     masses =  as.numeric(unlist(strsplit(ms_data$measured_mz[x]," "))), 
     intensities = as.numeric(unlist(strsplit(ms_data$measured_intensity[x], " "))),
     totalion = sum(as.numeric(unlist(strsplit(ms_data$measured_intensity[x], " ")))),
-    baseion = ms_data$base_ion[x],
+    baseion = ms_data$baseion[x],
     base_int = ms_data$base_int[x],
     time = ms_data$scantime[x], 
     mslevel = ms_data$ms_n[x]))
@@ -133,11 +133,15 @@ mergems <- function(mslist, peakindex, masserror = 5, minerror = 0.001) {
   inds <- order(abs(ind - peakindex))
   inds <- inds[-1]
   for (i in inds) {
+    if (nrow(mslist[[i]]) > 0) {
     newms <- lapply(mergedms, function(x) mergemass(x$masses, x$ints, x$scans, mslist[[i]], ind = i, masserror = masserror, minerror = minerror))
     leftin <- do.call(c, lapply(mergedms, function(x) getmergedind(x$masses, mslist[[i]], masserror = masserror, minerror = minerror)))
     leftout <- setdiff(1:nrow(mslist[[i]]), leftin)
-    extrams <- lapply(leftout, function(x) list(masses = mslist[[i]][x,1], ints = mslist[[i]][x,2], scans = i))
+    if (length(leftout) > 0) {
+      extrams <- lapply(leftout, function(x) list(masses = mslist[[i]][x,1], ints = mslist[[i]][x,2], scans = i))
+    }
     mergedms <- append(newms, extrams)
+    }
   }
   mergedms
 }

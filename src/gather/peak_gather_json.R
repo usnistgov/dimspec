@@ -43,10 +43,10 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     }
     all_scans <- which(times >= as.numeric(methodjson$peaks[[i]]$peak_starttime) & times <= as.numeric(methodjson$peaks[[i]]$peak_endtime))
     ms1scans <- all_scans[which(mslevels[all_scans] == 1)]
-    if (out[[i]]$massspectrometry$ms2exp == "data-independent acquisition (DIA/AIF)") {
+    if (out[[i]]$massspectrometry$ms2exp == "data-independent acquisition (DIA/AIF)" | out[[i]]$massspectrometry$ms2exp == "DIA") {
       ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
     }
-    if (out[[i]]$massspectrometry$ms2exp == "data-dependent acquisition (DDA/TopN)") {
+    if (out[[i]]$massspectrometry$ms2exp == "data-dependent acquisition (DDA/TopN)" | out[[i]]$massspectrometry$ms2exp == "DDA") {
       ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(out[[i]]$peak$mz) - as.numeric(out[[i]]$massspectrometry$isowidth) & precursors[all_scans] <= as.numeric(out[[i]]$peak$mz) + as.numeric(out[[i]]$massspectrometry$isowidth))]
     }
     if (out[[i]]$massspectrometry$ms2exp == "SWATH") {
