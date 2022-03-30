@@ -66,8 +66,11 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* name of professional affiliation */
+		PID
+		  TEXT
+		  /* URL resolvable persistent identifier for affiliation organization, typically a ROR (https://ror.org/) or GRID (https://grid.ac/) identifier */
 	);
 		/* Check constraints */
 		/* Foreign key relationships */

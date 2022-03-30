@@ -24,5 +24,5 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 
 DELETE FROM contributors;
 DELETE FROM affiliations;
-INSERT OR IGNORE INTO affiliations VALUES (1, "system");
+INSERT OR IGNORE INTO affiliations VALUES (1, "system", NULL);
 INSERT OR IGNORE INTO contributors (id, username, affiliation) VALUES (1, "sys", 1);

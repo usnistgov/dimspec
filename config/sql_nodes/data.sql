@@ -278,6 +278,39 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_peaks AS 
+  		/* View of "peaks" with text values displayed from normalization tables. */ 
+  	SELECT 	
+  		p.id AS id, 
+  			/* Direct use column 'id' from table 'p'. */ 	
+  		p.sample_id AS sample_id, 
+  			/* Direct use column 'sample_id' from table 'p'. */ 	
+  		p.num_points AS num_points, 
+  			/* Direct use column 'num_points' from table 'p'. */ 	
+  		p.precursor_mz AS precursor_mz, 
+  			/* Direct use column 'precursor_mz' from table 'p'. */ 	
+  		nis.name AS ion_state, 
+  			/* Normalized value column 'name' from table 'nis'. */ 	
+  		p.rt_start AS rt_start, 
+  			/* Direct use column 'rt_start' from table 'p'. */ 	
+  		p.rt_centroid AS rt_centroid, 
+  			/* Direct use column 'rt_centroid' from table 'p'. */ 	
+  		p.rt_end AS rt_end, 
+  			/* Direct use column 'rt_end' from table 'p'. */ 	
+  		iif(npc.level1 = "",
+  		  confidence,
+  		  "Level " ||
+  		  npc.level1 ||
+  		  npc.level2 ||
+  		  " - " ||
+  		  npc.confidence
+  		  )
+  		  AS confidence
+  			/* Narrative form of confidence from table 'norm_peak_confidence'. */ 
+  	FROM peaks p
+  	LEFT JOIN norm_ion_states nis ON p.ion_state = nis.id 
+  	LEFT JOIN norm_peak_confidence npc ON p.identification_confidence = npc.id;
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS peak_data AS
 		/* View raw peak data for a specific peak */
 		SELECT
