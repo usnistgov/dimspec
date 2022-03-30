@@ -191,8 +191,8 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
                                  table_cols <- dictionary[[norm_tables$norm_table[[nt]]]]$name
                                  table_cols <- table_cols[table_cols != norm_tables$pk_col[nt]]
                                  norm_tables$val_col[nt] <- table_cols[1]
-                                 return(norm_tables)
                                }
+                               return(norm_tables)
                              }) %>%
     setNames(tables)
   return(fk_relationships)
