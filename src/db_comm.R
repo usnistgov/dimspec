@@ -1350,13 +1350,12 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
-#'   
-#' @inheritParams build_db
 #'
 #' @param api_running LGL scalar of whether or not the API service is currently
 #'   running (default: TRUE)
-#' @param api_monitor process object pointing to the API service (default:
-#'   NULL)
+#' @param api_monitor process object pointing to the API service (default: NULL)
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: "db")
 #'
 #' @return Files for the new database, fallback build, and data dictionary will
 #'   be created in the project directory and objects will be created in the
@@ -1365,10 +1364,10 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @export
 #'
 #' @examples
-update_all <- function(api_running = TRUE, api_monitor = NULL) {
+update_all <- function(api_running = TRUE, api_monitor = NULL, log_ns = "db") {
   if (exists("log_it")) {
     log_fn("start")
-    log_it("debug", "Updating database, fallback build, and data dictionary files.", "db")
+    log_it("debug", "Updating database, fallback build, and data dictionary files.", log_ns)
   }
   if (api_running) {
     if (exists("api_reload")) {
@@ -1384,7 +1383,7 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
   manage_connection(reconnect = FALSE)
   tmp <- try(build_db())
   if (inherits(tmp, "try-error")) {
-    log_it("error", "There was a problem building the database. Build process halted.")
+    if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
     return(tmp)
   }
   manage_connection()
@@ -1396,17 +1395,19 @@ update_all <- function(api_running = TRUE, api_monitor = NULL) {
     slice(1) %>%
     rownames()
   if (length(dict_file) == 0) {
-    if (exists("log_it")) log_it("warn", "Unable to locate a data dictionary file.")
+    if (exists("log_it")) log_it("warn", "Unable to locate a data dictionary file.", log_ns)
   } else {
+    if (exists("log_it")) log_it("info", "Saving data dictionary to this session as object 'db_dict'.")
     db_dict <<- dict_file %>%
       jsonlite::read_json() %>%
       lapply(bind_rows)
   }
   tmp <- try(er_map())
   if (inherits(tmp, "try-error")) {
-    log_it("error", "There was a problem generating the entity relationship map. Build process halted.")
+    if (exists("log_it")) log_it("error", "There was a problem generating the entity relationship map. Build process halted.", log_ns)
     return(tmp)
   }
+  if (exists("log_it")) log_it("info", "Saving entity relationship map to this session as object 'db_map'.")
   db_map <<- tmp
   create_fallback_build()
   if (api_running && exists("api_reload")) {
