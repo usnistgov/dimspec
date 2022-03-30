@@ -35,8 +35,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source names */
 		acronym
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source acronyms */
+		import_text
+		  TEXT UNIQUE
+		  /* NTA MRT controlled vocabulary expression */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -126,8 +129,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* collision energy units */
+		abbreviation
+		  TEXT
+			/* collision energy unit abbreviation, if any */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -141,7 +147,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		name
 			TEXT NOT NULL UNIQUE,
 			/* ionization energy units */
-		acronym
+		abbreviation
 			TEXT NOT NULL UNIQUE
 			/* ionization energy units acronym */
 		/* Check constraints */
@@ -174,8 +180,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL UNIQUE,
 			/* type of the mass analyzer */
 		acronym
-			TEXT NOT NULL UNIQUE
+			TEXT UNIQUE,
 			/* common acronym for the mass spectrometer type */
+		import_text
+		  TEXT UNIQUE
+		  /* NTA MRT controlled vocabulary expression */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);

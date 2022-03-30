@@ -91,7 +91,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL,
 			/* text describing the reference name/acronym */
 		reference
-			TEXT NOT NULL
+			TEXT
 			/* reference URL for the alias */
 		/* Check constraints */
 		/* Foreign key relationships */
@@ -110,7 +110,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			TEXT NOT NULL,
 			/* name of compound, uncontrolled */
 		obtained_from
-			TEXT NOT NULL,
+			TEXT,
 			/* DOI/Link of compound structure's source */
 		source_type
 			INTEGER NOT NULL,
@@ -143,7 +143,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (local_positive >= 0),
 		CHECK (local_negative >= 0),
 		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
-		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
+		CHECK (inspected_on IS NULL OR inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (source_type) REFERENCES norm_source_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (category) REFERENCES compound_categories(id) ON UPDATE CASCADE ON DELETE RESTRICT,

@@ -976,13 +976,14 @@ manage_connection <- function(db          = DB_NAME,
 #' Parse SQL build statements
 #'
 #' Reading SQL files directly into R can be problematic. This function is
-#' primarily called in [create_fallback_build].
+#' primarily called in [create_fallback_build]. To support multiline,
+#' human-readable SQL statements, `sql_statements` must be of length 1.
 #'
 #' All arguments `magicsplit`, `header`, and `section` provide flexibility in
 #' the comment structure of the SQL file and accept regex for character matching
 #' purposes.
 #'
-#' @param sql_statements CHR vector of SQL build statements from an SQL file.
+#' @param sql_statements CHR scalar of SQL build statements from an SQL file.
 #' @param magicsplit CHR scalar regex indicating some "magic" split point SQL
 #'   comment to simplify the identification of discrete commands; will be used
 #'   to split results (optional but highly recommended)
@@ -1004,7 +1005,8 @@ manage_connection <- function(db          = DB_NAME,
 sqlite_parse_build <- function(sql_statements,
                                magicsplit = "/\\*magicsplit\\*/",
                                header     = "/\\*\\=+\\r*\\n[[:print:][:cntrl:]]+\\r*\\n\\=+\\*/",
-                               section    = "/\\* -* [[:print:][:cntrl:]]+ -* \\*/") {
+                               section    = "/\\* -* [[:print:][:cntrl:]]+ -* \\*/",
+                               comment    = "/\\* [[:alnum:][:punct:] -,\\.]+ \\*/") {
   if (exists("log_it")) log_fn("start")
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1013,22 +1015,25 @@ sqlite_parse_build <- function(sql_statements,
         sql_statements = list(c("mode", "character"), c("length", 1)),
         magicsplit     = list(c("mode", "character"), c("length", 1)),
         header         = list(c("mode", "character"), c("length", 1)),
-        section        = list(c("mode", "character"), c("length", 1))
+        section        = list(c("mode", "character"), c("length", 1)),
+        comment        = list(c("mode", "character"), c("length", 1))
       ),
       from_fn    = "sqlite_parse_build"
     )
     stopifnot(arg_check$valid)
   }
   if (exists("log_it")) log_it("trace", 'Parsing sql_statements for build commands.', "db")
-  to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
+  to_remove <- paste0(c(header, comment, "\\t", "\\r"), collapse = "|")
   out       <- sql_statements %>%
     str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
     str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
+    str_replace_all("\\.read ", paste0(magicsplit, ".read ")) %>%
     str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
+    str_replace_all("PRAGMA ", paste0(magicsplit, "PRAGMA ")) %>%
     str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
+    str_remove_all(to_remove) %>%
     str_split(magicsplit) %>%
     .[[1]] %>%
-    str_remove_all(to_remove) %>%
     str_replace_all("\\n{2,10}", "\n") %>%
     str_replace_all(" {2,10}", " ") %>%
     str_split("\\n") %>%
@@ -1146,7 +1151,8 @@ sqlite_parse_import <- function(build_statements) {
                                                          tidyr::unite(col = "statement", sep = '", "') %>%
                                                          dplyr::pull(statement) %>%
                                                          paste0(collapse = '"), ("')
-                              )
+                              ) %>%
+                                stringr::str_replace_all('"NA"|"NULL"|"null"|""', "NULL")
                               insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
                                                           target,
                                                           insert_values)
@@ -1191,17 +1197,19 @@ create_fallback_build <- function(build_file    = NULL,
   if (exists("log_it")) log_fn("start")
   if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
   if (all(is.null(populate_with), exists("DB_DATA"))) populate_with <- DB_DATA
-  build_files <- list.files(pattern = build_file,
-                            full.names = TRUE,
-                            recursive = TRUE)
-  if (length(build_files) > 1) {
-    if (interactive()) {
-      build_file <- resolve_multiple_values(build_files, build_file)
-    } else {
-      stop(msg)
+  if (!file.exists(build_file)) {
+    build_files <- list.files(pattern = build_file,
+                              full.names = TRUE,
+                              recursive = TRUE)
+    if (length(build_files) > 1) {
+      if (interactive()) {
+        build_file <- resolve_multiple_values(build_files, build_file)
+      } else {
+        stop("Non-interactive session and multiple build files identified.")
+      }
+    } else if (length(build_files) == 1) {
+      build_file <- build_files
     }
-  } else if (length(build_files) == 1) {
-    build_file <- build_files
   }
   if (is.null(out_file)) {
     out_file <- gsub(".sql", "_full.sql", build_file)
@@ -1233,9 +1241,22 @@ create_fallback_build <- function(build_file    = NULL,
   
   if (populate) {
     if (exists("log_it")) log_it("info", "Adding data insert reads...", "db")
-    populate_file <- list.files(pattern = populate_with,
-                                full.names = TRUE,
-                                recursive = TRUE)
+    if (file.exists(populate_with)) {
+      populate_file <- populate_with
+    } else {
+      populate_files <- list.files(pattern = populate_with,
+                                  full.names = TRUE,
+                                  recursive = TRUE)
+      if (length(populate_files) > 1) {
+        if (interactive()) {
+          populate_file <- resolve_multiple_values(populate_files, populate_file)
+        } else {
+          stop("Non-interactive session and multiple population files identified.")
+        }
+      } else if (length(populate_files) == 1) {
+        populate_file <- populate_files
+      }
+    }
     populate <- readr::read_file(populate_file) %>%
       sqlite_parse_build()
     build <- c(build, populate)
