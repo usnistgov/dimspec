@@ -63,8 +63,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
   		TEXT,
   		/* confidence sublevel */
   	confidence
-  		TEXT
+  		TEXT UNIQUE,
   		/* description of the confidence level */
+  	import_text
+  		TEXT UNIQUE
+  		/* customized import format expression of the confidence level */
   	/* Check constraints */
   	/* Foreign key relationships */
   );
