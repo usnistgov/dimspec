@@ -269,7 +269,20 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
   return(out)
 }
 
-#' Build a basic escaped SQL query
+#' Build an escaped SQL query
+#'
+#' In most cases, issuing basic SQL queries is made easy by tidyverse compliant
+#' functions such as [dplyr::tbl]. Full interaction with an SQLite database is a
+#' bit more complicated and typically requires [DBI::dbExecute] and writing SQL
+#' directly; several helpers exist for that (e.g. [glue::glue_sql]) but aren't
+#' as friendly or straight forward when writing more complicated actions, and
+#' still require directly writing SQL equivalents, routing through
+#' [DBI::dbQuoteIdentifier] and [DBI::dbQuoteLiteral] to prevent SQL injection
+#' attacks.
+#'
+#' This function is intended to ease that by taking care of most of the
+#' associated logic and enabling routing through other functions, or picking up
+#' arguments from within other function calls.
 #'
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
@@ -317,7 +330,18 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #' @return CHR scalar of the constructed query
 #' @export
 #'
-#' @examples
+#' @usage build_db_action("insert", "table", values = list(col1 = "a", col2 = 2,
+#'   col3 = "describe"), execute = FALSE) build_db_action("insert", "table",
+#'   values = list(col1 = "a", col2 = 2, col3 = "describe"))
+#'   build_db_action("get_id", "table", match_criteria = list(id = 2))
+#'   build_db_action("delete", "table", match_criteria = list(id = 2))
+#'   build_db_action("select", "table", columns = c("col1", "col2", "col3"),
+#'   match_criteria = list(id = 2)) build_db_action("select", "table",
+#'   match_criteria = list(sample_name = "sample 123"))
+#'   build_db_action("select", "table", match_criteria = list(sample_name =
+#'   list(value = "sample 123", exclude = TRUE)) build_db_action("select",
+#'   "table", match_criteria = list(sample_name = "sample 123",
+#'   sample_contributor = "Smith"), and_or = "AND", limit = 5)
 build_db_action <- function(action,
                             table_name,
                             db_conn         = con,
