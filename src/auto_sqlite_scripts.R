@@ -180,7 +180,8 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
                                  tidyr::separate(one,
                                                  into = c("fk_col", "norm_table", "pk_col"),
                                                  sep = " REFERENCES |\\(") %>%
-                                 dplyr::filter(grepl("norm", .$norm_table))
+                                 dplyr::filter(grepl("norm", .$norm_table)) %>%
+                                 mutate(val_col = vector(mode = "list", length = nrow(.)))
                              })
   fk_relationships <- fk_relationships[sapply(fk_relationships, nrow) > 0]
   tables <- names(fk_relationships)
@@ -190,7 +191,7 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
                                for (nt in 1:nrow(norm_tables)) {
                                  table_cols <- dictionary[[norm_tables$norm_table[[nt]]]]$name
                                  table_cols <- table_cols[table_cols != norm_tables$pk_col[nt]]
-                                 norm_tables$val_col[nt] <- table_cols[1]
+                                 norm_tables$val_col[nt] <- list(table_cols)
                                }
                                return(norm_tables)
                              }) %>%
@@ -205,14 +206,19 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #' update actions that have one or more foreign key relationships defined as
 #' `target_table.fk_col = norm_table.pk_col`. It is primarily for use in
 #' controlled vocabulary lists where a single id is tied to a single value in
-#' the parent table.
+#' the parent table, but more complicated relationships can be handled.
+#'
+#' These are intended as native database backup support for when connections do
+#' not change the default SQLite setting of PRAGMA foreign_keys = off.
+#' Theoretically any trigger could be created, but should only be used with care
+#' outside the intended purpose.
 #'
 #' Triggers created by this function will check all new INSERT and UPDATE
 #' statements by checking provided values against their parent table keys. If an
 #' index match is found no action will be taken on the parent table. If no match
 #' is found, it is assumed this is a new normalized value and it will be added
-#' to the table and the resulting new key will be replaced in the target table
-#' column.
+#' to the normalization table and the resulting new key will be replaced in the
+#' target table column.
 #'
 #' @note If `or_ignore` is set to TRUE, errors in adding to the parent table
 #'   will be ignored silently, possibly causing NULL values to be inserted into
@@ -272,6 +278,12 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #'   tables if an error occurs (default: TRUE, which can under certain
 #'   conditions raise exceptions during execution of the trigger if more than a
 #'   single value column exists in the parent table)
+#' @param addl_actions CHR vector of additional target actions to add to
+#'   `table_action` statements, appended to the end of the resulting "insert" or
+#'   "update" actions to `target_table`. If multiple tables are in use, use
+#'   positional matching in the vector (e.g. with three normalization tables,
+#'   and additional actions to only the second, use c("", "additional actions",
+#'   ""))
 #'
 #' @return CHR scalar of class glue containing the SQL necessary to create a
 #'   trigger. This is raw text; it is not escaped and should be further
@@ -279,9 +291,11 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #'   communication pipelines dictate.
 #' @export
 #'
-#' @usage
-#' sqlite_auto_trigger(target_table = "test", fk_col = c("col1", "col2", "col3"), norm_table = c("norm_col1", "norm_col2", "norm_col3"), pk_col = "id", val_col = "value", action_occurs = "after", trigger_action = "insert", table_action = "update")
-#' 
+#' @example sqlite_auto_trigger(target_table = "test", fk_col = c("col1",
+#'   "col2", "col3"), norm_table = c("norm_col1", "norm_col2", "norm_col3"),
+#'   pk_col = "id", val_col = "value", action_occurs = "after", trigger_action =
+#'   "insert", table_action = "update")
+#'   
 sqlite_auto_trigger <- function(target_table,
                                 fk_col,
                                 norm_table,
@@ -296,7 +310,7 @@ sqlite_auto_trigger <- function(target_table,
                                 or_ignore = TRUE,
                                 addl_target_actions = NULL) {
   kwargs <- as.list(environment())
-  kwargs <- kwargs[-grep("or_ignore|addl_target_actions", names(kwargs))]
+  kwargs <- kwargs[-grep("or_ignore|addl_target_actions|val_col", names(kwargs))]
   n_norm_tables <- length(norm_table)
   stopifnot(all(sapply(kwargs, is.character), sapply(kwargs, is.vector)))
   action_occurs <- match.arg(action_occurs)
@@ -325,11 +339,18 @@ sqlite_auto_trigger <- function(target_table,
       glue::glue("NEW.{fk_col} NOT IN (SELECT {pk_col} FROM {norm_table})"),
       collapse = " OR ")
   )
-  clause_norm_inserts <- paste(
-    glue::glue(
-      "INSERT {ifelse(or_ignore, 'OR IGNORE ', '')}INTO {norm_table} ({val_col}) VALUES (iif(NEW.{fk_col} IN (select {pk_col} FROM {norm_table}), (SELECT {val_col} FROM {norm_table} LIMIT 1), NEW.{fk_col}));",
-    ),
-    collapse = " ")
+  clause_norm_inserts <- character(0)
+  clause_target_action <- character(0)
+  for (i in 1:length(norm_table)) {
+    clause_norm_inserts[i] <- glue::glue(
+      "INSERT {ifelse(or_ignore, 'OR IGNORE ', '')}INTO {norm_table[i]} ({glue::glue_collapse(val_col[[i]], sep = ', ')}) VALUES (NEW.{glue_collapse(c(fk_col[i], rep('NULL', length(val_col[[i]]) - 1)), sep = ', ')})"
+    )
+    clause_target_action[i] <- glue::glue_collapse(
+      glue::glue("{val_col[[i]]} = NEW.{fk_col[i]}"),
+      sep = " OR "
+    )
+  }
+  clause_norm_inserts <- glue_collapse(clause_norm_inserts, sep = "; ")
   clause_where <- paste(
     "WHERE",
     ifelse(filter_col == "" && filter_val == "",
@@ -339,7 +360,7 @@ sqlite_auto_trigger <- function(target_table,
   clause_target_action <- paste0(
     paste0(
       glue::glue(
-        "{fk_col} = (iif(NEW.{fk_col} IN (SELECT {pk_col} FROM {norm_table}), NEW.{fk_col}, (SELECT {pk_col} FROM {norm_table} WHERE {val_col} = NEW.{fk_col})))",
+        "{fk_col} = (iif(NEW.{fk_col} IN (SELECT {pk_col} FROM {norm_table}), NEW.{fk_col}, (SELECT {pk_col} FROM {norm_table} WHERE {clause_target_action} ORDER BY {pk_col} LIMIT 1)))",
       ),
       ifelse(is.null(addl_target_actions),
              "",
@@ -349,11 +370,11 @@ sqlite_auto_trigger <- function(target_table,
   clause_table_action <- switch(
     tolower(table_action),
     "insert" = "INSERT OR IGNORE INTO",
-    "update" = sprintf("UPDATE %s SET %s", target_table, clause_target_action),
-    "delete" = sprintf("DELETE FROM %s %s", target_table, clause_target_action)
+    "update" = glue::glue("UPDATE {target_table} SET {clause_target_action}"),
+    "delete" = glue::glue("DELETE FROM {target_table} {clause_where}")
   )
   clause_start <- paste(clause_title, clause_when)
-  clause_actions <- paste(clause_norm_inserts, clause_table_action)
+  clause_actions <- paste(clause_norm_inserts, clause_table_action, sep = "; ")
   trigger_sql <- glue::glue("DROP TRIGGER IF EXISTS {trigger_title}; CREATE TRIGGER IF NOT EXISTS {clause_start} BEGIN {clause_actions} END;")
   return(trigger_sql)
 }
