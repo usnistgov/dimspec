@@ -1,27 +1,45 @@
-/*====================================================================================================
-Description:	Reference node including normalization tables for NIST high-resolution-accurate-mass 
-				spectrometric database for non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/reference.sql
-				
-Details:		Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script.
-				
-				The comment "magicsplit" is present to provide a hook for external processing,
-				allowing for direct building via R or Python when the CLI is unavailable. 
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		Reference data node schema definition for the NIST high-resolution
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains information relevant to tracking when a given instance of the 
+		database was built, and reference information for chemical elements
+		and isotopes useful for chemoinformatic and mass spectral evaluation.
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/reference.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are not available in the "config/sql_nodes" directory but should 
+		instead be populated directly from those applicable to the current 
+		project, if any. Examples are provided in the "config/data" directory 
+		and subdirectories; population scripts are available as 
+		"config/populate_X.sql" files.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/

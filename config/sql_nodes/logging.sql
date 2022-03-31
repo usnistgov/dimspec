@@ -1,31 +1,44 @@
-/*====================================================================================================
-Description:	Logging node for NIST high-resolution-accurate-mass spectrometric database for 
-				non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/logging.sql
-				
-Details:		Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script.
-				
-				The comment "magicsplit" is present to provide a hook for external processing,
-				allowing for direct building via R or Python when the CLI is unavailable. 
-				
-				Log triggers should be set up separately and only after other tables and views have
-				been created. This should be called last during the build if any autologging is 
-				desired.
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		[OPTIONAL] Logging node schema definition for the NIST high-resolution 
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains logs as defined by any added triggers, applications, or other 
+		avenues as well as a version history for this database. Its primary 
+		purpose is to support application development and provide user support 
+		for longer running implementations. It is not used as of v0.9 of the 
+		NIST HRMS-MS database for NTA.
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/logging.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are added here as a convenience for the normalization tables 
+		"norm_log_executed_from" and "norm_log_effect" rather than imported.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/

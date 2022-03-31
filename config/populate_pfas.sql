@@ -1,15 +1,43 @@
 /*=============================================================================
-	Run this file in sqlite3 to load basic data regarding PFAS into the 
-	database schema using:
-	
-		.read config/populate_pfas.sql
-	
-	Note this will first remove all data within the referenced tables!
-	You may also directly import these files into the appropriate tables using 
-	your SQLite IDE of choice; CSVs are named for their associated tables.
-	The OS file separator is assumed to be the "forward slash" ("/") character; 
-	if this is inappropriate for your OS, you should globally replace it within 
-	this script as appropriate.
+	Description
+		Clear and populate data for poly- and perfluoroalkyl substances (PFAS) 
+		to support non-targeted analysis (NTA) high-resolution accurate-mass 
+		mass spectrometry (HRAM-MS) experiments using the schema defined in 
+		this directory.
+		
+	Status
+		Development
+		
+	LastUpdate
+		2022-03-31
+		
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+			
+	Dependencies
+		sqlite3 (https://sqlite.org/version3.html)
+		
+	Usage
+		Run this file in sqlite3 to populate data into the database using:
+		
+			.read config/populate_pfas.sql
+		
+		Note this will first remove all data within the referenced tables!
+		You may also directly import these files into the appropriate 
+		tables using your SQLite IDE of choice.
+		
+	Details
+		Data files are located in the "config/data/pfas" directory and 
+		local paths will need to be referenced appropriately, which may
+		require modifications to this script; CSVs are named for their 
+		associated tables. The OS file separator is assumed to be the 
+		"forward slash" ("/") character; if this is inappropriate for 
+		your OS, you should globally replace it within this script as
+		appropriate.
+		
 =============================================================================*/
 
 /* To build in console, use each of the following as needed. */
