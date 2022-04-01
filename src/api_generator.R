@@ -511,6 +511,7 @@ build_db_action <- function(action,
   
   # Safely escape where clauses
   if (all(!is.null(match_criteria), !action == "INSERT")) {
+    if (!is.list(match_criteria)) match_criteria <- as.list(match_criteria)
     query <- paste(query, "WHERE",
                    clause_where(db_conn        = db_conn,
                                 table_names    = table_name,
