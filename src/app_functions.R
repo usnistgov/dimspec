@@ -539,7 +539,12 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
     }
     LOGGING_ON <- TRUE
   }
-  call_func <- sys.call(-1)[[1]]
+  call_i <- -1
+  call_func <- sys.call(call_i)[[1]]
+  if (is.function(call_func) && sys.call(-2)[[1]] == "do.call") {
+    call_i <- -2
+    call_func <- sys.call(call_i)[[2]]
+  }
   if (sys.nframe() > 1) {
     from_log_it <- call_func == "log_it"
   } else {
@@ -594,7 +599,7 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
     if (do_log) {
       log_func  <- sprintf("log_%s", tolower(log_level))
       log_level <- toupper(log_level)
-      n_call    <- ifelse(sys.nframe() > 1, -1, 1)
+      n_call    <- ifelse(sys.nframe() > 1, call_i, 1)
       if (exists(log_func)) {
         log_level(level    = log_level,
                   namespace = ns,
