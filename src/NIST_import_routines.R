@@ -5,7 +5,8 @@ full_import <- function(import_object                  = NULL,
                         include_if_missing_recommended = FALSE,
                         ignore_extra                   = TRUE,
                         requirements_obj               = "import_requirements",
-                        data_headers_includes          = "sample") {
+                        sample_info_in                 = "sample",
+                        method_info_in                 = "massspectrometry") {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
@@ -28,7 +29,7 @@ full_import <- function(import_object                  = NULL,
     ignore_extra = ignore_extra,
     log_issues_as = "trace"
   )
-  if (data_headers_includes %in% names(import_object)) import_object <- list(import_object)
+  if (sample_info_in %in% names(import_object)) import_object <- list(import_object)
   to_ignore <- integer(0)
   if (all(meets_requirements$all_required)) {
     log_it("success",
@@ -131,24 +132,25 @@ full_import <- function(import_object                  = NULL,
           data.frame(provided = contributor, resolved = contributor_id)
         )
     }
-    ms_method_id   <- resolve_method(obj)
+    # Method info is optional to support 
+    if (method_info_in %in% names(obj)) {
+      ms_method_id <- resolve_method(obj, method_in = method_info_in)
+    } else {
+      ms_method_id <- NA
+    }
+    # Sample info is required
     sample_id      <- resolve_sample(obj,
+                                     sample_in = sample_info_in,
                                      method_id = ms_method_id,
                                      sample_contributor = contributor_id)
-    # # Put in methods and append appropriate samples with the method id
-    # for (i in 1:length(tmp)) {
-    #   method_id <- resolve_method(obj = tmp[[i]], db_conn = db_conn)
-    #   
-    # }
-    # # Add samples
-    # for (i in 1:length(inport_relationships$import_samples)) {
-    #   
-    # }
-    # # Add descriptions
-    # # - ms_description
-    # # - chromatography description
-    # # Add data
-    # # Add QC if appropriate
+    # Add descriptions
+    # - ms_description
+    if (!is_na(ms_method_id)) {
+      resolve_description(ms_desc, "massspec")
+    }
+    # - chromatography description
+    # Add data
+    # Add QC if appropriate
   }
 }
 
@@ -397,7 +399,7 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param db_conn connection object (default: con)
-#' @param name_is CHR scalar of the import object name storing sample data
+#' @param sample_in CHR scalar of the import object name storing sample data
 #'   (default: "sample")
 #' @param method_id INT scalar of the associated ms_methods record
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
@@ -406,7 +408,7 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #'
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
-resolve_sample <- function(obj, db_conn = con, name_is = "sample", method_id = NULL, log_ns = "db", ...) {
+resolve_sample <- function(obj, db_conn = con, sample_in = "sample", method_id = NULL, log_ns = "db", ...) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -499,6 +501,8 @@ resolve_sample <- function(obj, db_conn = con, name_is = "sample", method_id = N
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_in CHR scalar name of the `obj` list containing method
 #'   information
+#' @param db_table CHR scalar name of the database table containing method
+#'   information
 #' @param db_conn connection object (default: con)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to "ms_methods" as necessary
@@ -507,7 +511,7 @@ resolve_sample <- function(obj, db_conn = con, name_is = "sample", method_id = N
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
 #'   
-resolve_method <- function(obj, method_in = "massspectrometry", db_conn = con, log_ns = "db", ...) {
+resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_methods", db_conn = con, log_ns = "db", ...) {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
@@ -515,10 +519,11 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_conn = con, l
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, method_in, db_conn, log_ns),
+      args       = list(obj, method_in, db_table, db_conn, log_ns),
       conditions = list(
         obj       = list(c("n>=", 1)),
         method_in = list(c("mode", "character"), c("length", 1)),
+        db_table  = list(c("mode", "character"), c("length", 1)),
         db_conn   = list(c("length", 1)),
         log_ns    = list(c("mode", "character"), c("length", 1))
       )
@@ -540,27 +545,27 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_conn = con, l
   ms_method_values <- c(
     ionization    = resolve_normalization_value(
       obj_method$ionization,
-      ref_table_from_map("ms_methods", "ionization")),
+      ref_table_from_map(db_table, "ionization")),
     voltage       = obj_method$voltage,
     voltage_units = resolve_normalization_value(
       obj_method$vunits,
-      ref_table_from_map("ms_methods", "voltage_units")),
+      ref_table_from_map(db_table, "voltage_units")),
     polarity      = resolve_normalization_value(
       obj_method$polarity,
-      ref_table_from_map("ms_methods", "polarity")),
+      ref_table_from_map(db_table, "polarity")),
     ce_value      = obj_method$ce_value,
     ce_units      = resolve_normalization_value(
       obj_method$ce_units,
-      ref_table_from_map("ms_methods", "ce_units")),
+      ref_table_from_map(db_table, "ce_units")),
     ce_desc       = resolve_normalization_value(
       obj_method$ce_desc,
-      ref_table_from_map("ms_methods", "ce_desc")),
+      ref_table_from_map(db_table, "ce_desc")),
     fragmentation = resolve_normalization_value(
       obj_method$fragmode,
-      ref_table_from_map("ms_methods", "fragmentation")),
+      ref_table_from_map(db_table, "fragmentation")),
     ms2_type      = resolve_normalization_value(
       obj_method$ms2exp,
-      ref_table_from_map("ms_methods", "ms2_type")),
+      ref_table_from_map(db_table, "ms2_type")),
     has_qc_method = as.numeric("qcmethod" %in% names(obj)),
     citation      = obj_method$source
   )
@@ -583,18 +588,35 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_conn = con, l
 }
 
 # TODO
-resolve_description <- function(obj, type) {
+resolve_description <- function(obj, method_id, type = c("massspec", "chromatography"), db_conn = con) {
   # Check connection
   stopifnot(active_connection(db_conn))
-  type <- match.arg(type, c("ms", "chromatography"))
-  type <- paste0(type, "_descriptions")
+  type <- match.arg(type)
   log_it("trace", glue('Adding descriptions to table "{type}".'))
+  values <- c("ms_methods_id" = method_id)
+  if (type == "massspec") {
+    table_name <- "ms_descriptions"
+    values <- c(
+      values,
+      vendor_id = resolve_normalization_value(
+        obj$msvendor,
+        "norm_vendors"
+      )
+    )
+  } else if (type == "chromatography") {
+    table_name <- "chromatography_descriptions"
+    values <- c(
+      values,
+      
+    )
+    table_name = "chromatography_descriptions"
+  }
   res <- try(
     build_db_action(
       action = "insert",
       table_name = type,
       db_conn = con,
-      values = obj
+      values = values
     )
   )
   if (class(res) == "try-error") {
@@ -646,7 +668,7 @@ resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required
                             ifelse(length(required > 1), "are", "is")))
     stop()
   }
-  stopifnot(check_for_value(ms_method_id, "ms_methods", "id")$exists)
+  stopifnot(check_for_value(ms_method_id, "ms_methods", "id", db_conn = db_conn)$exists)
   values <- tmp %>%
     mutate(ms_methods_id = ms_method_id) %>%
     relocate(ms_methods_id, .before = everything())
@@ -681,18 +703,11 @@ resolve_qc_data <- function(obj, sample_id, db_conn = con) {
     stopifnot(arg_check$valid)
   }
   # Check connection
-  stopifnot(active_connection(db_conn))
   # Sanity check that sample_id exists
-  valid_sample_id <- check_for_value(sample_id, "samples", "id", db_conn = db_conn)
-  if (!valid_sample_id$exists) {
-    msg <- sprintf("Sample ID '%s' does not exist.", sample_id)
-    if (exists("log_it") && LOGGING_ON) {
-      log_it("error", msg)
-    } else {
-      cat("\n", msg, "\n")
-    }
-    stop()
-  }
+  stopifnot(
+    active_connection(db_conn),
+    check_for_value(sample_id, "samples", "id", db_conn = db_conn)$exists
+  )
   values <- lapply(obj,
                    function(x) {
                      x %>%
