@@ -1611,15 +1611,19 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...)
   required   <- table_cols %>%
     filter(notnull == 1, name != "id") %>%
     pull(name)
+  need_unique <- table_cols %>%
+    filter(unique) %>%
+    pull(name)
   needed     <- needed[!needed %in% names(new_values)]
   if (length(needed) > 0) {
     msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
     if (interactive()) {
       if (exists("log_it")) {
         log_it("warn",
-               sprintf("add_normalization_value: %s Please provide the following values to continue. You provided '%s' as the initial value.",
+               sprintf("add_normalization_value: %s Please provide the following values to continue. You provided '%s' as the initial value for '%s' but this can be overridden here.",
                        msg,
-                       new_values$provided
+                       new_values[1],
+                       names(new_values[1])
                ),
                log_ns
         )
@@ -1643,25 +1647,40 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...)
               )
             }
           }
-          while (
-            all(
-              need_this %in% required,
-              any(new_value == "",
-                  is.null(new_value),
-                  is.na(new_value))
-            )
-          ) {
-            new_value <- readline(
-              sprintf("%s (required): ", ifelse(need_this %in% c("orcid"), toupper(need_this), need_this))
-            )
-          }
-          while (all(
-            need_this == "orcid",
-            new_value != "",
-            !str_detect(new_value, "[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]"))
-          ) {
-            log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
-            new_value <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
+          meets_unique <- FALSE
+          while (!meets_unique) {
+            while (
+              all(
+                need_this %in% required,
+                any(new_value == "",
+                    is.null(new_value),
+                    is.na(new_value))
+              )
+            ) {
+              new_value <- readline(
+                sprintf("%s (required): ", ifelse(need_this %in% c("orcid"), toupper(need_this), need_this))
+              )
+            }
+            while (all(
+              need_this == "orcid",
+              new_value != "",
+              !str_detect(new_value, "[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]"))
+            ) {
+              log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
+              new_value <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
+            }
+            if (need_this %in% need_unique) {
+              meets_unique <- !check_for_value(new_value, db_table, need_this)$exists
+              if (!meets_unique) {
+                log_it("warn", glue::glue("That {need_this} is already taken. Please provide a unique value."))
+                new_value <- ""
+              }
+            } else {
+              meets_unique <- TRUE
+            }
+            if (new_value == "") {
+              new_value = table_cols$dflt_value[table_cols$name == need_this]
+            } 
           }
           new_values <- c(
             new_values,
@@ -1750,8 +1769,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
         db_column      = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
         db_conn        = list(c("length", 1))
-      ),
-      from_fn = "check_for_value"
+      )
     )
     stopifnot(arg_check$valid)
   }
@@ -1834,9 +1852,10 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
                       ))
       )
     } else {
-      stop("Non interactive session. ", msg)
+      stop("Non-interactive session. ", msg)
     }
   }
+  chosen_value <- setNames(chosen_value, select_from)
   if (exists("log_it")) log_fn("end")
   return(chosen_value)
 }
@@ -1887,8 +1906,30 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
     )
     stopifnot(arg_check$valid)
   }
-  check <- dbReadTable(db_conn, db_table) %>%
-    filter(if_any(everything(), .fns = ~.x == this_value))
+  this_id <- integer(0)
+  if (!case_sensitive) {
+    table_fields <- dbListFields(db_conn, db_table)
+    check <- lapply(table_fields,
+                    function(x) {
+                      if (x != "id") {
+                        tmp <- check_for_value(
+                          values = this_value,
+                          db_table = db_table,
+                          db_column = x,
+                          case_sensitive = case_sensitive)
+                        if (tmp$exists) {
+                          tmp$values
+                        } else {
+                          NULL
+                        }
+                      }
+                    })
+    check <- check[-which(sapply(check, is.null))] %>%
+      bind_rows()
+  } else {
+    check <- dbReadTable(db_conn, db_table) %>%
+      filter(if_any(everything(), .fns = ~ this_value %in% .x))
+  }
   if ("id" %in% names(check)) {
     this_id <- check$id
   }
@@ -1916,12 +1957,11 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
           return(invisible(NULL))
         }
       } else if (str_detect(this_selection, "\\(New\\) ")) {
-        this_selection <- str_remove(this_selection, "\\(New\\) ")
-        to_add <- c(
-          db_table = db_table,
-          provided = this_selection,
-          list(...),
-          db_conn  = db_conn
+        this_selection <- sapply(this_selection, str_remove, "\\(New\\) ")
+        kwargs <- append(this_selection, list(...))
+        to_add <- append(
+          kwargs,
+          c(db_table = db_table, db_conn  = db_conn)
         )
         this_id <- do.call(add_normalization_value, to_add)
       } else {
