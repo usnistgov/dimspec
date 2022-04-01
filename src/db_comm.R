@@ -61,6 +61,19 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
                 function(x) {
                   tmp <- dbGetQuery(db_conn, sprintf(func, x))
                   tmp$table_name <- x
+                  unique_constraints <- dbGetQuery(con, sprintf("pragma index_list('%s')", x)) %>%
+                    filter(unique == 1) %>%
+                    pull(name)
+                  if (length(unique_constraints) > 0) {
+                    unique_constraints <- lapply(unique_constraints,
+                           function(x) {
+                             dbGetQuery(con, sprintf("pragma index_info('%s')", x))
+                           }) %>%
+                      bind_rows() %>%
+                      pull(name)
+                  }
+                  tmp <- tmp %>%
+                    mutate(unique = name %in% unique_constraints)
                   return(tmp)
                 }
   )
@@ -79,7 +92,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
     }
   } else {
     out <- dplyr::bind_rows(out) %>%
-      dplyr::select(cid, table_name, name:pk)
+      dplyr::select(cid, table_name, name:unique)
   }
   if (exists("log_it")) log_fn("end")
   # Return data frame object representing SQLite db_table schema(s)
@@ -1551,14 +1564,17 @@ active_connection <- function(db_conn = con) {
 #' something like [lapply].
 #'
 #' @param db_table CHR scalar of the normalization table's name
-#' @param ... Values to add to the table. All values must be named.
 #' @param db_conn connection object (default "con")
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: "db")
+#' @param ... CHR vector of additional named arguments to be added; names not
+#'   appearing in the referenced table will be ignored
 #'
 #' @return NULL if unable to add the values, INT scalar of the new ID otherwise
 #' @export
 #'
 #' @examples
-add_normalization_value <- function(db_table, ..., db_conn = con) {
+add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...) {
   if (exists("log_it")) log_fn("start")
   new_values <- list(...)
   if (length(names(new_values)) != length(new_values)) {
@@ -1567,11 +1583,11 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(db_table, db_conn, log_ns),
       conditions = list(
-        new_values  = list(c("mode", "list"), c("n>=", 1)),
         db_table    = list(c("mode", "character"), c("length", 1)),
-        db_conn     = list(c("length", 1))
+        db_conn     = list(c("length", 1)),
+        log_ns      = list(c("mode", "character"), c("length", 1))
       )
     )
     if (!arg_check$valid) {
@@ -1593,21 +1609,19 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
     filter(name != "id") %>%
     pull(name)
   required   <- table_cols %>%
-    filter(notnull == 1) %>%
+    filter(notnull == 1, name != "id") %>%
     pull(name)
-  new_values <- new_values[which(names(new_values) %in% needed)]
-  if (!all(needed %in% names(new_values))) {
+  needed     <- needed[!needed %in% names(new_values)]
+  if (length(needed) > 0) {
     msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
     if (interactive()) {
       if (exists("log_it")) {
         log_it("warn",
-               sprintf("%s Please provide the following values associated with %s to continue.",
+               sprintf("add_normalization_value: %s Please provide the following values to continue. You provided '%s' as the initial value.",
                        msg,
-                       format_list_of_names(
-                         sprintf('"%s = %s"', names(new_values), unlist(new_values))
-                       )
+                       new_values$provided
                ),
-               "db"
+               log_ns
         )
       }
       for (need_this in needed) {
@@ -1632,14 +1646,22 @@ add_normalization_value <- function(db_table, ..., db_conn = con) {
           while (
             all(
               need_this %in% required,
-              any(need_this == "",
-                  is.null(need_this),
-                  is.na(need_this))
+              any(new_value == "",
+                  is.null(new_value),
+                  is.na(new_value))
             )
           ) {
             new_value <- readline(
-              sprintf("%s: ", need_this)
+              sprintf("%s (required): ", ifelse(need_this %in% c("orcid"), toupper(need_this), need_this))
             )
+          }
+          while (all(
+            need_this == "orcid",
+            new_value != "",
+            !str_detect(new_value, "[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]"))
+          ) {
+            log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
+            new_value <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
           }
           new_values <- c(
             new_values,
@@ -1754,8 +1776,6 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 #'
 #' @param values CHR vector of possible values
 #' @param search_value CHR scalar of the value to search
-#' @param db_table CHR scalar of the table (for printing purposes only)
-#'   (default: "")
 #'
 #' @return CHR scalar result of the user's choice
 #' @export
@@ -1771,30 +1791,50 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
         values       = list(c("n>=", 0)),
         search_value = list(c("length", 1)),
         db_table     = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn = "resolve_multiple_values"
+      )
     )
     stopifnot(arg_check$valid)
   }
   present  <- any(grepl(search_value, values))
-  only_one <- sum(values %in% search_value) == 1
+  if (is.vector(values)) {
+    only_one <- sum(values %in% search_value) == 1
+  } else if (is.data.frame(values)) {
+    only_one <- values %>%
+      filter(if_any(everything(), .fns = ~ . == search_value)) %>%
+      nrow() == 1
+  }
   if (present && only_one) {
     chosen_value <- search_value
   } else {
-    if (length(values) %in% c(0, 1)) {
-      values <- c("(Abort)", sprintf("(New) %s", search_value), values)
-      msg <- sprintf('\n%s values directly matching "%s" were identified%s.',
-                     ifelse(all(present, !only_one), "Multiple", "No"),
-                     search_value,
-                     ifelse(db_table == "",
-                            "",
-                            sprintf(' in table "%s"', db_table))
+    if (is.data.frame(values)) {
+      print(values)
+      i <- ifelse("id" %in% names(values), which(names(values) == "id") + 1, 1)
+      select_from <- names(values)[i]
+      select_vals <- values[, i]
+    } else {
+      select_vals <- values
+    }
+    select_vals <- c("(Abort)", sprintf("(New) %s", search_value), select_vals)
+    msg <- sprintf('\n%s values directly matching "%s" were identified%s.',
+                   ifelse(all(present, !only_one), "Multiple", "No"),
+                   search_value,
+                   ifelse(db_table == "",
+                          "",
+                          sprintf(' in table "%s"', db_table))
+    )
+    if (interactive()) {
+      values
+      chosen_value <- select.list(
+        select_vals,
+        title = paste(msg,
+                      sprintf("Please select a number to match with a value%s to associate with that record, (Abort) to abort this operation, or (New) to add this value to the normalization table.",
+                              ifelse(is.data.frame(values),
+                                     sprintf(" from the table above in the '%s' column", select_from),
+                                     "")
+                      ))
       )
-      if (interactive()) {
-        chosen_value <- select.list(values, title = paste(msg, "Please select one."))
-      } else {
-        stop(msg)
-      }
+    } else {
+      stop("Non interactive session. ", msg)
     }
   }
   if (exists("log_it")) log_fn("end")
@@ -1822,61 +1862,75 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
 #' @param case_sensitive LGL scalar of whether or not to match case exactly
 #'   (TRUE) or to search all case manipulations (FALSE) (default: FALSE)
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: "db")
 #' @param ... other values to add to the normalization table, where names must
 #'   match the table schema
 #'
 #' @return
 #' @export
 #' 
-resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, ...) {
+resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, log_ns = "db", ...) {
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
-  fields <- dbListFields(conn = db_conn, db_table)
-  this_id <- integer(0)
-  for (field in fields) {
-    if (length(this_id) == 0) {
-      tmp <- check_for_value(this_value, db_table, field, case_sensitive, db_conn)
-      if (tmp$exists) {
-        this_id <- tmp$values$id
-      }
-    }
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(this_value, db_table, case_sensitive, log_ns),
+      conditions = list(
+        this_value     = list(c("mode", "character"), c("length", 1)),
+        db_table       = list(c("mode", "character"), c("length", 1)),
+        case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        log_ns         = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  check <- dbReadTable(db_conn, db_table) %>%
+    filter(if_any(everything(), .fns = ~.x == this_value))
+  if ("id" %in% names(check)) {
+    this_id <- check$id
   }
   if (!length(this_id) == 1) {
     if (interactive()) {
       if (length(this_id) == 0) {
-        tmp$values <- build_db_action("select", db_table)
+        tmp <- build_db_action("select", db_table)
       }
       if ("id" %in% names(tmp$values)) {
-        tmp$values <- tmp$values %>%
+        tmp <- tmp %>%
           select(-id)
       } else {
-        tmp$values <- tmp$values[, -1]
+        tmp <- tmp[, -1]
       }
-      these_choices <- tmp$values %>%
-        unite(choices, everything(), sep = " - ") %>%
-        pull(choices)
+      these_choices <- tmp
       if (length(these_choices) == 0) {
         this_selection <- paste("(New)", this_value)
       } else {
         this_selection <- resolve_multiple_values(these_choices, this_value, db_table = db_table)
       }
-      if (str_detect(this_selection, "\\(New\\) ")) {
+      if (str_detect(this_selection, "\\(Abort\\)")) {
+        msg <- glue::glue("Normalization check for '{this_value}' in table '{db_table}' aborted by user.") 
+        if (exists("log_it")) {
+          log_it("info", msg, log_ns)
+          return(invisible(NULL))
+        }
+      } else if (str_detect(this_selection, "\\(New\\) ")) {
         this_selection <- str_remove(this_selection, "\\(New\\) ")
         to_add <- c(
           db_table = db_table,
-          name = this_selection,
+          provided = this_selection,
           list(...),
-          db_conn = db_conn
+          db_conn  = db_conn
         )
         this_id <- do.call(add_normalization_value, to_add)
       } else {
-        this_id <- build_db_action("get_id", db_table, match_criteria = to_add)
+        this_id <- build_db_action("get_id", db_table, match_criteria = this_selection)
       }
     } else {
       msg <- glue('Multiple entries in "{db_table}" match value "{this_value}')
       if (exists("log_it"))  {
-        log_it("error", msg, "db")
+        log_it("error", msg, log_ns)
       } else {
         cat("ERROR", msg, "\n")
       }
@@ -1928,465 +1982,465 @@ ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_r
 
 # Operation specific functions -------------------------------------------------
 
-#' Add a contributor programmatically or interactively. If values are fed to all
-#' parameters then the user will be added automatically.
-#'
-#' @param user_value CHR scalar primarily used for programmatic use of this
-#'   function, indicating the original value provided by a user interface (e.g.
-#'   shiny or from another function). This is used only to provide an
-#'   interactive prompt to show the user what value was initially fed into this
-#'   function. (default "")
-#' @param username CHR scalar of the desired username (default "")
-#' @param contact CHR scalar of the contributor's contact point (default "")
-#' @param first_name CHR scalar of the contributor's first name (default "")
-#' @param last_name CHR scalar of the contributor's last name (default "")
-#' @param affiliation CHR scalar of the contributor's affiliation (default "")
-#' @param orcid CHR scalar of the contributor's ORCID (default ""), which must
-#'   match the valid ORCID pattern of four sets of four alphanumeric characters
-#'   separated by dashes (e.g. "1111-2222-3333-4444")
-#' @param db_conn connection object (default: con)
-#'
-#' @return
-#' @export
-#'
-#' @examples
-add_contributor <- function(user_value  = "",
-                            username    = "",
-                            contact     = "",
-                            first_name  = "",
-                            last_name   = "",
-                            affiliation = "",
-                            orcid       = "",
-                            db_conn     = con) {
-  if (exists("log_it")) {
-    log_fn("start", "db")
-  }
-  # Argument validation relies on verify_args
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = as.list(environment()),
-      conditions = list(
-        user_value  = list(c("mode", "character"), c("length", 1)),
-        username    = list(c("mode", "character"), c("length", 1)),
-        contact     = list(c("mode", "character"), c("length", 1)),
-        first_name  = list(c("mode", "character"), c("length", 1)),
-        last_name   = list(c("mode", "character"), c("length", 1)),
-        affiliation = list(c("mode", "character"), c("length", 1)),
-        orcid       = list(c("mode", "character"), c("length", 1)),
-        db_conn     = list(c("length", 1))
-      ),
-      from_fn = "add_contributor"
-    )
-    stopifnot(arg_check$valid)
-  }
-  # Check connection
-  stopifnot(active_connection(db_conn))
-  if (interactive()) {
-    cat(
-      sprintf(
-        'Would you like to add a user now?%s\n',
-        ifelse(user_value == "",
-               "",
-               sprintf(' The value provided was "%s".',
-                       user_value)
-        )
-      )
-    )
-    if (menu(c("Yes", "No")) != 1) {
-      cat("You can always add a user later.\n")
-      return(NULL)
-    }
-    while (username == "") username <- readline("Username (required): ")
-    while (check_for_value(username, "contributors", "username")$exists) {
-      cat("That username is already taken. Please select another.")
-      username <- readline("Username (required): ")
-    }
-    while (contact == "") {
-      contact     <- readline("Contact (email preferred, required): ")
-      if (str_detect(contact, ";|delete|select|alter|drop|update")) {
-        cat("Contact information may not include semicolons or database verbs (e.g. select, alter, etc.).")
-        contact   <- ""
-      }
-    }
-    while (first_name == "")  first_name  <- readline("First Name (required): ")
-    while (last_name == "")   last_name   <- readline("Last Name (required): ")
-    while (affiliation == "") affiliation <- readline("Affiliation (required): ")
-    this_affiliation <- check_for_value(affiliation, "affiliations", "name", case_sensitive = FALSE)
-    if (this_affiliation$exists) {
-      affiliation <- this_affiliation$values$id
-    }
-    if (orcid == "")       orcid       <- readline("ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ")
-    while (all(!grepl("^([0-9]{4}-){3}[0-9]{3}[0-9X]$", orcid),
-               nchar(orcid) > 1)) {
-      log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
-      orcid <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
-    }
-  } else {
-    unfilled <- c(
-      username    = username,
-      contact     = contact,
-      first_name  = first_name,
-      last_name   = last_name,
-      affiliation = affiliation
-    )
-    if (any(unfilled == "")) {
-      msg <- sprintf('Values must be provided for all required fields (%s were not provided).',
-                     format_list_of_names(names(unfilled)[unfilled == ""])
-      )
-      if (exists("log_it")) {
-        log_it("error", msg, "db")
-      } else {
-        cat("ERROR", msg, "\n")
-      }
-      return(NULL)
-    }
-  }
-  if (
-    any(
-      is.null(orcid),
-      is.na(orcid),
-      orcid %in% c("", "null", "NULL", "NA")
-    )
-  ) {orcid <- "null"}
-  build_db_action(
-    action     = "INSERT",
-    table_name = "contributors",
-    db_conn       = db_conn,
-    values     = c(
-      username    = username,
-      contact     = contact,
-      first_name  = first_name,
-      last_name   = last_name,
-      affiliation = affiliation,
-      orcid       = orcid
-    )
-  )
-  user_id <- build_db_action(
-    action         = "GET_ID",
-    table_name     = "contributors",
-    db_conn           = db_conn,
-    match_criteria = list(username = username)
-  )
-  if (exists("log_it")) log_fn("end")
-  return(user_id)
-}
+#' #' Add a contributor programmatically or interactively. If values are fed to all
+#' #' parameters then the user will be added automatically.
+#' #'
+#' #' @param user_value CHR scalar primarily used for programmatic use of this
+#' #'   function, indicating the original value provided by a user interface (e.g.
+#' #'   shiny or from another function). This is used only to provide an
+#' #'   interactive prompt to show the user what value was initially fed into this
+#' #'   function. (default "")
+#' #' @param username CHR scalar of the desired username (default "")
+#' #' @param contact CHR scalar of the contributor's contact point (default "")
+#' #' @param first_name CHR scalar of the contributor's first name (default "")
+#' #' @param last_name CHR scalar of the contributor's last name (default "")
+#' #' @param affiliation CHR scalar of the contributor's affiliation (default "")
+#' #' @param orcid CHR scalar of the contributor's ORCID (default ""), which must
+#' #'   match the valid ORCID pattern of four sets of four alphanumeric characters
+#' #'   separated by dashes (e.g. "1111-2222-3333-4444")
+#' #' @param db_conn connection object (default: con)
+#' #'
+#' #' @return
+#' #' @export
+#' #'
+#' #' @examples
+#' add_contributor <- function(user_value  = "",
+#'                             username    = "",
+#'                             contact     = "",
+#'                             first_name  = "",
+#'                             last_name   = "",
+#'                             affiliation = "",
+#'                             orcid       = "",
+#'                             db_conn     = con) {
+#'   if (exists("log_it")) {
+#'     log_fn("start", "db")
+#'   }
+#'   # Argument validation relies on verify_args
+#'   if (exists("verify_args")) {
+#'     arg_check <- verify_args(
+#'       args       = as.list(environment()),
+#'       conditions = list(
+#'         user_value  = list(c("mode", "character"), c("length", 1)),
+#'         username    = list(c("mode", "character"), c("length", 1)),
+#'         contact     = list(c("mode", "character"), c("length", 1)),
+#'         first_name  = list(c("mode", "character"), c("length", 1)),
+#'         last_name   = list(c("mode", "character"), c("length", 1)),
+#'         affiliation = list(c("mode", "character"), c("length", 1)),
+#'         orcid       = list(c("mode", "character"), c("length", 1)),
+#'         db_conn     = list(c("length", 1))
+#'       ),
+#'       from_fn = "add_contributor"
+#'     )
+#'     stopifnot(arg_check$valid)
+#'   }
+#'   # Check connection
+#'   stopifnot(active_connection(db_conn))
+#'   if (interactive()) {
+#'     cat(
+#'       sprintf(
+#'         'Would you like to add a user now?%s\n',
+#'         ifelse(user_value == "",
+#'                "",
+#'                sprintf(' The value provided was "%s".',
+#'                        user_value)
+#'         )
+#'       )
+#'     )
+#'     if (menu(c("Yes", "No")) != 1) {
+#'       cat("You can always add a user later.\n")
+#'       return(NULL)
+#'     }
+#'     while (username == "") username <- readline("Username (required): ")
+#'     while (check_for_value(username, "contributors", "username")$exists) {
+#'       cat("That username is already taken. Please select another.")
+#'       username <- readline("Username (required): ")
+#'     }
+#'     while (contact == "") {
+#'       contact     <- readline("Contact (email preferred, required): ")
+#'       if (str_detect(contact, ";|delete|select|alter|drop|update")) {
+#'         cat("Contact information may not include semicolons or database verbs (e.g. select, alter, etc.).")
+#'         contact   <- ""
+#'       }
+#'     }
+#'     while (first_name == "")  first_name  <- readline("First Name (required): ")
+#'     while (last_name == "")   last_name   <- readline("Last Name (required): ")
+#'     while (affiliation == "") affiliation <- readline("Affiliation (required): ")
+#'     this_affiliation <- check_for_value(affiliation, "affiliations", "name", case_sensitive = FALSE)
+#'     if (this_affiliation$exists) {
+#'       affiliation <- this_affiliation$values$id
+#'     }
+#'     if (orcid == "")       orcid       <- readline("ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ")
+#'     while (all(!grepl("^([0-9]{4}-){3}[0-9]{3}[0-9X]$", orcid),
+#'                nchar(orcid) > 1)) {
+#'       log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
+#'       orcid <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
+#'     }
+#'   } else {
+#'     unfilled <- c(
+#'       username    = username,
+#'       contact     = contact,
+#'       first_name  = first_name,
+#'       last_name   = last_name,
+#'       affiliation = affiliation
+#'     )
+#'     if (any(unfilled == "")) {
+#'       msg <- sprintf('Values must be provided for all required fields (%s were not provided).',
+#'                      format_list_of_names(names(unfilled)[unfilled == ""])
+#'       )
+#'       if (exists("log_it")) {
+#'         log_it("error", msg, "db")
+#'       } else {
+#'         cat("ERROR", msg, "\n")
+#'       }
+#'       return(NULL)
+#'     }
+#'   }
+#'   if (
+#'     any(
+#'       is.null(orcid),
+#'       is.na(orcid),
+#'       orcid %in% c("", "null", "NULL", "NA")
+#'     )
+#'   ) {orcid <- "null"}
+#'   build_db_action(
+#'     action     = "INSERT",
+#'     table_name = "contributors",
+#'     db_conn       = db_conn,
+#'     values     = c(
+#'       username    = username,
+#'       contact     = contact,
+#'       first_name  = first_name,
+#'       last_name   = last_name,
+#'       affiliation = affiliation,
+#'       orcid       = orcid
+#'     )
+#'   )
+#'   user_id <- build_db_action(
+#'     action         = "GET_ID",
+#'     table_name     = "contributors",
+#'     db_conn           = db_conn,
+#'     match_criteria = list(username = username)
+#'   )
+#'   if (exists("log_it")) log_fn("end")
+#'   return(user_id)
+#' }
 
-#' Verify a sample class exists, and add it if needed
-#'
-#' This utility function leverages [add_normalization_value] for the
-#' "norm_sample_classes" table to verify and add, if necessary, a sample class
-#' name or ID. If an integer is provided, it is verified against existing IDs.
-#' If a character scalar is provided it is checked against the sample class
-#' names and the associated ID number is returned.
-#'
-#' If used in an interactive mode, the user has the option of selecting an
-#' existing sample class, aborting, or creating a new entry with the value of
-#' parameter `sample_class`.
-#'
-#' If used non-interactively, new classes can be added automatically by setting
-#' `auto_add` to TRUE and using the associated sample class ID downstream. Note
-#' this may cause disconnections if typos are introduced (e.g. "plasma" vs
-#' "plamsa").
-#'
-#' @param sample_class CHR or NUM scalar of the sample class name or ID
-#' @param db_conn connection object (default "con")
-#' @param auto_add LGL scalar of whether to automatically add an entry for
-#'   `sample_class` as provided if it does not exist (use with caution: default
-#'   FALSE)
-#'
-#' @return NULL if no action is taken, or the new sample class ID
-#' @export
-#'
-#' @examples
-verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
-  logger <- exists("log_it")
-  if (logger) {
-    log_fn("start")
-    log_it("debug", "Run verify_sample_class().", "db")
-  }
-  # Argument validation relies on verify_args
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = list(sample_class, db_conn, auto_add),
-      conditions = list(
-        sample_class = list(c("length", 1)),
-        db_conn      = list(c("length", 1)),
-        auto_add     = list(c("mode", "logical"), c("length", 1))
-      )
-    )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
-  }
-  # Check connection
-  stopifnot(active_connection(db_conn))
-  sample_classes <- check_for_value(sample_class, "norm_sample_classes", "name", case_sensitive = FALSE)
-  if (sample_classes$exists) {
-    sample_class <- sample_classes$values$id
-    sample_classes <- sample_classes$values
-  } else {
-    sample_classes <- tbl(db_conn, "norm_sample_classes") %>% collect()
-  }
-  if (is.numeric(sample_class)) {
-    if (sample_class %in% sample_classes$id) {
-      sample_class_id <- sample_class
-      msg <- sprintf('Sample class "%s" identified from provided integer "%s".',
-                     sample_classes$name[sample_classes$id == sample_class],
-                     sample_class)
-      if (logger) {
-        log_it("info", msg, "db")
-      } else {
-        cat("INFO", msg, "\n")
-      }
-    } else {
-      sample_class_id <- NULL
-      msg <- sprintf('No sample class with ID = "%s" currently exists.',
-                     sample_class)
-      if (logger) {
-        log_it("warn", msg, "db")
-      } else {
-        cat("WARN", msg, "\n")
-      }
-    }
-  } else if (is.character(sample_class)) {
-    if (sample_class %in% sample_classes$name) {
-      sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
-      msg <- sprintf('Sample class id "%s" identified from direct name match to "%s".',
-                              sample_class_id,
-                              sample_class)
-      if (logger) {
-        log_it("info", msg, "db")
-      } else {
-        cat("INFO", msg, "\n")
-      }
-    } else {
-      sample_class_id <- NULL
-      msg <- sprintf('No sample class with name "%s" currently exists.',
-                             sample_class)
-      if (logger) {
-        log_it("info", msg, "db")
-      } else {
-        cat("INFO", msg, "\n")
-      }
-      if (interactive()) {
-        new_flag <- "\\(New\\) "
-        msg <- 'Cannot automatically identify a sample class. Selecting a sample class interactively.'
-        if (logger) {
-          log_it("info", msg, "db")
-        } else {
-          cat("INFO", msg, "\n")
-        }
-        create_it  <- resolve_multiple_values(sample_classes$name, sample_class)
-        if (str_detect(create_it, new_flag)) {
-          create_it <- str_remove(create_it, new_flag)
-          if (create_it != tolower(create_it)) {
-            enter_as_lower <- select.list(title = "Standardize spelling to lower case?", choices = c("Yes", "No"))
-            if (enter_as_lower == "Yes") {
-              create_it <- str_to_lower(create_it)
-            }
-          }
-          sample_class_id <- try(
-            add_normalization_value("norm_sample_classes", name = create_it)
-          )
-          if (class(sample_class_id) == "try-error") {
-            sample_class_id <- NULL
-            msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
-                           create_it)
-            if (logger) {
-              log_it("error", msg, "db")
-            } else {
-              cat("ERROR", msg, "\n")
-            }
-          } else {
-            msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
-                           create_it)
-            if (logger) {
-              log_it("success", msg, "db")
-            } else {
-              cat("SUCCESS", msg, "\n")
-            }
-          }
-        } else if (create_it == "(Abort)") {
-          sample_class_id <- NULL
-          msg <- 'Sample class selection aborted.'
-          if (logger) {
-            log_it("info", msg, "db")
-          } else {
-            cat("INFO", msg, "\n")
-          }
-        } else {
-          sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
-        }
-      } else {
-        if (auto_add) {
-          sample_class_id <- try(add_normalization_value("norm_sample_classes", sample_class))
-          if (class(sample_class_id) == "try-error") {
-            sample_class_id <- NULL
-            msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
-                           sample_class)
-            if (logger) {
-              log_it("error", msg, "db")
-            } else {
-              cat("ERROR", msg, "\n")
-            }
-          } else {
-            msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
-                           sample_class)
-            if (logger) {
-              log_it("success", msg, "db")
-            } else {
-              cat("SUCCESS", msg, "\n")
-            }
-          }
-        } else {
-          sample_class_id <- NULL
-          msg <- 'No new sample class added because "auto_add" is FALSE.'
-          if (logger) {
-            log_it("info", msg, "db")
-          } else {
-            cat("INFO", msg, "\n")
-          }
-        }
-      }
-    }
-  } else {
-    msg <- sprintf('Only character or numeric types are accepted for parameter "sample_class".')
-    if (logger) {
-      log_it("error", msg, "db")
-    } else {
-      cat("ERROR", msg, "\n")
-    }
-    sample_class_id <- NULL
-  }
-  if (logger) log_fn("end")
-  return(sample_class_id)
-}
+#' #' Verify a sample class exists, and add it if needed
+#' #'
+#' #' This utility function leverages [add_normalization_value] for the
+#' #' "norm_sample_classes" table to verify and add, if necessary, a sample class
+#' #' name or ID. If an integer is provided, it is verified against existing IDs.
+#' #' If a character scalar is provided it is checked against the sample class
+#' #' names and the associated ID number is returned.
+#' #'
+#' #' If used in an interactive mode, the user has the option of selecting an
+#' #' existing sample class, aborting, or creating a new entry with the value of
+#' #' parameter `sample_class`.
+#' #'
+#' #' If used non-interactively, new classes can be added automatically by setting
+#' #' `auto_add` to TRUE and using the associated sample class ID downstream. Note
+#' #' this may cause disconnections if typos are introduced (e.g. "plasma" vs
+#' #' "plamsa").
+#' #'
+#' #' @param sample_class CHR or NUM scalar of the sample class name or ID
+#' #' @param db_conn connection object (default "con")
+#' #' @param auto_add LGL scalar of whether to automatically add an entry for
+#' #'   `sample_class` as provided if it does not exist (use with caution: default
+#' #'   FALSE)
+#' #'
+#' #' @return NULL if no action is taken, or the new sample class ID
+#' #' @export
+#' #'
+#' #' @examples
+#' verify_sample_class <- function(sample_class, db_conn = con, auto_add = FALSE) {
+#'   logger <- exists("log_it")
+#'   if (logger) {
+#'     log_fn("start")
+#'     log_it("debug", "Run verify_sample_class().", "db")
+#'   }
+#'   # Argument validation relies on verify_args
+#'   if (exists("verify_args")) {
+#'     arg_check <- verify_args(
+#'       args       = list(sample_class, db_conn, auto_add),
+#'       conditions = list(
+#'         sample_class = list(c("length", 1)),
+#'         db_conn      = list(c("length", 1)),
+#'         auto_add     = list(c("mode", "logical"), c("length", 1))
+#'       )
+#'     )
+#'     if (!arg_check$valid) {
+#'       stop(cat(paste0(arg_check$messages, collapse = "\n")))
+#'     }
+#'   }
+#'   # Check connection
+#'   stopifnot(active_connection(db_conn))
+#'   sample_classes <- check_for_value(sample_class, "norm_sample_classes", "name", case_sensitive = FALSE)
+#'   if (sample_classes$exists) {
+#'     sample_class <- sample_classes$values$id
+#'     sample_classes <- sample_classes$values
+#'   } else {
+#'     sample_classes <- tbl(db_conn, "norm_sample_classes") %>% collect()
+#'   }
+#'   if (is.numeric(sample_class)) {
+#'     if (sample_class %in% sample_classes$id) {
+#'       sample_class_id <- sample_class
+#'       msg <- sprintf('Sample class "%s" identified from provided integer "%s".',
+#'                      sample_classes$name[sample_classes$id == sample_class],
+#'                      sample_class)
+#'       if (logger) {
+#'         log_it("info", msg, "db")
+#'       } else {
+#'         cat("INFO", msg, "\n")
+#'       }
+#'     } else {
+#'       sample_class_id <- NULL
+#'       msg <- sprintf('No sample class with ID = "%s" currently exists.',
+#'                      sample_class)
+#'       if (logger) {
+#'         log_it("warn", msg, "db")
+#'       } else {
+#'         cat("WARN", msg, "\n")
+#'       }
+#'     }
+#'   } else if (is.character(sample_class)) {
+#'     if (sample_class %in% sample_classes$name) {
+#'       sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
+#'       msg <- sprintf('Sample class id "%s" identified from direct name match to "%s".',
+#'                               sample_class_id,
+#'                               sample_class)
+#'       if (logger) {
+#'         log_it("info", msg, "db")
+#'       } else {
+#'         cat("INFO", msg, "\n")
+#'       }
+#'     } else {
+#'       sample_class_id <- NULL
+#'       msg <- sprintf('No sample class with name "%s" currently exists.',
+#'                              sample_class)
+#'       if (logger) {
+#'         log_it("info", msg, "db")
+#'       } else {
+#'         cat("INFO", msg, "\n")
+#'       }
+#'       if (interactive()) {
+#'         new_flag <- "\\(New\\) "
+#'         msg <- 'Cannot automatically identify a sample class. Selecting a sample class interactively.'
+#'         if (logger) {
+#'           log_it("info", msg, "db")
+#'         } else {
+#'           cat("INFO", msg, "\n")
+#'         }
+#'         create_it  <- resolve_multiple_values(sample_classes$name, sample_class)
+#'         if (str_detect(create_it, new_flag)) {
+#'           create_it <- str_remove(create_it, new_flag)
+#'           if (create_it != tolower(create_it)) {
+#'             enter_as_lower <- select.list(title = "Standardize spelling to lower case?", choices = c("Yes", "No"))
+#'             if (enter_as_lower == "Yes") {
+#'               create_it <- str_to_lower(create_it)
+#'             }
+#'           }
+#'           sample_class_id <- try(
+#'             add_normalization_value("norm_sample_classes", name = create_it)
+#'           )
+#'           if (class(sample_class_id) == "try-error") {
+#'             sample_class_id <- NULL
+#'             msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+#'                            create_it)
+#'             if (logger) {
+#'               log_it("error", msg, "db")
+#'             } else {
+#'               cat("ERROR", msg, "\n")
+#'             }
+#'           } else {
+#'             msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+#'                            create_it)
+#'             if (logger) {
+#'               log_it("success", msg, "db")
+#'             } else {
+#'               cat("SUCCESS", msg, "\n")
+#'             }
+#'           }
+#'         } else if (create_it == "(Abort)") {
+#'           sample_class_id <- NULL
+#'           msg <- 'Sample class selection aborted.'
+#'           if (logger) {
+#'             log_it("info", msg, "db")
+#'           } else {
+#'             cat("INFO", msg, "\n")
+#'           }
+#'         } else {
+#'           sample_class_id <- sample_classes$id[sample_classes$name == sample_class]
+#'         }
+#'       } else {
+#'         if (auto_add) {
+#'           sample_class_id <- try(add_normalization_value("norm_sample_classes", sample_class))
+#'           if (class(sample_class_id) == "try-error") {
+#'             sample_class_id <- NULL
+#'             msg <- sprintf('Error adding normalization value "%s" to table "norm_sample_classes".',
+#'                            sample_class)
+#'             if (logger) {
+#'               log_it("error", msg, "db")
+#'             } else {
+#'               cat("ERROR", msg, "\n")
+#'             }
+#'           } else {
+#'             msg <- sprintf('Added "%s" as a normalization option to table "norm_sample_classes"',
+#'                            sample_class)
+#'             if (logger) {
+#'               log_it("success", msg, "db")
+#'             } else {
+#'               cat("SUCCESS", msg, "\n")
+#'             }
+#'           }
+#'         } else {
+#'           sample_class_id <- NULL
+#'           msg <- 'No new sample class added because "auto_add" is FALSE.'
+#'           if (logger) {
+#'             log_it("info", msg, "db")
+#'           } else {
+#'             cat("INFO", msg, "\n")
+#'           }
+#'         }
+#'       }
+#'     }
+#'   } else {
+#'     msg <- sprintf('Only character or numeric types are accepted for parameter "sample_class".')
+#'     if (logger) {
+#'       log_it("error", msg, "db")
+#'     } else {
+#'       cat("ERROR", msg, "\n")
+#'     }
+#'     sample_class_id <- NULL
+#'   }
+#'   if (logger) log_fn("end")
+#'   return(sample_class_id)
+#' }
 
-#' Title
-#'
-#' @param contributor_text 
-#' @param db_conn 
-#' @param ... 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-verify_contributor <- function(contributor_text, db_conn = con, ...) {
-  logger <- exists("log_it") && LOGGING_ON
-  if (logger) log_fn("start")
-  # Check connection
-  stopifnot(active_connection(db_conn))
-  # Check contributor - do not check for internal id number
-  # Prefer username
-  db_contributors  <- tbl(db_conn, "contributors")
-  contributor_properties <- c(list(...), user_value = contributor_text)
-  if (is.numeric(contributor_text) && contributor_text == as.integer(contributor_text)) {
-    contributor_exists <- check_for_value(contributor_text, "contributors", "id")$exists
-    possible_matches <- db_contributors %>%
-      filter(id == contributor_text) %>%
-      collect()
-  } else {
-    possible_matches <- db_contributors %>%
-      filter(username %in% contributor_text |
-               contact %in% contributor_text |
-               first_name %in% contributor_text |
-               last_name %in% contributor_text
-      ) %>%
-      collect()
-    contributor_exists <- nrow(possible_matches) > 0
-  }
-  if (!contributor_exists) {
-    msg <- sprintf('No contributor matching "%s" was located.', contributor_text)
-    if (logger) {
-      log_it("warn", msg, "db")
-    } else {
-      cat("WARN", msg, "\n")
-    }
-    if (interactive()) {
-      if (logger) log_it("trace", "Getting user information from an interactive session.")
-      if (db_contributors %>% collect() %>% nrow() > 0) {
-        associate_with <- select.list(
-          choices = c("Yes", "No"),
-          title = sprintf('Associate "%s" with a current user?', contributor_text)
-        ) == "Yes"
-      } else {
-        associate_with <- FALSE
-      }
-      new_user <- NULL
-      if (associate_with) {
-        cat("\nCurrent contributors:\n")
-        print(db_contributors)
-        cat("\n")
-        new_contrib_prompt <- "(Make new contributor)"
-        new_user <- select.list(
-          title = sprintf('Select a username (see the list above) or "%s" to add a contributor.', new_contrib_prompt),
-          choices = c(db_contributors %>% collect() %>% pull(username), "(Abort)", new_contrib_prompt)
-        )
-        if (new_user == "(Abort)") stop("Operation aborted.")
-        if (new_user == new_contrib_prompt) new_user <- NULL
-      }
-      if (is.null(new_user)) {
-        new_user <- do.call(add_contributor, contributor_properties)
-      }
-      if (is.null(new_user)) stop("Could not verify this user.")
-      if (is.character(new_user)) new_user <- verify_contributor(new_user)
-      return(new_user)
-    } else {
-      needed <- dbListFields(db_conn, "contributors")
-      needed <- needed[needed != "id"]
-      properties_present <- needed %in% names(contributor_properties)
-      if (all(properties_present)) {
-        do.call(add_contributor, contributor_properties)
-      } else {
-        stop(sprintf("Unable to automatically add contributor. Please provide contributor properties for %s as arguments to this function.",
-                     format_list_of_names(needed[!properties_present], add_quotes = TRUE)))
-      }
-    }
-  } else {
-    if (nrow(possible_matches) == 1) {
-      return(possible_matches$id[1])
-    } else {
-      if (interactive()) {
-        possibles <- possible_matches %>%
-          left_join(tbl(db_conn, "affiliations") %>% collect(),
-                    by = c("affiliation" = "id")) %>%
-          select(-affiliation) %>%
-          rename("affiliation" = "name") %>%
-          mutate(Contributor = sprintf("%s %s at %s from %s",
-                                       first_name,
-                                       last_name,
-                                       contact,
-                                       affiliation))
-        if (logger) {
-          log_it("info", "Multiple contributors found.")
-        } else {
-          cat("INFO", "Multiple contributors found.\n")
-        }
-        verified_match <- resolve_multiple_values(possibles$Contributor, contributor_text)
-        if (str_detect(verified_match, "\\(New\\) ")) {
-          make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
-          if (make_new == "Yes") {
-            id <- add_contributor(db_contributors, user_value = contributor_text)
-            return(id)
-          } else {
-            return("Create a contributor manually to proceed.")
-          }
-        } else {
-          return(possible_matches$id[which(possibles$Contributor == verified_match)])
-        }
-      } else {
-        msg <- "Non interactive session and multiple matches identified."
-        if (logger) {
-          log_it("trace", msg, "db")
-        } else {
-          cat("TRACE", msg, "\n")
-        }
-        stop("Unable to discretely identify a contributor. Please try again.")
-      }
-    }
-  }
-}
+#' #' Title
+#' #'
+#' #' @param contributor_text 
+#' #' @param db_conn 
+#' #' @param ... 
+#' #'
+#' #' @return
+#' #' @export
+#' #'
+#' #' @examples
+#' verify_contributor <- function(contributor_text, db_conn = con, ...) {
+#'   logger <- exists("log_it") && LOGGING_ON
+#'   if (logger) log_fn("start")
+#'   # Check connection
+#'   stopifnot(active_connection(db_conn))
+#'   # Check contributor - do not check for internal id number
+#'   # Prefer username
+#'   db_contributors  <- tbl(db_conn, "contributors")
+#'   contributor_properties <- c(list(...), user_value = contributor_text)
+#'   if (is.numeric(contributor_text) && contributor_text == as.integer(contributor_text)) {
+#'     contributor_exists <- check_for_value(contributor_text, "contributors", "id")$exists
+#'     possible_matches <- db_contributors %>%
+#'       filter(id == contributor_text) %>%
+#'       collect()
+#'   } else {
+#'     possible_matches <- db_contributors %>%
+#'       filter(username %in% contributor_text |
+#'                contact %in% contributor_text |
+#'                first_name %in% contributor_text |
+#'                last_name %in% contributor_text
+#'       ) %>%
+#'       collect()
+#'     contributor_exists <- nrow(possible_matches) > 0
+#'   }
+#'   if (!contributor_exists) {
+#'     msg <- sprintf('No contributor matching "%s" was located.', contributor_text)
+#'     if (logger) {
+#'       log_it("warn", msg, "db")
+#'     } else {
+#'       cat("WARN", msg, "\n")
+#'     }
+#'     if (interactive()) {
+#'       if (logger) log_it("trace", "Getting user information from an interactive session.")
+#'       if (db_contributors %>% collect() %>% nrow() > 0) {
+#'         associate_with <- select.list(
+#'           choices = c("Yes", "No"),
+#'           title = sprintf('Associate "%s" with a current user?', contributor_text)
+#'         ) == "Yes"
+#'       } else {
+#'         associate_with <- FALSE
+#'       }
+#'       new_user <- NULL
+#'       if (associate_with) {
+#'         cat("\nCurrent contributors:\n")
+#'         print(db_contributors)
+#'         cat("\n")
+#'         new_contrib_prompt <- "(Make new contributor)"
+#'         new_user <- select.list(
+#'           title = sprintf('Select a username (see the list above) or "%s" to add a contributor.', new_contrib_prompt),
+#'           choices = c(db_contributors %>% collect() %>% pull(username), "(Abort)", new_contrib_prompt)
+#'         )
+#'         if (new_user == "(Abort)") stop("Operation aborted.")
+#'         if (new_user == new_contrib_prompt) new_user <- NULL
+#'       }
+#'       if (is.null(new_user)) {
+#'         new_user <- do.call(add_contributor, contributor_properties)
+#'       }
+#'       if (is.null(new_user)) stop("Could not verify this user.")
+#'       if (is.character(new_user)) new_user <- verify_contributor(new_user)
+#'       return(new_user)
+#'     } else {
+#'       needed <- dbListFields(db_conn, "contributors")
+#'       needed <- needed[needed != "id"]
+#'       properties_present <- needed %in% names(contributor_properties)
+#'       if (all(properties_present)) {
+#'         do.call(add_contributor, contributor_properties)
+#'       } else {
+#'         stop(sprintf("Unable to automatically add contributor. Please provide contributor properties for %s as arguments to this function.",
+#'                      format_list_of_names(needed[!properties_present], add_quotes = TRUE)))
+#'       }
+#'     }
+#'   } else {
+#'     if (nrow(possible_matches) == 1) {
+#'       return(possible_matches$id[1])
+#'     } else {
+#'       if (interactive()) {
+#'         possibles <- possible_matches %>%
+#'           left_join(tbl(db_conn, "affiliations") %>% collect(),
+#'                     by = c("affiliation" = "id")) %>%
+#'           select(-affiliation) %>%
+#'           rename("affiliation" = "name") %>%
+#'           mutate(Contributor = sprintf("%s %s at %s from %s",
+#'                                        first_name,
+#'                                        last_name,
+#'                                        contact,
+#'                                        affiliation))
+#'         if (logger) {
+#'           log_it("info", "Multiple contributors found.")
+#'         } else {
+#'           cat("INFO", "Multiple contributors found.\n")
+#'         }
+#'         verified_match <- resolve_multiple_values(possibles$Contributor, contributor_text)
+#'         if (str_detect(verified_match, "\\(New\\) ")) {
+#'           make_new <- select.list(choices = c("Yes", "No"), title = "Create a new user now?")
+#'           if (make_new == "Yes") {
+#'             id <- add_contributor(db_contributors, user_value = contributor_text)
+#'             return(id)
+#'           } else {
+#'             return("Create a contributor manually to proceed.")
+#'           }
+#'         } else {
+#'           return(possible_matches$id[which(possibles$Contributor == verified_match)])
+#'         }
+#'       } else {
+#'         msg <- "Non interactive session and multiple matches identified."
+#'         if (logger) {
+#'           log_it("trace", msg, "db")
+#'         } else {
+#'           cat("TRACE", msg, "\n")
+#'         }
+#'         stop("Unable to discretely identify a contributor. Please try again.")
+#'       }
+#'     }
+#'   }
+#' }
 
 # TODO - abstract the appropriate ms_n - 1 scan to associate with ms_data
 associated_scan <- function(df, scan_time) {
