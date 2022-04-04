@@ -132,7 +132,7 @@ full_import <- function(import_object                  = NULL,
           data.frame(provided = contributor, resolved = contributor_id)
         )
     }
-    # Method info is optional to support 
+    # Method info is optional but heavily encouraged 
     if (method_info_in %in% names(obj)) {
       ms_method_id <- resolve_method(obj, method_in = method_info_in)
     } else {
@@ -156,10 +156,14 @@ full_import <- function(import_object                  = NULL,
 
 #' Utility function to add a record
 #'
-#' Adds a record to a database table and returns the resulting table ID if
-#' successful. Values should be provided as a named vector of the values to add.
-#' No data coercion is performed, relying on the database schema or
-#' preprocessing to ensure data integrity.
+#' Checks a table in the attached SQL connection for a primary key ID matching
+#' the provided `values` and returns the ID. If none exists, adds a record and
+#' returns the resulting ID if successful. Values should be provided as a named
+#' vector of the values to add. No data coercion is performed, relying almost
+#' entirely on the database schema or preprocessing to ensure data integrity.
+#'
+#' Provided values are checked agaisnt required columns in the table using
+#' [verify_import_columns].
 #'
 #' Operations to add the record and get the resulting ID are both performed with
 #' [build_db_action] and are performed virtually back to back with the
@@ -171,23 +175,30 @@ full_import <- function(import_object                  = NULL,
 #'   is added before the call getting the ID completes.
 #'
 #' @param db_table CHR scalar name of the database table being modified
-#' @param values named vector of the values being added
+#' @param values named vector of the values being added, passed to
+#'   [build_db_action]
 #' @param db_conn connection object (default: con)
+#' @param ensure_unique LGL scalar of whether or not to first check that the
+#'   values provided form a new unique record (default: TRUE)
+#' @param ignore LGL scalar on whether to treat the insert try as an "INSERT OR
+#'   IGNORE" SQL statement (default: FALSE)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return
 #' @export
-add_or_get_id <- function(db_table, values, db_conn = con, ignore = FALSE, log_ns = "db") {
+add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, ignore = FALSE, log_ns = "db") {
   log_it("info", glue("Adding a record to {db_table}."), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        db_table = list(c("mode", "character"), c("length", 1)),
-        values   = list(c("n>=", 1)),
-        db_conn  = list(c("length", 1)),
-        ignore   = list(c("mode", "logical"), c("length", 1)),
-        log_ns   = list(c("mode", "character"), c("length", 1))
+        db_table      = list(c("mode", "character"), c("length", 1)),
+        values        = list(c("n>=", 1)),
+        db_conn       = list(c("length", 1)),
+        ensure_unique = list(c("mode", "logical"), c("length", 1)),
+        ignore        = list(c("mode", "logical"), c("length", 1)),
+        log_ns        = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "add_or_get_id"
     )
@@ -202,16 +213,20 @@ add_or_get_id <- function(db_table, values, db_conn = con, ignore = FALSE, log_n
     names_only = FALSE,
     db_conn    = con
   )
-  # Check for an existing match
-  res_id <- try(
-    build_db_action(
-      action         = "get_id",
-      table_name     = db_table,
-      db_conn        = db_conn,
-      match_criteria = as.list(values),
-      and_or         = "AND"
+  if (ensure_unique) {
+    # Check for an existing match
+    res_id <- try(
+      build_db_action(
+        action         = "get_id",
+        table_name     = db_table,
+        db_conn        = db_conn,
+        match_criteria = as.list(values),
+        and_or         = "AND"
+      )
     )
-  )
+  } else {
+    res_id <- integer(0)
+  }
   if (inherits(res_id, "try-error")) {
     tmp <- values
     blanks <- tmp %in% c("", "null", "NULL", "NA", "na", NA)
@@ -300,6 +315,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ignore = FALSE, log_n
 #'   back to the originating sample. If NULL (the default), the current system
 #'   timestamp in UTC will be used from [lubridate::now].
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to records in the
 #'   conversion_software_settings as necessary for workflow resolution, can be
 #'   used to pass defaults or additional values.
@@ -391,102 +407,71 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #'
 #' Part of the data import routine. Adds a record to the "samples" table with
 #' the values provided in the JSON import template. Uses [verify_sample_class]
-#' and [verify_contributor] to parse foreign key relationships, [resolve_method] to
-#' add a record to ms_methods to get the proper id, and [resolve_software_settings]
-#' to insert records into and get the proper conversion software linkage id from
-#' tables "conversion_software_settings" and "conversion_software_linkage" if
-#' appropriate.
+#' and [verify_contributor] to parse foreign key relationships, [resolve_method]
+#' to add a record to ms_methods to get the proper id, and
+#' [resolve_software_settings] to insert records into and get the proper
+#' conversion software linkage id from tables "conversion_software_settings" and
+#' "conversion_software_linkage" if appropriate.
+#'
+#' @inheritParams add_or_get_id
 #'
 #' @param obj LIST object containing data formatted from the import generator
-#' @param db_conn connection object (default: con)
 #' @param sample_in CHR scalar of the import object name storing sample data
 #'   (default: "sample")
-#' @param method_id INT scalar of the associated ms_methods record
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#' @param method_id INT scalar of the associated ms_methods record id
 #' @param ... Other named elements to be appended to samples as necessary for
 #'   workflow resolution, can be used to pass defaults or additional values.
 #'
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
-resolve_sample <- function(obj, db_conn = con, sample_in = "sample", method_id = NULL, log_ns = "db", ...) {
+resolve_sample <- function(obj,
+                           db_conn = con,
+                           sample_in = "sample",
+                           db_table = "samples",
+                           method_id = NULL,
+                           ensure_unique = TRUE,
+                           log_ns = "db",
+                           ...) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, db_conn, name_is, log_ns),
+      args       = list(obj, db_conn, sample_in, db_table, ensure_unique, log_ns),
       conditions = list(
-        obj      = list(c("n>=", 1)),
-        db_conn  = list(c("length", 1)),
-        name_is  = list(c("mode", "character"), c("length", 1)),
-        log_ns   = list(c("mode", "character"), c("length", 1))
+        obj                  = list(c("n>=", 1)),
+        db_conn              = list(c("length", 1)),
+        sample_in            = list(c("mode", "character"), c("length", 1)),
+        db_table             = list(c("mode", "character"), c("length", 1)),
+        ensure_unique        = list(c("mode", "logical"), c("length", 1)),
+        log_ns               = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
   # Check connection
   stopifnot(active_connection(db_conn))
+  if (!is.null(method_id)) stopifnot(method_id == as.integer(method_id), length(method_id) == 1)
   log_fn("start")
-  log_it("info", "Preparing sample entry with resolve_sample().", log_ns)
   
-  obj_sample <- obj[[name_is]]
-  obj_sample <- tack_on(obj_sample, ...)
-  
-  if ("sample_class_id" %in% names(obj_sample)) {
-    this_sample_class_id <- obj_sample$sample_class_id
-  } else {
-    this_sample_class_id <- obj_sample$sample_class
-  }
-  this_sample_class_id <- verify_sample_class(this_sample_class_id)
-  if ("sample_contributor" %in% names(obj_sample)) {
-    this_contributor_id <- obj_sample$sample_contributor
-  } else {
-    this_contributor_id <- obj_sample$data_generator
-  }
-  this_contributor_id  <- verify_contributor(this_contributor_id)
-  if ("generation_type" %in% names(obj_sample)) {
-    this_generation_type <- obj_sample$generation_type
-  } else {
-    if (interactive()) {
-      this_generation_type <- select.list(
-        title = "No generation type was provided. Please select one.",
-        choices = tbl(con, "norm_generation_type") %>%
-          pull(name)
-      )
-      this_generation_type <- build_db_action(
-        action = "get_id",
-        table_name = "norm_generation_type",
-        match_criteria = list(name = this_generation_type)
-      )
-    } else {
-      stop("No generation type (in silico or empirical) provided.")
-    }
-  }
-  
-  log_it("info", sprintf("Building sample entry values for %s...", obj_sample$name), log_ns)
-  sample_values <- c(
-    mzml_name          = obj_sample$name,
-    description        = obj_sample$description,
-    sample_class_id    = this_sample_class_id,
-    source_citation    = obj_sample$source,
-    sample_contributor = this_contributor_id,
-    generation_type    = this_generation_type,
-    generated_on       = obj_sample$starttime %>%
-      lubridate::as_datetime() %>%
-      format("%Y-%m-%d %H:%M:%S"),
-    ms_methods_id      = ifelse(is.null(method_id), "NULL", method_id)
-  )
+  log_it("info", "Preparing sample import.", log_ns)
+  sample_values <- map_import(obj, db_table) %>%
+    tack_on(...) %>%
+    ensure_required_presence(db_table, db_conn = db_conn)
   is_single_record <- all(unlist(lapply(sample_values, length)) == 1)
   log_it("trace", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
-  if (!is_single_record) stop("Resolve and try again.")
+  if (!is_single_record) {
+    stop("Resolve and try again.")
+  }
   sample_id <- try(
     add_or_get_id(
       db_table = "samples",
       values   = sample_values,
       db_conn  = db_conn,
-      ignore   = FALSE
+      ignore   = FALSE,
+      ensure_unique = ensure_unique
     )
   )
   if (inherits(sample_id, "try-error")) {
-    log_it("error", "There was an issue resolving the sample record.")
+    log_it("error", "There was an issue resolving the sample record.", log_ns)
     sample_id <- NULL
   }
   return(sample_id)
@@ -497,47 +482,42 @@ resolve_sample <- function(obj, db_conn = con, sample_in = "sample", method_id =
 #' Part of the data import routine. Adds a record to the "ms_methods" table with
 #' the values provided in the JSON import template. Makes extensive uses of
 #' [resolve_normalization_value] to parse foreign key relationships.
+#' 
+#' @inheritParams add_or_get_id
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_in CHR scalar name of the `obj` list containing method
 #'   information
 #' @param db_table CHR scalar name of the database table containing method
 #'   information
-#' @param db_conn connection object (default: con)
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to "ms_methods" as necessary
 #'   for workflow resolution, can be used to pass defaults or additional values.
 #'
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
 #'   
-resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_methods", db_conn = con, log_ns = "db", ...) {
+resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_methods", db_conn = con, ensure_unique = TRUE, log_ns = "db", ...) {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
-  log_it("trace", "Preparing method entry with resolve_method().", "db")
+  log_it("trace", "Preparing method import.", "db")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, method_in, db_table, db_conn, log_ns),
+      args       = list(obj, method_in, db_table, db_conn, ensure_unique, log_ns),
       conditions = list(
-        obj       = list(c("n>=", 1)),
-        method_in = list(c("mode", "character"), c("length", 1)),
-        db_table  = list(c("mode", "character"), c("length", 1)),
-        db_conn   = list(c("length", 1)),
-        log_ns    = list(c("mode", "character"), c("length", 1))
+        obj           = list(c("n>=", 1)),
+        method_in     = list(c("mode", "character"), c("length", 1)),
+        db_table      = list(c("mode", "character"), c("length", 1)),
+        db_conn       = list(c("length", 1)),
+        ensure_unique = list(c("mode", "logical"), c("length", 1)),
+        log_ns        = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
   
-  if (method_in %in% names(obj)) {
-    obj_method <- obj[[method_in]]
-  } else {
-    log_it("warn", glue('"{method_in}" not found in the namespace of this object. Using directly.'))
-    obj_method <- obj
-  }
-  obj_method <- tack_on(obj_method, ...)
+  obj_method <- get_component(obj, method_in, ...)[[1]]
   
   log_it("trace", "Building methods entry values...", "db")
   verify <- VERIFY_ARGUMENTS
@@ -573,9 +553,10 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_m
   # Insert method if appropriate
   ms_method_id <- try(
     add_or_get_id(
-      db_table = "ms_methods",
-      values   = ms_method_values,
-      db_conn  = db_conn
+      db_table      = "ms_methods",
+      values        = ms_method_values,
+      db_conn       = db_conn,
+      ensure_unique = ensure_unique
     )
   )
   if (inherits(ms_method_id, 'try-error')) {
@@ -625,14 +606,14 @@ resolve_description <- function(obj, method_id, type = c("massspec", "chromatogr
 }
 
 # TODO
-resolve_ms_data <- function(obj) {
+resolve_ms_data <- function(obj, log_ns = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
   
 }
 
 # TODO
-resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source"), db_conn = con) {
+resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source"), db_conn = con, log_ns = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
   stopifnot(as.integer(ms_method_id) == ms_method_id)
@@ -686,7 +667,7 @@ resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required
 }
 
 # TODO
-resolve_qc_data <- function(obj, sample_id, db_conn = con) {
+resolve_qc_data <- function(obj, sample_id, db_conn = con, log_ns = "db") {
   # Argument validation relies on verify_args
   if ("qc" %in% names(obj)) obj <- obj$qc
   stopifnot(as.integer(sample_id) == sample_id)
@@ -746,8 +727,13 @@ resolve_qc_data <- function(obj, sample_id, db_conn = con) {
 #' be identical for multiple data import files. This provides a unique listing
 #' of those sample characteristics to reduce data manipulation and storage, and
 #' minimize database "chatter" during read/write. It returns a set of unique
-#' characteristics in a list, with an appended characteristic "applies_to" with
-#' the index number of entries matching those characteristics.
+#' characteristics in a list, with appended characteristics "applies_to" with
+#' the index number and object name of entries matching those characteristics.
+#'
+#' This is largely superceded by later developments to database operations that
+#' first check for a table primary key id given a comprehensive list of column
+#' values in those tables where only a single record should contain those values
+#' (e.g. a complete unique case, enforced or unenforced).
 #'
 #' @param objects LIST object
 #' @param aspect CHR scalar name of the aspect from which to generate unique
@@ -769,11 +755,11 @@ get_uniques <- function(objects, aspect) {
     lapply(function(x) {
       ind <- unname(which(sapply(out, FUN = identical, x) == TRUE))
       applies_to <- list(
-        index = ind,
-        file  = names(objects)[ind]
+        index  = ind,
+        object = names(objects)[ind]
       )
       if (is.null(applies_to$file)) applies_to$file <- "import_file"
-      c(x, applies_to = list(applies_to))
+      c(data = list(x), applies_to = list(applies_to))
     })
   return(out_distinct)
 }
@@ -976,14 +962,15 @@ make_requirements <- function(example_import,
 #'   column names rather than the column values (default: FALSE)
 #' @param require_all LGL scalar of whether to require all columns (except the
 #'   assumed primary key column of "id") or only those defined as "NOT NULL"
-#'   (default: FALSE)
+#'   (default: TRUE requires the presence of all columns in the table)
 #' @param db_conn connection object (default: con)
 #'
 #' @return An object of the same type as `values` with extraneous values (i.e.
 #'   those not matching a database column header) stripped away.
 #' @export
-verify_import_columns <- function(db_table, values, names_only = FALSE, require_all = FALSE, db_conn = con) {
-  log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'), "db")
+verify_import_columns <- function(db_table, values, names_only = FALSE, require_all = TRUE, db_conn = con, log_ns = "db") {
+  log_fn("start")
+  log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -993,9 +980,9 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
         values      = list(c("n>=", 1)),
         names_only  = list(c("mode", "logical"), c("length", 1)),
         require_all = list(c("mode", "logical"), c("length", 1)),
-        db_conn     = list(c("length", 1))
-      ),
-      from_fn = "verify_import_columns"
+        db_conn     = list(c("length", 1)),
+        log_ns      = list(c("mode", "character"), c("length", 1))
+      )
     )
     stopifnot(arg_check$valid)
   }
@@ -1028,9 +1015,9 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
     valid_columns <- provided %in% table_info$name
     if (!all(valid_columns)) {
       extra_columns <- provided[!valid_columns]
-      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'), "db")
-      stop()
+      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'), log_ns)
     }
+    log_fn("end")
     return(values[valid_columns])
   }
 }
@@ -1106,8 +1093,7 @@ verify_import_requirements <- function(obj,
         obj           = list(c("mode", "list")),
         ignore_extra  = list(c("mode", "logical"), c("length", 1)),
         log_issues_as = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn = "verify_import_requirements"
+      )
     )
     stopifnot(arg_check$valid)
   }
@@ -1163,10 +1149,11 @@ verify_import_requirements <- function(obj,
       nested <- TRUE
       # Speed this up since it already passed argument verification
       verify <- VERIFY_ARGUMENTS
-      log_it("trace", "Argument verification will be turned off for import requirement verification to speed up the import process.", "db")
+      if (verify) log_it("info", "Argument verification will be turned off to speed up the check process.", "db")
       VERIFY_ARGUMENTS <<- FALSE
       out <- lapply(obj, verify_import_requirements, ignore_extra = ignore_extra, log_issues_as = log_issues_as) %>%
         setNames(names(obj))
+      if (verify != VERIFY_ARGUMENTS) log_it("info", glue::glue("Setting argument verification back to {verify} according to the session settings."), "db")
       VERIFY_ARGUMENTS <<- verify
     } else {
       nested <- FALSE
@@ -1230,6 +1217,118 @@ verify_import_requirements <- function(obj,
 #' tack_on(list(a = 1:3))
 tack_on <- function(obj, ...) {
   addl_args <- list(...)
-  obj <- append(obj, addl_args)
-  return(obj)
+  out <- append(obj, addl_args)
+  return(out)
+}
+
+#' Resolve components from a list or named vector
+#'
+#' Call this to pull a component named `obj_component` from a list or named
+#' vector provided as `obj` and optionally use [tack_on] to append to it. This
+#' is intended to ease the process of pulling specific components from a list
+#' for further treatment in the import process by isolating that component.
+#'
+#' @note If ellipsis arguments are provided, they will be appended to each
+#'   identified component via [tack_on]. Use with caution, but this can be
+#'   useful for appending common data to an entire list (e.g. a datetime stamp
+#'   for logging processing time or a processor name, human or software).
+#'
+#' @inheritParams tack_on
+#'
+#' @param obj LIST or NAMED vector in which to find `obj_component`
+#' @param obj_component CHR vector of named elements to find in `obj`
+#' @param silence LGL scalar indicating whether to silence recursive messages,
+#'   which may be the same for each element of `obj` (default: TRUE)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global", ...) {
+  stopifnot(is.character(obj_component), length(obj_component) > 0, is.character(log_ns), length(log_ns) == 1)
+  logging <- exists("log_it")
+  names_present <- obj_component %in% names(obj)
+  if (any(names_present)) {
+    if (!all(names_present)) {
+      msg <- glue::glue("Requested component{ifelse(sum(!names_present) > 1, 's', '')} {format_list_of_names(obj_component[!names_present])} were missing.")
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      obj_component <- which(names_present)
+    }
+    out <- obj[obj_component]
+  } else if (is.list(obj)) {
+    out <- purrr::flatten(
+      lapply(obj,
+             get_component,
+             obj_component = obj_component,
+             silence = silence)
+    )
+  } else {
+    if (logging && !silence) log_it("warn", glue::glue('"No components named {gsub(" and ", " or ", format_list_of_names(obj_component))}" found in the namespace of this object. Using directly.'), log_ns)
+    return(NULL)
+  }
+  kwargs <- list(...)
+  if (length(kwargs) > 0) {
+    if (logging) log_it("info", glue::glue("Tacking on {length(kwargs)} additional argument{ifelse(length(kwargs) > 1, 's', '')} ({format_list_of_names(names(kwargs), add_quotes = TRUE)})."))
+    out <- lapply(out, function(x) tack_on(obj = x, ... = ...))
+  }
+  return(out)
+}
+
+map_import <- function(import_obj, aspect, import_map = nist_map, case_sensitive = TRUE, db_conn = con) {
+  if (is.character(import_map)) {
+    if (!file.exists(import_map)) {
+      import_map <- list.files(pattern = import_map, recursive = TRUE, full.names = TRUE)
+      stopifnot(length(import_map) == 1)
+    }
+    import_map <- read_csv(import_map)
+  }
+  this_map <- import_map %>%
+    filter(sql_table == aspect)
+  out <- vector("list", length = nrow(this_map)) %>%
+    setNames(this_map$sql_parameter)
+  for (i in 1:nrow(this_map)) {
+    properties <- this_map %>% filter(sql_parameter == names(out)[i])
+    if (nrow(properties) == 1) {
+      category  <- properties$import_category[1]
+      parameter <- properties$import_parameter[1]
+      alias_in  <- properties$alias_lookup[1]
+      norm_by   <- properties$sql_normalization[1]
+      this_val  <- import_obj[[category]][[parameter]]
+      if (is.null(this_val) || this_val == "") this_val <- NA
+      if (!is.na(alias_in)) {
+        log_it("info", glue::glue("{names(out)[i]}: alias_in = {alias_in} and this_val = {this_val}; resolving normalization value."))
+        column_names <- dbListFields(db_conn, alias_in)
+        lookup_val <- list(list(values = this_val, like = TRUE)) %>%
+          setNames(column_names[2])
+        alias_id <- try(
+          build_db_action(
+            action = "select",
+            table_name = alias_in,
+            column_names = column_names[1],
+            match_criteria = lookup_val
+          )
+        )
+        if (!inherits(alias_id, "try-error") && length(alias_id == 1)) {
+          this_val <- as.integer(alias_id)
+          norm_by  <- NA
+        }
+      }
+      if (!is.na(norm_by) && !is.na(this_val)) {
+        log_it("info", glue::glue("{names(out)[i]}: norm_by = {norm_by} and this_val = {this_val}; resolving normalization value."))
+        this_val <- resolve_normalization_value(
+          this_value = this_val,
+          db_table = norm_by,
+          case_sensitive = case_sensitive,
+          db_conn = db_conn
+        )
+      }
+      out[i]  <- this_val
+    }
+  }
+  return(out)
 }
