@@ -29,14 +29,14 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,1,1,0,0,chromatography,mp3solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
 1,1,1,0,0,chromatography,mp4solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
 0,0,0,0,0,,,solvent_mixes,fraction,,,
-0,0,1,0,0,,,solvent_aliases,,,,add if not present
+0,0,1,0,0,,,solvent_aliases,alias,,,add if not present
 1,1,1,0,0,chromatography,mp1add,solvent_additives,component,norm_additives,additive_aliases,
 1,1,1,0,0,chromatography,mp2add,solvent_additives,component,norm_additives,additive_aliases,
 1,1,1,0,0,chromatography,mp3add,solvent_additives,component,norm_additives,additive_aliases,
 1,1,1,0,0,chromatography,mp4add,solvent_additives,component,norm_additives,additive_aliases,
 0,0,0,0,0,,,solvent_additives,amount,,,
 0,0,0,0,0,,,solvent_additives,units,norm_additive_units,,
-0,0,1,0,0,,,additive_aliases,,,,add if not present
+0,0,1,0,0,,,additive_aliases,alias,,,add if not present
 1,0,0,0,0,chromatography,gcolvendor,chromatography_descriptions,column_vendor_id,norm_vendors,,
 1,0,0,0,0,chromatography,gcolname,chromatography_descriptions,column_vendor_model,,,
 1,0,0,0,0,chromatography,gcolchemistry,chromatography_descriptions,column_chemistry_id,norm_column_chemistries,,
