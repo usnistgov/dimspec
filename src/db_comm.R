@@ -1928,7 +1928,7 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
       bind_rows()
   } else {
     check <- dbReadTable(db_conn, db_table) %>%
-      filter(if_any(everything(), .fns = ~ this_value %in% .x))
+      filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
   }
   if ("id" %in% names(check)) {
     this_id <- check$id
