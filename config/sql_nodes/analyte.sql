@@ -168,12 +168,12 @@
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
-		alias_type
-			INTEGER,
-			/* foreign key to norm_analyte_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
+		alias_type
+			INTEGER,
+			/* foreign key to norm_analyte_alias_references */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE CASCADE,
