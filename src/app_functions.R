@@ -436,7 +436,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       out$results[[i]][j]   <- rslt
       if (!rslt) {
         out$valid           <- FALSE
-        n_msg <- length(out$messages) + 1
+        n_msg               <- length(out$messages) + 1
         out$messages[n_msg] <- msg
         log_it("trace", glue('{log_msg} - FAIL'))
         if (!silent) log_it("error", glue("    {msg}"))
