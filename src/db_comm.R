@@ -49,7 +49,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
   # Check connection
   stopifnot(active_connection(db_conn))
   # Ensure table exists
-  db_table <- table_exists(db_table, db_conn)
+  db_table <- resolve_table_name(db_table, db_conn)
   
   # Define function scope
   func <- ifelse(get_sql,
@@ -163,7 +163,7 @@ pragma_table_info <- function(db_table,
   # Check connection
   stopifnot(active_connection(db_conn))
   # Ensure table exists
-  db_table <- table_exists(db_table, db_conn)
+  db_table <- resolve_table_name(db_table, db_conn)
   # Bail early for performance if names only
   if (names_only) {
     return(DBI::dbListFields(db_conn, db_table))
@@ -475,21 +475,28 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #'
 #' @param db_table CHR vector of table names to check
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the namespace (if any) to use for logging
+#'   (default: "db")
 #'
 #' @return CHR vector of existing tables
 #' @export
 #'
 #' @examples
-table_exists <- function(db_table, db_conn = con) {
-  if (exists("log_it")) log_fn("start")
+resolve_table_name <- function(db_table, db_conn = con, log_ns = "db") {
+  can_log <- exists("log_it")
+  if (can_log) log_fn("start")
+  stopifnot(active_connection(db_conn))
   tables_exist <- db_table %in% dbListTables(db_conn)
   if (!all(tables_exist)) {
-    if (exists("log_it")) {
-      log_it("warn", sprintf('No table named "%s" was found in this schema.', db_table[!tables_exist]), "db")
+    missing <- db_table[!tables_exist]
+    if (can_log) {
+      log_it("warn", glue::glue('No table{ifelse(length(missing) > 1, "s", "")} named {gsub("and", "or", format_list_of_names(missing, add_quotes = TRUE))} {ifelse(length(missing) > 1, "were", "was")} found in this schema.'), log_ns)
     }
     db_table <- db_table[tables_exist]
   }
-  if (length(db_table) == 0) stop("No valid tables were found in this schema.")
+  if (length(db_table) == 0) {
+    return(NULL)
+  }
   if (exists("log_it")) log_fn("end")
   return(db_table)
 }
@@ -1893,12 +1900,13 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
+  db_table <- resolve_table_name(db_table, db_conn)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = list(this_value, db_table, case_sensitive, log_ns),
       conditions = list(
-        this_value     = list(c("mode", "character"), c("length", 1)),
+        this_value     = list(c("mode", "character"), c("length", 1), "not_empty"),
         db_table       = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
         log_ns         = list(c("mode", "character"), c("length", 1))
@@ -1926,11 +1934,23 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
                     })
     check <- check[-which(sapply(check, is.null))] %>%
       bind_rows()
+    if (nrow(check) == 0) {
+      log_it("info", "No case insensitive matches found.")
+      return(NULL)
+    }
   } else {
     check <- dbReadTable(db_conn, db_table) %>%
-      filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
+      filter(if_any(everything(), .fns = ~ .x == this_value))
+    if (nrow(check) == 0) {
+      log_it("info", "No direct match found; executing fuzzy match across columns.", log_ns)
+      check <- dbReadTable(db_conn, db_table) %>%
+        filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
+    }
   }
-  if ("id" %in% names(check)) {
+  if (!"id" %in% names(check)) {
+    log_it("warn", glue::glue("Expected but could not find an 'id' column. Is '{db_table}' a normalization table?"), log_ns)
+    return(NULL)
+  } else {
     this_id <- check$id
   }
   if (!length(this_id) == 1) {
