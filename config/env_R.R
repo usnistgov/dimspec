@@ -95,9 +95,6 @@ if (MINIMIZE) {
   LOGGING_ON       <- FALSE
 }
 
-# Import mapping
-IMPORT_MAP     <- readr::read_csv(file.path("config", "map_NTA_MRT.csv"))
-
 # Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]
 # Whether to activate plumber integration. [SET IN env_glob.txt]

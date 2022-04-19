@@ -399,7 +399,7 @@ extend_suspect_list <- function(suspect_list, db_conn = con, retain_current = TR
     needed <- dbListFields(con, "compound_aliases")
     alias_ref <- build_db_action("get_id", "compound_alias_references", match_criteria = list(name = "Alias"))
     if (length(alias_ref) == 0) {
-      alias_ref <- add_and_get_id(
+      alias_ref <- add_or_get_id(
         db_table = "compound_alias_references",
         values   = list(
           name        = "Alias",

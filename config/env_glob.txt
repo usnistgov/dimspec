@@ -45,7 +45,7 @@ CONDA_CLI      = "conda"
 INIT_CONNECT   = TRUE
 
 # Whether to activate logging for this session. (requires R)
-LOGGING_ON     = FALSE
+LOGGING_ON     = TRUE
 
 # Whether to activate plumber integration. (requires R)
 USE_API        = FALSE
