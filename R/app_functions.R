@@ -1075,7 +1075,7 @@ open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
   } else if (is.null(dir)) {
     match_name <- list.files(pattern = name, recursive = TRUE, full.names = TRUE)
     if (length(match_name) == 1) {
-      usethis::edit_file(usethis::proj_path(name), open = open)
+      usethis::edit_file(usethis::proj_path(match_name), open = open)
     } else if (length(match_name) == 0) {
       if (exists("log_it")) {
         log_it(ifelse(create_new, "warn", "error"),
