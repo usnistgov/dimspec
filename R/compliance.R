@@ -33,7 +33,6 @@ if (!dir.exists(file.path("output", "extract"))) {dir.create(file.path("output",
 if (!dir.exists(file.path("output", "example"))) {dir.create(file.path("output", "example"))}
 
 # _Set operational env variables -----------------------------------------------
-source(file.path("config", "env_glob.txt"))
 source(file.path("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
@@ -53,7 +52,7 @@ rm(packs, unload_packs, packs_TRUE, packs_FALSE)
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
-sources <- list.files('src', pattern = ".R$", full.names = TRUE, recursive = TRUE)
+sources <- list.files("R", pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source))
 

@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' get_suspectlist()
-get_suspectlist <- function(destfile = file.path("src", "compoundlist", "suspectlist.xlsx"),
+get_suspectlist <- function(destfile = file.path("R", "compoundlist", "suspectlist.xlsx"),
                             url_file = file.path("config", "suspectlist_url.txt"),
                             default_url = SUS_LIST_URL,
                             save_local = FALSE) {

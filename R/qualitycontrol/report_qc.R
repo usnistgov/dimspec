@@ -10,5 +10,11 @@
 #' 
 
 report_qc <- function(jsonfile = file.choose(),outputfile = gsub('.json', '.pdf', jsonfile, ignore.case = TRUE)) {
-  rmarkdown::render('src/qualitycontrol/qcreport_template.Rmd', params = list(jsonfile = jsonfile), output_format = "pdf_document" ,output_file = outputfile)
+  rmarkdown::render(
+    file.path(
+      "R", "qualitycontrol", "qcreport_template.Rmd"),
+    params = list(jsonfile = jsonfile),
+    output_format = "pdf_document",
+    output_file = outputfile
+  )
 }

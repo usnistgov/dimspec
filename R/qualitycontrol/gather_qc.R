@@ -13,7 +13,7 @@
 #'
 #' @examples
 
-exactmasschart <- readRDS('src/qualitycontrol/exactmasschart.RDS')
+exactmasschart <- readRDS(file.path("R", "qualitycontrol", "exactmasschart.RDS"))
 
 gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {
   #performs quality check on the submitted data and adds 'check' list item

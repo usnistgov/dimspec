@@ -34,9 +34,7 @@ validate_tables <- function(db_conn, table_names) {
       ),
       from_fn = "validate_tables"
     )
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+    stopifnot(arg_check$valid)
   }
   # Check connection
   stopifnot(active_connection(db_conn))

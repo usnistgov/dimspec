@@ -48,7 +48,7 @@ DEPENDS_ON     <- c("base64enc",
                     "dbplyr",
                     "jsonlite",
                     "tools",
-                    # "xlsx",
+                    "usethis",
                     "XML")
 
 # Decide whether to use ChemmineR, which is only available through Bioconductor,
