@@ -66,9 +66,9 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
                     pull(name)
                   if (length(unique_constraints) > 0) {
                     unique_constraints <- lapply(unique_constraints,
-                           function(x) {
-                             dbGetQuery(con, sprintf("pragma index_info('%s')", x))
-                           }) %>%
+                                                 function(x) {
+                                                   dbGetQuery(con, sprintf("pragma index_info('%s')", x))
+                                                 }) %>%
                       bind_rows() %>%
                       pull(name)
                   }
@@ -292,8 +292,8 @@ build_db <- function(db            = DB_NAME,
     build_file <- ifelse(file.exists(build_from),
                          build_file,
                          list.files(pattern = build_from,
-                            full.names = TRUE,
-                            recursive = TRUE)
+                                    full.names = TRUE,
+                                    recursive = TRUE)
     )
   }
   if (length(build_file) == 0) {
@@ -305,7 +305,7 @@ build_db <- function(db            = DB_NAME,
       if (logger) log_it("warn", glue::glue("{msg} Querying user to choose..."))
       use_file <- select.list(
         choices = c("(Abort)", build_file),
-        title = sprintf("%s Please choose a single build file or abort.")
+        title = sprintf("Please choose a single build file or abort.")
       )
       if (use_file == "(Abort)") {
         if (logger) log_it("warn", "Database build aborted by user.")
@@ -1264,8 +1264,8 @@ create_fallback_build <- function(build_file    = NULL,
       populate_file <- populate_with
     } else {
       populate_files <- list.files(pattern = populate_with,
-                                  full.names = TRUE,
-                                  recursive = TRUE)
+                                   full.names = TRUE,
+                                   recursive = TRUE)
       if (length(populate_files) > 1) {
         if (interactive()) {
           populate_file <- resolve_multiple_values(populate_files, populate_file)
@@ -1574,6 +1574,12 @@ active_connection <- function(db_conn = con) {
 #' @param db_conn connection object (default "con")
 #' @param log_ns CHR scalar of the logging namespace to use during execution
 #'   (default: "db")
+#' @param id_column CHR scalar of the column to use as the primary key
+#'   identifier for `db_table` (default: "id")
+#' @param database_map LIST of the database entity relationship map, typically
+#'   from calling [er_map]. If NULL (default) the object "db_map" will be
+#'   searched for and used by default, otherwise it will be created with
+#'   [er_map]
 #' @param ... CHR vector of additional named arguments to be added; names not
 #'   appearing in the referenced table will be ignored
 #'
@@ -1581,9 +1587,16 @@ active_connection <- function(db_conn = con) {
 #' @export
 #'
 #' @examples
-add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...) {
+add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_column = "id", database_map = NULL, ...) {
   if (exists("log_it")) log_fn("start")
   new_values <- list(...)
+  if (is.null(database_map)) {
+    if (exists("db_map")) {
+      database_map <- db_map
+    } else {
+      assign("db_map", er_map(db_conn), envir = .GlobalEnv)
+    }
+  }
   if (length(names(new_values)) != length(new_values)) {
     stop("All values provided to this function must be named.")
   }
@@ -1603,112 +1616,195 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...)
   }
   # Check connection
   stopifnot(active_connection(db_conn))
-  if (exists("db_dict")) {
-    if (db_table %in% names(db_dict)) {
-      table_cols <- db_dict[[db_table]]
-    } else {
-      table_cols <- pragma_table_info(db_table)
-    }
-  } else {
-    table_cols <- pragma_table_info(db_table)
-  }
+  table_cols <- pragma_table_info(db_table)
   needed     <- table_cols %>%
-    filter(name != "id") %>%
+    filter(name != id_column) %>%
     pull(name)
+  all_cols   <- needed
   required   <- table_cols %>%
-    filter(notnull == 1, name != "id") %>%
+    filter(notnull == 1, name != id_column) %>%
     pull(name)
   need_unique <- table_cols %>%
     filter(unique) %>%
     pull(name)
+  new_values <- new_values[which(names(new_values) %in% needed)]
   needed     <- needed[!needed %in% names(new_values)]
-  if (length(needed) > 0) {
-    msg <- sprintf('Not all values needed for table "%s" were supplied.', db_table)
-    if (interactive()) {
-      if (exists("log_it")) {
-        log_it("warn",
-               sprintf("add_normalization_value: %s Please provide the following values to continue. You provided '%s' as the initial value for '%s' but this can be overridden here.",
-                       msg,
-                       new_values[1],
-                       names(new_values[1])
-               ),
-               log_ns
-        )
-      }
-      for (need_this in needed) {
-        if (!need_this %in% names(new_values)) {
-          new_value <- ""
-          if (all(need_this == "acronym", "name" %in% names(new_values))) {
-            auto_acro <- make_acronym(new_values$name)
-            use_auto_acro <- select.list(
-              choices = c("Yes", "No"),
-              title = sprintf('\nUse the automatic acronym "%s" for normalization name "%s"?',
-                              auto_acro,
-                              new_values$name)
-            )
-            if (use_auto_acro == "Yes") {
-              new_value <- auto_acro
-            } else {
-              new_value <- readline(
-                sprintf("%s: ", need_this)
-              )
-            }
-          }
-          meets_unique <- FALSE
-          while (!meets_unique) {
-            while (
-              all(
-                need_this %in% required,
-                any(new_value == "",
-                    is.null(new_value),
-                    is.na(new_value))
-              )
-            ) {
-              new_value <- readline(
-                sprintf("%s (required): ", ifelse(need_this %in% c("orcid"), toupper(need_this), need_this))
-              )
-            }
-            while (all(
-              need_this == "orcid",
-              new_value != "",
-              !str_detect(new_value, "[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]"))
-            ) {
-              log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only). Leave blank to skip.', "db")
-              new_value <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
-            }
-            if (need_this %in% need_unique) {
-              meets_unique <- !check_for_value(new_value, db_table, need_this)$exists
-              if (!meets_unique) {
-                log_it("warn", glue::glue("That {need_this} is already taken. Please provide a unique value."))
-                new_value <- ""
-              }
-            } else {
-              meets_unique <- TRUE
-            }
-            if (new_value == "") {
-              new_value = table_cols$dflt_value[table_cols$name == need_this]
-            } 
-          }
-          new_values <- c(
-            new_values,
-            setNames(new_value, need_this)
-          )
-        }
-      }
-    } else {
-      if (exists("log_it")) {
-        log_it("error", msg, "db")
-      } else {
-        cat("ERROR", msg, "\n")
-      }
-      return(NULL)
+  if (length(needed) == 0) {
+    if (exists("log_it")) {
+      lot_it("info", "add_normalization_value: Named values were provided for all columns.", log_ns)
+    }
+  } else if (length(needed) > 0) {
+    msg <- sprintf('Not all values for table "%s" were supplied.', db_table)
+    if (exists("log_it")) {
+      log_it("warn",
+             sprintf("add_normalization_value: %s Please provide the following values to continue.%s",
+                     msg,
+                     ifelse(length(new_values) > 0,
+                            sprintf(" You provided '%s' as the initial value%s.",
+                                    format_list_of_names(paste0(names(new_values), " = ", new_values)),
+                                    ifelse(length(new_values) > 1, "s", "")
+                            ),
+                            ""
+                     )
+             ),
+             log_ns
+      )
     }
   }
-  if (exists("log_it")) log_it("trace", sprintf('Addding normalization values to table "%s"', db_table), "db")
+  if (interactive()) {
+    for (need_this in all_cols) {
+      prompt_field <- ifelse(need_this %in% c("orcid", "PID"),
+                             toupper(need_this),
+                             need_this %>%
+                               stringr::str_replace_all("_", " ") %>%
+                               stringr::str_to_title()
+      )
+      value_checks <- c(
+        required = ifelse(need_this %in% required, "required", ""),
+        unique   = ifelse(need_this %in% need_unique, "unique", ""),
+        default  = table_cols$dflt_value[table_cols$name == need_this],
+        provided = ifelse(need_this %in% names(new_values),
+                          new_values[[need_this]],
+                          "")
+      )
+      if (is.na(value_checks[["default"]])) value_checks[["default"]] <- ""
+      need_clause <- c(
+        required = value_checks[["required"]],
+        unique   = value_checks[["unique"]],
+        default = ifelse(
+          value_checks[["default"]] == "" || is.na(value_checks[["default"]]),
+          "",
+          sprintf('default value "%s"', value_checks[["default"]])
+        ),
+        provided = ifelse(
+          value_checks[["provided"]] == "",
+          "",
+          sprintf('provided value "%s"', value_checks[["provided"]])
+        )
+      )
+      if (need_clause[["provided"]] != "") {
+        need_clause[["provided"]] <- sprintf("press enter to use the %s",
+                                             need_clause[["provided"]])
+      }
+      if (need_clause[["default"]] != "" && need_clause[["provided"]] == "") {
+        need_clause[["default"]] <- sprintf("press enter to use the %s",
+                                            need_clause[["default"]])
+      }
+      need_clause <- stringr::str_to_sentence(need_clause[need_clause != ""])
+      need_clause <- sprintf("%s",
+                             paste0(need_clause, collapse = "; ")
+      )
+      if (nchar(need_clause) > 0) need_clause <- sprintf(" (%s)", need_clause)
+      need_prompt <- sprintf("%s%s: ",
+                             prompt_field,
+                             need_clause)
+      new_value <- ""
+      if (all(need_this == "acronym", "name" %in% needed)) {
+        if ("name" %in% names(new_values)) {
+          auto_acro <- make_acronym(new_values$name)
+          use_auto_acro <- select.list(
+            choices = c("Yes", "No"),
+            title = glue::glue('\nUse the automatic acronym "{auto_acro}" for normalization name "{new_values$name}"?')
+          )
+        } else {
+          use_auto_acro <- "NULL"
+        }
+        if (use_auto_acro == "Yes") {
+          new_value <- auto_acro
+        } else {
+          new_value <- readline(need_prompt)
+        }
+      } else {
+        new_value <- readline(need_prompt)
+      }
+      if (new_value == "") {
+        if (value_checks[["provided"]] != "") {
+          # Use the value provided to the function for this column
+          new_value <- value_checks[["provided"]]
+        } else if (value_checks[["default"]] != "") {
+          # Let the database use its default value
+          new_value <- ""
+        }
+      }
+      meets_unique <- FALSE
+      while (!meets_unique) {
+        while (
+          all(
+            need_this %in% required,
+            any(new_value == "",
+                is.null(new_value),
+                is.na(new_value))
+          )
+        ) {
+          new_value <- readline(need_prompt)
+        }
+        if (need_this %in% need_unique) {
+          meets_unique <- !check_for_value(new_value, db_table, need_this)$exists
+          if (!meets_unique) {
+            log_it("warn", glue::glue("That {need_this} is already taken. Please provide a unique value."), log_ns)
+            new_value <- ""
+          }
+        } else {
+          meets_unique <- TRUE
+        }
+        while (all(
+          need_this == "orcid",
+          new_value != "",
+          !str_detect(new_value, "[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]"))
+        ) {
+          log_it("error", 'Valid ORCIDs must be of the pattern "0000-0000-0000-000X" where "0" is a number and "X" may be a number or the character "X" (upper case only).', log_ns)
+          new_value <- readline('ORCID (0000-0000-0000-000X) (optional but strongly encouraged): ')
+        }
+      }
+      if (!need_this %in% names(new_values)) {
+        new_values <- c(
+          new_values,
+          setNames(new_value, need_this)
+        )
+      } else {
+        if (new_value != new_values[[need_this]]) {
+          new_values[[need_this]] <- new_value
+        }
+      }
+      # Resolve additional normalization values (for N>1 tables)
+      norm_refs <- database_map[[db_table]]$references
+      if (length(norm_refs) > 0) {
+        is_normalized <- grepl(need_this, norm_refs)
+        if (is_normalized) {
+          log_it("info", glue::glue("{prompt_field} is normalized and needs additional information."), log_ns)
+          normalizes_to <- grep(need_this, database_map[[db_table]]$references, value = TRUE) %>%
+            str_remove_all("\\)") %>%
+            str_split(" REFERENCES |\\(") %>%
+            .[[1]]
+          chosen_value <- resolve_normalization_value(
+            this_value = new_values[[need_this]],
+            db_table = normalizes_to[2],
+            case_sensitive = FALSE,
+            db_conn = db_conn,
+            id_column = id_column,
+            log_ns = log_ns
+          )
+          if (is.null(chosen_value)) {
+            return(NULL)
+          } else {
+            new_values[[need_this]] <- chosen_value
+          }
+        }
+      }
+    }
+  } else {
+    if (exists("log_it")) {
+      log_it("error", msg, "db")
+    } else {
+      cat("ERROR", msg, "\n")
+    }
+    return(NULL)
+  }
+  if (exists("log_it")) log_it("trace", glue::glue('Addding normalization values to table "{db_table}"'), log_ns)
   res <- try(
     build_db_action("insert", db_table, values = list(new_values))
   )
-  if (class(res) == "try-error") {
+  if (inherits(res, "try-error")) {
     msg <- sprintf(
       'Unable to add normalization values (%s) to table "%s": %s',
       lapply(names(new_values),
@@ -1723,10 +1819,17 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", ...)
       log_it("error", msg, "db")
     } else {
       cat("ERROR", msg, "\n")
-      return(NULL)
     }
+    this_id <- NULL
+  } else {
+    last_insert_rowid <- dbGetQuery(con,
+                                    sprintf("select seq from sqlite_sequence where name = '%s'",
+                                            db_table)
+    )$seq
+    this_id <- build_db_action(action = "get_id",
+                               table_name = db_table,
+                               match_criteria = list(rowid = last_insert_rowid))
   }
-  this_id <- build_db_action("get_id", db_table, match_criteria = new_values, and_or = "AND")
   if (exists("log_it")) log_fn("end")
   return(this_id)
 }
@@ -1850,7 +1953,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
     if (interactive()) {
       values
       chosen_value <- select.list(
-        select_vals,
+        choices = select_vals,
         title = paste(msg,
                       sprintf("Please select a number to match with a value%s to associate with that record, (Abort) to abort this operation, or (New) to add this value to the normalization table.",
                               ifelse(is.data.frame(values),
@@ -1896,7 +1999,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
 #' @return
 #' @export
 #' 
-resolve_normalization_value <- function(this_value, db_table, case_sensitive = FALSE, db_conn = con, log_ns = "db", ...) {
+resolve_normalization_value <- function(this_value, db_table, id_column = "id", case_sensitive = FALSE, db_conn = con, log_ns = "db", ...) {
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -1917,9 +2020,14 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
   this_id <- integer(0)
   if (!case_sensitive) {
     table_fields <- dbListFields(db_conn, db_table)
+    # Accelerate this portion
+    argument_verification <- VERIFY_ARGUMENTS
+    if (argument_verification) {
+      assign("VERIFY_ARGUMENTS", FALSE, envir = .GlobalEnv)
+    }
     check <- lapply(table_fields,
                     function(x) {
-                      if (x != "id") {
+                      if (x != id_column) {
                         tmp <- check_for_value(
                           values = this_value,
                           db_table = db_table,
@@ -1932,11 +2040,13 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
                         }
                       }
                     })
+    if (argument_verification) {
+      assign("VERIFY_ARGUMENTS", argument_verification, envir = .GlobalEnv)
+    }
     check <- check[-which(sapply(check, is.null))] %>%
       bind_rows()
     if (nrow(check) == 0) {
-      log_it("info", "No case insensitive matches found.")
-      return(NULL)
+      log_it("info", "No case insensitive matches found.", log_ns)
     }
   } else {
     check <- dbReadTable(db_conn, db_table) %>%
@@ -1947,21 +2057,24 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
         filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
     }
   }
-  if (!"id" %in% names(check)) {
-    log_it("warn", glue::glue("Expected but could not find an 'id' column. Is '{db_table}' a normalization table?"), log_ns)
+  if (length(names(check)) == 0) {
+    check <- dbListFields(db_conn, db_table)
+    names(check) <- check
+  }
+  if (!id_column %in% names(check)) {
+    log_it("warn", glue::glue("Expected but could not find an '{id_column}' column. Is '{db_table}' a normalization table containing '{id_column}'?"), log_ns)
     return(NULL)
   } else {
-    this_id <- check$id
+    this_id <- check[[id_column]]
   }
-  if (!length(this_id) == 1) {
+  if (check[[id_column]] == id_column || !length(this_id) == 1) {
     if (interactive()) {
-      if (length(this_id) == 0) {
-        tmp <- build_db_action("select", db_table)
-      }
-      if ("id" %in% names(tmp$values)) {
+      tmp <- dbReadTable(db_conn, db_table)
+      if (id_column %in% names(tmp$values)) {
         tmp <- tmp %>%
-          select(-id)
+          select(-!!id_column)
       } else {
+        # Assume the first column is the id
         tmp <- tmp[, -1]
       }
       these_choices <- tmp
@@ -1977,7 +2090,8 @@ resolve_normalization_value <- function(this_value, db_table, case_sensitive = F
           return(invisible(NULL))
         }
       } else if (str_detect(this_selection, "\\(New\\) ")) {
-        this_selection <- sapply(this_selection, str_remove, "\\(New\\) ")
+        this_selection <- sapply(this_selection, str_remove, "\\(New\\) ") %>%
+          setNames(names(tmp)[1])
         kwargs <- append(this_selection, list(...))
         to_add <- append(
           kwargs,
