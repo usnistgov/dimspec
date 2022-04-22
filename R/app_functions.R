@@ -479,7 +479,9 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 format_list_of_names <- function(namelist, add_quotes = FALSE) {
   stopifnot(require(glue))
   log_fn("start")
-  if (length(namelist) == 1) {
+  if (length(namelist) == 0) {
+    return("")
+  } else if (length(namelist) == 1) {
     res <- glue::glue("{paste0(namelist, collapse = '')}")
   } else {
     res <- glue::glue(
