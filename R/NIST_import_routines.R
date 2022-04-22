@@ -6,7 +6,8 @@ full_import <- function(import_object                  = NULL,
                         ignore_extra                   = TRUE,
                         requirements_obj               = "import_requirements",
                         sample_info_in                 = "sample",
-                        method_info_in                 = "massspectrometry") {
+                        method_info_in                 = "massspectrometry",
+                        log_ns                         = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
@@ -22,7 +23,7 @@ full_import <- function(import_object                  = NULL,
     import_object <- obj
     import_type <- "object"
   }
-  log_it("trace", glue::glue('Verifying import requirements with verify_import_requirements().'), "db")
+  log_it("trace", glue::glue('Verifying import requirements with verify_import_requirements().'), log_ns)
   meets_requirements <- verify_import_requirements(
     obj = import_object,
     requirements_obj = requirements_obj,
@@ -36,7 +37,7 @@ full_import <- function(import_object                  = NULL,
            sprintf("Import %s%s meets all import requirements.",
                    import_type,
                    ifelse(nrow(meets_requirements) > 1, "s", "")),
-           "db")
+           log_ns)
   } else {
     missing_required <- meets_requirements %>%
       select(applies_to, all_required, missing_required) %>%
@@ -62,13 +63,14 @@ full_import <- function(import_object                  = NULL,
                      import_type,
                      ifelse(nrow(missing_required) > 1, "s", ""),
                      format_list_of_names(missing_required$applies_to, resolve_quotes = TRUE)
-             ))
+             ),
+             log_ns)
     } else {
       log_it("error",
              sprintf('The import %s must contain all required information defined in "%s" because ignore_missing_required = FALSE.',
                      import_type,
                      requirements_obj),
-             "db")
+             log_ns)
       return(invisible(NULL))
     }
   }
@@ -77,7 +79,7 @@ full_import <- function(import_object                  = NULL,
            sprintf("Import %s%s contains all expected detail.",
                    import_type,
                    ifelse(nrow(meets_requirements) > 1, "s", "")),
-           "db")
+           log_ns)
   } else {
     missing_recommended <- meets_requirements %>%
       select(applies_to, full_detail, missing_detail) %>%
@@ -102,8 +104,8 @@ full_import <- function(import_object                  = NULL,
                    import_type,
                    ifelse(nrow(missing_recommended) > 1, "s", ""),
                    format_list_of_names(missing_recommended$applies_to, resolve_quotes = TRUE),
-                   include_if_missing_recommended)
-    )
+                   include_if_missing_recommended),
+           log_ns)
     if (!include_if_missing_recommended) {
       to_ignore <- c(to_ignore, which(!meets_requirements$full_detail))
     }
@@ -126,7 +128,13 @@ full_import <- function(import_object                  = NULL,
     if (contributor %in% map_contributors_to$provided) {
       contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
     } else {
-      contributor_id <- verify_contributor(contributor)
+      contributor_id <- resolve_normalization_value(contributor, "contributors")
+      if (is.null(contributor_id)) {
+        log_it("error",
+               "Unable to resolve contributor. Please adjust and try again.",
+               log_ns)
+        return(invisible(NULL))
+      }
       map_contributors_to <- map_contributors_to %>%
         bind_rows(
           data.frame(provided = contributor, resolved = contributor_id)
@@ -134,7 +142,8 @@ full_import <- function(import_object                  = NULL,
     }
     # Method info is optional but heavily encouraged 
     if (method_info_in %in% names(obj)) {
-      ms_method_id <- resolve_method(obj, method_in = method_info_in)
+      ms_method_id <- resolve_method(obj,
+                                     method_in = method_info_in)
     } else {
       ms_method_id <- NA
     }
@@ -451,9 +460,12 @@ resolve_sample <- function(obj,
   stopifnot(active_connection(db_conn))
   if (!is.null(method_id)) stopifnot(method_id == as.integer(method_id), length(method_id) == 1)
   log_fn("start")
-  
   log_it("info", "Preparing sample import.", log_ns)
-  sample_values <- map_import(obj, db_table) %>%
+  sample_values <- map_import(
+    import_obj = obj,
+    aspect = db_table,
+    import_map = IMPORT_MAP
+  ) %>%
     tack_on(...) %>%
     ensure_required_presence(db_table, db_conn = db_conn)
   is_single_record <- all(unlist(lapply(sample_values, length)) == 1)
@@ -520,8 +532,24 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_m
   obj_method <- get_component(obj, method_in, ...)[[1]]
   
   log_it("trace", "Building methods entry values...", "db")
-  verify <- VERIFY_ARGUMENTS
-  VERIFY_ARGUMENTS <<- FALSE
+  # Accelerate this portion
+  argument_verification <- VERIFY_ARGUMENTS
+  if (argument_verification) {
+    assign("VERIFY_ARGUMENTS", FALSE, envir = .GlobalEnv)
+  }
+  log_it("info", "Preparing sample import.", log_ns)
+  ms_method_values <- map_import(
+    import_obj = obj,
+    aspect = db_table,
+    import_map = IMPORT_MAP
+  ) %>%
+    tack_on(...) %>%
+    ensure_required_presence(db_table, db_conn = db_conn)
+  is_single_record <- all(unlist(lapply(ms_method_values, length)) == 1)
+  log_it("trace", glue("Mass spectromtery value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
+  if (!is_single_record) {
+    stop("Resolve and try again.")
+  }
   ms_method_values <- c(
     ionization    = resolve_normalization_value(
       obj_method$ionization,
@@ -549,7 +577,9 @@ resolve_method <- function(obj, method_in = "massspectrometry", db_table = "ms_m
     has_qc_method = as.numeric("qcmethod" %in% names(obj)),
     citation      = obj_method$source
   )
-  VERIFY_ARGUMENTS <<- verify
+  if (argument_verification) {
+    assign("VERIFY_ARGUMENTS", argument_verification, envir = .GlobalEnv)
+  }
   # Insert method if appropriate
   ms_method_id <- try(
     add_or_get_id(
@@ -1149,12 +1179,16 @@ verify_import_requirements <- function(obj,
       nested <- TRUE
       # Speed this up since it already passed argument verification
       verify <- VERIFY_ARGUMENTS
-      if (verify) log_it("info", "Argument verification will be turned off to speed up the check process.", "db")
-      VERIFY_ARGUMENTS <<- FALSE
+      if (verify) {
+        log_it("info", "Argument verification will be turned off to speed up the check process.", "db")
+        assign("VERIFY_ARGUMENTS", FALSE, envir = .GlobalEnv)
+      }
       out <- lapply(obj, verify_import_requirements, ignore_extra = ignore_extra, log_issues_as = log_issues_as) %>%
         setNames(names(obj))
-      if (verify != VERIFY_ARGUMENTS) log_it("info", glue::glue("Setting argument verification back to {verify} according to the session settings."), "db")
-      VERIFY_ARGUMENTS <<- verify
+      if (verify) {
+        log_it("info", glue::glue("Setting argument verification back to {verify} according to the session settings."), "db")
+        assign("VERIFY_ARGUMENTS", verify, envir = .GlobalEnv)
+      }
     } else {
       nested <- FALSE
       missing_reqs <- hard_reqs[!hard_reqs %in% names(obj)]
@@ -1279,7 +1313,39 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
   return(out)
 }
 
-map_import <- function(import_obj, aspect, import_map = nist_map, case_sensitive = TRUE, db_conn = con) {
+#' Map an import file to the database schema
+#'
+#' This parses an import object and attempts to map it to database fields and
+#' tables as defined by an import map stored in an object of class data.frame,
+#' typically created during project compliance as "IMPORT_MAP". This object is a
+#' list of all columns and their tables in the import file matched with the
+#' database table and column to which they should be imported.
+#'
+#' @param import_obj LIST object of values to import
+#' @param aspect CHR scalar of the import aspect (e.g. "sample") to map
+#' @param import_map data.frame object of the import map (e.g. from a CSV)
+#' @param case_sensitive LGL scalar of whether to match normalization values in
+#'   a case sensitive (TRUE, default) or case insensitive manner; passed to
+#'   [resolve_normalization_values]
+#' @param db_conn connection object (default: con)
+#'
+#' @return LIST of final mapped values
+#' @export
+#' 
+map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db_conn = con) {
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args = list(import_obj, aspect, import_map, case_sensitive),
+      conds = list(
+        import_obj = list(c("mode", "list")),
+        aspect = list(c("mode", "character"), c("length", 1)),
+        import_map = list(c("mode", "data.frame"), c("n>", 0)),
+        case_sensitive = list(c("mode", "logical"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  stopifnot(dbIsValid(db_conn))
   if (is.character(import_map)) {
     if (!file.exists(import_map)) {
       import_map <- list.files(pattern = import_map, recursive = TRUE, full.names = TRUE)
@@ -1331,4 +1397,15 @@ map_import <- function(import_obj, aspect, import_map = nist_map, case_sensitive
     }
   }
   return(out)
+}
+
+ensure_required_presence <- function(db_table, db_dict, db_conn = con) {
+  if (is.character(db_dict)) {
+    if (exists(db_dict)) {
+      db_dict <- .GlobalEnv[[db_dict]]
+    } else {
+      db_dict <- er_map(db_conn)
+      assign("db_dict", db_dict, envir = .GlobalEnv)
+    }
+  }
 }
