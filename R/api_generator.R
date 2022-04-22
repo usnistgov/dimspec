@@ -85,9 +85,19 @@ validate_column_names <- function(db_conn, table_names, column_names) {
   }
   # Check connection
   stopifnot(active_connection(db_conn))
-  
-  valid_fields <- lapply(table_names, function(x) dbListFields(db_conn, x)) %>%
-    unlist() %>% unique()
+  row_id <- "rowid"
+  row_id_refs <- c("row_id", "rowid", "ROWID", "ROW_ID")
+  if (any(row_id_refs %in% column_names)) {
+    column_names[which(column_names %in% row_id_refs)] <- row_id
+    column_names <- unique(column_names)
+  }
+  valid_fields <- c(
+    table_names %>%
+      lapply(function(x) dbListFields(db_conn, x)) %>%
+    unlist() %>%
+      unique(),
+    row_id
+  )
   valid_columns <- unique(column_names) %in% valid_fields
   if (!all(valid_columns)) {
     stop(
