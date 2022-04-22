@@ -71,11 +71,14 @@ if (ifelse(exists("INFORMATICS"), INFORMATICS, TRUE)) {
 }
 
 # Files matching these patterns will be excluded from sourcing at startup.
-EXCLUSIONS     <- c(".RDS",
-                    "compliance",
-                    "create_method_list",
-                    "generate_db",
-                    "metadata_xml")
+EXCLUSIONS       <- c(".RDS",
+                      "compliance",
+                      "create_method_list",
+                      "generate_db",
+                      "metadata_xml")
+
+# Import map to use ------------------------------------------------------------
+IMPORT_MAP       <- read.csv(file.path("config", "map_NTA_MRT.csv"))
 
 # Runtime quality assurance/control --------------------------------------------
 # Whether to use application logging to print or record log messages during use.
