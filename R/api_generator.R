@@ -153,7 +153,7 @@ validate_column_names <- function(db_conn, table_names, column_names) {
 #' clause_where(ANSI(), "example", list(foo = "bar", cat = "dog"))
 #' clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
 #' clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
-clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = TRUE, and_or = "OR") {
+clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = TRUE, fuzzy = FALSE, and_or = "OR") {
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -162,6 +162,7 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
         table_names    = list(c("mode", "character"), c("n>=", 1)),
         match_criteria = list(c("mode", "list")),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        fuzzy          = list(c("mode", "logical"), c("length", 1)),
         and_or         = list(c("mode", "character"), c("length", 1))
       ),
       from_fn = "clause_where"
@@ -214,16 +215,21 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
     }
     modifiers <- names(out[[m]])
     checks    <- out[[m]]$values
-    if (!case_sensitive) {
-      checks <- unique(
-        c(
-          checks,
-          str_to_lower(checks),
-          str_to_title(checks),
-          str_to_sentence(checks),
-          str_to_upper(checks)
+    if (fuzzy) {
+      out[[m]]$values <- checks
+      out[[m]]$like   <- TRUE
+    } else {
+      if (!case_sensitive) {
+        checks <- unique(
+          c(
+            checks,
+            str_to_lower(checks),
+            str_to_title(checks),
+            str_to_sentence(checks),
+            str_to_upper(checks)
+          )
         )
-      )
+      }
     }
     if (length(checks) == 1) {
       out[[m]]$query <- sqlInterpolate(db_conn, "? = ?", column, checks)
@@ -291,35 +297,15 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #' This function is intended to ease that by taking care of most of the
 #' associated logic and enabling routing through other functions, or picking up
 #' arguments from within other function calls.
+#' 
+#' @param inheritParams clause_where
 #'
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
 #' @param table_name CHR scalar of the table name to which this query applies
-#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
-#'   (default: con)
 #' @param column_names CHR vector of column names to include (default NULL)
 #' @param values LIST of CHR vectors with values to INSERT or UPDATE (default
 #'   NULL)
-#' @param match_criteria LIST of matching criteria to be passed to
-#'   {clause_where} with names matching columns against which to apply. In the
-#'   simplest case, a direct value is given to the name (e.g. `list(last_name =
-#'   "Smith")`) for single matches. All match criteria must be their own list
-#'   item. Values can also be provided as a nested list for more complicated
-#'   WHERE clauses with names `values`, `exclude`, and `like` that will be
-#'   recognized. `values` should be the actual search criteria, and if a vector
-#'   of length greater than one is specified, the WHERE clause becomes an IN
-#'   clause. `exclude` (LGL scalar) determines whether to apply the NOT
-#'   operator. `like` (LGL scalar) determines whether this is an equality, list,
-#'   or similarity. To reverse the example above by issuing a NOT statement, use
-#'   `list(last_name = list(values = "Smith", exclude = TRUE))`, or to look for
-#'   all records LIKE (or NOT LIKE) "Smith", set this as `list(last_name =
-#'   list(values = "Smith", exclude = FALSE, like = TRUE))`
-#' @param case_sensitive LGL scalar of whether to match on a case sensitive
-#'   basis (the default TRUE searches for values as-provided) or whether to
-#'   coerce value matches by upper, lower, sentence, and title case matches;
-#'   passed directly to [clause_where] (default: TRUE)
-#' @param and_or CHR scalar one of "AND" or "OR" to be applied to the match
-#'   criteria (default "OR")
 #' @param limit INT scalar of the maximum number of rows to return  (default
 #'   NULL)
 #' @param group_by CHR vector of columns by which to group (default NULL)
@@ -334,6 +320,9 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #'   query statement (default TRUE)
 #' @param single_column_as_vector LGL scalar of whether to return results as a
 #'   vector if they consist of only a single column (default TRUE)
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: "db")
+#' @log_ns 
 #'
 #' @return CHR scalar of the constructed query
 #' @export
@@ -357,6 +346,7 @@ build_db_action <- function(action,
                             values          = NULL,
                             match_criteria  = NULL,
                             case_sensitive  = TRUE,
+                            fuzzy           = FALSE,
                             and_or          = "OR",
                             limit           = NULL,
                             group_by        = NULL,
@@ -365,17 +355,19 @@ build_db_action <- function(action,
                             get_all_columns = FALSE,
                             ignore          = FALSE,
                             execute         = TRUE,
-                            single_column_as_vector = TRUE) {
+                            single_column_as_vector = TRUE,
+                            log_ns          = "db") {
   # Argument validation
   action       <- toupper(action)
   table_name   <- tolower(table_name)
   and_or       <- toupper(and_or)
   is_ansi      <- identical(db_conn, ANSI())
+  logging      <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(action, table_name, db_conn, case_sensitive, and_or,
-                        distinct, get_all_columns, ignore, execute,
-                        single_column_as_vector),
+      args       = list(action, table_name, db_conn, case_sensitive, fuzzy,
+                        and_or, distinct, get_all_columns, ignore, execute,
+                        single_column_as_vector, log_ns),
       conditions = list(
         action          = list(c("choices", list(toupper(names(queries)))),
                                c("mode", "character")),
@@ -389,6 +381,7 @@ build_db_action <- function(action,
         },
         db_conn         = list(c("length", 1)),
         case_sensitive  = list(c("mode", "logical"), c("length", 1)),
+        fuzzy           = list(c("mode", "logical"), c("length", 1)),
         and_or          = list(c("choices", list(c("AND", "OR"))),
                                c("mode", "character"),
                                c("length", 1)),
@@ -401,7 +394,9 @@ build_db_action <- function(action,
         execute         = list(c("mode", "logical"),
                                c("length", 1)),
         single_column_as_vector = list(c("mode", "logical"),
-                                       c("length", 1))
+                                       c("length", 1)),
+        log_ns          = list(c("mode", "logical"),
+                               c("length", 1))
       ),
       from_fn = "build_db_action"
     )
@@ -524,11 +519,18 @@ build_db_action <- function(action,
                    clause_where(db_conn        = db_conn,
                                 table_names    = table_name,
                                 case_sensitive = case_sensitive,
+                                fuzzy          = fuzzy,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
+    if (fuzzy && case_sensitive) {
+      if (logging) {
+        log_it("warn",
+               "Fuzzy and case sensitive queries cannot be combined...defaulting to fuzzy, case insensitive query.",
+               log_ns)
+      }
+    }
   } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT", "SELECT"))) {
-    log_it("error", 'Only "NROW", "INSERT", and "SELECT" actions are valid when argument "match_criteria" is not provided.')
-    stop()
+    stop('Only "NROW", "INSERT", and "SELECT" actions are valid when argument "match_criteria" is not provided.')
   }
   
   if (action == "SELECT") {
@@ -577,8 +579,8 @@ build_db_action <- function(action,
                                  rows_affected,
                                  ifelse(rows_affected == 1, "row", "rows")),
                          "does not match any rows"))
-      log_it("info", msg, "db")
-      if (interactive() && !LOGGING_ON) {
+      if (logging) log_it("info", msg, log_ns)
+      if (interactive() && exists("LOGGING_ON") && !LOGGING_ON) {
         cat(msg, "\n")
       }
       if (rows_affected > 0) {
@@ -588,13 +590,13 @@ build_db_action <- function(action,
                                  multiple  = FALSE,
                                  title     = "Please confirm.")
           if (!confirm == "CONFIRM") {
-            log_it("info", "Delete query construction aborted.")
+            if (logging) log_it("info", "Delete query construction aborted.", log_ns)
             query <- NA
           } else {
-            log_it("info", "Delete query confirmed by user.")
+            if (logging) log_it("info", "Delete query confirmed by user.", log_ns)
           }
         } else {
-          log_it("warn", "Delete statement issued from non-interactive session.", "db")
+          if (logging) log_it("warn", "Delete statement issued from non-interactive session.", log_ns)
         }
       }
     }
@@ -608,6 +610,7 @@ build_db_action <- function(action,
       str_replace_all(catch_null, " IS NULL")
   }
   if (execute) {
+    if (logging) log_it("trace", glue::glue("Executing: {query}."), log_ns)
     if (grepl("^SELECT", query)) {
       tmp <- dbGetQuery(db_conn, query)
       if (all(ncol(tmp) == 1, single_column_as_vector)) tmp <- tmp[, 1]

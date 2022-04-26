@@ -1850,6 +1850,8 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #'   basis (the default TRUE searches for values as-provided) or whether to
 #'   coerce value matches by upper, lower, sentence, and title case matches
 #' @param db_conn connection object (default: con)
+#' @param fuzzy LGL scalar of whether to do a "fuzzy" match in the sense that
+#'   values provided are wrapped in an SQL "LIKE '%value%'" clause.
 #'
 #' @return LIST of length 1-2 containing "exists" as a LGL scalar for whether
 #'   the values were found, and "values" containing the result of the database
@@ -1888,11 +1890,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
   stopifnot(active_connection(db_conn))
   to_match <- setNames(list(values), db_column)
   if (fuzzy) {
-    to_match <- lapply(to_match,
-                       function(x) {
-                         list(values = x,
-                              like = TRUE)
-                       })
+    case_sensitive <- FALSE
   }
   existing_values <- build_db_action(action         = "SELECT",
                                      table_name     = db_table,
@@ -1952,7 +1950,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
       select_vals <- values
     }
     select_vals <- c("(Abort)", sprintf("(New) %s", search_value), select_vals)
-    msg <- sprintf('\n%s values directly matching "%s" were identified%s.',
+    msg <- sprintf('\n%s values matching "%s" were identified%s.',
                    ifelse(all(present, !only_one), "Multiple", "No"),
                    search_value,
                    ifelse(db_table == "",
@@ -1966,7 +1964,8 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
         title = paste(msg,
                       sprintf("Please select a number to match with a value%s to associate with that record, (Abort) to abort this operation, or (New) to add this value to the normalization table.",
                               ifelse(is.data.frame(values),
-                                     sprintf(" from the table above in the '%s' column", select_from),
+                                     sprintf(" from the table above in the '%s' column",
+                                             select_from),
                                      "")
                       ))
       )
@@ -1994,12 +1993,10 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
 #' @note This is mostly a DRY convenience function to avoid having to write the
 #'   loookup and add logic each time.
 #' @note Interactive sessions are required to add new values
+#' 
+#' @inheritParams check_for_value
 #'
 #' @param this_value CHR (or coercible to) scalar value to look up
-#' @param db_table CHR scalar of the table name in which to search
-#' @param case_sensitive LGL scalar of whether or not to match case exactly
-#'   (TRUE) or to search all case manipulations (FALSE) (default: FALSE)
-#' @param db_conn connection object (default: con)
 #' @param log_ns CHR scalar of the logging namespace to use during execution
 #'   (default: "db")
 #' @param ... other values to add to the normalization table, where names must
@@ -2008,7 +2005,13 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
 #' @return
 #' @export
 #' 
-resolve_normalization_value <- function(this_value, db_table, id_column = "id", case_sensitive = FALSE, db_conn = con, log_ns = "db", ...) {
+resolve_normalization_value <- function(this_value,
+                                        db_table,
+                                        id_column = "id",
+                                        case_sensitive = FALSE,
+                                        fuzzy = FALSE,
+                                        db_conn = con,
+                                        log_ns = "db", ...) {
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -2016,18 +2019,19 @@ resolve_normalization_value <- function(this_value, db_table, id_column = "id", 
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(this_value, db_table, case_sensitive, log_ns),
+      args       = list(this_value, db_table, case_sensitive, fuzzy, log_ns),
       conditions = list(
         this_value     = list(c("mode", "character"), c("length", 1), "not_empty"),
         db_table       = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        fuzzy          = list(c("mode", "logical"), c("length", 1)),
         log_ns         = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
   this_id <- integer(0)
-  if (!case_sensitive) {
+  if (!case_sensitive && !fuzzy) {
     table_fields <- dbListFields(db_conn, db_table)
     # Accelerate this portion
     argument_verification <- VERIFY_ARGUMENTS
@@ -2041,6 +2045,7 @@ resolve_normalization_value <- function(this_value, db_table, id_column = "id", 
                           values = this_value,
                           db_table = db_table,
                           db_column = x,
+                          fuzzy = fuzzy,
                           case_sensitive = case_sensitive)
                         if (tmp$exists) {
                           tmp$values
@@ -2054,21 +2059,37 @@ resolve_normalization_value <- function(this_value, db_table, id_column = "id", 
     }
     check <- check[-which(sapply(check, is.null))] %>%
       bind_rows()
-    if (nrow(check) == 0) {
-      log_it("info", "No case insensitive matches found.", log_ns)
-    }
+    match_fail <- nrow(check) == 0
   } else {
     check <- dbReadTable(db_conn, db_table) %>%
       filter(if_any(everything(), .fns = ~ .x == this_value))
-    if (nrow(check) == 0) {
-      log_it("info", "No direct match found; executing fuzzy match across columns.", log_ns)
-      check <- dbReadTable(db_conn, db_table) %>%
-        filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
+    match_fail <- nrow(check) == 0
+    if (match_fail) {
+      log_it("info",
+             glue::glue("No direct match found in table {db_table}."),
+             log_ns)
+      if (match_fail) {
+        if (fuzzy) {
+          log_it("info",
+                 glue::glue("Executing fuzzy match on table {db_table}."),
+                 log_ns)
+          check <- dbReadTable(db_conn, db_table) %>%
+            filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
+          match_fail <- nrow(check) == 0
+          if (match_fail) {
+            log_it("info",
+                   glue::glue("No fuzzy matches found in table {db_table}."),
+                   log_ns)
+          }
+        }
+      }
     }
   }
-  if (length(names(check)) == 0) {
+  if (match_fail) {
     check <- dbListFields(db_conn, db_table)
     names(check) <- check
+    msg <- glue::glue("No case {ifelse(case_sensitive, 'sensitive', 'insensitive')}{ifelse(fuzzy, ' fuzzy', '')} matches found.")
+    log_it("info", msg, log_ns)
   }
   if (!id_column %in% names(check)) {
     log_it("warn", glue::glue("Expected but could not find an '{id_column}' column. Is '{db_table}' a normalization table containing '{id_column}'?"), log_ns)
@@ -2078,7 +2099,11 @@ resolve_normalization_value <- function(this_value, db_table, id_column = "id", 
   }
   if (check[[id_column]] == id_column || !length(this_id) == 1) {
     if (interactive()) {
-      tmp <- dbReadTable(db_conn, db_table)
+      if (match_fail) {
+        tmp <- dbReadTable(db_conn, db_table)
+      } else {
+        tmp <- check
+      }
       if (id_column %in% names(tmp$values)) {
         tmp <- tmp %>%
           select(-!!id_column)
