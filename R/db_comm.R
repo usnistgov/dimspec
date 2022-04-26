@@ -1629,6 +1629,7 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
     pull(name)
   new_values <- new_values[which(names(new_values) %in% needed)]
   needed     <- needed[!needed %in% names(new_values)]
+  if (exists("log_it")) log_it("info", glue::glue("add_normalization_value: Adding normalization value to {db_table}."))
   if (length(needed) == 0) {
     if (exists("log_it")) {
       lot_it("info", "add_normalization_value: Named values were provided for all columns.", log_ns)
@@ -1771,7 +1772,7 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
       if (length(norm_refs) > 0) {
         is_normalized <- grepl(need_this, norm_refs)
         if (is_normalized) {
-          log_it("info", glue::glue("{prompt_field} is normalized and needs additional information."), log_ns)
+          log_it("info", glue::glue("{prompt_field} is a normalized field and may need additional information."), log_ns)
           normalizes_to <- grep(need_this, database_map[[db_table]]$references, value = TRUE) %>%
             str_remove_all("\\)") %>%
             str_split(" REFERENCES |\\(") %>%
@@ -2066,19 +2067,29 @@ resolve_normalization_value <- function(this_value,
     match_fail <- nrow(check) == 0
     if (match_fail) {
       log_it("info",
-             glue::glue("No direct match found in table {db_table}."),
+             glue::glue("No direct match for '{this_value}' found in table '{db_table}'."),
              log_ns)
       if (match_fail) {
         if (fuzzy) {
           log_it("info",
-                 glue::glue("Executing fuzzy match on table {db_table}."),
+                 glue::glue("Executing fuzzy match on table '{db_table}'."),
                  log_ns)
           check <- dbReadTable(db_conn, db_table) %>%
             filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
           match_fail <- nrow(check) == 0
           if (match_fail) {
             log_it("info",
-                   glue::glue("No fuzzy matches found in table {db_table}."),
+                   glue::glue("No fuzzy matches found for '{this_value}' in table '{db_table}'."),
+                   log_ns)
+          } else {
+            possibles <- grep(
+              unlist(check),
+              pattern = this_value,
+              ignore.case = TRUE,
+              value = TRUE
+            )
+            log_it("info",
+                   glue::glue("Fuzzy match {format_list_of_names(possibles, add_quotes = TRUE)} found for '{this_value}' in table '{db_table}'."),
                    log_ns)
           }
         }
