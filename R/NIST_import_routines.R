@@ -32,7 +32,7 @@ full_import <- function(import_object                  = NULL,
   )
   if (sample_info_in %in% names(import_object)) import_object <- list(import_object)
   to_ignore <- integer(0)
-  if (all(meets_requirements$all_required)) {
+  if (all(meets_requirements$has_all_required)) {
     log_it("success",
            sprintf("Import %s%s meets all import requirements.",
                    import_type,
@@ -40,29 +40,29 @@ full_import <- function(import_object                  = NULL,
            log_ns)
   } else {
     missing_required <- meets_requirements %>%
-      select(applies_to, all_required, missing_required) %>%
-      filter(!all_required) %>%
-      group_by(applies_to) %>%
-      unnest(cols = c(missing_required)) %>%
+      select(import_object, has_all_required, missing_requirements) %>%
+      filter(!has_all_required) %>%
+      group_by(import_object) %>%
+      unnest(cols = c(missing_requirements)) %>%
       mutate(req_msg = stringr::str_c('Required element',
-                                      ifelse(length(missing_required) > 1, "s ", " "),
-                                      format_list_of_names(missing_required, resolve_quotes = TRUE),
-                                      ifelse(length(missing_required) > 1, " were", " was"),
+                                      ifelse(length(missing_requirements) > 1, "s ", " "),
+                                      format_list_of_names(missing_requirements, resolve_quotes = TRUE),
+                                      ifelse(length(missing_requirements) > 1, " were", " was"),
                                       ' missing from import ',
                                       import_type,
                                       ' "',
-                                      applies_to,
+                                      import_object,
                                       '". ')) %>%
-      distinct(applies_to, req_msg)
+      distinct(import_object, req_msg)
     for (x in missing_required$req_msg) log_it("error", msg = x, "db")
     if (ignore_missing_required) {
-      to_ignore <- c(to_ignore, which(!meets_requirements$all_required))
+      to_ignore <- c(to_ignore, which(!meets_requirements$has_all_required))
       log_it("warn",
              sprintf('The import will ignore %s %s%s (%s) which did not contain all required information.',
                      nrow(missing_required),
                      import_type,
                      ifelse(nrow(missing_required) > 1, "s", ""),
-                     format_list_of_names(missing_required$applies_to, resolve_quotes = TRUE)
+                     format_list_of_names(missing_required$import_object, resolve_quotes = TRUE)
              ),
              log_ns)
     } else {
@@ -74,7 +74,7 @@ full_import <- function(import_object                  = NULL,
       return(invisible(NULL))
     }
   }
-  if (all(meets_requirements$full_detail)) {
+  if (all(meets_requirements$has_full_detail)) {
     log_it("success",
            sprintf("Import %s%s contains all expected detail.",
                    import_type,
@@ -82,9 +82,9 @@ full_import <- function(import_object                  = NULL,
            log_ns)
   } else {
     missing_recommended <- meets_requirements %>%
-      select(applies_to, full_detail, missing_detail) %>%
-      filter(!full_detail) %>%
-      group_by(applies_to) %>%
+      select(import_object, has_full_detail, missing_detail) %>%
+      filter(!has_full_detail) %>%
+      group_by(import_object) %>%
       unnest(cols = c(missing_detail)) %>%
       mutate(recc_msg = stringr::str_c('Recommended element',
                                        ifelse(length(missing_detail) > 1, "s ", " "),
@@ -93,9 +93,9 @@ full_import <- function(import_object                  = NULL,
                                        ' missing from import ',
                                        import_type,
                                        ' "',
-                                       applies_to,
+                                       import_object,
                                        '".')) %>%
-      distinct(applies_to, recc_msg)
+      distinct(import_object, recc_msg)
     for (x in missing_recommended$recc_msg) log_it("error", msg = x, "db")
     log_it("warn",
            sprintf('The import will %s %s %s%s (%s) which did not contain all recommended information because ignore_missing_recommended = %s.',
@@ -103,11 +103,11 @@ full_import <- function(import_object                  = NULL,
                    nrow(missing_recommended),
                    import_type,
                    ifelse(nrow(missing_recommended) > 1, "s", ""),
-                   format_list_of_names(missing_recommended$applies_to, resolve_quotes = TRUE),
+                   format_list_of_names(missing_recommended$import_object, resolve_quotes = TRUE),
                    include_if_missing_recommended),
            log_ns)
     if (!include_if_missing_recommended) {
-      to_ignore <- c(to_ignore, which(!meets_requirements$full_detail))
+      to_ignore <- c(to_ignore, which(!meets_requirements$has_full_detail))
     }
   }
   if (length(to_ignore) > 0) {
@@ -428,6 +428,7 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #' @param sample_in CHR scalar of the import object name storing sample data
 #'   (default: "sample")
 #' @param method_id INT scalar of the associated ms_methods record id
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to samples as necessary for
 #'   workflow resolution, can be used to pass defaults or additional values.
 #'
@@ -467,7 +468,7 @@ resolve_sample <- function(obj,
     import_map = IMPORT_MAP
   ) %>%
     tack_on(...) %>%
-    ensure_required_presence(db_table, db_conn = db_conn)
+    verify_import_columns(db_table, db_conn = db_conn)
   is_single_record <- all(unlist(lapply(sample_values, length)) == 1)
   log_it("trace", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
   if (!is_single_record) {
@@ -502,6 +503,7 @@ resolve_sample <- function(obj,
 #'   information
 #' @param db_table CHR scalar name of the database table containing method
 #'   information
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to "ms_methods" as necessary
 #'   for workflow resolution, can be used to pass defaults or additional values.
 #'
@@ -757,7 +759,7 @@ resolve_qc_data <- function(obj, sample_id, db_conn = con, log_ns = "db") {
 #' be identical for multiple data import files. This provides a unique listing
 #' of those sample characteristics to reduce data manipulation and storage, and
 #' minimize database "chatter" during read/write. It returns a set of unique
-#' characteristics in a list, with appended characteristics "applies_to" with
+#' characteristics in a list, with appended characteristics "import_object" with
 #' the index number and object name of entries matching those characteristics.
 #'
 #' This is largely superceded by later developments to database operations that
@@ -784,12 +786,12 @@ get_uniques <- function(objects, aspect) {
     unique() %>%
     lapply(function(x) {
       ind <- unname(which(sapply(out, FUN = identical, x) == TRUE))
-      applies_to <- list(
+      import_object <- list(
         index  = ind,
         object = names(objects)[ind]
       )
-      if (is.null(applies_to$file)) applies_to$file <- "import_file"
-      c(data = list(x), applies_to = list(applies_to))
+      if (is.null(import_object$file)) import_object$file <- "import_file"
+      c(data = list(x), import_object = list(import_object))
     })
   return(out_distinct)
 }
@@ -803,10 +805,11 @@ get_uniques <- function(objects, aspect) {
 #'
 #' @param sample_ids INT vector of IDs to remove from the samples table.
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return
 #' @export
-remove_sample <- function(sample_ids, db_conn = con) {
+remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
   log_fn("start")
   if (sample_ids != as.integer(sample_ids)) stop('Parameter "sample_ids" cannot be safely coerced to integer.')
   sample_ids <- as.integer(sample_ids)
@@ -828,7 +831,7 @@ remove_sample <- function(sample_ids, db_conn = con) {
     filter(id %in% sample_ids) %>%
     distinct(ms_methods_id) %>%
     pull()
-  log_it("info", glue('Removing samples with id{ifelse(length(sample_ids) > 1, "s", "")} {format_list_of_names(sample_ids)}.'), "db")
+  log_it("info", glue('Removing samples with id{ifelse(length(sample_ids) > 1, "s", "")} {format_list_of_names(sample_ids)}.'), log_ns)
   build_db_action("delete", "samples", match_criteria = list(id = sample_ids))
   remaining_ms_methods_ids <- dat %>%
     filter(ms_methods_id %in% target_ms_methods_ids) %>%
@@ -837,14 +840,14 @@ remove_sample <- function(sample_ids, db_conn = con) {
   remove_methods_ids <- target_ms_methods_ids[!target_ms_methods_ids %in% remaining_ms_methods_ids]
   if (length(remaining_ms_methods_ids) == 0) {
     msg_part <- glue('{ifelse(length(remove_methods_ids) > 1, "s", "")} {format_list_of_names(remove_methods_ids)}')
-    log_it("info", glue('No other samples share methods with id{msg_part}.'), "db")
+    log_it("info", glue('No other samples share methods with id{msg_part}.'), log_ns)
   } else {
     msg_part <- glue('{ifelse(length(remaining_ms_methods_ids) > 1, "s", "")} {format_list_of_names(remaining_ms_methods_ids)} {ifelse(length(remaining_ms_methods_ids) > 1, "were", "was")}')
-    log_it("info", glue("Method{msg_part} shared by others and will not be removed."))
+    log_it("info", glue("Method{msg_part} shared by others and will not be removed."), log_ns)
   }
   if (length(remove_methods_ids) > 0) {
     msg_part <- glue('{ifelse(length(remove_methods_ids) > 1, "s", "")} {format_list_of_names(remove_methods_ids)}')
-    log_it("info", glue("Removing method{msg_part}."))
+    log_it("info", glue("Removing method{msg_part}."), log_ns)
     build_db_action("delete", "ms_methods", match_criteria = list(id = remove_methods_ids))
   }
   log_fn("end")
@@ -881,6 +884,7 @@ remove_sample <- function(sample_ids, db_conn = con) {
 #'   deleted. (default: TRUE)
 #' @param retain_in_R LGL indicating whether to retain a local copy of the
 #'   requirements file generated (default: TRUE)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return writes a file to the project directory (based on the found location
 #'   of `file_name`) with the JSON structure
@@ -888,19 +892,20 @@ remove_sample <- function(sample_ids, db_conn = con) {
 make_requirements <- function(example_import,
                               file_name = "import_requirements.json",
                               archive = TRUE,
-                              retain_in_R = TRUE) {
+                              retain_in_R = TRUE,
+                              log_ns = "db") {
   if (class(example_import) == "character") {
-    log_it("info", sprintf('Assuming "%s" refers to a file name, and that the file is parseable as JSON.', example_import))
+    log_it("info", sprintf('Assuming "%s" refers to a file name, and that the file is parseable as JSON.', example_import), log_ns)
     f_name <- ifelse(
       file.exists(example_import),
       example_import,
       list.files(pattern = example_import, recursive = TRUE, full.names = TRUE)
     )
     if (length(f_name) == 0) {
-      log_it("error", sprintf('No file matching "%s" was located in the project directory.', example_import))
+      log_it("error", sprintf('No file matching "%s" was located in the project directory.', example_import), log_ns)
       stop()
     } else if (length(f_name) > 1) {
-      log_it("warn", sprintf('Multiple files matching "%s" were located in the project directory.', example_import))
+      log_it("warn", sprintf('Multiple files matching "%s" were located in the project directory.', example_import), log_ns)
       if (interactive()) {
         f_name <- select.list(
           title = "Please select an example file to continue.",
@@ -928,7 +933,8 @@ make_requirements <- function(example_import,
       sprintf(
         "Multiple import requirements files located. Only the file at (%s) will be replaced.",
         f_name
-      )
+      ),
+      log_ns
     )
   } else if (length(f_name) == 1 && archive) {
     f_ext      <- paste0(".", tools::file_ext(f_name))
@@ -984,21 +990,22 @@ make_requirements <- function(example_import,
 #' @note If columns are provided that do not match the schema, they will be
 #'   stripped away in the return value.
 #'
-#' @param db_table CHR scalar of the table name
 #' @param values LIST or CHR vector of values to add. If `names_only` is TRUE,
 #'   values are directly interpreted as column names. Otherwise, all values
 #'   provided must be named.
+#' @param db_table CHR scalar of the table name
 #' @param names_only LGL scalar of whether to treat entries of `values` as the
 #'   column names rather than the column values (default: FALSE)
 #' @param require_all LGL scalar of whether to require all columns (except the
 #'   assumed primary key column of "id") or only those defined as "NOT NULL"
 #'   (default: TRUE requires the presence of all columns in the table)
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return An object of the same type as `values` with extraneous values (i.e.
 #'   those not matching a database column header) stripped away.
 #' @export
-verify_import_columns <- function(db_table, values, names_only = FALSE, require_all = TRUE, db_conn = con, log_ns = "db") {
+verify_import_columns <- function(values, db_table, names_only = FALSE, require_all = TRUE, db_conn = con, log_ns = "db") {
   log_fn("start")
   log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'), log_ns)
   # Argument validation relies on verify_args
@@ -1006,8 +1013,8 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        db_table    = list(c("mode", "character"), c("length", 1)),
         values      = list(c("n>=", 1)),
+        db_table    = list(c("mode", "character"), c("length", 1)),
         names_only  = list(c("mode", "logical"), c("length", 1)),
         require_all = list(c("mode", "logical"), c("length", 1)),
         db_conn     = list(c("length", 1)),
@@ -1071,17 +1078,19 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
 #' the names of the provided `obj` attached to each row. Other columns contain
 #' information related to three checks.
 #'
-#' 1. all_required: Are all required names present in the sample? (TRUE/FALSE)
+#' 1. has_all_required: Are all required names present in the sample?
+#' (TRUE/FALSE)
 #'
-#' 2. missing_reqs: Character vectors naming any of the missing requirements
+#' 2. missing_requirements: Character vectors naming any of the missing
+#' requirements
 #'
-#' 3. full_detail: Is all expected detail present? (TRUE/FALSE)
+#' 3. has_full_detail: Is all expected detail present? (TRUE/FALSE)
 #'
 #' 4. missing_detail: Character vectors naming any missing value sets
 #'
-#' 5. extra: Are there unexpected values provided ? (TRUE/FALSE)
+#' 5. has_extra: Are there unexpected values provided ? (TRUE/FALSE)
 #'
-#' 6. extra_cols: Character vectors naming any extra columns; these will be
+#' 6. extra_cols: Character vectors naming any has_extra columns; these will be
 #' dropped from the import but are provided for information sake
 #'
 #' All of this is defined by the `requirements_obj` list. Do not provide that
@@ -1103,26 +1112,32 @@ verify_import_columns <- function(db_table, values, names_only = FALSE, require_
 #' @param file_name CHR scalar of the name of a file holding import
 #'   requirements; if this has already been added to the calling environment,
 #'   `requirements_obj` will be used preferentially as the name of that object
+#' @param log_issues_as CHR scalar of the log level to use (default: "warn"),
+#'   which must be a valid log level as in [logger::FATAL]; will be ignored if
+#'   the [logger] package isn't available
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return A tibble object with 6 columns containing the results of the check,
 #'   with one row for each import object identified; if `obj` is a list of
-#'   import data, the column "applies_to" is added at the left of the data frame
-#'   with the names of the list components
+#'   import data, the column "import_object" is added at the left of the data
+#'   frame with the names of the list components
 #'
 #' @export
 verify_import_requirements <- function(obj,
                                        ignore_extra = TRUE,
                                        requirements_obj = "import_requirements",
                                        file_name = "import_requirements.json",
-                                       log_issues_as = "warn") {
+                                       log_issues_as = "warn",
+                                       log_ns = "db") {
   # Argument validation relies on verify_args
   if (all(exists("verify_args"))) {
     arg_check <- verify_args(
-      args       = list(obj, ignore_extra, log_issues_as),
+      args       = list(obj, ignore_extra, log_issues_as, log_ns),
       conditions = list(
         obj           = list(c("mode", "list")),
         ignore_extra  = list(c("mode", "logical"), c("length", 1)),
-        log_issues_as = list(c("mode", "character"), c("length", 1))
+        log_issues_as = list(c("mode", "character"), c("length", 1)),
+        log_ns        = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
@@ -1162,19 +1177,19 @@ verify_import_requirements <- function(obj,
   extra          <- any(extra_cols)
   extra_cols     <- obj_names[extra_cols]
   out    <- list(
-    all_required   = all_required,
-    missing_reqs   = list(detail_reqs),
-    full_detail    = full_detail,
-    missing_detail = list(missing_detail),
-    extra          = extra,
-    extra_cols     = list(extra_cols)
+    has_all_required     = all_required,
+    missing_requirements = list(detail_reqs),
+    has_full_detail      = full_detail,
+    missing_detail       = list(missing_detail),
+    has_extra            = extra,
+    extra_cols           = list(extra_cols)
   )
   if (all_required) {
     nested <- FALSE
   } else {
     required <- hard_reqs %in% unique(unlist(lapply(obj, names)))
-    all_required <- all(required)
-    if (all_required) {
+    nested_with_all_required <- all(required)
+    if (nested_with_all_required) {
       log_it("info", "The provided object contains a nested list where required names were located.", "db")
       nested <- TRUE
       # Speed this up since it already passed argument verification
@@ -1191,11 +1206,11 @@ verify_import_requirements <- function(obj,
       }
     } else {
       nested <- FALSE
-      missing_reqs <- hard_reqs[!hard_reqs %in% names(obj)]
+      missing_requirements <- hard_reqs[!hard_reqs %in% names(obj)]
       log_it(log_issues_as,
              sprintf("Required import element%s %s missing from at least one import item.",
-                     ifelse(length(missing_reqs) > 1, "s", ""),
-                     ifelse(length(missing_reqs) > 1, "were", "was")
+                     ifelse(length(missing_requirements) > 1, "s", ""),
+                     ifelse(length(missing_requirements) > 1, "were", "was")
              ),
              "db"
       )
@@ -1221,8 +1236,8 @@ verify_import_requirements <- function(obj,
   if (nested) {
     out <- out %>%
       bind_rows() %>%
-      mutate(applies_to = names(obj)) %>%
-      relocate(applies_to, .before = )
+      mutate(import_object = names(obj)) %>%
+      relocate(import_object, .before = )
   } else {
     out <- as_tibble(out)
   }
@@ -1321,6 +1336,10 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
 #' list of all columns and their tables in the import file matched with the
 #' database table and column to which they should be imported.
 #'
+#' @note The object used for `import_map` must be of a data.frame object that at
+#'   minimum includes names columns that includes import_category,
+#'   import_parameter, alias_lookup, and sql_normalization 
+#'
 #' @param import_obj LIST object of values to import
 #' @param aspect CHR scalar of the import aspect (e.g. "sample") to map
 #' @param import_map data.frame object of the import map (e.g. from a CSV)
@@ -1328,35 +1347,36 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
 #'   a case sensitive (TRUE, default) or case insensitive manner; passed to
 #'   [resolve_normalization_values]
 #' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#'
 #'
 #' @return LIST of final mapped values
 #' @export
 #' 
-map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db_conn = con) {
+map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db_conn = con, log_ns = "db") {
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args = list(import_obj, aspect, import_map, case_sensitive),
-      conds = list(
-        import_obj = list(c("mode", "list")),
-        aspect = list(c("mode", "character"), c("length", 1)),
-        import_map = list(c("mode", "data.frame"), c("n>", 0)),
-        case_sensitive = list(c("mode", "logical"), c("length", 1))
+      args       = as.list(environment()),
+      conditions = list(
+        import_obj     = list(c("mode", "list")),
+        aspect         = list(c("mode", "character"), c("length", 1)),
+        import_map     = list(c("mode", "data.frame"), c("n>", 0)),
+        case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        db_conn        = list(c("length", 1)),
+        log_ns         = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
   stopifnot(dbIsValid(db_conn))
-  if (is.character(import_map)) {
-    if (!file.exists(import_map)) {
-      import_map <- list.files(pattern = import_map, recursive = TRUE, full.names = TRUE)
-      stopifnot(length(import_map) == 1)
-    }
-    import_map <- read_csv(import_map)
-  }
   this_map <- import_map %>%
     filter(sql_table == aspect)
   out <- vector("list", length = nrow(this_map)) %>%
     setNames(this_map$sql_parameter)
+  needed_columns <- c("import_category", "import_parameter", "alias_lookup", "sql_normalization")
+  if (!all(needed_columns %in% names(import_map))) {
+    stop(glue::glue("The object provided to `import_map` must contain columns {format_list_of_names(needed_columns)} to be a valid import map."))
+  }
   for (i in 1:nrow(this_map)) {
     properties <- this_map %>% filter(sql_parameter == names(out)[i])
     if (nrow(properties) == 1) {
@@ -1366,46 +1386,56 @@ map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db
       norm_by   <- properties$sql_normalization[1]
       this_val  <- import_obj[[category]][[parameter]]
       if (is.null(this_val) || this_val == "") this_val <- NA
-      if (!is.na(alias_in)) {
-        log_it("info", glue::glue("{names(out)[i]}: alias_in = {alias_in} and this_val = {this_val}; resolving normalization value."))
-        column_names <- dbListFields(db_conn, alias_in)
-        lookup_val <- list(list(values = this_val, like = TRUE)) %>%
-          setNames(column_names[2])
-        alias_id <- try(
-          build_db_action(
-            action = "select",
-            table_name = alias_in,
-            column_names = column_names[1],
-            match_criteria = lookup_val
+      if (is.null(alias_in) || alias_in == "") alias_in <- NA
+      if (is.null(norm_by) || norm_by == "") norm_by <- NA
+      this_field <- names(out)[i]
+      if (!is.na(this_val)) {
+        if (!is.na(alias_in)) {
+          log_it("info", glue::glue("{this_field}: alias_in = {alias_in} and this_val = {this_val}; resolving normalization value."), log_ns)
+          column_names <- dbListFields(db_conn, alias_in)
+          lookup_val <- list(list(values = this_val, like = TRUE)) %>%
+            setNames(column_names[2])
+          alias_id <- try(
+            build_db_action(
+              action = "select",
+              table_name = alias_in,
+              column_names = column_names[1],
+              match_criteria = lookup_val
+            )
           )
-        )
-        if (!inherits(alias_id, "try-error") && length(alias_id == 1)) {
-          this_val <- as.integer(alias_id)
-          norm_by  <- NA
+          if (inherits(alias_id, "try-error")) {
+            msg <- glue::glue("There was a problem resolving the alias for {this_field}.")
+            log_it("error", msg, log_ns)
+            stop(msg)
+          } else if (!length(alias_id) == 1) {
+            msg <- paste0("%s aliases identified in %s for value '%s'.",
+                          ifelse(length(alias_id) == 0, "No", "Multiple"),
+                          this_field,
+                          this_val)
+            stop(msg)
+          } else {
+            this_val <- as.integer(alias_id)
+            log_it("info", glue::glue("Resolved alias for {this_field} as id = {this_val}."), log_ns)
+            norm_by  <- NA
+          }
         }
+        if (!is.na(norm_by)) {
+          log_it("info", glue::glue("{this_field}: norm_by = {norm_by} and this_val = {this_val}; resolving normalization value."), log_ns)
+          this_val <- resolve_normalization_value(
+            this_value = this_val,
+            db_table = norm_by,
+            case_sensitive = case_sensitive,
+            db_conn = db_conn
+          )
+          if (length(this_val == 1)) {
+            log_it("info", glue::glue("Resolved normalization value for {names(out)[i]} as id = {this_val}."))
+          }
+        }
+        out[i]  <- this_val
+      } else {
+        out[i] <- NULL
       }
-      if (!is.na(norm_by) && !is.na(this_val)) {
-        log_it("info", glue::glue("{names(out)[i]}: norm_by = {norm_by} and this_val = {this_val}; resolving normalization value."))
-        this_val <- resolve_normalization_value(
-          this_value = this_val,
-          db_table = norm_by,
-          case_sensitive = case_sensitive,
-          db_conn = db_conn
-        )
-      }
-      out[i]  <- this_val
     }
   }
   return(out)
-}
-
-ensure_required_presence <- function(db_table, db_dict, db_conn = con) {
-  if (is.character(db_dict)) {
-    if (exists(db_dict)) {
-      db_dict <- .GlobalEnv[[db_dict]]
-    } else {
-      db_dict <- er_map(db_conn)
-      assign("db_dict", db_dict, envir = .GlobalEnv)
-    }
-  }
 }
