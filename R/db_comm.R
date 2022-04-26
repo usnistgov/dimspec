@@ -1867,7 +1867,7 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #' check_for_value(letters[1:10], "alphabet", "lower", con)
 #' }
 #' ## End(Not run)
-check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con) {
+check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con, fuzzy = FALSE) {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -1878,17 +1878,26 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
         db_table       = list(c("mode", "character"), c("length", 1)),
         db_column      = list(c("mode", "character"), c("length", 1)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
-        db_conn        = list(c("length", 1))
+        db_conn        = list(c("length", 1)),
+        fuzzy          = list(c("mode", "logical"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
   # Check connection
   stopifnot(active_connection(db_conn))
-  existing_values <- build_db_action(db_conn        = db_conn,
-                                     action         = "SELECT",
+  to_match <- setNames(list(values), db_column)
+  if (fuzzy) {
+    to_match <- lapply(to_match,
+                       function(x) {
+                         list(values = x,
+                              like = TRUE)
+                       })
+  }
+  existing_values <- build_db_action(action         = "SELECT",
                                      table_name     = db_table,
-                                     match_criteria = setNames(list(values), db_column),
+                                     db_conn        = db_conn,
+                                     match_criteria = to_match,
                                      case_sensitive = case_sensitive,
                                      distinct       = TRUE)
   found <- nrow(existing_values) > 0
