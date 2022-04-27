@@ -1629,10 +1629,10 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
     pull(name)
   new_values <- new_values[which(names(new_values) %in% needed)]
   needed     <- needed[!needed %in% names(new_values)]
-  if (exists("log_it")) log_it("info", glue::glue("add_normalization_value: Adding normalization value to {db_table}."))
+  if (exists("log_it")) log_it("info", glue::glue("add_normalization_value: Adding normalization value to {db_table}."), log_ns)
   if (length(needed) == 0) {
     if (exists("log_it")) {
-      lot_it("info", "add_normalization_value: Named values were provided for all columns.", log_ns)
+      log_it("info", "add_normalization_value: Named values were provided for all columns.", log_ns)
     }
   } else if (length(needed) > 0) {
     msg <- sprintf('Not all values for table "%s" were supplied.', db_table)
@@ -1661,8 +1661,8 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
                                stringr::str_to_title()
       )
       value_checks <- c(
-        required = ifelse(need_this %in% required, "required", ""),
-        unique   = ifelse(need_this %in% need_unique, "unique", ""),
+        required = ifelse(need_this %in% required, "Required", ""),
+        unique   = ifelse(need_this %in% need_unique, "Unique", ""),
         default  = table_cols$dflt_value[table_cols$name == need_this],
         provided = ifelse(need_this %in% names(new_values),
                           new_values[[need_this]],
@@ -1684,23 +1684,21 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
         )
       )
       if (need_clause[["provided"]] != "") {
-        need_clause[["provided"]] <- sprintf("press enter to use the %s",
+        need_clause[["provided"]] <- sprintf("Press enter to use the %s",
                                              need_clause[["provided"]])
       }
       if (need_clause[["default"]] != "" && need_clause[["provided"]] == "") {
-        need_clause[["default"]] <- sprintf("press enter to use the %s",
+        need_clause[["default"]] <- sprintf("Press enter to use the %s",
                                             need_clause[["default"]])
       }
-      need_clause <- stringr::str_to_sentence(need_clause[need_clause != ""])
-      need_clause <- sprintf("%s",
-                             paste0(need_clause, collapse = "; ")
-      )
+      need_clause <- need_clause[need_clause != ""] %>%
+        paste0(collapse = "; ")
       if (nchar(need_clause) > 0) need_clause <- sprintf(" (%s)", need_clause)
       need_prompt <- sprintf("%s%s: ",
                              prompt_field,
                              need_clause)
       new_value <- ""
-      if (all(need_this == "acronym", "name" %in% needed)) {
+      if (all(need_this == "acronym", "name" %in% names(new_values))) {
         if ("name" %in% names(new_values)) {
           auto_acro <- make_acronym(new_values$name)
           use_auto_acro <- select.list(
@@ -1943,7 +1941,7 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
     chosen_value <- search_value
   } else {
     if (is.data.frame(values)) {
-      print(values)
+      if (nrow(values) > 0) print(values)
       i <- ifelse("id" %in% names(values), which(names(values) == "id") + 1, 1)
       select_from <- names(values)[i]
       select_vals <- values[, i]
@@ -1959,7 +1957,6 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
                           sprintf(' in table "%s"', db_table))
     )
     if (interactive()) {
-      values
       chosen_value <- select.list(
         choices = select_vals,
         title = paste(msg,
@@ -2012,7 +2009,8 @@ resolve_normalization_value <- function(this_value,
                                         case_sensitive = FALSE,
                                         fuzzy = FALSE,
                                         db_conn = con,
-                                        log_ns = "db", ...) {
+                                        log_ns = "db",
+                                        ...) {
   if (exists("log_it")) log_fn("start")
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -2115,12 +2113,13 @@ resolve_normalization_value <- function(this_value,
       } else {
         tmp <- check
       }
-      if (id_column %in% names(tmp$values)) {
+      if (id_column %in% names(tmp)) {
         tmp <- tmp %>%
           select(-!!id_column)
       } else {
         # Assume the first column is the id
-        tmp <- tmp[, -1]
+        tmp <- tmp %>%
+          select(-1)
       }
       these_choices <- tmp
       if (length(these_choices) == 0) {
@@ -2140,7 +2139,9 @@ resolve_normalization_value <- function(this_value,
         kwargs <- append(this_selection, list(...))
         to_add <- append(
           kwargs,
-          c(db_table = db_table, db_conn  = db_conn)
+          c(db_table = db_table,
+            db_conn = db_conn,
+            log_ns = log_ns)
         )
         this_id <- do.call(add_normalization_value, to_add)
       } else {
