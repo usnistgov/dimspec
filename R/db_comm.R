@@ -1632,7 +1632,7 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
   if (exists("log_it")) log_it("info", glue::glue("add_normalization_value: Adding normalization value to {db_table}."), log_ns)
   if (length(needed) == 0) {
     if (exists("log_it")) {
-      log_it("info", "add_normalization_value: Named values were provided for all columns.", log_ns)
+      log_it("trace", "add_normalization_value: Named values were provided for all columns.", log_ns)
     }
   } else if (length(needed) > 0) {
     msg <- sprintf('Not all values for table "%s" were supplied.', db_table)
