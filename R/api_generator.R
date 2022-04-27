@@ -395,7 +395,7 @@ build_db_action <- function(action,
                                c("length", 1)),
         single_column_as_vector = list(c("mode", "logical"),
                                        c("length", 1)),
-        log_ns          = list(c("mode", "logical"),
+        log_ns          = list(c("mode", "character"),
                                c("length", 1))
       ),
       from_fn = "build_db_action"
