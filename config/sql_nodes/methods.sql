@@ -385,9 +385,9 @@
 		vendor_model
 		  TEXT,
 		  /* free text entry for mass spectrometry system model */
-		citation
+		reference
 		  TEXT,
-		  /* citation for this mass spectrometry method */
+		  /* resolvable reference for this mass spectrometry model, e.g. a URL to the product */
 		/* Check constraints */
 		UNIQUE(ms_methods_id, ms_types_id, vendor_id),
 		/* Foreign key relationships */
