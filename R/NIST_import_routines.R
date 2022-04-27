@@ -7,6 +7,9 @@ full_import <- function(import_object                  = NULL,
                         requirements_obj               = "import_requirements",
                         sample_info_in                 = "sample",
                         method_info_in                 = "massspectrometry",
+                        chrom_info_in                  = "chromatography",
+                        mobile_phases_in               = "chromatography",
+                        import_map                     = IMPORT_MAP,
                         log_ns                         = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -114,13 +117,20 @@ full_import <- function(import_object                  = NULL,
     import_object <- import_object[-unique(to_ignore)]
   }
   # Get all unique relationships to cut down on extraneous database rows
-  import_relationships <- vector("list", length(names(import_requirements)))
-  names(import_relationships) <- names(import_requirements)
-  import_relationships <- import_requirements
-  for (ele in names(import_relationships)) {
-    import_relationships[[ele]] <- get_uniques(to_import, ele)
-  }
-  # Resolve contributor
+  # ____________________________________________________________________________
+  # 2022-04-27: This was more easily accomplished by fixing the import map and
+  # relying on the database to find fully qualified matches during INSERT using
+  # a combination of build_db_action("get_id", ...) and INSERT OR IGNORE INTO
+  # ____________________________________________________________________________
+  # import_relationships <- vector("list", length(names(import_requirements)))
+  # names(import_relationships) <- names(import_requirements)
+  # import_relationships <- import_requirements for (ele in
+  # names(import_relationships)) { import_relationships[[ele]] <-
+  # get_uniques(to_import, ele) } 
+  
+  # Resolve contributor and build an internal contributor mapping so they don't
+  # have to rely on fuzzy matching as the contributor provided in import files
+  # may not end up being a value they use in the eventual contributors table
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
@@ -147,17 +157,50 @@ full_import <- function(import_object                  = NULL,
     } else {
       ms_method_id <- NA
     }
+    if (!is.na(ms_method_id)) {
+      # - instrument properties
+      tmp <- map_import(import_obj = obj,
+                        aspect = "instrument_properties",
+                        import_map = import_map)
+      tmp <- tibble(
+        ms_method_id = ms_method_id,
+        name = names(tmp),
+        value = unlist(tmp),
+        value_unit = case_when(
+          name == "isowidth" ~ "Da",
+          name == "msaccuracy" ~ "ppm"
+        )
+      )
+      res <- try(
+        build_db_action(action = "insert",
+                        table_name = "instrument_properties",
+                        db_conn = db_conn,
+                        values = tmp,
+                        # TODO consider removing in production
+                        ignore = TRUE)
+      )
+      # - ms_description
+      if (method_info_in %in% names(obj)) {
+        resolve_description_NTAMRT(obj = obj,
+                                   method_id = ms_method_id,
+                                   mass_spec_in = method_info_in,
+                                   type = "massspec")
+      }
+      # - chromatography description
+      if (chrom_info_in %in% names(obj)) {
+        resolve_description_NTAMRT(obj = obj,
+                                   method_id = ms_method_id,
+                                   chrom_spec_in = chrom_info_in,
+                                   type = "chromatography")
+      }
+      # - mobile phases
+      # - qc_methods
+    }
     # Sample info is required
     sample_id      <- resolve_sample(obj,
                                      sample_in = sample_info_in,
                                      method_id = ms_method_id,
                                      sample_contributor = contributor_id)
-    # Add descriptions
-    # - ms_description
-    if (!is_na(ms_method_id)) {
-      resolve_description(ms_desc, "massspec")
-    }
-    # - chromatography description
     # Add data
     # Add QC if appropriate
   }
@@ -196,7 +239,7 @@ full_import <- function(import_object                  = NULL,
 #' @return
 #' @export
 add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, ignore = FALSE, log_ns = "db") {
-  log_it("info", glue("Adding a record to {db_table}."), log_ns)
+  log_it("info", glue("Adding or identifying a record to {db_table}."), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -229,7 +272,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
         action         = "get_id",
         table_name     = db_table,
         db_conn        = db_conn,
-        match_criteria = as.list(values),
+        match_criteria = values,
         and_or         = "AND"
       )
     )
@@ -281,7 +324,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
         action         = "get_id",
         table_name     = db_table,
         db_conn        = db_conn,
-        match_criteria = as.list(values),
+        match_criteria = values,
         and_or         = "AND"
       )
     )
@@ -423,11 +466,14 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #' "conversion_software_linkage" if appropriate.
 #'
 #' @inheritParams add_or_get_id
+#' @inheritParams map_import
 #'
 #' @param obj LIST object containing data formatted from the import generator
+#' @param method_id INT scalar of the associated ms_methods record id
+#' @param generation_type CHR scalar of the type of data generated for this
+#'   sample (e.g. default: "empirical" or "in silico")
 #' @param sample_in CHR scalar of the import object name storing sample data
 #'   (default: "sample")
-#' @param method_id INT scalar of the associated ms_methods record id
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to samples as necessary for
 #'   workflow resolution, can be used to pass defaults or additional values.
@@ -436,9 +482,11 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #'   otherwise
 resolve_sample <- function(obj,
                            db_conn = con,
+                           method_id = NULL,
+                           generation_type = "empirical",
                            sample_in = "sample",
                            db_table = "samples",
-                           method_id = NULL,
+                           import_map = IMPORT_MAP,
                            ensure_unique = TRUE,
                            log_ns = "db",
                            ...) {
@@ -467,10 +515,26 @@ resolve_sample <- function(obj,
     aspect = db_table,
     import_map = IMPORT_MAP
   ) %>%
-    tack_on(...) %>%
+    tack_on(
+      ms_methods_id = method_id,
+      generation_type = resolve_normalization_value(this_value = generation_type,
+                                                    db_table = "norm_generation_type",
+                                                    db_conn = db_conn,
+                                                    log_ns = log_ns)
+    ) %>%
+    tack_on(...)
+  # Ensure that starttime is in the datetime format required by the database
+  starttime <- sample_values$generated_on
+  if (!any(starttime == "", is.null(starttime), is.na(starttime))) {
+    starttime <- starttime %>%
+      lubridate::as_datetime() %>%
+      format("%Y-%m-%d %H:%M:%S")
+    sample_values$generated_on <- starttime
+  }
+  sample_values <- sample_values %>%
     verify_import_columns(db_table, db_conn = db_conn)
-  is_single_record <- all(unlist(lapply(sample_values, length)) == 1)
-  log_it("trace", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
+  is_single_record <- all(unlist(lapply(sample_values, length)) < 2)
+  log_it("info", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
   if (!is_single_record) {
     stop("Resolve and try again.")
   }
@@ -497,6 +561,8 @@ resolve_sample <- function(obj,
 #' [resolve_normalization_value] to parse foreign key relationships.
 #' 
 #' @inheritParams add_or_get_id
+#' @inheritParams qc_result
+#' @inheritParams map_import
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_in CHR scalar name of the `obj` list containing method
@@ -516,6 +582,12 @@ resolve_method <- function(obj,
                            db_conn = con,
                            ensure_unique = TRUE,
                            log_ns = "db",
+                           qc_in = "qc",
+                           qc_method_in = "qcmethod",
+                           search_text_in = "name",
+                           search_text = "QC Method Used",
+                           value_in = "value",
+                           import_map = IMPORT_MAP,
                            ...) {
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -549,42 +621,27 @@ resolve_method <- function(obj,
   ms_method_values <- map_import(
     import_obj = obj,
     aspect = db_table,
-    import_map = IMPORT_MAP
+    import_map = import_map,
+    log_ns = log_ns
   ) %>%
+    tack_on(
+      has_qc_method = qc_result(
+        obj = obj,
+        qc_in = qc_in,
+        qc_method_in = qc_method_in,
+        search_text_in = search_text_in,
+        search_text = search_text,
+        value_in = value_in)
+    ) %>%
     tack_on(...) %>%
-    verify_import_columns(db_table, db_conn = db_conn)
-  is_single_record <- all(unlist(lapply(ms_method_values, length)) == 1)
+    verify_import_columns(db_table = db_table,
+                          db_conn = db_conn,
+                          log_ns = log_ns)
+  is_single_record <- all(unlist(lapply(ms_method_values, length)) < 2)
   log_it("trace", glue("Mass spectromtery value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
   if (!is_single_record) {
     stop("Resolve and try again.")
   }
-  ms_method_values <- c(
-    ionization    = resolve_normalization_value(
-      obj_method$ionization,
-      ref_table_from_map(db_table, "ionization")),
-    voltage       = obj_method$voltage,
-    voltage_units = resolve_normalization_value(
-      obj_method$vunits,
-      ref_table_from_map(db_table, "voltage_units")),
-    polarity      = resolve_normalization_value(
-      obj_method$polarity,
-      ref_table_from_map(db_table, "polarity")),
-    ce_value      = obj_method$ce_value,
-    ce_units      = resolve_normalization_value(
-      obj_method$ce_units,
-      ref_table_from_map(db_table, "ce_units")),
-    ce_desc       = resolve_normalization_value(
-      obj_method$ce_desc,
-      ref_table_from_map(db_table, "ce_desc")),
-    fragmentation = resolve_normalization_value(
-      obj_method$fragmode,
-      ref_table_from_map(db_table, "fragmentation")),
-    ms2_type      = resolve_normalization_value(
-      obj_method$ms2exp,
-      ref_table_from_map(db_table, "ms2_type")),
-    has_qc_method = as.numeric("qcmethod" %in% names(obj)),
-    citation      = obj_method$source
-  )
   if (argument_verification) {
     assign("VERIFY_ARGUMENTS", argument_verification, envir = .GlobalEnv)
   }
@@ -598,6 +655,7 @@ resolve_method <- function(obj,
     )
   )
   if (inherits(ms_method_id, 'try-error')) {
+    resolve_description <- sprintf("%s = %s", names(ms_method_values), ms_method_values)
     log_it("warn", glue('Unable to add or locate values ({format_list_of_names(resolve_description)}) in table "ms_methods".'), "db")
   } else {
     log_it("success", glue::glue("Using ID {ms_method_id} from ms_methods."), "db")
@@ -635,24 +693,26 @@ resolve_method <- function(obj,
 #' @export
 #'
 #' @examples
-resolve_description_NIST <- function(obj,
-                                     method_id,
-                                     type = c("massspec", "chromatography"),
-                                     mass_spec_in = "massspectrometry",
-                                     chrom_spec_in = "chromatography",
-                                     db_conn = con,
-                                     er_map = db_map,
-                                     fuzzy = TRUE,
-                                     log_ns = "db") {
+resolve_description_NTAMRT <- function(obj,
+                                       method_id,
+                                       type = c("massspec", "chromatography"),
+                                       mass_spec_in = "massspectrometry",
+                                       chrom_spec_in = "chromatography",
+                                       db_conn = con,
+                                       er_map = db_map,
+                                       fuzzy = TRUE,
+                                       log_ns = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
+  log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, method_id, mass_spec_in, chrom_spec_in, db_conn, fuzzy, log_ns),
+      args       = list(obj, method_id, type, mass_spec_in, chrom_spec_in, db_conn, fuzzy, log_ns),
       conditions = list(
         obj           = list(c("n>=", 1)),
         method_id     = list(c("mode", "numeric"), c("length", 1)),
+        type          = list(c("mode", "character"), c("length", 1)),
         mass_spec_in  = list(c("mode", "character"), c("length", 1)),
         chrom_spec_in = list(c("mode", "character"), c("length", 1)),
         db_conn       = list(c("length", 1)),
@@ -727,7 +787,9 @@ resolve_description_NIST <- function(obj,
           }
         }
       ),
-      column_position_id = 1:2,
+      column_position_id = sapply(c("guard", "analytical"),
+                                  resolve_normalization_value,
+                                  db_table = "norm_column_positions"),
       column_vendor_id = sapply(
         obj[grep("colvendor", names(obj), value = TRUE)],
         resolve_normalization_value,
@@ -741,18 +803,73 @@ resolve_description_NIST <- function(obj,
     ) %>%
       filter(!column_chemistry_id == "")
   }
-  log_it("trace", glue('Adding descriptions to table "{table_name}".'), log_ns)
+  log_it("info", glue::glue('Adding descriptions to table "{table_name}".'), log_ns)
   res <- try(
     build_db_action(
       action = "insert",
       table_name = table_name,
       db_conn = db_conn,
-      values = values
+      values = values,
+      # TODO consider removing during production
+      ignore = TRUE
     )
   )
-  if (class(res) == "try-error") {
-    stop(glue('There was an issue adding records to table "{type}".'))
+  if (inherits(res, "try-error")) {
+    browser()
+    stop(glue('There was an issue adding records to table "{table_name}".'))
+  } else {
+    log_it("success", glue::glue('Added {type} description to table "{table_name}".'), log_ns)
   }
+  log_fn("end")
+}
+
+resolve_mobile_phase_NTAMRT <- function(obj,
+                                        method_id,
+                                        sample_id,
+                                        mobile_phase_in = "chromatography",
+                                        id_mix_by = "^mp*[0-9]+",
+                                        solvent_mix_name = NULL,
+                                        db_conn = con,
+                                        er_map = db_map,
+                                        fuzzy = TRUE,
+                                        log_ns = "db") {
+  stopifnot(
+    check_for_value(values = method_id,
+                    db_table = "ms_methods",
+                    db_column = "id",
+                    db_conn = db_conn)$exists,
+    check_for_value(values = sample_id,
+                    db_table = "samples",
+                    db_column = "id",
+                    db_conn = db_conn)$exists
+  )
+  obj <- get_component(obj, mobile_phase_in)[[1]]
+  mixes <- names(obj[grep(id_mix_by, names(obj))])
+  components <- obj[grep("solvent", mixes, value = T)]
+  components <- components[-which(components == "none")]
+  # TODO PICK UP HERE
+  solvent_mixes <- tibble(
+    component_ref = names(components),
+    component = components
+  )
+  additives <- grep("add", mixes, value = T)
+  # additives <- additives[order(as.integer(str_extract(additives, "[0-9]+")))]
+  browser()
+    # mix_id <- add_or_get_id(
+    #   table_name = "solvent_mix_collections",
+    #   values = list(
+    #     name = ifelse(is.null(solvent_mix_name),
+    #                   glue::glue("method_{method_id}-sample_{sample_id}"),
+    #                   solvent_mix_name)
+    #   ),
+    #   db_conn = db_conn,
+    #   log_ns = log_ns
+    # )
+    # solvent_mix_values <- list(
+    #   mix_id = mix_id,
+    #   component = components,
+    #   fraction = fractions
+    # )
 }
 
 # TODO
@@ -1125,7 +1242,7 @@ make_requirements <- function(example_import,
 #' @export
 verify_import_columns <- function(values, db_table, names_only = FALSE, require_all = TRUE, db_conn = con, log_ns = "db") {
   log_fn("start")
-  log_it("info", glue('Verifying column requirements for table "{db_table}" with verify_import_columns().'), log_ns)
+  log_it("info", glue('Verifying column requirements for table "{db_table}".'), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1165,12 +1282,12 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
   columns_present <- table_needs %in% provided
   if (!all(columns_present)) {
     missing_columns <- table_needs[!columns_present]
-    stop(glue('Required column{ifelse(length(missing_columns) > 1, "s", "")} {ifelse(length(missing_columns) > 1, "are", "is")} missing: {format_list_of_names(missing_columns)}.'))
+    stop(glue('Required column{ifelse(length(missing_columns) > 1, "s are", " is")}} missing: {format_list_of_names(missing_columns)}.'))
   } else {
     valid_columns <- provided %in% table_info$name
     if (!all(valid_columns)) {
       extra_columns <- provided[!valid_columns]
-      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s", "")} {ifelse(length(extra_columns) > 1, "were", "was")} provided and will be ignored: {format_list_of_names(extra_columns)}.'), log_ns)
+      log_it("warn", glue('Extra column{ifelse(length(extra_columns) > 1, "s were", " was")}} provided and will be ignored: {format_list_of_names(extra_columns)}.'), log_ns)
     }
     log_fn("end")
     return(values[valid_columns])
@@ -1471,7 +1588,12 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
 #' @return LIST of final mapped values
 #' @export
 #' 
-map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db_conn = con, log_ns = "db") {
+map_import <- function(import_obj,
+                       aspect,
+                       import_map,
+                       case_sensitive = TRUE,
+                       db_conn = con,
+                       log_ns = "db") {
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -1519,10 +1641,10 @@ map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db
         stop(glue::glue("'{this_field}' is unresolvably mapped to multiple places. Please resolve and try again."))
       }
     } else if (nrow(properties) == 0) {
-      log_it("warn", glue::glue("{this_field} is not mapped. A null value will be used."), log_ns)
+      log_it("warn", glue::glue("'{this_field}' is not mapped. A null value will be used."), log_ns)
     } else {
       if (properties$note == "key:value pairs") {
-        
+        # Do inserts for straight key:value pair long form tables
       } else {
         category  <- properties$import_category[1]
         parameter <- properties$import_parameter[1]
@@ -1533,48 +1655,83 @@ map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db
         if (is.null(alias_in) || alias_in == "") alias_in <- NA
         if (is.null(norm_by) || norm_by == "") norm_by <- NA
         if (!is.na(this_val)) {
-          if (!is.na(alias_in)) {
-            log_it("info", glue::glue("{this_field}: alias_in = {alias_in} and this_val = {this_val}; resolving normalization value."), log_ns)
-            column_names <- dbListFields(db_conn, alias_in)
-            lookup_val <- list(list(values = this_val, like = TRUE)) %>%
-              setNames(column_names[2])
-            alias_id <- try(
-              build_db_action(
-                action = "select",
-                table_name = alias_in,
-                column_names = column_names[1],
-                match_criteria = lookup_val
-              )
-            )
-            if (inherits(alias_id, "try-error")) {
-              msg <- glue::glue("There was a problem resolving the alias for {this_field}.")
-              log_it("error", msg, log_ns)
-              stop(msg)
-            } else if (!length(alias_id) == 1) {
-              msg <- paste0("%s aliases identified in %s for value '%s'.",
-                            ifelse(length(alias_id) == 0, "No", "Multiple"),
-                            this_field,
-                            this_val)
-              stop(msg)
-            } else {
-              this_val <- as.integer(alias_id)
-              log_it("info", glue::glue("Resolved alias for {this_field} as id = {this_val}."), log_ns)
-              norm_by  <- NA
-            }
-          }
           if (!is.na(norm_by)) {
-            log_it("info", glue::glue("Attempt resolution of {this_field}: norm_by = {norm_by} and this_val = {this_val}."), log_ns)
+            norm_id <- integer(0)
+            column_names <- character(0)
+            log_it("info", glue::glue("Attempt resolution of '{this_field}': norm_by = '{norm_by}' and this_val = '{this_val}'."), log_ns)
             if (!is.na(alias_in)) {
-              norm_by <- alias_in
+              log_it("info", glue::glue("'{this_field}': alias_in = '{alias_in}' and this_val = '{this_val}'; resolving normalization value."), log_ns)
+              column_names <- dbListFields(db_conn, alias_in)
+              lookup_val <- list(list(values = this_val, like = TRUE)) %>%
+                setNames(column_names[2])
+              alias_id <- try(
+                build_db_action(
+                  action = "select",
+                  table_name = alias_in,
+                  match_criteria = lookup_val,
+                  db_conn = db_conn,
+                  log_ns = log_ns
+                )
+              )
+              if (inherits(alias_id, "try-error")) {
+                msg <- glue::glue("There was a problem resolving the alias for {this_field}.")
+                log_it("error", msg, log_ns)
+                stop(msg)
+                if (!nrow(alias_id) == 1) {
+                  msg <- sprintf("%s aliases identified in %s for value '%s'.",
+                                 ifelse(nrow(alias_id) == 0, "No", "Multiple"),
+                                 this_field,
+                                 this_val)
+                  log_it("info", msg, log_ns)
+                  if (nrow(alias_id) > 1) {
+                    alias_id <- resolve_normalization_value(
+                      this_value = this_val,
+                      db_table = alias_in,
+                      id_column = column_names[1],
+                      db_conn = db_conn,
+                      log_ns = log_ns
+                    )
+                  }
+                }
+              } else {
+                norm_id <- alias_id %>%
+                  select(contains("_id")) %>%
+                  pull(1)
+                log_it("info", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
+              }
             }
-            this_val <- resolve_normalization_value(
-              this_value = this_val,
-              db_table = norm_by,
-              case_sensitive = case_sensitive,
-              db_conn = db_conn
-            )
-            if (length(this_val == 1)) {
-              log_it("info", glue::glue("Resolved normalization value for {this_field} as id = {this_val}."), log_ns)
+            if (!length(norm_id) == 1) {
+              norm_id <- resolve_normalization_value(
+                this_value = this_val,
+                db_table = norm_by,
+                case_sensitive = case_sensitive,
+                db_conn = db_conn,
+                log_ns = log_ns
+              )
+              if (!is.na(alias_in)) {
+                res <- try(
+                  build_db_action(
+                    action = "insert",
+                    table_name = alias_in,
+                    values = list(norm_id, this_val) %>%
+                      setNames(column_names),
+                    ignore = TRUE,
+                    log_ns = log_ns
+                  )
+                )
+                if (inherits(res, "try-error")) {
+                  log_it("warn",
+                         glue::glue("There was a problem inserting the alias '{this_val}' into table '{alias_in}'."),
+                         log_ns)
+                }
+              }
+            }
+            
+            if (length(norm_id) == 1 && norm_id == as.integer(norm_id)) {
+              this_val <- norm_id
+              log_it("info", glue::glue("Resolved normalization value for '{this_field}' as id = '{this_val}'."), log_ns)
+            } else {
+              log_it("error", glue::glue("Could not resolve a normalization value for '{this_field}'."), log_ns)
             }
           }
           out[i] <- this_val
@@ -1582,5 +1739,66 @@ map_import <- function(import_obj, aspect, import_map, case_sensitive = TRUE, db
       }
     }
   }
+  # Catch date like object and coerce to a specific format
+  # date_likes <- lapply(out,
+  #                      function(x) {
+  #                        if (is.POSIXtst <- suppressWarnings(
+  #                          lubridate::as_datetime(x)
+  #                        )
+  #                      })
   return(out)
+}
+
+
+#' Does an import object have a defined QC value present?
+#'
+#' This returns a numerical boolean of whether or not the import has a given
+#' structure for QC data, indicating whether the analytical method has a QC
+#' method attached.
+#'
+#' @param obj LIST import object of a single import file
+#' @param qc_in CHR scalar name of an item in `obj` containing QC information
+#'   (default: "qc")
+#' @param qc_method_in CHR scalar name of an item in `obj` containing QC method
+#'   results as a data.frame object of the form `data.frame(name = character(0),
+#'   value = logical(0))` (default: "qcmethod")
+#' @param search_text_in CHR scalar column name in `obj[[qc_method_in]]`
+#'   containing the QC result names to look for (default: "name")
+#' @param search_text CHR scalar of the QC result to look for (default: "QC
+#'   Method Used")
+#' @param value_in CHR scalar column name in `obj[[qc_method_in]]` containing
+#'   the values of QC results in boolean format (default: "name")
+#'
+#' @return LGL scalar of the value, if present, as numeric, or 0 if not present
+#' @export
+#'
+#' @examples
+#' qc_result(list(qc = list(letters), qcmethod = data.frame(name = "QC Method Used", value = TRUE)))
+qc_result <- function(obj,
+                      qc_in = "qc",
+                      qc_method_in = "qcmethod",
+                      search_text_in = "name",
+                      search_text = "QC Method Used",
+                      value_in = "value") {
+  stopifnot(
+    all(sapply(c(qc_in, qc_method_in, search_text, value_in), is.character)),
+    all(sapply(c(qc_in, qc_method_in, search_text, value_in), length) == 1)
+  )
+  can_parse <- qc_in %in% names(obj) &&
+    length(obj[[qc_in]]) > 1 &&
+    qc_method_in %in% names(obj)
+  if (can_parse) {
+    tmp <- obj[[qc_method_in]] %>%
+      filter(.[[search_text_in]] == search_text)
+    if (nrow(tmp) == 0) {
+      out <- FALSE
+    } else {
+      out <- ifelse(value_in %in% names(tmp),
+                    tmp[[value_in]],
+                    FALSE)
+    }
+  } else {
+    out <- FALSE
+  }
+  return(as.numeric(out))
 }
