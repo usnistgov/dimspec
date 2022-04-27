@@ -56,8 +56,8 @@ DEPENDS_ON     <- c("base64enc",
 # in env_glob.txt by default. Reticulate and the "rcdk" package often cause
 # conflicts due to the "rJava" package, making "rpytools" unavailable to
 # reticulate.
-if (ifelse(exists("INFORMATICS"), INFORMATICS, TRUE)) {
-  if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, TRUE)) {
+if (ifelse(exists("INFORMATICS"), INFORMATICS, FALSE)) {
+  if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, FALSE)) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
     }
