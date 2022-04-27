@@ -346,6 +346,9 @@
 		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to methods */
+		sample_id
+		  INTEGER,
+		  /* foreign key to samples */
 		solvent_mix_collection_id
 			INTEGER NOT NULL,
 			/* foreign key to solvent_mixes */
@@ -365,6 +368,7 @@
 		CHECK (duration > 0),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -412,6 +416,7 @@
 		  TEXT,
 		  /* units associated with this value; open text */
 		/* Check constraints */
+		UNIQUE(ms_methods_id, name, value, value_unit),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
