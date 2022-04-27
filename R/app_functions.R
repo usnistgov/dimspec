@@ -33,37 +33,82 @@ support_info <- function(app_info = TRUE) {
     if (exists("log_it")) log_it("debug", "Gathering application information...")
     global <- as.list(.GlobalEnv)
     app <- list(
-      DB_NAME         = if (exists("DB_NAME")) DB_NAME else "Not set",
-      DB_DATE         = if (exists("DB_DATE")) DB_DATE else "Not set",
-      DB_VERSION      = if (exists("DB_VERSION")) DB_VERSION else "Not set",
-      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grepl("DB_", names(global))] else "Not set",
+      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grepl("DB_", sort(names(global)))] else "Not set",
       BUILD_FILE      = if (exists("DB_BUILD_FILE")) {
-        c(file = DB_BUILD_FILE, exists = file.exists(DB_BUILD_FILE))
+        fpath <- list.files(pattern = DB_BUILD_FILE,
+                            full.names = TRUE,
+                            recursive = TRUE)
+        list(file = DB_BUILD_FILE,
+             exists = !length(fpath) == 0,
+             location = fpath)
       } else {
         "Not set"
       },
       BUILD_FILE_FULL = if (exists("DB_BUILD_FULL")) {
-        c(file = DB_BUILD_FULL, exists = file.exists(DB_BUILD_FULL))
+        fpath <- list.files(pattern = DB_BUILD_FULL,
+                            full.names = TRUE,
+                            recursive = TRUE)
+        list(file = DB_BUILD_FULL,
+             exists = !length(fpath) == 0,
+             location = fpath)
       } else {
         "Not set"
       },
       POPULATED_WITH  = if (exists("DB_DATA")) {
-        c(file = DB_DATA, exists = file.exists(DB_DATA))
+        fpath <- list.files(pattern = DB_DATA,
+                            full.names = TRUE,
+                            recursive = TRUE)
+        list(file = DB_DATA,
+             exists = !length(fpath) == 0,
+             location = fpath)
       } else {
         "Not set"
       },
-      LAST_DB_SCHEMA  = if (exists("LAST_DB_SCHEMA")) LAST_DB_SCHEMA else "Not set",
       LAST_MODIFIED   = if (exists("LAST_MODIFIED")) LAST_MODIFIED else "Not set",
       DEPENDS_ON      = if (exists("DEPENDS_ON")) DEPENDS_ON else "Not set",
       EXCLUSIONS      = if (exists("EXCLUSIONS")) EXCLUSIONS else "Not set",
       EXPLICIT_PATHS  = if (exists("EXPLICIT_PATHS")) EXPLICIT_PATHS else "Not set",
-      RUNNING         = c(
-        "API" = if (exists("USE_API")) USE_API else "Not set",
-        "RDK" = if (exists("USE_RDKIT")) USE_RDKIT else "Not set",
-        "SHINY" = if (exists("USE_SHINY")) USE_SHINY else "Not set",
-        "DB" = if (exists("INIT_CONNECT")) INIT_CONNECT else "Not set"
-      ),
-      LOGGER          = c(global[grepl("^LOG[G_]", names(global))],
+      START_UP        = {
+        get_settings <- c("USE_API", "USE_RDKIT", "USE_SHINY", "INIT_CONNECT",
+                          "INFORMATICS", "MINIMIZE", "VERIFY_ARGUMENTS",
+                          "LOGGING_ON")
+        setNames(
+          lapply(get_settings,
+               function(x) {
+                 if (exists(x)) {
+                   eval(sym(x))
+                 } else {
+                   "Not set"
+                 }
+               }
+          ),
+          get_settings
+        )},
+      PLUMBER         = {
+        get_settings <- c("USE_API", "PLUMBER_FILE", "PLUMBER_HOST",
+                          "PLUMBER_PORT", "PLUMBER_URL")
+        setNames(
+          lapply(get_settings,
+                 function(x) {
+                   if (exists(x)) {
+                     if (x == "PLUMBER_FILE") {
+                       fpath <- list.files(pattern = x,
+                                           full.names = TRUE,
+                                           recursive = TRUE)
+                       list(file = eval(sym(x)),
+                            exists = !length(fpath) == 0,
+                            location = fpath)
+                     } else {
+                       eval(sym(x))
+                     }
+                   } else {
+                     "Not set"
+                   }
+                 }
+          ),
+          get_settings
+        )},
+      LOGGER_SETTINGS = c(global[grepl("^LOG[G_]", names(global))],
                           FILES_EXIST <- lapply(
                             global[grepl("LOG_FILE", names(global))],
                             file.exists) %>%
@@ -1020,132 +1065,4 @@ obj_name_check <- function(obj, default_name = NULL) {
   }
   if (exists("log_it")) log_it("debug", "Exiting obj_name_check().")
   return(obj_name)
-}
-
-#' Open and edit project files
-#'
-#' Project files are organized in several topical directories depending on their
-#' purpose as part of the package. For example, several project control
-#' variables are set to establish the session global environment in the "config"
-#' directory rather than the "R" directory.
-#'
-#' If a direct file match to name is not found, it will be searched for using a
-#' recursive [list.files] allowing for regex matches (e.g. ".R$"). Directories
-#' are similarly sought out within the project. Reasonable feedback is provided.
-#'
-#' This convenience function uses [usethis::edit_file] to open (or create if
-#' `create_new` is TRUE) any given file in the project.
-#'
-#' @note If the directory and file cannot be found, and `create_new` is true,
-#'   the directory will be placed within the project directory.
-#'
-#' @param name CHR scalar of the file name to open, accepts regex
-#' @param dir CHR scalar of a directory name to search within
-#' @param create_new LGL scalar of whether to create the file (similar
-#'   functionality to [usethis]; default FALSE)
-#'
-#' @return None, opens a file for editing
-#' @export
-#' 
-open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
-  if (exists("VERIFY_ARGUMENTS") && VERIFY_ARGUMENTS && exists("verify_args")) {
-    conds <- list(
-      name = list(c("mode", "character"), c("length", 1)),
-      dir = list(c("mode", "character"), c("length", 1)),
-      create_new = list(c("mode", "logical"), c("length", 1))
-    )
-    if (is.null(dir)) {
-      args <- list(name, create_new)
-      conds$dir <- NULL
-    } else {
-      args <- list(name, dir, create_new)
-    }
-    arg_check <- verify_args(
-      args = args,
-      conditions = conds
-    )
-    stopifnot(arg_check$valid)
-  }
-  open <- rlang::is_interactive()
-  if (create_new) {
-    if (tools::file_ext(name) == "") {
-      new_fname <- paste0(name, ".R")
-    }
-  }
-  if (file.exists(name)) {
-    usethis::edit_file(usethis::proj_path(name), open = open)
-  } else if (is.null(dir)) {
-    match_name <- list.files(pattern = name, recursive = TRUE, full.names = TRUE)
-    if (length(match_name) == 1) {
-      usethis::edit_file(usethis::proj_path(match_name), open = open)
-    } else if (length(match_name) == 0) {
-      if (exists("log_it")) {
-        log_it(ifelse(create_new, "warn", "error"),
-               sprintf('Could not locate a file matching the pattern "%s" in this project.', name))
-      }
-      if (create_new) {
-        usethis::edit_file(usethis::proj_path(new_fname), open = open)
-      }
-    } else {
-      if (exists("log_it")) {
-        log_it("error", sprintf('Multiple files matching the pattern "%s" were found in this project. Please be more specific or provide the "dir" argument. Perhaps it was one of these?', name))
-        cat(paste0(match_name, collapse = "\n"))
-      }
-    }
-  } else if (file.exists(file.path(dir, name))) {
-    usethis::edit_file(usethis::proj_path(dir, name), open = open)
-  } else {
-    all_dirs <- list.dirs()
-    if (any(grepl(dir, all_dirs))) {
-      match_dir <- all_dirs[grepl(dir, all_dirs)]
-      if (length(match_dir) > 1) {
-        if (exists("log_it")) {
-          log_it("error", sprintf('Multiple directories matching the pattern "%s" were found. Please be more specific.', dir))
-          stop()
-        }
-      }
-    } else {
-      if (exists("log_it")) {
-        log_it("warn", sprintf('Could not locate a directory matching "%s". Looking in all project directories.', dir))
-      }
-      match_dir <- "."
-    }
-    match_name <- list.files(path = match_dir, pattern = name, recursive = TRUE, full.names = TRUE)
-    if (length(match_name) == 1) {
-      usethis::edit_file(usethis::proj_path(match_name), open = open)
-    } else if (length(match_name) == 0) {
-      if (exists("log_it")) {
-        log_it(ifelse(create_new, "warn", "error"),
-               sprintf('Could not locate a file matching the pattern "%s" in the "%s" directory.', name, dir))
-      }
-      if (create_new) {
-        usethis::edit_file(usethis::proj_path(dir, new_fname), open = open)
-      }
-    } else {
-      if (exists("log_it")) {
-        log_it("error", sprintf('Multiple files matching the pattern "%s" were found in the "%s" directory. Please be more specific.', name, dir))
-        cat(paste0(match_name, collapse = "\n"))
-      }
-    }
-  }
-}
-
-#' Convenience shortcut to open and edit session environment variables
-#'
-#' Calls [open_proj_file] for either the R, global, or logging environment
-#' settings containing the most common settings dictating project behavior.
-#'
-#' @param name CHR scalar, one of "R", "global", or "logging".
-#'
-#' @return None, opens a file for editing
-#' @export
-#' 
-open_env <- function(name = c("R", "global", "logging")) {
-  name <- switch(
-    match.arg(name),
-    "R" = "env_R.R",
-    "global" = "env_glob.txt",
-    "logging" = "env_logger.R"
-  )
-  open_proj_file(name, "config")
 }
