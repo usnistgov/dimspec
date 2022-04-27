@@ -233,7 +233,7 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
     }
     if (length(checks) == 1) {
       out[[m]]$query <- sqlInterpolate(db_conn, "? = ?", column, checks)
-    } else {
+    } else if (length(checks) > 1) {
       out[[m]]$query <- paste0(column, " IN (",
                                paste0(
                                  lapply(checks,
@@ -248,6 +248,8 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
                                    unlist(),
                                  collapse = ", "),
                                ")")
+    } else {
+      out[[m]]$query <- sqlInterpolate(db_conn, "? IS NULL", column)
     }
     
     # Negate clause
@@ -435,7 +437,7 @@ build_db_action <- function(action,
   
   # Check that values is formatted properly as a nested list
   if (!is.null(values)) {
-    if (!is.list(values[1])) {
+    if (!is.list(values[[1]])) {
       values <- list(values)
     }
     value_names <- names(values[[1]])
@@ -469,7 +471,7 @@ build_db_action <- function(action,
                              function(x) {
                                lapply(x,
                                       function(y) {
-                                        if (any(tolower(y) == "null", y == "", is.na(y))) {
+                                        if (any(tolower(y) == "null", y == "", is.na(y), is.null(y))) {
                                           "null"
                                         } else {
                                           dbQuoteLiteral(db_conn, y)
