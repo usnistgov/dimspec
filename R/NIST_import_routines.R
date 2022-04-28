@@ -464,6 +464,8 @@ resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = co
 #' [resolve_software_settings] to insert records into and get the proper
 #' conversion software linkage id from tables "conversion_software_settings" and
 #' "conversion_software_linkage" if appropriate.
+#' 
+#' @note This function is called as part of [full_import]
 #'
 #' @inheritParams add_or_get_id
 #' @inheritParams map_import
@@ -559,6 +561,8 @@ resolve_sample <- function(obj,
 #' Part of the data import routine. Adds a record to the "ms_methods" table with
 #' the values provided in the JSON import template. Makes extensive uses of
 #' [resolve_normalization_value] to parse foreign key relationships.
+#' 
+#' @note This function is called as part of [full_import]
 #' 
 #' @inheritParams add_or_get_id
 #' @inheritParams qc_result
@@ -677,16 +681,20 @@ resolve_method <- function(obj,
 #' "long" tables that may well have `n` records for each mass spectrometric
 #' method.
 #'
-#' @note This function is fragile and is built specifically for the NIST import
-#'   format. If using a different import format, customize to your needs using
-#'   this function as a guide.
-#'   
+#' @note This function is called as part of [full_import]
+#'
+#' @note This function is brittle; built specifically for the NIST NTA MRT
+#'   import format. If using a different import format, customize to your needs
+#'   using this function as a guide.
+#'
 #' @inheritParams get_component
 #' @inheritParams build_db_action
 #'
-#' @param obj
-#' @param method_id
-#' @param type
+#' @param obj LIST object containing data formatted from the import generator
+#' @param method_id INT scalar of the ms_method.id record to associate
+#' @param type CHR scalar, one of "massspec" or "chromatography" depending on
+#'   the type of description to add; much of the logic is shared, only details
+#'   differ
 #' @param er_map
 #'
 #' @return
@@ -815,7 +823,6 @@ resolve_description_NTAMRT <- function(obj,
     )
   )
   if (inherits(res, "try-error")) {
-    browser()
     stop(glue('There was an issue adding records to table "{table_name}".'))
   } else {
     log_it("success", glue::glue('Added {type} description to table "{table_name}".'), log_ns)
@@ -826,53 +833,228 @@ resolve_description_NTAMRT <- function(obj,
 resolve_mobile_phase_NTAMRT <- function(obj,
                                         method_id,
                                         sample_id,
-                                        mobile_phase_in = "chromatography",
+                                        carrier_mix_names = NULL,
                                         id_mix_by = "^mp*[0-9]+",
-                                        solvent_mix_name = NULL,
+                                        methods_table = "ms_methods",
+                                        methods_id_column = "id",
+                                        samples_table = "samples",
+                                        samples_id_column = "id",
                                         db_conn = con,
+                                        mix_collection_table = "carrier_mix_collections",
+                                        mobile_phase_props = list(
+                                          in_item = "chromatography",
+                                          db_table = "mobile_phases",
+                                          props = c(
+                                            flow_rate = "flow",
+                                            flow_units = "flowunits",
+                                            duration = "duration",
+                                            duration_units = "durationunits"
+                                          )
+                                        ),
+                                        carrier_table = "carrier_mixes",
+                                        carrier_props = c(
+                                          id_by = "solvent",
+                                          fraction_by = "fraction"),
+                                        additive_props = c(
+                                          id_by = "add",
+                                          amount_by = "amount",
+                                          units_by = "units"),
+                                        exclude_values = c("none", "", NA),
                                         er_map = db_map,
                                         fuzzy = TRUE,
                                         log_ns = "db") {
   stopifnot(
     check_for_value(values = method_id,
-                    db_table = "ms_methods",
-                    db_column = "id",
+                    db_table = methods_table,
+                    db_column = methods_id_column,
                     db_conn = db_conn)$exists,
     check_for_value(values = sample_id,
-                    db_table = "samples",
-                    db_column = "id",
-                    db_conn = db_conn)$exists
+                    db_table = samples_table,
+                    db_column = samples_id_column,
+                    db_conn = db_conn)$exists,
+    is.list(obj)
   )
-  obj <- get_component(obj, mobile_phase_in)[[1]]
-  mixes <- names(obj[grep(id_mix_by, names(obj))])
-  components <- obj[grep("solvent", mixes, value = T)]
-  components <- components[-which(components == "none")]
-  # TODO PICK UP HERE
-  solvent_mixes <- tibble(
-    component_ref = names(components),
-    component = components
+  obj <- get_component(obj, mobile_phase_props[["in_item"]])[[1]]
+  mixes <- obj[names(obj[grep(id_mix_by, names(obj))])]
+  mixes <- mixes[-which(mixes %in% exclude_values)]
+  if (any(str_detect(mixes, "[0-9]+"))) {
+    log_it("info", "Order of carriers and additives is numerically inferrable from object names.", log_ns)
+    mixes <- mixes[order(str_extract_all())]
+  } else {
+    log_it("info", "Order is not explicitly inferrable, order will be inferred from the object order.", log_ns)
+  }
+  components <- obj[grep(carrier_props[["id_by"]], names(mixes), value = T)]
+  # Separate out solvent mixes
+  carrier_mixes <- tibble(
+    component_ref = components %>%
+      names(),
+    component = components %>%
+      unname() %>%
+      unlist(),
+    fraction = obj[which(gsub(carrier_props[["id_by"]],
+                              carrier_props[["fraction_by"]],
+                              names(components))
+                         %in% names(components))] %>%
+      unname() %>%
+      unlist()
+  ) %>%
+    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),) %>%
+    group_by(inferred_group) %>%
+    select(-component_ref) %>%
+    group_split() %>%
+    lapply(function(x) {
+      x %>%
+        select(-inferred_group) %>%
+        mutate(
+          component = sapply(
+            component,
+            function(x) {
+              resolve_normalization_value(
+                this_val = x,
+                db_table = "norm_carriers",
+                id_column = "id",
+                db_conn = db_conn,
+                log_ns = log_ns
+              )
+            }) %>%
+            unname()
+        )
+    })
+  # Insert carrier mix collections and get id
+  if (is.null(carrier_mix_names)) {
+    carrier_mix_names <- glue::glue("method_{method_id}_sample_{sample_id}_carrier_{1:length(carrier_mixes)}")
+  } else {
+    if (length(carrier_mix_names) != length(carrier_mixes)) {
+      log_it("warn", "Incorrect number of carrier names.", log_ns)
+      if (length(carrier_mix_names) == 1) {
+        msg <- glue::glue("Carrier names will be appended to '{carrier_mix_names}'.")
+      } else {
+        msg <- glue::glue("Carrier names will be appended to the first carrier name '{carrier_mix_names[1]}'.")
+      }
+      log_it("info", msg, log_ns)
+      carrier_mix_names <- glue::glue("{carrier_mix_names}_carrier_{1:length(carrier_mixes)}")
+    }
+  }
+  build_db_action(
+    action = "insert",
+    table_name = mix_collection_table,
+    values = lapply(carrier_mix_names, function(x) list(name = x)),
+    db_conn = db_conn,
+    log_ns = log_ns
   )
-  additives <- grep("add", mixes, value = T)
-  # additives <- additives[order(as.integer(str_extract(additives, "[0-9]+")))]
-  browser()
-    # mix_id <- add_or_get_id(
-    #   table_name = "solvent_mix_collections",
-    #   values = list(
-    #     name = ifelse(is.null(solvent_mix_name),
-    #                   glue::glue("method_{method_id}-sample_{sample_id}"),
-    #                   solvent_mix_name)
-    #   ),
-    #   db_conn = db_conn,
-    #   log_ns = log_ns
-    # )
-    # solvent_mix_values <- list(
-    #   mix_id = mix_id,
-    #   component = components,
-    #   fraction = fractions
-    # )
+  # Get the last n inserted mix IDs
+  id_col <- "id"
+  mix_ids <- dbGetQuery(
+    conn = db_conn,
+    statement = sqlInterpolate(conn = db_conn,
+                               "SELECT ?id_col FROM ?table ORDER BY ?id_col DESC LIMIT ?limit",
+                               id_col = dbQuoteIdentifier(db_conn, id_col),
+                               table = mix_collection_table,
+                               limit = length(components))
+  ) %>%
+    pull(!!id_col) %>%
+    sort() %>%
+    setNames(carrier_mix_names)
+  names(carrier_mixes) <- carrier_mix_names
+  # Insert into carrier_mixes table by name match
+  lapply(names(carrier_mixes),
+         function(x) {
+           build_db_action(
+             action = "insert",
+             table_name = "carrier_mixes",
+             db_conn = db_conn,
+             values = carrier_mixes[[x]] %>%
+               mutate(mix_id = mix_ids[[x]]),
+             log_ns = log_ns
+           )
+         })
+  # Separate out additives and infer their group from their name in the same manner
+  additives <- obj[grep(additive_props[["id_by"]], names(mixes), value = T)]
+  additive_mixes <- tibble(
+    component_ref = additives %>%
+      names(),
+    component = additives %>%
+      unname() %>%
+      unlist(),
+    amount = obj[which(gsub(additive_props[["id_by"]],
+                            additive_props[["amount_by"]],
+                            names(additives))
+                       %in% names(additives))] %>%
+      unname() %>%
+      unlist(),
+    units = obj[which(gsub(additive_props[["id_by"]],
+                           additive_props[["units_by"]],
+                           names(additives))
+                      %in% names(additives))] %>%
+      unname() %>%
+      unlist()
+  ) %>%
+    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),) %>%
+    group_by(inferred_group) %>%
+    select(-component_ref) %>%
+    group_split() %>%
+    lapply(function(x) {
+      x %>%
+        select(-inferred_group) %>%
+        mutate(
+          component = sapply(
+            component,
+            function(x) {
+              resolve_normalization_value(
+                this_val = x,
+                db_table = "norm_additives",
+                id_column = "id",
+                db_conn = db_conn,
+                log_ns = log_ns
+              )
+            }) %>%
+            unname(),
+          units = if (!"units" %in% names(x)) {
+            NULL
+          } else {
+            if (!is.na(units)) {
+              sapply(
+                component,
+                function(x) {
+                  resolve_normalization_value(
+                    this_val = x,
+                    db_table = "norm_additive_units",
+                    id_column = "id",
+                    db_conn = db_conn,
+                    log_ns = log_ns
+                  )
+                }) %>%
+                unname()
+            } else {
+              units
+            }
+          }
+        )
+    })
+  # Insert into carrier_mixes table by name match
+  names(mix_ids) <- names(additive_mixes)
+  lapply(names(additive_mixes),
+         function(x) {
+           build_db_action(
+             action = "insert",
+             table_name = "additive_mixes",
+             db_conn = db_conn,
+             values = additive_mixes[[x]] %>%
+               mutate(mix_id = mix_ids[[x]]),
+             log_ns = log_ns
+           )
+         })
+  # Finally, insert into mobile_phases
+  mobile_phase <- tibble(
+    ms_methods_id = method_id,
+    sample_id = sample_id,
+    carrier_mix_collection_id = unname(mix_ids),
+    flow = obj[[mobile_phase_props]]
+  )
 }
 
 # TODO
+#' @note This function is called as part of [full_import]
 resolve_ms_data <- function(obj, log_ns = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
@@ -880,6 +1062,7 @@ resolve_ms_data <- function(obj, log_ns = "db") {
 }
 
 # TODO
+#' @note This function is called as part of [full_import]
 resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source"), db_conn = con, log_ns = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
