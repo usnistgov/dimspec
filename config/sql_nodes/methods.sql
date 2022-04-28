@@ -62,28 +62,28 @@
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_solvents
-		/* Mobile phase solvent list: controlled. */
+	CREATE TABLE IF NOT EXISTS norm_carriers
+		/* Mobile phase carrier list: controlled. */
 	(
 		id
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
-			/* IUPAC name for mobile phase norm_solvents */
+			/* IUPAC name for mobile phase norm_carriers */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_additives
-		/* Solvent additives list: controlled. */
+		/* carrier additives list: controlled. */
 	(
 		id
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
-			/* IUPAC name for solvent additives */
+			/* IUPAC name for carrier additives */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -327,8 +327,8 @@
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_mix_collections
-		/* An intermediary identification table linking mobile_phases and solvent_mixes */
+	CREATE TABLE IF NOT EXISTS carrier_mix_collections
+		/* An intermediary identification table linking mobile_phases and carrier_mixes */
 	(
 		id
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -349,12 +349,12 @@
 		sample_id
 		  INTEGER,
 		  /* foreign key to samples */
-		solvent_mix_collection_id
+		carrier_mix_collection_id
 			INTEGER NOT NULL,
-			/* foreign key to solvent_mixes */
+			/* foreign key to carrier_mixes */
 		flow
 		  REAL,
-		  /* flow rate of carrier described in solvent_mix_collection_id */
+		  /* flow rate of carrier described in carrier_mix_collection_id */
 		flow_units
 		  INTEGER,
 		  /* foreign key to norm_flow_units */
@@ -369,7 +369,7 @@
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (carrier_mix_collection_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
@@ -548,18 +548,18 @@
 		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_aliases
-		/* List of common aliases for each entry in TABLE norm_solvents */
+	CREATE TABLE IF NOT EXISTS carrier_aliases
+		/* List of common aliases for each entry in TABLE norm_carriers */
 	(
-		solvent_id
+		carrier_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		alias
 			TEXT NOT NULL UNIQUE,
-			/* human meaningful name(s) associated with a solvent */
+			/* human meaningful name(s) associated with a carrier */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (carrier_id) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS additive_aliases
@@ -567,7 +567,7 @@
 	(
 		additive_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		alias
 			TEXT NOT NULL UNIQUE,
 			/* human meaningful name(s) associated with an additive */
@@ -576,44 +576,44 @@
 		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_mixes
-		/* Mobile phase solvent mixture for a given elution method */
+	CREATE TABLE IF NOT EXISTS carrier_mixes
+		/* Mobile phase carrier mixture for a given elution method */
 	(
 		mix_id
 			INTEGER NOT NULL,
-			/* mixture identifier to gather discrete components; foreign key to solvent_mix_collections */
+			/* mixture identifier to gather discrete components; foreign key to carrier_mix_collections */
 		component
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		fraction
 			REAL,
-			/* amount fraction of this solvent in the mixture, constrained from 0 - 1 */
+			/* amount fraction of this carrier in the mixture, constrained from 0 - 1 */
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (mix_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_additives
-		/* Mobile phase additives mixture for a given solvent mix collection */
+	CREATE TABLE IF NOT EXISTS carrier_additives
+		/* Mobile phase additives mixture for a given carrier mix collection */
 	(
 		mix_id
 			INTEGER NOT NULL,
-			/* mixture identifier to gather discrete additives; foreign key to solvent_mix_collections */
+			/* mixture identifier to gather discrete additives; foreign key to carrier_mix_collections */
 		component
 			INTEGER NOT NULL,
 			/* foreign key to norm_additives */
 		amount
 			REAL,
-			/* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */
+			/* amount fraction amount of this carrier in the mixture, contrained from 0 - 1 */
 		units
 		  INTEGER,
 		  /* additive units, foreign key to norm_additive_units */
 		/* Check constraints */
 		CHECK (amount > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (mix_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
@@ -648,27 +648,27 @@
 		FROM chromatography_descriptions cd
 		INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
 	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_solvent_mix AS
+	CREATE VIEW IF NOT EXISTS view_carrier_mix AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
 			sm.mix_id AS "mix_id",
-				/* solvent mix id */
+				/* carrier mix id */
 			ns.name AS "component",
-				/* solvent name */
+				/* carrier name */
 			CASE WHEN sm.fraction IS NULL THEN "" ELSE sm.fraction * 100 END "amount",
-				/* solvent fraction in this mix */
+				/* carrier fraction in this mix */
 			CASE WHEN sm.fraction IS NULL THEN "" ELSE "percent" END "unit_name",
-			  /* full name of solvent amount unit */
+			  /* full name of carrier amount unit */
 			CASE WHEN sm.fraction IS NULL THEN "" ELSE "%" END "unit"
-			  /* solvent unit abbreviation */
-		FROM solvent_mixes sm
-		LEFT JOIN norm_solvents ns ON ns.id = sm.component;
+			  /* carrier unit abbreviation */
+		FROM carrier_mixes sm
+		LEFT JOIN norm_carriers ns ON ns.id = sm.component;
 	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_solvent_additives AS
+	CREATE VIEW IF NOT EXISTS view_carrier_additives AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
 			sa.mix_id AS "mix_id",
-				/* solvent mix id */
+				/* carrier mix id */
 			na.name AS "component",
 				/* additive name */
 			CASE WHEN sa.amount IS NULL THEN "" ELSE sa.amount END "amount",
@@ -677,35 +677,35 @@
 			  /* full name of additive units */
 			CASE WHEN sa.amount IS NULL THEN "" ELSE nau.abbreviation END "unit"
 			  /* additive units abbreviation */
-		FROM solvent_additives sa
+		FROM carrier_additives sa
 		LEFT JOIN norm_additive_units nau ON sa.units = nau.id
 		LEFT JOIN norm_additives na ON sa.component = na.id;
 	/*magicsplit*/
-  CREATE VIEW IF NOT EXISTS view_solvent_mix_collection AS
-		/* Tabular view of solvent mix components by mixture ID */
+  CREATE VIEW IF NOT EXISTS view_carrier_mix_collection AS
+		/* Tabular view of carrier mix components by mixture ID */
   	SELECT
   	  smc.id,
-  	    /* solvent mix collection id */
+  	    /* carrier mix collection id */
   	  smc.name,
-  	    /* solvent mix user-supplied name */
+  	    /* carrier mix user-supplied name */
   	  vst.component,
-  	    /* solvent mix component name */
+  	    /* carrier mix component name */
   	  vst.component_type,
-  	    /* solvent mix component type, whether a solvent or an additive */
+  	    /* carrier mix component type, whether a carrier or an additive */
   	  vst.amount,
-  	    /* solvent mix component amount */
+  	    /* carrier mix component amount */
   	  vst.unit
-  	    /* solvent mix component units associated with the amount */
-  		FROM solvent_mix_collections smc JOIN
+  	    /* carrier mix component units associated with the amount */
+  		FROM carrier_mix_collections smc JOIN
   			(SELECT
   				*,
-  				"solvent" AS "component_type"
-  				FROM view_solvent_mix vsm
+  				"carrier" AS "component_type"
+  				FROM view_carrier_mix vsm
   			UNION
   			SELECT
   				*,
   				"additive" AS "component_type"
-  				FROM view_solvent_additives vsa
+  				FROM view_carrier_additives vsa
   			) AS vst
   		ON mix_id = smc.id
   		ORDER BY id, component_type DESC, amount DESC;
@@ -715,9 +715,9 @@
     SELECT
     	mp.ms_methods_id,
     	  /* MS Methods ID, foreign key to ms_methods.id */
-    	CASE ifnull(solvents, "") WHEN "" THEN "" ELSE solvents END ||
+    	CASE ifnull(carriers, "") WHEN "" THEN "" ELSE carriers END ||
     		CASE ifnull(additives, "") WHEN "" THEN "" ELSE
-    			CASE ifnull(solvents, "") WHEN "" THEN "" ELSE " with " END
+    			CASE ifnull(carriers, "") WHEN "" THEN "" ELSE " with " END
     			|| additives || " amendment" END ||
     		CASE ifnull(mp.duration, "") WHEN "" THEN "" ELSE " for " || mp.duration END ||
     		CASE ifnull(ndu.abbreviation, "") WHEN "" THEN "" ELSE " " || ndu.abbreviation END ||
@@ -733,22 +733,22 @@
 		LEFT JOIN(
 			SELECT
 				CASE ifnull(mix_id, "") WHEN "" THEN mix2 ELSE mix_id END AS mix_id,
-				solvents,
+				carriers,
 				additives
 			FROM
 				(SELECT
 		  	    	mix_id as mix2,
 		  		    REPLACE(REPLACE(group_concat(vsa.component || " (" || vsa.amount || " " || vsa.unit || ")"), ",", " / "), " ( )", "") AS "additives"
-		  		    FROM view_solvent_additives vsa
+		  		    FROM view_carrier_additives vsa
 		  	        GROUP BY vsa.mix_id)
 		  	    LEFT JOIN
 		  	    (SELECT
 		  	    	mix_id,
-		  		    REPLACE(REPLACE(group_concat(vsm.component || " (" || vsm.amount || " " || vsm.unit || ")"), ",", " / "), " ( )", "") AS "solvents"
-		  		    FROM view_solvent_mix vsm    
+		  		    REPLACE(REPLACE(group_concat(vsm.component || " (" || vsm.amount || " " || vsm.unit || ")"), ",", " / "), " ( )", "") AS "carriers"
+		  		    FROM view_carrier_mix vsm    
 		  	        GROUP BY vsm.mix_id)
 	  	    	ON mix_id = mix2
-	  	) ON mp.solvent_mix_collection_id = mix_id;
+	  	) ON mp.carrier_mix_collection_id = mix_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_detectors AS
 		/* Convenience view to build view_method_as by providing a single character string for detectors used in this method */
