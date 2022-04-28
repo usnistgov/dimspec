@@ -42,13 +42,13 @@
 
 /* To build in console, use each of the following as needed. */
 
-DELETE FROM solvent_mixes;
-DELETE FROM solvent_additives;
-DELETE FROM solvent_mix_collections;
-DELETE FROM solvent_aliases;
+DELETE FROM carrier_mixes;
+DELETE FROM carrier_additives;
+DELETE FROM carrier_mix_collections;
+DELETE FROM carrier_aliases;
 DELETE FROM additive_aliases;
 DELETE FROM mobile_phases;
-DELETE FROM norm_solvents;
+DELETE FROM norm_carriers;
 DELETE FROM norm_additives;
 DELETE FROM norm_sample_classes;
 DELETE FROM instrument_properties;
@@ -65,7 +65,7 @@ DELETE FROM conversion_software_settings;
 DELETE FROM conversion_software_peaks_linkage;
 DELETE FROM norm_peak_confidence;
 DELETE FROM samples;
-.import --csv --skip 1 config/data/pfas/norm_solvents.csv norm_solvents
+.import --csv --skip 1 config/data/pfas/norm_carriers.csv norm_carriers
 .import --csv --skip 1 config/data/pfas/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes
 .import --csv --skip 1 config/data/pfas/ms_methods.csv ms_methods
@@ -74,12 +74,12 @@ DELETE FROM samples;
 .import --csv --skip 1 config/data/pfas/chromatography_descriptions.csv chromatography_descriptions
 .import --csv --skip 1 config/data/pfas/affiliations.csv affiliations
 .import --csv --skip 1 config/data/pfas/contributors.csv contributors
-.import --csv --skip 1 config/data/pfas/solvent_mix_collections.csv solvent_mix_collections
+.import --csv --skip 1 config/data/pfas/carrier_mix_collections.csv carrier_mix_collections
 .import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
-.import --csv --skip 1 config/data/pfas/solvent_aliases.csv solvent_aliases
+.import --csv --skip 1 config/data/pfas/carrier_aliases.csv carrier_aliases
 .import --csv --skip 1 config/data/pfas/additive_aliases.csv additive_aliases
-.import --csv --skip 1 config/data/pfas/solvent_mixes.csv solvent_mixes
-.import --csv --skip 1 config/data/pfas/solvent_additives.csv solvent_additives
+.import --csv --skip 1 config/data/pfas/carrier_mixes.csv carrier_mixes
+.import --csv --skip 1 config/data/pfas/carrier_additives.csv carrier_additives
 .import --csv --skip 1 config/data/pfas/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/pfas/norm_peak_confidence.csv norm_peak_confidence
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds

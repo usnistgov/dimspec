@@ -43,13 +43,13 @@
 
 /* To build in console, use each of the following as needed. */
 
-DELETE FROM solvent_mixes;
-DELETE FROM solvent_mix_collections;
-DELETE FROM solvent_additives;
-DELETE FROM solvent_aliases;
+DELETE FROM carrier_mixes;
+DELETE FROM carrier_mix_collections;
+DELETE FROM carrier_additives;
+DELETE FROM carrier_aliases;
 DELETE FROM additive_aliases;
 DELETE FROM mobile_phases;
-DELETE FROM norm_solvents;
+DELETE FROM norm_carriers;
 DELETE FROM norm_additives;
 DELETE FROM norm_peak_confidence;
 DELETE FROM samples;
@@ -66,7 +66,7 @@ DELETE FROM compound_categories;
 DELETE FROM compound_aliases;
 DELETE FROM conversion_software_settings;
 DELETE FROM conversion_software_peaks_linkage;
-.import --csv --skip 1 config/data/demo/norm_solvents.csv norm_solvents
+.import --csv --skip 1 config/data/demo/norm_carriers.csv norm_carriers
 .import --csv --skip 1 config/data/demo/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/demo/norm_sample_classes.csv norm_sample_classes
 .import --csv --skip 1 config/data/demo/ms_methods.csv ms_methods
@@ -75,12 +75,12 @@ DELETE FROM conversion_software_peaks_linkage;
 .import --csv --skip 1 config/data/demo/chromatography_descriptions.csv chromatography_descriptions
 .import --csv --skip 1 config/data/demo/affiliations.csv affiliations
 .import --csv --skip 1 config/data/demo/contributors.csv contributors
-.import --csv --skip 1 config/data/demo/solvent_mix_collections.csv solvent_mix_collections
+.import --csv --skip 1 config/data/demo/carrier_mix_collections.csv carrier_mix_collections
 .import --csv --skip 1 config/data/demo/mobile_phases.csv mobile_phases
-.import --csv --skip 1 config/data/demo/solvent_aliases.csv solvent_aliases
+.import --csv --skip 1 config/data/demo/carrier_aliases.csv carrier_aliases
 .import --csv --skip 1 config/data/demo/additive_aliases.csv additive_aliases
-.import --csv --skip 1 config/data/demo/solvent_mixes.csv solvent_mixes
-.import --csv --skip 1 config/data/demo/solvent_additives.csv solvent_additives
+.import --csv --skip 1 config/data/demo/carrier_mixes.csv carrier_mixes
+.import --csv --skip 1 config/data/demo/carrier_additives.csv carrier_additives
 .import --csv --skip 1 config/data/demo/compound_categories.csv compound_categories
 .import --csv --skip 1 config/data/demo/compounds.csv compounds
 .import --csv --skip 1 config/data/demo/compound_aliases.csv compound_aliases

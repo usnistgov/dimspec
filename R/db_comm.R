@@ -670,6 +670,23 @@ save_data_dictionary <- function(db_conn            = con,
   } else {
     f_name <- output_file
   }
+  out <- data_dictionary(db_conn)
+  if (attr(out, "has_failures")) {
+    if (exists("log_it")) {
+      log_it("error",
+             sprintf('This dictionary failed on %s. No file will be saved.',
+                     format_list_of_names(attr(out, "failures"))),
+             "db")
+    }
+  } else {
+    if (is.null(output_file)) {
+      if (exists("log_it")) {
+        log_it("warn",
+               sprintf('No file name provided to "output_file", saving as "%s".',
+                       f_name),
+               "db")
+      }
+    }
   i <- 0
   if (all(file.exists(f_name), overwrite_existing)) {
     file.remove(f_name)
@@ -688,23 +705,6 @@ save_data_dictionary <- function(db_conn            = con,
                                   f_ext)
     )
   }
-  out <- data_dictionary(db_conn)
-  if (attr(out, "has_failures")) {
-    if (exists("log_it")) {
-      log_it("error",
-             sprintf('This dictionary failed on %s. No file will be saved.',
-                     format_list_of_names(attr(out, "failures"))),
-             "db")
-    }
-  } else {
-    if (is.null(output_file)) {
-      if (exists("log_it")) {
-        log_it("warn",
-               sprintf('No file name provided to "output_file", saving as "%s".',
-                       f_name),
-               "db")
-      }
-    }
     switch(output_format,
            "json"       = out %>%
              jsonlite::toJSON() %>%
