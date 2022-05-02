@@ -54,7 +54,7 @@ rm(packs, unload_packs, packs_TRUE, packs_FALSE)
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
 sources <- list.files("R", pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
-invisible(sapply(sources, source))
+invisible(sapply(sources, source, keep.source = FALSE))
 
 # _Set up logger ---------------------------------------------------------------
 if (LOGGING_ON) {
