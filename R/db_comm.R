@@ -1370,6 +1370,8 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
 #'
+#' @param rebuild LGL scalar indicating whether to first rebuild from
+#'   environment settings
 #' @param api_running LGL scalar of whether or not the API service is currently
 #'   running (default: TRUE)
 #' @param api_monitor process object pointing to the API service (default: NULL)
@@ -1383,7 +1385,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @export
 #'
 #' @examples
-update_all <- function(api_running = TRUE, api_monitor = NULL, log_ns = "db") {
+update_all <- function(rebuild = TRUE, api_running = TRUE, api_monitor = NULL, log_ns = "db") {
   if (exists("log_it")) {
     log_fn("start")
     log_it("debug", "Updating database, fallback build, and data dictionary files.", log_ns)
@@ -1399,13 +1401,15 @@ update_all <- function(api_running = TRUE, api_monitor = NULL, log_ns = "db") {
       plumber_service_existed <- FALSE
     }
   }
-  manage_connection(reconnect = FALSE)
-  tmp <- try(build_db())
-  if (inherits(tmp, "try-error")) {
-    if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
-    return(tmp)
+  if (rebuild) {
+    manage_connection(reconnect = FALSE)
+    tmp <- try(build_db())
+    if (inherits(tmp, "try-error")) {
+      if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
+      return(tmp)
+    }
+    manage_connection()
   }
-  manage_connection()
   save_data_dictionary()
   dict_file <- list.files(pattern = "data_dictionary.json",
                           full.names = TRUE) %>%
