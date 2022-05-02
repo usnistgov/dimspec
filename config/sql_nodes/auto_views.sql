@@ -218,7 +218,7 @@ CREATE VIEW IF NOT EXISTS view_samples AS
 			/* Direct use column 'generated_on' from table 'samples'. */ 	
 		samples.ms_methods_id AS ms_methods_id, 
 			/* Direct use column 'ms_methods_id' from table 'samples'. */ 	
-		norm_carriers.name AS sample_solventcarrier 
+		norm_carriers.name AS sample_solvent
 			/* Normalized value column 'name' from table 'norm_carriers'. */ 
 	FROM samples 
 	LEFT JOIN norm_sample_classes ON samples.sample_class_id = norm_sample_classes.id 

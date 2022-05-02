@@ -12,30 +12,30 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,1,1,1,,,samples,generation_type,norm_generation_type,,"default to ""empirical"""
 1,0,0,0,1,sample,starttime,samples,generated_on,,,
 0,0,1,0,1,,,samples,ms_methods_id,,,id from ms_methods
-1,0,1,0,1,chromatography,ssolvent,samples,sample_solvent,norm_solvents,solvent_aliases,
+1,0,1,0,1,chromatography,ssolvent,samples,sample_solvent,norm_carriers,carrier_aliases,
 0,0,1,0,0,,,chromatography_descriptions,ms_methods_id,,,id from ms_methods
 1,0,1,0,0,chromatography,ctype,chromatography_descriptions,chromatography_types_id,norm_chromatography_types,,
 1,0,1,0,0,chromatography,cvendor,chromatography_descriptions,system_vendor_id,norm_vendors,,
 1,0,0,0,0,chromatography,cmodel,chromatography_descriptions,system_vendor_model,,,
 0,0,1,0,0,,,mobile_phases,ms_methods_id,,,id from ms_methods
-0,0,1,0,0,,,mobile_phases,solvent_mix_collection_id,,,mix_id from solvent_mix_collections.id
+0,0,1,0,0,,,mobile_phases,carrier_mix_collection_id,,,mix_id from carrier_mix_collections.id
 0,0,0,0,0,,,mobile_phases,flow,,,(optional)
 0,0,0,0,0,,,mobile_phases,flow_units,norm_flow_units,,(optional)
 0,0,0,0,0,,,mobile_phases,duration,,,(optional)
 0,0,0,0,0,,,mobile_phases,duration_units,norm_duration_units,,(optional)
-0,0,1,0,0,,,solvent_mix_collections,name,,,
-1,1,1,0,0,chromatography,mp1solvent,solvent_mixes,component,norm_solvents,solvent_aliases,mix_id from solvent_mix_collections.id
-1,1,1,0,0,chromatography,mp2solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
-1,1,1,0,0,chromatography,mp3solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
-1,1,1,0,0,chromatography,mp4solvent,solvent_mixes,component,norm_solvents,solvent_aliases,
-0,0,0,0,0,,,solvent_mixes,fraction,,,
-0,0,1,0,0,,,solvent_aliases,alias,,,add if not present
-1,1,1,0,0,chromatography,mp1add,solvent_additives,component,norm_additives,additive_aliases,
-1,1,1,0,0,chromatography,mp2add,solvent_additives,component,norm_additives,additive_aliases,
-1,1,1,0,0,chromatography,mp3add,solvent_additives,component,norm_additives,additive_aliases,
-1,1,1,0,0,chromatography,mp4add,solvent_additives,component,norm_additives,additive_aliases,
-0,0,0,0,0,,,solvent_additives,amount,,,
-0,0,0,0,0,,,solvent_additives,units,norm_additive_units,,
+0,0,1,0,0,,,carrier_mix_collections,name,,,
+1,1,1,0,0,chromatography,mp1carrier,carrier_mixes,component,norm_carriers,carrier_aliases,mix_id from carrier_mix_collections.id
+1,1,1,0,0,chromatography,mp2carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
+1,1,1,0,0,chromatography,mp3carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
+1,1,1,0,0,chromatography,mp4carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
+0,0,0,0,0,,,carrier_mixes,fraction,,,
+0,0,1,0,0,,,carrier_aliases,alias,,,add if not present
+1,1,1,0,0,chromatography,mp1add,carrier_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp2add,carrier_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp3add,carrier_additives,component,norm_additives,additive_aliases,
+1,1,1,0,0,chromatography,mp4add,carrier_additives,component,norm_additives,additive_aliases,
+0,0,0,0,0,,,carrier_additives,amount,,,
+0,0,0,0,0,,,carrier_additives,units,norm_additive_units,,
 0,0,1,0,0,,,additive_aliases,alias,,,add if not present
 1,0,0,0,0,chromatography,gcolvendor,chromatography_descriptions,column_vendor_id,norm_vendors,,
 1,0,0,0,0,chromatography,gcolname,chromatography_descriptions,column_vendor_model,,,

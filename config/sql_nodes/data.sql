@@ -147,7 +147,7 @@
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (sample_solvent) REFERENCES norm_solvents(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (sample_solvent) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS conversion_software_peaks_linkage
