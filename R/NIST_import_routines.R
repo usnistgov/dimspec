@@ -134,7 +134,7 @@ full_import <- function(import_object                  = NULL,
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
-    contributor <- obj$sample$data_generator
+    contributor <- obj[["sample_info_in"]]$data_generator
     if (contributor %in% map_contributors_to$provided) {
       contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
     } else {
@@ -209,9 +209,9 @@ full_import <- function(import_object                  = NULL,
         match_criteria = list(id = contributor_id)
       )
     }
-    sample_id      <- resolve_sample(obj,
-                                     sample_in = sample_info_in,
-                                     method_id = ms_method_id)
+    sample_id <- resolve_sample(obj,
+                                sample_in = sample_info_in,
+                                method_id = ms_method_id)
     # - mobile phases
     resolve_mobile_phase_NTAMRT(obj = obj,
                                 method_id = ms_method_id,
@@ -389,7 +389,13 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 #'
 #' @return status of the insertion
 #' @export
-resolve_software_settings <- function(obj, sample_timestamp = NULL, db_conn = con, software_settings_name = "msconvertsettings", db_table = "conversion_software_settings", log_ns = "db", ...) {
+resolve_software_settings <- function(obj,
+                                      sample_timestamp = NULL,
+                                      db_conn = con,
+                                      software_settings_name = "msconvertsettings",
+                                      db_table = "conversion_software_settings",
+                                      log_ns = "db",
+                                      ...) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -715,7 +721,6 @@ resolve_method <- function(obj,
 #' @return
 #' @export
 #'
-#' @examples
 resolve_description_NTAMRT <- function(obj,
                                        method_id,
                                        type = c("massspec", "chromatography"),
@@ -913,28 +918,22 @@ resolve_mobile_phase_NTAMRT <- function(obj,
       unname() %>%
       unlist()
   ) %>%
-    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),) %>%
+    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),
+           component = sapply(
+             component,
+             function(x) {
+               resolve_normalization_value(
+                 this_value = x,
+                 db_table = "norm_carriers",
+                 id_column = "id",
+                 db_conn = db_conn,
+                 log_ns = log_ns
+               )
+             })
+    )%>%
     group_by(inferred_group) %>%
     select(-component_ref) %>%
-    group_split() %>%
-    lapply(function(x) {
-      x %>%
-        select(-inferred_group) %>%
-        mutate(
-          component = sapply(
-            component,
-            function(x) {
-              resolve_normalization_value(
-                this_val = x,
-                db_table = "norm_carriers",
-                id_column = "id",
-                db_conn = db_conn,
-                log_ns = log_ns
-              )
-            }) %>%
-            unname()
-        )
-    })
+    group_split()
   # Insert carrier mix collections and get id
   if (is.null(carrier_mix_names)) {
     carrier_mix_names <- glue::glue("method_{method_id}_sample_{sample_id}_carrier_{1:length(carrier_mixes)}")
@@ -1687,6 +1686,10 @@ verify_import_requirements <- function(obj,
 #' parameters. If no additional arguments are passed `obj` is returned as
 #' provided.
 #'
+#' @note If duplicate names exists in `obj` and those provided as elipsis
+#'   arguments, those provided as part of the elipsis will replace those in
+#'   `obj`.
+#'
 #' @param obj LIST of any length to be appended to
 #' @param ... Additional arguments passed to/from the ellipsis parameter of
 #'   calling functions. If named, names are preserved.
@@ -1699,6 +1702,12 @@ verify_import_requirements <- function(obj,
 #' tack_on(list(a = 1:3))
 tack_on <- function(obj, ...) {
   addl_args <- list(...)
+  if (any(names(addl_args) %in% names(obj))) {
+    applies_to <- names(addl_args)[names(addl_args) %in% names(obj)]
+    for(i in applies_to) {
+      obj[[i]] <- NULL
+    }
+  }
   out <- append(obj, addl_args)
   return(out)
 }
