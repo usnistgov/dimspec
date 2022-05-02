@@ -1964,9 +1964,9 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
       chosen_value <- select.list(
         choices = select_vals,
         title = paste(msg,
-                      sprintf("Please select a number to match with a value%s to associate with that record, (Abort) to abort this operation, or (New) to add this value to the normalization table.",
-                              ifelse(is.data.frame(values),
-                                     sprintf(" from the table above in the '%s' column",
+                      sprintf("\nPlease select a number from this list:%s (Abort) to abort this operation, or (New) to add this value to the normalization table.",
+                              ifelse(is.data.frame(values) && nrow(values) > 0,
+                                     sprintf(" to match with a value from the table above in the '%s' column to associate with that record,",
                                              select_from),
                                      "")
                       ))
