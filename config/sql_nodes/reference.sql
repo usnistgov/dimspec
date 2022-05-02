@@ -65,7 +65,7 @@
 	);
 	/*magicsplit*/
 	INSERT INTO config VALUES (
-	  0, strftime("%s", "now", "utc"), null, datetime('now', 'utc')
+	  0, hex(randomblob(8)), null, datetime('now', 'utc')
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS elements
