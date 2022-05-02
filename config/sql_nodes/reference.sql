@@ -50,7 +50,7 @@
 	    INTEGER PRIMARY KEY,
 	    /* primary key */
 	  code
-	    INTEGER NOT NULL,
+	    TEXT NOT NULL,
 	    /* random installation number */
 	  name
 	    TEXT,

@@ -1,7 +1,7 @@
 PRAGMA journal_mode=WAL;
 /* Sourced from ./config/sql_nodes/reference.sql */
-CREATE TABLE IF NOT EXISTS config ( id INTEGER PRIMARY KEY, code INTEGER NOT NULL, name TEXT, build_date TEXT, CHECK (id = 0), CHECK (build_date == strftime("%Y-%m-%d %H:%M:%S", build_date)) );
-INSERT INTO config VALUES ( 0, strftime("%s", "now", "utc"), null, datetime('now', 'utc') );
+CREATE TABLE IF NOT EXISTS config ( id INTEGER PRIMARY KEY, code TEXT NOT NULL, name TEXT, build_date TEXT, CHECK (id = 0), CHECK (build_date == strftime("%Y-%m-%d %H:%M:%S", build_date)) );
+INSERT INTO config VALUES ( 0, hex(randomblob(8)), null, datetime('now', 'utc') );
 CREATE TABLE IF NOT EXISTS elements ( atomic_number INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, symbol TEXT NOT NULL UNIQUE, common_name TEXT NOT NULL UNIQUE );
 CREATE TABLE IF NOT EXISTS isotopes ( atomic_number INTEGER NOT NULL, exact_mass REAL NOT NULL, abundance REAL NOT NULL, CHECK (abundance BETWEEN 0 AND 1), CHECK (exact_mass > 0), FOREIGN KEY (atomic_number) REFERENCES elements(atomic_number) ON UPDATE CASCADE ON DELETE CASCADE );
 CREATE VIEW IF NOT EXISTS view_element_isotopes AS SELECT e.atomic_number, e.symbol, cast(round(exact_mass) as int)||symbol as isotope, e.common_name AS "element", i.exact_mass, i.abundance FROM isotopes i INNER JOIN elements e ON i.atomic_number = e.atomic_number;
