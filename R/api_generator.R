@@ -229,6 +229,8 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
             str_to_upper(checks)
           )
         )
+        out[[m]]$values <- checks
+        out[[m]]$like   <- FALSE
       }
     }
     if (length(checks) == 1) {
@@ -260,7 +262,7 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
     }
     
     # Shift to "LIKE" operator
-    if (!is.null(out[[m]]$like)) {
+    if (!is.null(out[[m]]$like) && out[[m]]$like) {
       if (length(out[[m]]$values) > 1) {
         warning("Like operator is only available for single values.")
       } else {
