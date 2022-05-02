@@ -72,6 +72,7 @@ if (ifelse(exists("INFORMATICS"), INFORMATICS, FALSE)) {
 
 # Files matching these patterns will be excluded from sourcing at startup.
 EXCLUSIONS       <- c(".RDS",
+                      paste0("suspectlist", .Platform$file.sep),
                       "compliance",
                       "create_method_list",
                       "generate_db",
