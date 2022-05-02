@@ -576,7 +576,7 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FALSE, logger_settings = file.path("config", "env_logger.R"), add_unknown_ns = FALSE, clone_settings_from = NULL) {
   stopifnot(length(msg) < 2)
-  if (has_missing_elements(msg)) msg <- "[no message provided]"
+  if (has_missing_elements(msg, logging = FALSE)) msg <- "[no message provided]"
   if (!exists("LOGGING_ON")) {
     if (reload_logger_settings) {
       if (file.exists(logger_settings)) {
@@ -733,6 +733,7 @@ make_acronym <- function(text) {
 #'   reduced by R.
 #'
 #' @param x Object to be checked
+#' @param logging LGL scalar of whether or not to make log messages (default: TRUE)
 #'
 #' @return LGL scalar of whether `x` is empty
 #' @export
@@ -746,16 +747,16 @@ make_acronym <- function(text) {
 #' # TRUE
 #' has_missing_elements(data.frame(a = character(0)))
 #' # TRUE
-has_missing_elements <- function(x) {
-  log_fn("start")
+has_missing_elements <- function(x, logging = TRUE) {
+  if (logging) log_fn("start")
   if (is.function(x)) {
     out <- FALSE
-    log_it("trace", sprintf("%s is a function, not a variable.", deparse(substitute(x))))
+    if (logging) log_it("trace", sprintf("%s is a function, not a variable.", deparse(substitute(x))))
   } else if (is.data.frame(x)) {
-    log_it("trace", sprintf("%s is a data frame; result checks whether it has 0 rows.", deparse(substitute(x))))
+    if (logging) log_it("trace", sprintf("%s is a data frame; result checks whether it has 0 rows.", deparse(substitute(x))))
     out <- nrow(x) == 0
   } else if (is.list(x)) {
-    log_it("trace", sprintf("%s is a list; result checks whether any element of that list is empty.", deparse(substitute(x))))
+    if (logging) log_it("trace", sprintf("%s is a list; result checks whether any element of that list is empty.", deparse(substitute(x))))
     out <- any(
       unlist(
         lapply(x,
@@ -777,7 +778,7 @@ has_missing_elements <- function(x) {
       length(x) == 0
     )
   }
-  log_fn("end")
+  if (logging) log_fn("end")
   return(out)
 }
 
