@@ -193,14 +193,29 @@ full_import <- function(import_object                  = NULL,
                                    chrom_spec_in = chrom_info_in,
                                    type = "chromatography")
       }
-      # - mobile phases
       # - qc_methods
     }
     # Sample info is required
+    # Conveniently carry forward resolved contributor
+    if ("data_generator" %in% names(obj[[sample_info_in]]) &&
+        !is.null(contributor_id) &&
+        !is.na(contributor_id) &&
+        is.integer(contributor_id) &&
+        length(contributor_id) == 1) {
+      obj[[sample_info_in]][["data_generator"]] <- build_db_action(
+        action = "select",
+        table_name = "contributors",
+        column_names = "username",
+        match_criteria = list(id = contributor_id)
+      )
+    }
     sample_id      <- resolve_sample(obj,
                                      sample_in = sample_info_in,
-                                     method_id = ms_method_id,
-                                     sample_contributor = contributor_id)
+                                     method_id = ms_method_id)
+    # - mobile phases
+    resolve_mobile_phase_NTAMRT(obj = obj,
+                                method_id = ms_method_id,
+                                sample_id = sample_id)
     # Add data
     # Add QC if appropriate
   }
@@ -1807,7 +1822,11 @@ map_import <- function(import_obj,
   while (i < nrow(this_map)) {
     i <- i + 1
     this_field <- names(out)[i]
-    properties <- this_map %>% filter(sql_parameter == names(out)[i])
+    properties <- this_map
+    if (!is.na(names(out)[i])) {
+      properties <- this_map %>%
+        filter(sql_parameter == names(out)[i])
+    }
     if (nrow(properties) > 1) {
       # Some expansion tables are listed as "key:value pairs" (e.g. "instrument_properties")
       if (all(properties$note == "key:value pairs")) {
@@ -1826,7 +1845,8 @@ map_import <- function(import_obj,
     } else if (nrow(properties) == 0) {
       log_it("warn", glue::glue("'{this_field}' is not mapped. A null value will be used."), log_ns)
     } else {
-      if (properties$note == "key:value pairs") {
+      this_note <- properties$note
+      if (!is.na(this_note) && this_note == "key:value pairs") {
         # Do inserts for straight key:value pair long form tables
       } else {
         category  <- properties$import_category[1]
@@ -1834,9 +1854,9 @@ map_import <- function(import_obj,
         alias_in  <- properties$alias_lookup[1]
         norm_by   <- properties$sql_normalization[1]
         this_val  <- import_obj[[category]][[parameter]]
-        if (is.null(this_val) || this_val == "") this_val <- NA
-        if (is.null(alias_in) || alias_in == "") alias_in <- NA
-        if (is.null(norm_by) || norm_by == "") norm_by <- NA
+        if (!is.na(this_val) && (is.null(this_val) || this_val == "")) this_val <- NA
+        if (!is.na(alias_in) && (is.null(alias_in) || alias_in == "")) alias_in <- NA
+        if (!is.na(norm_by) && (is.null(norm_by) || norm_by == "")) norm_by <- NA
         if (!is.na(this_val)) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
@@ -1880,7 +1900,7 @@ map_import <- function(import_obj,
                 norm_id <- alias_id %>%
                   select(contains("_id")) %>%
                   pull(1)
-                log_it("info", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
+                # log_it("info", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
               }
             }
             if (!length(norm_id) == 1) {
@@ -1911,8 +1931,8 @@ map_import <- function(import_obj,
             }
             
             if (length(norm_id) == 1 && norm_id == as.integer(norm_id)) {
+              log_it("info", glue::glue("Resolved normalization value for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
               this_val <- norm_id
-              log_it("info", glue::glue("Resolved normalization value for '{this_field}' as id = '{this_val}'."), log_ns)
             } else {
               log_it("error", glue::glue("Could not resolve a normalization value for '{this_field}'."), log_ns)
             }
