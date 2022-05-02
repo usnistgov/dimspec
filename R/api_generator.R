@@ -183,7 +183,7 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
   if (!is_ansi) {
     validate_column_names(db_conn, table_names, names(match_criteria))
   }
-  keywords <- c("values", "exclude", "like")
+  keywords <- c("values", "exclude", "like", "query")
   # Parse match criteria
   for (m in names(out)) {
     column <- dbQuoteIdentifier(db_conn, m)
