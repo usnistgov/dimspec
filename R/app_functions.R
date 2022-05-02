@@ -307,8 +307,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   } else if (!any(is.character(args), !is.list(args))) {
     stop("Parameter 'args' must be either an environment or a list of values.")
   }
-  if (rlang::is_null(from_fn)) from_fn <- deparse(sys.call(-1)[[1]])
-  if (exists("log_it")) log_it("trace", glue('Verifying arguments for "{from_fn}".'))
+  if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN", "not_empty", "file_exists")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -491,7 +490,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
     }
   }
   if (out$valid) {
-    if (exists("log_it")) log_it("trace", glue("Arguments verified for '{from_fn}'"))
+    if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue("Arguments verified for '{from_fn}'"))
   } else {
     if (exists("log_it")) log_it("error", glue("Arguments could not be verified",
                                                ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
