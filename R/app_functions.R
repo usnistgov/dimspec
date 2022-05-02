@@ -575,7 +575,8 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' test_log()
 #' # Try it with and without logger loaded.
 log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FALSE, logger_settings = file.path("config", "env_logger.R"), add_unknown_ns = FALSE, clone_settings_from = NULL) {
-  if (is.null(msg) || is.na(msg)) msg <- "[no message provided]"
+  stopifnot(length(msg) < 2)
+  if (has_missing_elements(msg)) msg <- "[no message provided]"
   if (!exists("LOGGING_ON")) {
     if (reload_logger_settings) {
       if (file.exists(logger_settings)) {
