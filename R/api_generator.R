@@ -484,11 +484,21 @@ build_db_action <- function(action,
                              }),
                       ")",
                       collapse = ", "),
-    "UPDATE" = paste0(lapply(names(values),
+    "UPDATE" = paste0(lapply(values,
                              function(x) {
-                               sprintf("%s = %s",
-                                       dbQuoteIdentifier(db_conn, x),
-                                       dbQuoteLiteral(db_conn, values[[x]]))
+                               lapply(names(x),
+                                      function(y) {
+                                        val <- x[[y]]
+                                        if (is.na(val) || is.null(val) || tolower(val) == "null" || val == "") {
+                                          val <- "null"
+                                        }
+                                        sprintf("%s = %s",
+                                                dbQuoteIdentifier(db_conn, y),
+                                                dbQuoteLiteral(db_conn, val)
+                                        )
+                                      }) %>%
+                                 unlist() %>%
+                                 paste0(collapse = ", ")
                              }),
                       collapse = ", "),
     ""
@@ -611,7 +621,7 @@ build_db_action <- function(action,
   catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
   if (str_detect(query, catch_null)) {
     query <- query %>%
-      str_replace_all(catch_null, " IS NULL")
+      str_replace_all(catch_null, " = null")
   }
   if (execute) {
     if (logging) log_it("trace", glue::glue("Executing: {query}."), log_ns)
