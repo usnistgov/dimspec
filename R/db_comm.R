@@ -2061,11 +2061,13 @@ resolve_normalization_value <- function(this_value,
       assign("VERIFY_ARGUMENTS", argument_verification, envir = .GlobalEnv)
     }
     check <- check[-which(sapply(check, is.null))] %>%
-      bind_rows()
+      bind_rows() %>%
+      distinct()
     match_fail <- nrow(check) == 0
   } else {
     check <- dbReadTable(db_conn, db_table) %>%
-      filter(if_any(everything(), .fns = ~ .x == this_value))
+      filter(if_any(everything(), .fns = ~ .x == this_value)) %>%
+      distinct()
     match_fail <- nrow(check) == 0
     if (match_fail) {
       log_it("info",
@@ -2077,7 +2079,8 @@ resolve_normalization_value <- function(this_value,
                  glue::glue("Executing fuzzy match on table '{db_table}'."),
                  log_ns)
           check <- dbReadTable(db_conn, db_table) %>%
-            filter(if_any(everything(), .fns = ~ grepl(this_value, .x)))
+            filter(if_any(everything(), .fns = ~ grepl(this_value, .x))) %>%
+            distinct()
           match_fail <- nrow(check) == 0
           if (match_fail) {
             log_it("info",
