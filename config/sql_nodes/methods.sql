@@ -715,6 +715,8 @@
     SELECT
     	mp.ms_methods_id,
     	  /* MS Methods ID, foreign key to ms_methods.id */
+    	mp.sample_id,
+    	  /* Sample ID, foreign key to samples.id */
     	CASE ifnull(carriers, "") WHEN "" THEN "" ELSE carriers END ||
     		CASE ifnull(additives, "") WHEN "" THEN "" ELSE
     			CASE ifnull(carriers, "") WHEN "" THEN "" ELSE " with " END
@@ -722,8 +724,7 @@
     		CASE ifnull(mp.duration, "") WHEN "" THEN "" ELSE " for " || mp.duration END ||
     		CASE ifnull(ndu.abbreviation, "") WHEN "" THEN "" ELSE " " || ndu.abbreviation END ||
     		CASE ifnull(mp.flow, "") WHEN "" THEN "" ELSE " at " || mp.flow END ||
-    		CASE ifnull(nfu.abbreviation, "") WHEN "" THEN "" ELSE " " || nfu.abbreviation END ||
-    		"."
+    		CASE ifnull(nfu.abbreviation, "") WHEN "" THEN "" ELSE " " || nfu.abbreviation END
     		AS narrative
     		/* Summary narrative of this elution profile */
   	FROM 
