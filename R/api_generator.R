@@ -450,7 +450,7 @@ build_db_action <- function(action,
   if (get_all_columns) {
     if (action == "INSERT") {
       req_names <- dbListFields(db_conn, table_name)
-      if (length(value_names) == length(req_names)) {
+      if (length(value_names) == length(req_names) && all(order(value_names) == order(req_names))) {
         query <- gsub("\\(\\?column_names\\) ", "", query)
       }
     } else {
