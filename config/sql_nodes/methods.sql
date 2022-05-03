@@ -528,6 +528,9 @@
 		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to ms_methods */
+		sample_id
+			INTEGER NOT NULL,
+			/* foreign key to samples */
 		name
 			INTEGER NOT NULL,
 			/* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */
@@ -544,6 +547,7 @@
 		CHECK (value IN (0, 1))
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);

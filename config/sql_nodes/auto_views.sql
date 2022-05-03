@@ -185,6 +185,8 @@ CREATE VIEW IF NOT EXISTS view_qc_methods AS
 	SELECT 	
 		qc_methods.ms_methods_id AS ms_methods_id, 
 			/* Direct use column 'ms_methods_id' from table 'qc_methods'. */ 	
+		qc_methods.sample_id AS sample_id, 
+			/* Direct use column 'sample_id' from table 'qc_methods'. */ 	
 		norm_qc_methods_name.name AS name, 
 			/* Normalized value column 'name' from table 'norm_qc_methods_name'. */ 	
 		qc_methods.value AS value, 
