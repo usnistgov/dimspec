@@ -865,20 +865,30 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                                           in_item = "chromatography",
                                           db_table = "mobile_phases",
                                           props = c(
-                                            flow_rate = "flow",
+                                            flow = "flow",
                                             flow_units = "flowunits",
                                             duration = "duration",
                                             duration_units = "durationunits"
                                           )
                                         ),
-                                        carrier_table = "carrier_mixes",
-                                        carrier_props = c(
-                                          id_by = "solvent",
-                                          fraction_by = "fraction"),
-                                        additive_props = c(
-                                          id_by = "add",
-                                          amount_by = "amount",
-                                          units_by = "units"),
+                                        carrier_props = list(
+                                          db_table = "carrier_mixes",
+                                          norm_by = "norm_carriers",
+                                          alias_in = "carrier_aliases",
+                                          props = c(
+                                            id_by = "solvent",
+                                            fraction_by = "fraction"
+                                          )
+                                        ),
+                                        additive_props = list(
+                                          db_table = "carrier_additives",
+                                          norm_by = "norm_additives",
+                                          alias_in = "additive_aliases",
+                                          props = c(
+                                            id_by = "add$",
+                                            amount_by = "_amount",
+                                            units_by = "_units")
+                                        ),
                                         exclude_values = c("none", "", NA),
                                         er_map = db_map,
                                         fuzzy = TRUE,
@@ -897,46 +907,85 @@ resolve_mobile_phase_NTAMRT <- function(obj,
   obj <- get_component(obj, mobile_phase_props[["in_item"]])[[1]]
   mixes <- obj[names(obj[grep(id_mix_by, names(obj))])]
   mixes <- mixes[-which(mixes %in% exclude_values)]
-  if (any(str_detect(mixes, "[0-9]+"))) {
-    log_it("info", "Order of carriers and additives is numerically inferrable from object names.", log_ns)
-    mixes <- mixes[order(str_extract_all())]
-  } else {
-    log_it("info", "Order is not explicitly inferrable, order will be inferred from the object order.", log_ns)
-  }
-  components <- obj[grep(carrier_props[["id_by"]], names(mixes), value = T)]
-  # Separate out solvent mixes
-  carrier_mixes <- tibble(
-    component_ref = components %>%
-      names(),
-    component = components %>%
+  if (length(mixes) == 0) return(NULL)
+  mixes <- tibble(
+    ref = names(mixes),
+    value = mixes %>%
       unname() %>%
       unlist(),
-    fraction = obj[which(gsub(carrier_props[["id_by"]],
-                              carrier_props[["fraction_by"]],
-                              names(components))
-                         %in% names(components))] %>%
-      unname() %>%
-      unlist()
+    inferred_order = ref %>%
+      str_extract_all("[0-9]+") %>%
+      unlist() %>%
+      as.integer(),
+    inferred_group = ref %>%
+      str_extract("[0-9]") %>%
+      unlist() %>%
+      as.integer(),
+    group = case_when(
+      str_detect(ref, paste0(mobile_phase_props$props, collapse = "|")) ~ "mobile_phase",
+      str_detect(ref, paste0(carrier_props$props, collapse = "|")) ~ "carrier",
+      str_detect(ref, paste0(additive_props$props, collapse = "|")) ~ "additive"
+    )
   ) %>%
-    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),
-           component = sapply(
-             component,
-             function(x) {
-               resolve_normalization_value(
-                 this_value = x,
-                 db_table = "norm_carriers",
-                 id_column = "id",
-                 db_conn = db_conn,
-                 log_ns = log_ns
-               )
-             })
-    )%>%
-    group_by(inferred_group) %>%
-    select(-component_ref) %>%
-    group_split()
-  # Insert carrier mix collections and get id
+    arrange(inferred_group, inferred_order)
+  
+  # Separate out solvent mixes and do inserts on carrier mixes, norm_carriers, and carrier_aliases as appropriate
+  carrier_mixes <- mixes %>%
+    filter(group == "carrier") %>%
+    mutate(ref = str_remove_all(ref, id_mix_by)) %>%
+    pivot_wider(id_cols = c(inferred_group, inferred_order),
+                values_from = c(value),
+                names_from = c(ref)) %>%
+    mutate(
+      fraction = as.numeric(fraction),
+      fraction = ifelse(fraction > 1,
+                        fraction / 100,
+                        fraction)
+    ) %>%
+    rename(c("component" = !!carrier_props$props[["id_by"]])) %>%
+    left_join(
+      build_db_action(
+        action = "select",
+        table_name = carrier_props$alias_in,
+        db_conn = db_conn,  
+        match_criteria = list(alias = .$component),
+        log_ns = log_ns
+      ),
+      by = c("component" = "alias")
+    ) %>%
+    rename("alias_id" = "carrier_id") %>%
+    mutate(
+      carrier_id = ifelse(!is.na(alias_id),
+                          alias_id,
+                          sapply(component,
+                                 function(x) {
+                                   resolve_normalization_value(
+                                     this_value = x,
+                                     db_table = carrier_props$norm_by,
+                                     id_column = "id",
+                                     db_conn = db_conn,
+                                     log_ns = log_ns)
+                                 })
+      )
+    )
+  
+  # Insert any missing aliases
+  if (any(is.na(carrier_mixes$alias_id))) {
+    carrier_mixes %>%
+      filter(is.na(alias_id)) %>%
+      select(carrier_id, component) %>%
+      rename("alias" = "component") %>%
+      build_db_action(
+        action = "insert",
+        table_name = carrier_props$alias_in,
+        db_conn = db_conn,
+        values = .,
+        ignore = TRUE)
+  }
+  
+  # Make carrier mix names, insert carrier mix collections, and get the latest IDs
   if (is.null(carrier_mix_names)) {
-    carrier_mix_names <- glue::glue("method_{method_id}_sample_{sample_id}_carrier_{1:length(carrier_mixes)}")
+    carrier_mix_names <- glue::glue("method_{method_id}_sample_{sample_id}_carrier_{unique(mixes$inferred_group)}")
   } else {
     if (length(carrier_mix_names) != length(carrier_mixes)) {
       log_it("warn", "Incorrect number of carrier names.", log_ns)
@@ -946,7 +995,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
         msg <- glue::glue("Carrier names will be appended to the first carrier name '{carrier_mix_names[1]}'.")
       }
       log_it("info", msg, log_ns)
-      carrier_mix_names <- glue::glue("{carrier_mix_names}_carrier_{1:length(carrier_mixes)}")
+      carrier_mix_names <- glue::glue("{carrier_mix_names}_carrier_{unique(mixes$inferred_group)}")
     }
   }
   build_db_action(
@@ -956,114 +1005,210 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     db_conn = db_conn,
     log_ns = log_ns
   )
-  # Get the last n inserted mix IDs
+  
   id_col <- "id"
   mix_ids <- dbGetQuery(
     conn = db_conn,
     statement = sqlInterpolate(conn = db_conn,
-                               "SELECT ?id_col FROM ?table ORDER BY ?id_col DESC LIMIT ?limit",
+                               "SELECT * FROM ?table ORDER BY ?id_col DESC LIMIT ?limit",
                                id_col = dbQuoteIdentifier(db_conn, id_col),
                                table = mix_collection_table,
-                               limit = length(components))
+                               limit = n_distinct(carrier_mixes$inferred_group))
   ) %>%
-    pull(!!id_col) %>%
-    sort() %>%
-    setNames(carrier_mix_names)
-  names(carrier_mixes) <- carrier_mix_names
+    rename(c("mix_id" = "id")) %>%
+    arrange(mix_id)
+  carrier_mixes <- carrier_mixes %>%
+    mutate(component = carrier_id) %>%
+    select(-alias_id, -carrier_id) %>%
+    group_by(inferred_group) %>%
+    group_split() %>%
+    setNames(mix_ids$name)
+  carrier_mixes <- lapply(
+    mix_ids$name,
+    function(x) {
+      carrier_mixes[[x]] %>%
+        mutate(mix_collection_name = x) %>%
+        left_join(mix_ids, by = c("mix_collection_name" = "name"))
+    }
+  ) %>%
+    setNames(mix_ids$name)
+  mix_ids <- mix_ids %>%
+    left_join(
+      carrier_mixes %>%
+        unname() %>%
+        bind_rows() %>%
+        distinct(inferred_group, mix_id)
+    )
+  mixes <- mixes %>%
+    left_join(mix_ids)
+  
   # Insert into carrier_mixes table by name match
   lapply(names(carrier_mixes),
          function(x) {
            build_db_action(
              action = "insert",
-             table_name = "carrier_mixes",
+             table_name = carrier_props$db_table,
              db_conn = db_conn,
              values = carrier_mixes[[x]] %>%
-               mutate(mix_id = mix_ids[[x]]),
+               select(-c(inferred_group, inferred_order, mix_collection_name)),
              log_ns = log_ns
            )
          })
-  # Separate out additives and infer their group from their name in the same manner
-  additives <- obj[grep(additive_props[["id_by"]], names(mixes), value = T)]
-  additive_mixes <- tibble(
-    component_ref = additives %>%
-      names(),
-    component = additives %>%
-      unname() %>%
-      unlist(),
-    amount = obj[which(gsub(additive_props[["id_by"]],
-                            additive_props[["amount_by"]],
-                            names(additives))
-                       %in% names(additives))] %>%
-      unname() %>%
-      unlist(),
-    units = obj[which(gsub(additive_props[["id_by"]],
-                           additive_props[["units_by"]],
-                           names(additives))
-                      %in% names(additives))] %>%
-      unname() %>%
-      unlist()
-  ) %>%
-    mutate(inferred_group = stringr::str_extract(component_ref, "[0-9]"),) %>%
+  
+  # Follow the same basic pipeline for carrier additives
+  # Separate out solvent mixes and do inserts on carrier mixes, norm_carriers, and carrier_aliases as appropriate
+  carrier_additives <- mixes %>%
+    filter(group == "additive") %>%
+    mutate(ref = str_remove_all(ref, id_mix_by)) %>%
+    pivot_wider(id_cols = c(inferred_group, inferred_order),
+                values_from = c(value),
+                names_from = c(ref)) %>%
+    rename(
+      c("amount" = !!grep(additive_props$props[["amount_by"]], names(.), value = TRUE)),
+      c("units" = !!grep(additive_props$props[["units_by"]], names(.), value = TRUE)),
+      c("component" = !!grep(additive_props$props[["id_by"]], names(.), value = TRUE))
+    ) %>%
+    mutate(amount = as.numeric(amount)) %>%
+    left_join(
+      build_db_action(
+        action = "select",
+        table_name = additive_props$alias_in,
+        db_conn = db_conn,  
+        match_criteria = list(alias = .$component),
+        log_ns = log_ns
+      ),
+      by = c("component" = "alias")
+    ) %>%
+    rename("alias_id" = "additive_id") %>%
+    mutate(
+      additive_id = ifelse(!is.na(alias_id),
+                           alias_id,
+                           sapply(component,
+                                  function(x) {
+                                    resolve_normalization_value(
+                                      this_value = x,
+                                      db_table = additive_props$norm_by,
+                                      id_column = "id",
+                                      db_conn = db_conn,
+                                      log_ns = log_ns)
+                                  })
+      )
+    )
+  
+  # Insert any missing aliases
+  if (any(is.na(carrier_additives$alias_id))) {
+    carrier_additives %>%
+      filter(is.na(alias_id)) %>%
+      select(additive_id, component) %>%
+      rename("alias" = "component") %>%
+      build_db_action(
+        action = "insert",
+        table_name = additive_props$alias_in,
+        db_conn = db_conn,
+        values = .,
+        ignore = TRUE)
+  }
+  # Insert into carrier_additives table by name match
+  carrier_additives <- carrier_additives %>%
+    mutate(component = additive_id) %>%
+    select(-alias_id, -additive_id) %>%
+    left_join(mix_ids, by = c("inferred_group" = "inferred_group")) %>%
+    select(mix_id, component, amount, units, inferred_group) %>%
+    mutate(units = sapply(
+      units,
+      function(x) {
+        if (!has_missing_elements(x)) {
+          resolve_normalization_value(
+            this_value = x,
+            db_table = "norm_additive_units",
+            id_column = "id",
+            db_conn = db_conn,
+            log_ns = log_ns) %>%
+            unlist()
+        } else {
+          x
+        }
+      }
+    )) %>%
     group_by(inferred_group) %>%
-    select(-component_ref) %>%
     group_split() %>%
-    lapply(function(x) {
-      x %>%
-        select(-inferred_group) %>%
-        mutate(
-          component = sapply(
-            component,
-            function(x) {
-              resolve_normalization_value(
-                this_val = x,
-                db_table = "norm_additives",
-                id_column = "id",
-                db_conn = db_conn,
-                log_ns = log_ns
-              )
-            }) %>%
-            unname(),
-          units = if (!"units" %in% names(x)) {
-            NULL
-          } else {
-            if (!is.na(units)) {
-              sapply(
-                component,
-                function(x) {
-                  resolve_normalization_value(
-                    this_val = x,
-                    db_table = "norm_additive_units",
-                    id_column = "id",
-                    db_conn = db_conn,
-                    log_ns = log_ns
-                  )
-                }) %>%
-                unname()
-            } else {
-              units
-            }
-          }
+    lapply(
+      function(x) {
+        build_db_action(
+          action = "insert",
+          table_name = additive_props$db_table,
+          db_conn = db_conn,
+          values = x %>%
+            select(-inferred_group),
+          log_ns = log_ns
         )
-    })
-  # Insert into carrier_mixes table by name match
-  names(mix_ids) <- names(additive_mixes)
-  lapply(names(additive_mixes),
-         function(x) {
-           build_db_action(
-             action = "insert",
-             table_name = "additive_mixes",
-             db_conn = db_conn,
-             values = additive_mixes[[x]] %>%
-               mutate(mix_id = mix_ids[[x]]),
-             log_ns = log_ns
-           )
-         })
-  # Finally, insert into mobile_phases
-  mobile_phase <- tibble(
-    ms_methods_id = method_id,
-    sample_id = sample_id,
-    carrier_mix_collection_id = unname(mix_ids),
-    flow = obj[[mobile_phase_props]]
+      })
+  # Finally, shape up and insert into mobile_phases
+  mobile_phases <- mixes %>%
+    filter(group == "mobile_phase")
+  if (nrow(mobile_phases) == 0) {
+    mobile_phases <- tibble(
+      ms_methods_id = method_id,
+      sample_id = sample_id,
+      carrier_mix_collection_id = mix_ids$mix_id
+    )
+  } else {
+    mobile_phases <- mobile_phases %>%
+      mutate(ref = str_remove_all(ref, id_mix_by)) %>%
+      left_join(mobile_phase_props$props %>%
+                  as.data.frame() %>%
+                  rownames_to_column() %>%
+                  setNames(c("map_to", "ref"))) %>%
+      mutate(ref = ifelse(is.na(map_to), ref, map_to)) %>%
+      pivot_wider(id_cols = c(inferred_group, inferred_order, mix_id),
+                  values_from = c(value),
+                  names_from = c(ref))
+  }
+  mobile_phases <-  mobile_phases %>%
+    rename("carrier_mix_collection_id" = "mix_id") %>%
+    mutate(
+      ms_methods_id = method_id,
+      sample_id = sample_id,
+      flow_units = sapply(
+        flow_units,
+        function(x) {
+          if (!has_missing_elements(x)) {
+            resolve_normalization_value(
+              this_value = x,
+              db_table = "norm_flow_units",
+              id_column = "id",
+              db_conn = db_conn,
+              log_ns = log_ns) %>%
+              unlist()
+          } else {
+            x
+          }
+        }
+      ),
+      duration_units = sapply(
+        duration_units,
+        function(x) {
+          if (!has_missing_elements(x)) {
+            resolve_normalization_value(
+              this_value = x,
+              db_table = "norm_duration_units",
+              id_column = "id",
+              db_conn = db_conn,
+              log_ns = log_ns) %>%
+              unlist()
+          } else {
+            x
+          }
+        }
+      )
+    ) %>%
+    select(any_of(dbListFields(con, mobile_phase_props$db_table)))
+  build_db_action(
+    action = "insert",
+    table_name = mobile_phase_props$db_table,
+    values = mobile_phases,
+    db_conn = db_conn,
+    log_ns = log_ns
   )
 }
 
