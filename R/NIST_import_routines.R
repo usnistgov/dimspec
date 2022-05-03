@@ -134,7 +134,7 @@ full_import <- function(import_object                  = NULL,
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
-    contributor <- obj[["sample_info_in"]]$data_generator
+    contributor <- obj[[sample_info_in]]$data_generator
     if (contributor %in% map_contributors_to$provided) {
       contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
     } else {
@@ -216,8 +216,9 @@ full_import <- function(import_object                  = NULL,
     resolve_mobile_phase_NTAMRT(obj = obj,
                                 method_id = ms_method_id,
                                 sample_id = sample_id)
+    # - qc methods
+    resolve_qc_methods(obj = obj, method_id = ms_method_id)
     # Add data
-    # Add QC if appropriate
   }
 }
 
@@ -703,7 +704,6 @@ resolve_method <- function(obj,
 #' method.
 #'
 #' @note This function is called as part of [full_import]
-#'
 #' @note This function is brittle; built specifically for the NIST NTA MRT
 #'   import format. If using a different import format, customize to your needs
 #'   using this function as a guide.
@@ -716,7 +716,6 @@ resolve_method <- function(obj,
 #' @param type CHR scalar, one of "massspec" or "chromatography" depending on
 #'   the type of description to add; much of the logic is shared, only details
 #'   differ
-#' @param er_map
 #'
 #' @return
 #' @export
@@ -727,7 +726,6 @@ resolve_description_NTAMRT <- function(obj,
                                        mass_spec_in = "massspectrometry",
                                        chrom_spec_in = "chromatography",
                                        db_conn = con,
-                                       er_map = db_map,
                                        fuzzy = TRUE,
                                        log_ns = "db") {
   # Check connection
@@ -778,7 +776,7 @@ resolve_description_NTAMRT <- function(obj,
         db_table = "norm_vendors"
       ),
       vendor_model = unlist(obj[grep("model", names(obj), value = TRUE)]),
-      citation = unlist(obj[grep("source", names(obj), value = TRUE)])
+      reference = unlist(obj[grep("source", names(obj), value = TRUE)])
     )
   } else if (type == "chromatography") {
     if (chrom_spec_in %in% names(obj)) {
@@ -850,15 +848,107 @@ resolve_description_NTAMRT <- function(obj,
   log_fn("end")
 }
 
+#' Resolve the mobile phase node
+#'
+#' The database node containing chromatographic method information is able to
+#' handle any number of descriptive aspects regarding chromatography. It houses
+#' normalized and aliased data in a manner that maximizes flexibility, allowing
+#' any number of carrier agents (e.g. gasses for GC, solvents for LC) to be
+#' described in increasing detail. To accomodate that, the structure itself may
+#' be unintuitive and may not map well as records may be heavily nested.
+#'
+#' The mobile phase node contains one record in table "mobile_phases" for each
+#' method id, sample id, and carrier mix collection id with its associated flow
+#' rate, normalized flow units, duration, and normalized duration units. Each
+#' carrier mix collection has a name and child tables containing: records for
+#' each value normalized carrier component and its unit fraction (e.g. in
+#' carrier_mixes: Helium 1 would indicate pure Helium as a carrier gas in GC
+#' work; Water, 0.9; Methanol, 0.1 to indicate a solvent mixture of 10% methanol
+#' in water), as well as value normalized carrier additives, their amount, and
+#' the units for that amount (mostly for LC work; e.g. in carrier_additives:
+#' ammonium acetate, 5, mMol to indicate an additive to a solvent of 5 mMol
+#' ammonium acetate); these are linked through the carrier mix collection id.
+#'
+#' Call this function to import the results of the NIST Non-Targeted Analysis
+#' Method Reporting Tool (NTA MRT), or feed it as `obj` a flat list containing
+#' chromatography information.
+#'
+#' @note This is a brittle function, and should only be used as part of the NTA
+#'   MRT import process, or as a template for how to import data.
+#' @note Some arguments are complicated by design to keep conceptual information
+#'   together. These should be fed a structured list matching expectations. This
+#'   applies to `mobile_phase_props`, `carrier_props`, and `additive_props`. See
+#'   defaults in documentation for examples.
+#' @note Database insertions are done in real time, so failures may result in
+#'   hanging or orphaned records. Turn on `clean_up` to roll back by removing
+#'   entries from `mix_collection_table` and relying on delete cascades built
+#'   into the database. Additional names are provided here to match the schema.
+#' @note This function is called as part of [full_import]
+#'
+#' @inheritParams build_db_action
+#' @inheritParams full_import
+#' @inheritParams resolve_normalization_value
+#'
+#' @param method_id INT scalar of the method id (e.g. from the import workflow)
+#' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#' @param carrier_mix_names CHR vector (optional) of carrier mix collection
+#'   names to assign, the length of which should equal 1 or the length of
+#'   discrete carrier mixtures; the default, NULL, will automatically assign
+#'   names as a function of the method and sample id.
+#' @param id_mix_by CHR scalar regex to identify the elements of `obj` to use
+#'   for the mobile phase node (default "^mp*[0-9]+") grouping of carrier mix
+#'   collections, this is the main piece of connectivity pulling together the
+#'   descriptions and should only be changed to match different import naming
+#'   schemes
+#' @param methods_table CHR scalar name of the methods table (default:
+#'   "ms_methods")
+#' @param samples_table CHR scalar name of the methods table (default:
+#'   "samples")
+#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
+#' @param mix_collection_table CHR scalar name of the mix collections table
+#'   (default: "carrier_mix_collections")
+#' @param mobile_phase_props LIST object describing how to import the mobile
+#'   phase table containing: in_item: CHR scalar name of the `obj` name
+#'   containing chromatographic information (default: "chromatography");
+#'   db_table: CHR scalar name of the mobile phases table (default:
+#'   "mobile_phases"); props: named CHR vector of name mappings with names equal
+#'   to database columns in `mobile_phase_props$db_table` and values matching
+#'   regex to match names in `obj[[mobile_phase_props$in_item]]`
+#' @param carrier_props LIST object describing how to import the mobile phase
+#'   table containing: db_table: CHR scalar name of the mobile phases table
+#'   (default: "mobile_phases"); norm_table: CHR scalar name of the table used
+#'   to normalize carriers (default: "norm_carriers"); alias_table: CHR scalar
+#'   name of the table containing carrier aliases to search (default:
+#'   "carrier_aliases"); props: named CHR vector of name mappings with names
+#'   equal to database columns in `carrier_props$db_table` and values matching
+#'   regex to match names in `obj[[mobile_phase_props$in_item]]`, and an extra
+#'   element named `id_by` containing regex used to match names in the import
+#'   object indicate a carrier (e.g. "solvent")
+#' @param additive_props LIST object describing how to import the mobile phase
+#'   table containing: db_table: CHR scalar name of the mobile phases table
+#'   (default: "mobile_phases"); norm_table: CHR scalar name of the table used
+#'   to normalize carriers (default: "norm_additives"); alias_table: CHR scalar
+#'   name of the table containing carrier aliases to search (default:
+#'   "additive_aliases"); props: named CHR vector of name mappings with names
+#'   equal to database columns in `additive_props$db_table` and values matching
+#'   regex to match names in `obj[[mobile_phase_props$in_item]]`
+#'   `obj[[mobile_phase_props$in_item]][[mobile_phase_props$db_table]]`, and an
+#'   extra element named `id_by` containing regex used to match names in the
+#'   import object indicate an additive (e.g. "add$")
+#' @param exclude_values CHR vector indicating which values to ignore in `obj`
+#'   (default: c("none", "", NA))
+#' @param clean_up
+#'
+#' @return None, executes actions on the database
+#' @export
+#' 
 resolve_mobile_phase_NTAMRT <- function(obj,
                                         method_id,
                                         sample_id,
                                         carrier_mix_names = NULL,
                                         id_mix_by = "^mp*[0-9]+",
                                         methods_table = "ms_methods",
-                                        methods_id_column = "id",
                                         samples_table = "samples",
-                                        samples_id_column = "id",
                                         db_conn = con,
                                         mix_collection_table = "carrier_mix_collections",
                                         mobile_phase_props = list(
@@ -890,17 +980,20 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                                             units_by = "_units")
                                         ),
                                         exclude_values = c("none", "", NA),
-                                        er_map = db_map,
                                         fuzzy = TRUE,
+                                        clean_up = TRUE,
                                         log_ns = "db") {
   stopifnot(
+    active_connection(db_conn),
+    as.integer(method_id) == method_id,
     check_for_value(values = method_id,
                     db_table = methods_table,
-                    db_column = methods_id_column,
+                    db_column = "id",
                     db_conn = db_conn)$exists,
+    as.integer(sample_id) == sample_id,
     check_for_value(values = sample_id,
                     db_table = samples_table,
-                    db_column = samples_id_column,
+                    db_column = "id",
                     db_conn = db_conn)$exists,
     is.list(obj)
   )
@@ -937,10 +1030,10 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                 values_from = c(value),
                 names_from = c(ref)) %>%
     mutate(
-      fraction = as.numeric(fraction),
-      fraction = ifelse(fraction > 1,
-                        fraction / 100,
-                        fraction)
+      across(any_of(!!carrier_props$props[["fraction_by"]]), as.numeric),
+      across(any_of(!!carrier_props$props[["fraction_by"]]),
+             ~ ifelse(. > 1, . / 100, .)
+      )
     ) %>%
     rename(c("component" = !!carrier_props$props[["id_by"]])) %>%
     left_join(
@@ -964,6 +1057,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                                      db_table = carrier_props$norm_by,
                                      id_column = "id",
                                      db_conn = db_conn,
+                                     fuzzy = fuzzy,
                                      log_ns = log_ns)
                                  })
       )
@@ -998,13 +1092,20 @@ resolve_mobile_phase_NTAMRT <- function(obj,
       carrier_mix_names <- glue::glue("{carrier_mix_names}_carrier_{unique(mixes$inferred_group)}")
     }
   }
-  build_db_action(
-    action = "insert",
-    table_name = mix_collection_table,
-    values = lapply(carrier_mix_names, function(x) list(name = x)),
-    db_conn = db_conn,
-    log_ns = log_ns
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = mix_collection_table,
+      values = lapply(carrier_mix_names, function(x) list(name = x)),
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
   )
+  if (inherits(res, "try-error")) {
+    msg <- glue::glue("There was a problem inserting into '{mix_collection_table}'.")
+    log_it("error", msg, log_ns)
+    stop(msg)
+  }
   
   id_col <- "id"
   mix_ids <- dbGetQuery(
@@ -1043,17 +1144,33 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     left_join(mix_ids)
   
   # Insert into carrier_mixes table by name match
-  lapply(names(carrier_mixes),
-         function(x) {
-           build_db_action(
-             action = "insert",
-             table_name = carrier_props$db_table,
-             db_conn = db_conn,
-             values = carrier_mixes[[x]] %>%
-               select(-c(inferred_group, inferred_order, mix_collection_name)),
-             log_ns = log_ns
-           )
-         })
+  res <- lapply(names(carrier_mixes),
+                function(x) {
+                  try(
+                    build_db_action(
+                      action = "insert",
+                      table_name = carrier_props$db_table,
+                      db_conn = db_conn,
+                      values = carrier_mixes[[x]] %>%
+                        select(-c(inferred_group, inferred_order, mix_collection_name)),
+                      log_ns = log_ns
+                    )
+                  )
+                })
+  if (any(unlist(lapply(res, inherits, what = "try-error")))) {
+    msg <- glue::glue("There was a problem inserting into '{carrier_props$db_table}'.")
+    log_it("error", msg, log_ns)
+    if (clean_up) {
+      build_db_action(
+        action = "delete",
+        table_name = mix_collection_table,
+        match_criteria = list(id = mix_ids$mix_id),
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+    }
+    return(carrier_mixes)
+  }
   
   # Follow the same basic pipeline for carrier additives
   # Separate out solvent mixes and do inserts on carrier mixes, norm_carriers, and carrier_aliases as appropriate
@@ -1068,7 +1185,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
       c("units" = !!grep(additive_props$props[["units_by"]], names(.), value = TRUE)),
       c("component" = !!grep(additive_props$props[["id_by"]], names(.), value = TRUE))
     ) %>%
-    mutate(amount = as.numeric(amount)) %>%
+    mutate(across(any_of("amount"), as.numeric)) %>%
     left_join(
       build_db_action(
         action = "select",
@@ -1090,6 +1207,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                                       db_table = additive_props$norm_by,
                                       id_column = "id",
                                       db_conn = db_conn,
+                                      fuzzy = fuzzy,
                                       log_ns = log_ns)
                                   })
       )
@@ -1113,23 +1231,27 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     mutate(component = additive_id) %>%
     select(-alias_id, -additive_id) %>%
     left_join(mix_ids, by = c("inferred_group" = "inferred_group")) %>%
-    select(mix_id, component, amount, units, inferred_group) %>%
-    mutate(units = sapply(
-      units,
-      function(x) {
-        if (!has_missing_elements(x)) {
-          resolve_normalization_value(
-            this_value = x,
-            db_table = "norm_additive_units",
-            id_column = "id",
-            db_conn = db_conn,
-            log_ns = log_ns) %>%
-            unlist()
-        } else {
-          x
-        }
-      }
-    )) %>%
+    select(any_of(c("mix_id", "component", "amount", "units", "inferred_group"))) %>%
+    mutate(
+      across(any_of("units"),
+             ~ sapply(
+               .,
+               function(x) {
+                 if (!has_missing_elements(x)) {
+                   resolve_normalization_value(
+                     this_value = x,
+                     db_table = "norm_additive_units",
+                     id_column = "id",
+                     db_conn = db_conn,
+                     fuzzy = fuzzy,
+                     log_ns = log_ns) %>%
+                     unlist()
+                 } else {
+                   x
+                 }
+               }
+             ))
+    ) %>%
     group_by(inferred_group) %>%
     group_split() %>%
     lapply(
@@ -1147,11 +1269,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
   mobile_phases <- mixes %>%
     filter(group == "mobile_phase")
   if (nrow(mobile_phases) == 0) {
-    mobile_phases <- tibble(
-      ms_methods_id = method_id,
-      sample_id = sample_id,
-      carrier_mix_collection_id = mix_ids$mix_id
-    )
+    mobile_phases <- tibble(mix_id = mix_ids$mix_id)
   } else {
     mobile_phases <- mobile_phases %>%
       mutate(ref = str_remove_all(ref, id_mix_by)) %>%
@@ -1169,37 +1287,43 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     mutate(
       ms_methods_id = method_id,
       sample_id = sample_id,
-      flow_units = sapply(
-        flow_units,
-        function(x) {
-          if (!has_missing_elements(x)) {
-            resolve_normalization_value(
-              this_value = x,
-              db_table = "norm_flow_units",
-              id_column = "id",
-              db_conn = db_conn,
-              log_ns = log_ns) %>%
-              unlist()
-          } else {
-            x
-          }
-        }
+      across(any_of("flow_units"),
+             ~ sapply(
+               .,
+               function(x) {
+                 if (!has_missing_elements(x)) {
+                   resolve_normalization_value(
+                     this_value = x,
+                     db_table = "norm_flow_units",
+                     id_column = "id",
+                     db_conn = db_conn,
+                     fuzzy = fuzzy,
+                     log_ns = log_ns) %>%
+                     unlist()
+                 } else {
+                   x
+                 }
+               }
+             )
       ),
-      duration_units = sapply(
-        duration_units,
-        function(x) {
-          if (!has_missing_elements(x)) {
-            resolve_normalization_value(
-              this_value = x,
-              db_table = "norm_duration_units",
-              id_column = "id",
-              db_conn = db_conn,
-              log_ns = log_ns) %>%
-              unlist()
-          } else {
-            x
-          }
-        }
+      across(any_of("duration_units"),
+             ~ sapply(
+               .,
+               function(x) {
+                 if (!has_missing_elements(x)) {
+                   resolve_normalization_value(
+                     this_value = x,
+                     db_table = "norm_duration_units",
+                     id_column = "id",
+                     db_conn = db_conn,
+                     fuzzy = fuzzy,
+                     log_ns = log_ns) %>%
+                     unlist()
+                 } else {
+                   x
+                 }
+               }
+             )
       )
     ) %>%
     select(any_of(dbListFields(con, mobile_phase_props$db_table)))
@@ -1222,51 +1346,66 @@ resolve_ms_data <- function(obj, log_ns = "db") {
 
 # TODO
 #' @note This function is called as part of [full_import]
-resolve_qc_methods <- function(obj, ms_method_id, name_is = "qcmethod", required = c("name", "value", "source"), db_conn = con, log_ns = "db") {
+resolve_qc_methods <- function(obj,
+                               method_id,
+                               sample_id,
+                               qc_method_in = "qcmethod",
+                               db_table = "qc_methods",
+                               reference_in = "source",
+                               import_map = IMPORT_MAP,
+                               db_conn = con,
+                               log_ns = "db") {
   # Check connection
-  stopifnot(active_connection(db_conn))
-  stopifnot(as.integer(ms_method_id) == ms_method_id)
-  ms_method_id <- as.integer(ms_method_id)
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = list(ms_method_id, db_conn),
-      conditions = list(
-        ms_method_id = list(c("mode", "integer"), c("length", 1), "no_na"),
-        db_conn      = list(c("length", 1))
-      )
+  stopifnot(
+    active_connection(db_conn),
+    as.integer(method_id) == method_id,
+    check_for_value(values = method_id,
+                    db_table = "ms_methods",
+                    db_column = "id",
+                    db_conn = db_conn)$exists,
+    check_for_value(values = sample_id,
+                    db_table = "samples",
+                    db_column = "id",
+                    db_conn = db_conn)$exists
+  )
+  values <- obj[[qc_method_in]] %>%
+    rename(c("reference" = !!reference_in)) %>%
+    mutate(
+      ms_methods_id = method_id,
+      sample_id = sample_id,
+      name = sapply(
+        name,
+        function(x) {
+          resolve_normalization_value(
+            this_value = x,
+            db_table = "norm_qc_methods_name",
+            db_conn = db_conn,
+            log_ns = log_ns
+          )
+        }
+      ) %>%
+        unname(),
+      reference = ifelse(reference == "", NA, reference),
+      reference = ifelse(is.na(reference),
+                         NA,
+                         sapply(
+                           reference,
+                           function(x) {
+                             resolve_normalization_value(
+                               this_value = x,
+                               db_table = "norm_qc_methods_reference",
+                               db_conn = db_conn,
+                               log_ns = log_ns
+                             )
+                           }
+      ))
     )
-    stopifnot(arg_check$valid)
-  }
-  if ("data.frame" %in% class(obj)) {
-    tmp <- obj
-  } else if (class(obj) == "list") {
-    if (name_is %in% names(obj)) {
-      tmp <- obj[[name_is]]
-    } else if (length(obj) > 1) {
-      log_it("warn", "The object provided is longer than length 1; only the first element will be used.")
-      if (name_is %in% names(obj[[1]])) {
-        tmp <- obj[[1]][[name_is]]
-      } else {
-        stop(sprintf('The name "%s" was not found in the first element of "obj" and is required.', name_is))
-      }
-    }
-  }
-  if (!all(required %in% names(tmp))) {
-    log_it("error", sprintf('Required column%s %s %s not present.',
-                            ifelse(length(required > 1), "s", ""),
-                            format_list_of_names(required),
-                            ifelse(length(required > 1), "are", "is")))
-    stop()
-  }
-  stopifnot(check_for_value(ms_method_id, "ms_methods", "id", db_conn = db_conn)$exists)
-  values <- tmp %>%
-    mutate(ms_methods_id = ms_method_id) %>%
-    relocate(ms_methods_id, .before = everything())
   res <- try(
     build_db_action(action = "insert",
-                    table_name = "qc_methods",
+                    table_name = db_table,
                     db_conn = db_conn,
-                    values = values)
+                    values = values,
+                    log_ns = log_ns)
   )
   if (inherits(res, "try-error")) {
     msg <- 'There was an issue adding records to table "qc_methods".'
