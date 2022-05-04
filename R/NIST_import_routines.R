@@ -6,6 +6,7 @@ full_import <- function(import_object                  = NULL,
                         ignore_extra                   = TRUE,
                         requirements_obj               = "import_requirements",
                         sample_info_in                 = "sample",
+                        sample_aliases                 = NULL,
                         method_info_in                 = "massspectrometry",
                         chrom_info_in                  = "chromatography",
                         mobile_phases_in               = "chromatography",
@@ -153,7 +154,9 @@ full_import <- function(import_object                  = NULL,
     # Method info is optional but heavily encouraged 
     if (method_info_in %in% names(obj)) {
       ms_method_id <- resolve_method(obj,
-                                     method_in = method_info_in)
+                                     method_in = method_info_in,
+                                     db_conn = db_conn,
+                                     log_ns = log_ns)
     } else {
       ms_method_id <- NA
     }
@@ -174,8 +177,9 @@ full_import <- function(import_object                  = NULL,
       res <- try(
         build_db_action(action = "insert",
                         table_name = "instrument_properties",
-                        db_conn = db_conn,
                         values = tmp,
+                        db_conn = db_conn,
+                        log_ns = log_ns,
                         # TODO consider removing in production
                         ignore = TRUE)
       )
@@ -184,16 +188,19 @@ full_import <- function(import_object                  = NULL,
         resolve_description_NTAMRT(obj = obj,
                                    method_id = ms_method_id,
                                    mass_spec_in = method_info_in,
-                                   type = "massspec")
+                                   type = "massspec",
+                                   db_conn = db_conn,
+                                   log_ns = log_ns)
       }
       # - chromatography description
       if (chrom_info_in %in% names(obj)) {
         resolve_description_NTAMRT(obj = obj,
                                    method_id = ms_method_id,
                                    chrom_spec_in = chrom_info_in,
-                                   type = "chromatography")
+                                   type = "chromatography",
+                                   db_conn = db_conn,
+                                   log_ns = log_ns)
       }
-      # - qc_methods
     }
     # Sample info is required
     # Conveniently carry forward resolved contributor
@@ -209,15 +216,48 @@ full_import <- function(import_object                  = NULL,
         match_criteria = list(id = contributor_id)
       )
     }
-    sample_id <- resolve_sample(obj,
+    # - import samples
+    sample_id <- resolve_sample(obj = obj,
                                 sample_in = sample_info_in,
-                                method_id = ms_method_id)
-    # - mobile phases
+                                method_id = ms_method_id,
+                                db_conn = db_conn,
+                                log_ns = log_ns)
+    # - import sample aliases
+    if (!is.null(sample_aliases)) {
+      if (is.list(sample_aliases)) {
+        if (length(names(sample_aliases)) == length(sample_aliases)) {
+          resolve_sample_aliases(sample_id = sample_id,
+                                 values = sample_aliases)
+        } else {
+          log_it("warn", "Sample aliases were not properly formatted; add them later with resolve_sample_aliases()", log_ns)
+        }
+      } else if (is.character(sample_aliases)) {
+        resolve_sample_aliases(sample_id = sample_id,
+                               obj = obj,
+                               aliases_in = sample_aliases,
+                               db_conn = db_conn,
+                               log_ns = log_ns)
+      }
+    }
+    # - import mobile phases
     resolve_mobile_phase_NTAMRT(obj = obj,
                                 method_id = ms_method_id,
-                                sample_id = sample_id)
-    # - qc methods
-    resolve_qc_methods(obj = obj, method_id = ms_method_id)
+                                sample_id = sample_id,
+                                db_conn = db_conn,
+                                log_ns = log_ns)
+    # - import qc methods
+    resolve_qc_methods_NTAMRT(obj = obj,
+                       method_id = ms_method_id,
+                       sample_id = sample_id,
+                       db_conn = db_conn,
+                       log_ns = log_ns)
+    # - import qc data
+    resolve_qc_data(obj = obj,
+                    sample_id = sample_id,
+                    db_conn = db_conn,
+                    log_ns = log_ns)
+    # WIP ----
+    
     # Add data
   }
 }
@@ -241,6 +281,8 @@ full_import <- function(import_object                  = NULL,
 #' @note If this is used in high volume/traffic applications, ID conflicts may
 #'   occur if the timing is such that another record containing identical values
 #'   is added before the call getting the ID completes.
+#'   
+#' @inheritParams build_db_action
 #'
 #' @param db_table CHR scalar name of the database table being modified
 #' @param values named vector of the values being added, passed to
@@ -576,6 +618,67 @@ resolve_sample <- function(obj,
     sample_id <- NULL
   }
   return(sample_id)
+}
+
+#' Resolve and import sample aliases
+#'
+#' Call this function to attach sample aliases to a sample record in the
+#' database. This can be done either through the import object with a name
+#' reference or directly by assigning additional values.
+#' 
+#' @note This function is called as part of [full_import]
+#'
+#' @param sample_id  INT scalar of the sample id (e.g. from the import workflow)
+#' @param obj (optional) LIST object containing data formatted from the import
+#'   generator (default: NULL)
+#' @param aliases_in (optional) CHR scalar of the name in `obj` containing the
+#'   sample aliases in list format (default: NULL)
+#' @param values (optional) LIST containing the sample aliases with names as the
+#'   alias name and values containing the reference (e.g. URI, link to a
+#'   containing repository, or reference to the owner or project from which a
+#'   sample is drawn) to that alias
+#' @param db_table CHR scalar name of the database table containing sample
+#'   aliases (default: "sample_aliases")
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#'
+#' @return None, executes actions on the database
+#' @export
+#' 
+resolve_sample_aliases <- function(sample_id,
+                                   obj = NULL,
+                                   aliases_in = NULL,
+                                   values = NULL,
+                                   db_table = "sample_aliases",
+                                   db_conn = con,
+                                   log_ns = "db") {
+  stopifnot(sample_id == as.integer(sample_id))
+  if (all(is.null(aliases_in), is.null(values))) {
+    return(NULL)
+  }
+  if (!is.null(aliases_in)) obj <- get_component(obj, aliases_in)
+  if (is.null(values)) {
+    values <- obj
+  } else {
+    values <- tack_on(values, obj)
+  }
+  values <- tibble(
+    sample_id = sample_id,
+    name = names(values),
+    reference = unname(values)
+  ) %>%
+    unnest(c(reference, name))
+  res <- try(
+    build_db_action(action = 'insert',
+                    table_name = db_table,
+                    values = values,
+                    db_conn = db_conn,
+                    log_ns = log_ns)
+  )
+  if (inherits(res, "try-error")) {
+    log_it("error",
+           glue::glue("Could not insert records into the '{db_table}' table."),
+           log_ns)
+  }
 }
 
 #' Add an ms_method record via import
@@ -1344,15 +1447,36 @@ resolve_ms_data <- function(obj, log_ns = "db") {
   
 }
 
-# TODO
+
+#' Resolve and import quality control method information
+#'
+#' This imports the defined object component containing QC method information
+#' (i.e. a data frame of multiple quality control checks) from the NIST
+#' Non-Targeted Analysis Method Reporting Tool (NTA MRT).
+#'
 #' @note This function is called as part of [full_import]
-resolve_qc_methods <- function(obj,
+#'
+#' @inheritParams full_import
+#' @inheritParams get_component
+#'
+#' @param method_id INT scalar of the method id (e.g. from the import workflow)
+#' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#' @param qc_method_in CHR scalar of the name in `obj` that contains QC method
+#'   check information (default: "qcmethod")
+#' @param db_table CHR scalar of the database table name holding QC method check
+#'   information (default: "qc_methods")
+#' @param reference_in CHR scalar of the name in `obj[[qc_method_in]]` that
+#'   contains the reference or citation for the QC protocol (default: "source")
+#'
+#' @return None, executes actions on the database
+#' @export
+#' 
+resolve_qc_methods_NTAMRT <- function(obj,
                                method_id,
                                sample_id,
                                qc_method_in = "qcmethod",
                                db_table = "qc_methods",
                                reference_in = "source",
-                               import_map = IMPORT_MAP,
                                db_conn = con,
                                log_ns = "db") {
   # Check connection
@@ -1368,7 +1492,8 @@ resolve_qc_methods <- function(obj,
                     db_column = "id",
                     db_conn = db_conn)$exists
   )
-  values <- obj[[qc_method_in]] %>%
+  obj <- get_component(obj, qc_method_in)[[1]]
+  values <- obj %>%
     rename(c("reference" = !!reference_in)) %>%
     mutate(
       ms_methods_id = method_id,
@@ -1414,10 +1539,29 @@ resolve_qc_methods <- function(obj,
   }
 }
 
-# TODO
-resolve_qc_data <- function(obj, sample_id, db_conn = con, log_ns = "db") {
+
+#' Resolve and import quality control data for import
+#'
+#' This imports the defined object component containing QC data (i.e. a nested
+#' list of multiple quality control checks) from the NIST Non-Targeted Analysis
+#' Method Reporting Tool (NTA MRT).
+#'
+#' @note This function is called as part of [full_import]
+#'
+#' @inheritParams full_import
+#' @inheritParams get_component
+#'
+#' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#'
+#' @return None, executes actions on the database
+#' @export
+#' 
+resolve_qc_data_NTAMRT <- function(obj,
+                                   sample_id,
+                                   obj_component = "qc",
+                                   db_conn = con,
+                                   log_ns = "db") {
   # Argument validation relies on verify_args
-  if ("qc" %in% names(obj)) obj <- obj$qc
   stopifnot(as.integer(sample_id) == sample_id)
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
@@ -1431,6 +1575,7 @@ resolve_qc_data <- function(obj, sample_id, db_conn = con, log_ns = "db") {
     )
     stopifnot(arg_check$valid)
   }
+  obj <- get_component(obj, obj_component)[[1]]
   # Check connection
   # Sanity check that sample_id exists
   stopifnot(
@@ -1975,6 +2120,7 @@ verify_import_requirements <- function(obj,
 #'   `obj`.
 #'
 #' @param obj LIST of any length to be appended to
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Additional arguments passed to/from the ellipsis parameter of
 #'   calling functions. If named, names are preserved.
 #'
@@ -1984,7 +2130,8 @@ verify_import_requirements <- function(obj,
 #' @examples
 #' tack_on(list(a = 1:3), b = letters, c = rnorm(10))
 #' tack_on(list(a = 1:3))
-tack_on <- function(obj, ...) {
+tack_on <- function(obj, log_ns = "db", ...) {
+  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   addl_args <- list(...)
   if (any(names(addl_args) %in% names(obj))) {
     applies_to <- names(addl_args)[names(addl_args) %in% names(obj)]
@@ -1992,6 +2139,7 @@ tack_on <- function(obj, ...) {
       obj[[i]] <- NULL
     }
   }
+  if (logging) log_it("info", glue::glue("Tacking on {length(addl_args)} additional item{ifelse(length(addl_args) > 1, 's', '')} ({format_list_of_names(names(addl_args), add_quotes = TRUE)})."), log_ns)
   out <- append(obj, addl_args)
   return(out)
 }
@@ -2002,6 +2150,13 @@ tack_on <- function(obj, ...) {
 #' vector provided as `obj` and optionally use [tack_on] to append to it. This
 #' is intended to ease the process of pulling specific components from a list
 #' for further treatment in the import process by isolating that component.
+#'
+#' This is similar in scope to [purrr::pluck] in many regards, but always
+#' returns items with names, and will search an entire list structure, including
+#' data frames, to return all values associated with that name in individual
+#' elements, though the parent names are not preserved.
+#' 
+#' @note This is a recursive function.
 #'
 #' @note If ellipsis arguments are provided, they will be appended to each
 #'   identified component via [tack_on]. Use with caution, but this can be
@@ -2018,37 +2173,38 @@ tack_on <- function(obj, ...) {
 #'
 #' @return
 #' @export
-#'
-#' @examples
+#' 
 get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global", ...) {
   stopifnot(is.character(obj_component), length(obj_component) > 0, is.character(log_ns), length(log_ns) == 1)
-  logging <- exists("log_it")
+  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   names_present <- obj_component %in% names(obj)
   if (any(names_present)) {
     if (!all(names_present)) {
-      msg <- glue::glue("Requested component{ifelse(sum(!names_present) > 1, 's', '')} {format_list_of_names(obj_component[!names_present])} were missing.")
+      msg <- glue::glue("Requested component{ifelse(sum(!names_present) > 1, 's', '')} {format_list_of_names(obj_component[!names_present], add_quotes = TRUE)} {ifelse(sum(!names_present) > 1, 'were', 'was')} missing.")
       if (logging) {
         log_it("warn", msg, log_ns)
       } else {
         warning(msg)
       }
-      obj_component <- which(names_present)
+      return(NULL)
     }
-    out <- obj[obj_component]
+    out <- obj[obj_component[names_present]]
   } else if (is.list(obj)) {
-    out <- purrr::flatten(
-      lapply(obj,
-             get_component,
-             obj_component = obj_component,
-             silence = silence)
-    )
+    out <- lapply(obj,
+                  function(x) {
+                    tmp <- get_component(
+                      obj = x,
+                      obj_component = obj_component,
+                      silence = silence
+                    )
+                  }) %>%
+      purrr::keep(~ length(.x) > 0)
   } else {
-    if (logging && !silence) log_it("warn", glue::glue('"No components named {gsub(" and ", " or ", format_list_of_names(obj_component))}" found in the namespace of this object. Using directly.'), log_ns)
+    if (logging && !silence) log_it("warn", glue::glue('"No components named {gsub(" and ", " or ", format_list_of_names(obj_component, add_quotes = TRUE))}" found in the namespace of this object..'), log_ns)
     return(NULL)
   }
   kwargs <- list(...)
   if (length(kwargs) > 0) {
-    if (logging) log_it("info", glue::glue("Tacking on {length(kwargs)} additional argument{ifelse(length(kwargs) > 1, 's', '')} ({format_list_of_names(names(kwargs), add_quotes = TRUE)})."))
     out <- lapply(out, function(x) tack_on(obj = x, ... = ...))
   }
   return(out)
@@ -2280,21 +2436,14 @@ qc_result <- function(obj,
     all(sapply(c(qc_in, qc_method_in, search_text, value_in), is.character)),
     all(sapply(c(qc_in, qc_method_in, search_text, value_in), length) == 1)
   )
-  can_parse <- qc_in %in% names(obj) &&
-    length(obj[[qc_in]]) > 1 &&
-    qc_method_in %in% names(obj)
-  if (can_parse) {
-    tmp <- obj[[qc_method_in]] %>%
-      filter(.[[search_text_in]] == search_text)
-    if (nrow(tmp) == 0) {
-      out <- FALSE
-    } else {
-      out <- ifelse(value_in %in% names(tmp),
-                    tmp[[value_in]],
-                    FALSE)
-    }
-  } else {
-    out <- FALSE
+  out <- qc_in %in% names(obj) &&
+    length(obj[[qc_in]]) > 0 &&
+    qc_method_in %in% names(obj) &&
+    length(obj[[qc_method_in]]) > 0 &&
+    value_in %in% names(obj[[qc_method_in]])
+  if (out) {
+    tmp <- obj[[qc_method_in]]
+    out <- tmp[[value_in]][tmp[[search_text_in]] == search_text]
   }
   return(as.numeric(out))
 }
