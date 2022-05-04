@@ -554,12 +554,25 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' When using [logger], create settings for each namespace in file
 #' `config/env_logger.R` as a list (see examples there) and make sure it is
 #' sourced. If using with [logger] and "file" or "both" is selected for the
-#' namespace `LOGGING[[x]]$TO` parameter in `env_logger.R` logs will be written
-#' to disk at the file defined in `LOGGING[[x]]$file` as well as the console.
+#' namespace `LOGGING[[log_ns]]$to` parameter in `env_logger.R` logs will be
+#' written to disk at the file defined in `LOGGING[[log_ns]]$file` as well as
+#' the console.
 #'
 #' @param log_level CHR scalar of the level at which to log a given statement.
 #'   If using the [logger] package, must match one of [logger:::log_levels]
 #' @param msg CHR scalar of the message to accompany the log.
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: NULL prints to the global logging namespace)
+#' @param reset_logger_settings LGL scalar indicating whether or not to refresh
+#'   the logger settings using the file identified in `logger_settings`
+#'   (default: FALSE)
+#' @param reload_all LGL scalar indicating whether to, during
+#'   `reset_logger_settings`, to reload the R environment configuration file
+#' @param logger_settings CHR file path to the file containing logger settings
+#'   (default: file.path("config", "env_logger.R"))
+#' @param add_unknown_ns LGL scalar indicating whether or not to add a new
+#'   namespace if `log_ns` is not defined in `logger_settings` (default: FALSE)
+#' @param clone_settings_from CHR scalar indicating
 #'
 #' @return Adds to the logger file (if enabled) and/or prints to the console if
 #'   enabled. See
@@ -573,13 +586,26 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' }
 #' test_log()
 #' # Try it with and without logger loaded.
-log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FALSE, logger_settings = file.path("config", "env_logger.R"), add_unknown_ns = FALSE, clone_settings_from = NULL) {
-  stopifnot(length(msg) < 2)
+log_it <- function(log_level,
+                   msg = NULL,
+                   log_ns = NULL,
+                   reset_logger_settings = FALSE,
+                   reload_all = FALSE,
+                   logger_settings = file.path("config", "env_logger.R"),
+                   add_unknown_ns = FALSE,
+                   clone_settings_from = NULL) {
+  stopifnot(
+    length(msg) < 2,
+    is.logical(reload_logger_settings) && length(reload_logger_settings) == 1,
+    !reload_logger_settings || (reload_logger_settings && length(logger_settings) == 1 && file.exists(logger_settings)),
+    is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING") && toupper(clone_settings_from) %in% toupper(names(LOGGING))),
+    is.logical(add_unknown_ns) && length(add_unknown_ns) == 1
+  )
   if (has_missing_elements(msg, logging = FALSE)) msg <- "[no message provided]"
   if (!exists("LOGGING_ON")) {
-    if (reload_logger_settings) {
+    if (reset_logger_settings) {
       if (file.exists(logger_settings)) {
-        source(logger_settings)
+        reset_logger_settings(reload = reload_all)
       } else {
         stop(sprintf('Logging settings not configured. File "%s" not available.', logger_settings))
       }
@@ -600,43 +626,49 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
   }
   do_log <- TRUE
   if (LOGGING_ON) {
-    if (is.na(ns) || is.null(ns)) {
-      ns <- NA_character_
+    if (is.na(log_ns) || is.null(log_ns)) {
+      log_ns <- NA_character_
     } else {
       if (!exists("LOGGING")) {
-        log_it("warn", sprintf('Logging is not set up for namespace "%s".', ns))
+        log_it("warn", sprintf('Logging is not set up for namespace "%s".', log_ns))
         if (add_unknown_ns) {
           log_it("warn", "Setting up a default namespace for interactive logging only.")
-          assign(x = "LOGGING", value = setNames(list(list(log = TRUE, ns = ns, threshold = "trace")), toupper(ns)), envir = .GlobalEnv)
+          assign(x = "LOGGING", value = setNames(list(list(log = TRUE, log_ns = log_ns, threshold = "trace")), toupper(log_ns)), envir = .GlobalEnv)
         } else {
-          log_it("info", sprintf('Call log_it() again with "add_unknown_ns = TRUE" to establish the "%s" namespace.', ns))
+          log_it("info", sprintf('Call log_it() again with "add_unknown_ns = TRUE" to establish the "%s" namespace.', log_ns))
         }
       } else {
-        logging_set <- toupper(ns) %in% names(LOGGING)
+        logging_set <- toupper(log_ns) %in% names(LOGGING)
         if (logging_set) {
-          do_log <- LOGGING[[toupper(ns)]]$log
+          do_log <- LOGGING[[toupper(log_ns)]]$log
         } else {
-          log_it("warn", sprintf('Logging namespace "%s" is not set up.', ns))
+          log_it("warn", sprintf('Logging namespace "%s" is not set up.', log_ns))
           clone_exists <- !is.null(clone_settings_from) && toupper(clone_settings_from) %in% names(LOGGING)
           if (clone_exists) {
             i <- grep(toupper(clone_settings_from), names(LOGGING))
           } else {
-            clone_settings_from <- names(LOGGING)[1]
             i <- 1
           }
+          clone_settings_from <- names(LOGGING)[i]
           settings_from <- LOGGING[[i]]$ns
           if (add_unknown_ns) {
             if (clone_exists) {
-              log_it("info", sprintf('Copying settings for "%s" from LOGGING[["%s"]]. Access settings at LOGGING[["%s"]]', ns, toupper(settings_from), toupper(ns)))
+              log_it("info", sprintf('Copying settings for "%s" from "%s". Access settings at LOGGING[["%s"]]', log_ns, settings_from, toupper(log_ns)))
             } else {
               log_it("warn", sprintf('Clone namespace "%s" is not set up. Settings for "%s" will be used instead.', tolower(clone_settings_from), settings_from))
             }
-            LOGGING[[toupper(ns)]] <<- LOGGING[[i]]
-            LOGGING[[toupper(ns)]]$ns <<- ns
-            if (exists("update_logger_settings")) update_logger_settings()
+            LOGGING[[toupper(log_ns)]] <- LOGGING[[i]]
+            LOGGING[[toupper(log_ns)]]$ns <- log_ns
+            assign("LOGGING", LOGGING, envir = .GlobalEnv)
+            log_it(
+              "warn",
+              sprintf(
+                'Logger settings updated for this session, but will reset to those in "%s" if settings are refreshed (e.g. by calling "update_logger_settings()" or by calls to "log_it(..., reset_logger_settings = TRUE)"',
+                logger_settings),
+              log_ns)
           } else {
-            log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace with the same settings as "%s".', ns, settings_from))
-            log_it("info", sprintf('Logs for "%s" will only be available in the console.', ns))
+            log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace with the same settings as "%s".', log_ns, settings_from))
+            log_it("info", sprintf('Logs for "%s" will only be available in the console.', log_ns))
           }
           do_log <- TRUE
         }
@@ -649,7 +681,7 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
       n_call    <- ifelse(sys.nframe() > 1, call_i, 1)
       if (exists(log_func)) {
         log_level(level    = log_level,
-                  namespace = ns,
+                  namespace = log_ns,
                   .topcall = sys.call(n_call),
                   msg)
       } else {
@@ -661,7 +693,7 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
         #                     log_level)
         msg <- sprintf("[%s] <%s> %s in fn %s(): %s\n",
                        format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
-                       ifelse(is.na(ns), "global", ns),
+                       ifelse(is.na(log_ns), "global", log_ns),
                        log_level,
                        deparse(sys.call(n_call)[[1]]),
                        msg)
@@ -678,10 +710,10 @@ log_it <- function(log_level, msg = NULL, ns = NULL, reload_logger_settings = FA
         # }
       }
     } else {
-      if (!LOGGING[[toupper(ns)]]$log) {
+      if (!LOGGING[[toupper(log_ns)]]$log) {
         msg <- sprintf('Logging is currently turned off for namespace "%s". Set LOGGING$%s$log to TRUE to begin logging.\n',
-                       ns,
-                       toupper(ns))
+                       log_ns,
+                       toupper(log_ns))
         log_it("warn", msg)
       }
     }
@@ -954,7 +986,7 @@ rectify_null_from_env <- function(parameter, env_parameter, default, log_ns = NA
 #' @export
 #'
 #' @examples 
-update_logger_settings <- function(reload = FALSE) {
+reset_logger_settings <- function(reload = FALSE) {
   if (reload) source(file.path("config", "env_R.R"))
   source(file.path("config", "env_logger.R"))
 }
