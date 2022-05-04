@@ -122,7 +122,8 @@ validate_column_names <- function(db_conn, table_names, column_names) {
 #' including negation and similarity (see the description for argument
 #' `match_criteria`).
 #'
-#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
+#' @inheritParams build_db_action
+#'
 #' @param table_names CHR vector of tables to search
 #' @param match_criteria LIST of matching criteria with names matching columns
 #'   against which to apply. In the simplest case, a direct value is given to
@@ -302,11 +303,10 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #' associated logic and enabling routing through other functions, or picking up
 #' arguments from within other function calls.
 #' 
-#' @param inheritParams clause_where
-#'
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
 #' @param table_name CHR scalar of the table name to which this query applies
+#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
 #' @param column_names CHR vector of column names to include (default NULL)
 #' @param values LIST of CHR vectors with values to INSERT or UPDATE (default
 #'   NULL)
@@ -326,7 +326,6 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #'   vector if they consist of only a single column (default TRUE)
 #' @param log_ns CHR scalar of the logging namespace to use during execution
 #'   (default: "db")
-#' @log_ns 
 #'
 #' @return CHR scalar of the constructed query
 #' @export
