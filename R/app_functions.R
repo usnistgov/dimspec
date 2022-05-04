@@ -597,7 +597,7 @@ log_it <- function(log_level,
   stopifnot(
     length(msg) < 2,
     is.logical(reset_logger_settings) && length(reset_logger_settings) == 1,
-    !reload_logger_settings || (reload_logger_settings && length(logger_settings) == 1 && file.exists(logger_settings)),
+    !reset_logger_settings || (reset_logger_settings && length(logger_settings) == 1 && file.exists(logger_settings)),
     is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING") && toupper(clone_settings_from) %in% toupper(names(LOGGING))),
     is.logical(add_unknown_ns) && length(add_unknown_ns) == 1
   )
