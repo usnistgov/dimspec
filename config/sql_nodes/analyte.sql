@@ -258,7 +258,7 @@
 		fragment_id
 			INTEGER NOT NULL,
 			/* foreign key to fragments */
-		generated_by
+		generation_type
 			INTEGER NOT NULL,
 			/* foreign key to norm_generation_type */
 		citation
@@ -267,7 +267,7 @@
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (generated_by) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Views */
