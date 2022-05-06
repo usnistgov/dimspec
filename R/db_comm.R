@@ -30,7 +30,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
     log_fn("start")
     log_it("trace",
            sprintf('Getting table definition for "%s".', format_list_of_names(db_table)),
-           ns = "db")
+           log_ns = "db")
   }
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -1914,12 +1914,16 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 #'
 #' @param values CHR vector of possible values
 #' @param search_value CHR scalar of the value to search
+#' @param as_regex LGL scalar of whether to treat `search_value` as a regular
+#'   expression string (TRUE) or to use it directly (FALSE, default)
+#' @param db_table CHR scalar name of the database table to search, used for
+#'   printing log messages only (default: "")
 #'
 #' @return CHR scalar result of the user's choice
 #' @export
 #'
 #' @examples
-resolve_multiple_values <- function(values, search_value, db_table = "") {
+resolve_multiple_values <- function(values, search_value, as_regex = FALSE, db_table = "") {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -1928,12 +1932,13 @@ resolve_multiple_values <- function(values, search_value, db_table = "") {
       conditions = list(
         values       = list(c("n>=", 0)),
         search_value = list(c("length", 1)),
+        as_regex     = list(c("mode", "logical"), c("length", 1)),
         db_table     = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
-  present  <- any(grepl(search_value, values))
+  present  <- any(grepl(search_value, values, fixed = !as_regex))
   if (is.vector(values)) {
     only_one <- sum(values %in% search_value) == 1
   } else if (is.data.frame(values)) {
