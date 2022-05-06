@@ -1,8 +1,10 @@
 full_import <- function(import_object                  = NULL,
                         file_name                      = NULL,
                         db_conn                        = con,
-                        ignore_missing_required        = FALSE,
+                        exclude_missing_required       = FALSE,
+                        stop_if_missing_required       = TRUE,
                         include_if_missing_recommended = FALSE,
+                        stop_if_missing_recommended    = TRUE,
                         ignore_extra                   = TRUE,
                         requirements_obj               = "import_requirements",
                         sample_info_in                 = "sample",
@@ -10,13 +12,16 @@ full_import <- function(import_object                  = NULL,
                         method_info_in                 = "massspectrometry",
                         chrom_info_in                  = "chromatography",
                         mobile_phases_in               = "chromatography",
+                        software_settings_in           = "msconvertsettings",
+                        date_format                    = "%Y-%m-%d %H:%M:%S",
+                        software_timestamp             = NULL,
                         import_map                     = IMPORT_MAP,
                         log_ns                         = "db") {
   # Check connection
   stopifnot(active_connection(db_conn))
   log_fn("start")
   if (all(is.null(file_name), is.null(obj))) {
-    stop('One of either "file_name" or "obj" must be provided.')
+    stop('One of either "import_obj" or "file_name" must be provided.')
   }
   if (is.null(obj)) {
     if (all(file.exists(file_name), grepl(".json", file_name))) {
@@ -24,7 +29,7 @@ full_import <- function(import_object                  = NULL,
     }
     import_type <- "file"
   } else {
-    import_object <- obj
+    import_object <- import_object
     import_type <- "object"
   }
   log_it("trace", glue::glue('Verifying import requirements with verify_import_requirements().'), log_ns)
@@ -50,33 +55,39 @@ full_import <- function(import_object                  = NULL,
       unnest(cols = c(missing_requirements)) %>%
       mutate(req_msg = stringr::str_c('Required element',
                                       ifelse(length(missing_requirements) > 1, "s ", " "),
-                                      format_list_of_names(missing_requirements, resolve_quotes = TRUE),
+                                      format_list_of_names(missing_requirements, add_quotes = TRUE),
                                       ifelse(length(missing_requirements) > 1, " were", " was"),
                                       ' missing from import ',
                                       import_type,
-                                      ' "',
-                                      import_object,
-                                      '". ')) %>%
+                                      ifelse(import_object == "import object",
+                                             '',
+                                             sprintf(' "%s"', import_object)),
+                                      '. ')) %>%
       distinct(import_object, req_msg)
     for (x in missing_required$req_msg) log_it("error", msg = x, "db")
-    if (ignore_missing_required) {
+    if (exclude_missing_required) {
       to_ignore <- c(to_ignore, which(!meets_requirements$has_all_required))
       log_it("warn",
-             sprintf('The import will ignore %s %s%s (%s) which did not contain all required information.',
+             sprintf('The import will exclude %s of %s %s%s (%s) which did not contain all required information.',
                      nrow(missing_required),
+                     length(import_object),
                      import_type,
                      ifelse(nrow(missing_required) > 1, "s", ""),
-                     format_list_of_names(missing_required$import_object, resolve_quotes = TRUE)
+                     format_list_of_names(missing_required$import_object, add_quotes = TRUE)
              ),
              log_ns)
     } else {
+      stop_if_missing_required <- TRUE
+    }
+    if (stop_if_missing_required) {
       log_it("error",
-             sprintf('The import %s must contain all required information defined in "%s" because ignore_missing_required = FALSE.',
+             sprintf("The import %s must contain all required information defined in '%s'; call with 'exclude_missing_required = TRUE' and 'stop_if_missing_required = FALSE' to exclude these items.",
                      import_type,
                      requirements_obj),
              log_ns)
       return(invisible(NULL))
     }
+    browser()
   }
   if (all(meets_requirements$has_full_detail)) {
     log_it("success",
@@ -92,7 +103,7 @@ full_import <- function(import_object                  = NULL,
       unnest(cols = c(missing_detail)) %>%
       mutate(recc_msg = stringr::str_c('Recommended element',
                                        ifelse(length(missing_detail) > 1, "s ", " "),
-                                       format_list_of_names(missing_detail, resolve_quotes = TRUE),
+                                       format_list_of_names(missing_detail, add_quotes = TRUE),
                                        ifelse(length(missing_detail) > 1, " were", " was"),
                                        ' missing from import ',
                                        import_type,
@@ -100,18 +111,23 @@ full_import <- function(import_object                  = NULL,
                                        import_object,
                                        '".')) %>%
       distinct(import_object, recc_msg)
-    for (x in missing_recommended$recc_msg) log_it("error", msg = x, "db")
+    for (x in missing_recommended$recc_msg) log_it("warn", msg = x, "db")
     log_it("warn",
-           sprintf('The import will %s %s %s%s (%s) which did not contain all recommended information because ignore_missing_recommended = %s.',
+           sprintf('The import will %s %s of %s %s%s (%s) which did not contain all recommended information because include_if_missing_recommended = %s.',
                    ifelse(include_if_missing_recommended, "include", "ignore"),
                    nrow(missing_recommended),
+                   length(import_object),
                    import_type,
                    ifelse(nrow(missing_recommended) > 1, "s", ""),
-                   format_list_of_names(missing_recommended$import_object, resolve_quotes = TRUE),
+                   format_list_of_names(missing_recommended$import_object, add_quotes = TRUE),
                    include_if_missing_recommended),
            log_ns)
     if (!include_if_missing_recommended) {
       to_ignore <- c(to_ignore, which(!meets_requirements$has_full_detail))
+    }
+    if (stop_if_missing_recommended) {
+      log_it("error", "Include missing recommended data and try again, or call again with 'stop_if_missing_recommended = FALSE'.", log_ns)
+      return(invisible(NULL))
     }
   }
   if (length(to_ignore) > 0) {
@@ -133,6 +149,28 @@ full_import <- function(import_object                  = NULL,
   # have to rely on fuzzy matching as the contributor provided in import files
   # may not end up being a value they use in the eventual contributors table
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
+  # Grab software timestamps to cut down on import chatter
+  browser()
+  unique_software_settings <- get_uniques(import_object, software_settings_in)
+  if (is.null(software_timestamp)) {
+    import_object$software_timestamp <- vector("character", length(import_object))
+    generated_timestamp <- lubridate::now(tzone = "UTC") - 1
+    generated_timestamp <- generated_timestamp + seq_along(generated_timestamp)
+    generated_timestamp <- generated_timestamp %>%
+      lubridate::ymd_hms() %>%
+      format(date_format)
+    for (i in 1:length(unique_software_settings)) {
+      import_object$software_timestamp[unique_software_settings[[i]]$import_object$index] <- generated_timestamp[i]
+    }
+  } else {
+    if (!(length(unique_software_settings) == 1 ||
+          length(unique_software_settings) == length(to_import)
+          )) {
+      log_it("warn", "Conversion software timestamp must either be of length 1 or of length matching that of the import object.")
+    } else {
+      to_import$software_timestamp <- software_timestamp
+    }
+  }
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
     contributor <- obj[[sample_info_in]]$data_generator
@@ -257,7 +295,10 @@ full_import <- function(import_object                  = NULL,
                     db_conn = db_conn,
                     log_ns = log_ns)
     # WIP ----
-    
+    resolve_peaks(obj = obj,
+                  sample_id = sample_id,
+                  db_conn = db_conn,
+                  log_ns = log_ns)
     # Add data
   }
 }
@@ -351,15 +392,15 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
            log_ns
     )
     stop()
-  } else {
-    if (length(res_id) > 1) {
-      this_id <- tail(res_id, 1)
-      log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
-    } else if (length(res_id) == 1) {
-      this_id <- res_id
-      log_it("success", glue("Record found in {db_table} as ID {this_id}."), log_ns)
-      return(this_id)
-    }
+  # } else {
+  #   if (length(res_id) > 1) {
+  #     this_id <- tail(res_id, 1)
+  #     log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
+  #   } else if (length(res_id) == 1) {
+  #     this_id <- res_id
+  #     log_it("success", glue("Record found in {db_table} as ID {this_id}."), log_ns)
+  #   }
+  #   return(this_id)
   }
   if (length(res_id) == 0) {
     # Try the insertion
@@ -386,7 +427,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
         and_or         = "AND"
       )
     )
-    if (inherits(res_id, "try-error")) {
+    if (inherits(res_id, "try-error") || length(res_id) == 0) {
       tmp <- values
       blanks <- tmp %in% c("", "null", "NULL", "NA", "na", NA)
       tmp[!blanks] <- paste0("= ", tmp[!blanks])
@@ -401,11 +442,13 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
       )
       return(res_id)
     } else {
-      this_id <- tail(res_id, 1)
       if (length(res_id) > 1) {
         log_it("warn",
                glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."),
                log_ns)
+        this_id <- tail(res_id, 1)
+      } else if (length(res_id) == 1) {
+        this_id <- res_id
       }
       log_it("success", glue("Record added to {db_table} as ID {this_id}."), log_ns)
       return(this_id)
@@ -433,7 +476,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 #' @return status of the insertion
 #' @export
 resolve_software_settings <- function(obj,
-                                      sample_timestamp = NULL,
+                                      software_timestamp = NULL,
                                       db_conn = con,
                                       software_settings_name = "msconvertsettings",
                                       db_table = "conversion_software_settings",
@@ -456,44 +499,27 @@ resolve_software_settings <- function(obj,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (software_settings_name %in% names(obj)) {
-    obj <- obj[[software_settings_name]]
+    obj <- get_component(obj, software_settings_name)
   } else {
     msg <- sprintf('"%s" not found in the namespace of this object. Using obj directly.', software_settings_name)
     log_it("warn", msg)
   }
   obj <- tack_on(obj, ...)
   # Add entries to conversion_software_peaks_linkage
-  if (is.null(sample_timestamp)) {
-    sample_timestamp <- format(
+  if (is.null(software_timestamp)) {
+    software_timestamp <- format(
       lubridate::now("UTC"),
       "%Y-%m-%d %H:%M:%S"
     )
   } else {
-    
+    # TODO Verify the timestamp is in the appropriate format
   }
   link_table <- "conversion_software_peaks_linkage"
-  res <- try(
-    build_db_action(
-      action     = "insert",
-      table_name = link_table,
-      values     = list(generated_on = sample_timestamp)
-    )
+  res <- add_or_get_id(
+    db_table = link_table,
+    values = list(generated_on = software_timestamp),
+    ensure_unique = TRUE
   )
-  if (inherits(res, "try-error")) {
-    log_it("error" , glue::glue("There was a problem adding records to table {link_table}."), log_ns)
-    return(res)
-  } else {
-    linkage_id <- build_db_action(
-      action = "get_id",
-      table_name = link_table,
-      match_criteria = list(generated_on = sample_timestamp)
-    )
-    if (length(linkage_id) > 1) {
-      log_it("info", glue::glue("Links to samples with time stamp {sample_timestamp} already exist."), log_ns)
-      linkage_id <- tail(linkage_id, 1)
-    }
-    log_it("success", glue::glue("Record added to {link_table} as id {linkage_id}."), log_ns)
-  }
   # Add entries to conversion_software_settings
   if (is.vector(obj)) {
     values <- lapply(
@@ -1447,6 +1473,67 @@ resolve_ms_data <- function(obj, log_ns = "db") {
   
 }
 
+#' Resolve and import peak information
+#' 
+#' @note This function relies on an import map
+#'
+#' @param obj CHR vector describing settings or a named LIST with names matching
+#'   column names in table conversion_software_settings.
+#' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#' @param aspect CHR scalar of the database table name holding QC method check
+#'   information (default: "peaks")
+#' @param db_conn
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#'
+#' @return INT scalar of the newly inserted or identified peak ID
+#' @export
+#' 
+resolve_peak <- function(obj,
+                         sample_id,
+                         aspect = "peaks",
+                         software_settings_in = "msconvertsettings",
+                         software_timestamp = NULL,
+                         import_map = IMPORT_MAP,
+                         db_conn = con,
+                         log_ns = "db") {
+  stopifnot(as.integer(sample_id) == sample_id)
+  sample_id <- as.integer(sample_id)
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        obj                  = list(c("mode", "list")),
+        sample_id            = list(c("mode", "integer"), c("length", 1), "no_na"),
+        aspect               = list(c("mode", "character"), c("length", 1)),
+        software_settings_in = list(c("mode", "character"), c("length", 1)),
+        import_map           = list(c("mode", "list"), c("n>", 1)),
+        db_conn              = list(c("length", 1)),
+        log_ns               = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  peaks_import <- map_import(
+    import_obj = obj,
+    aspect = aspect,
+    import_map = import_map
+  )
+  software_settings_id <- resolve_software_settings(
+    obj = obj,
+    software_settings_name = software_settings_in,
+    software_timestamp = NULL,
+    db_table = software_settings_in,
+    db_conn = db_conn,
+    log_ns = log_ns
+  )
+  peaks_import <- peaks_import %>%
+    tack_on(
+      sample_id = sample_id,
+      conversion_peaks_software_linkage_id = software_settings_id
+    )
+  browser()
+}
+
 
 #' Resolve and import quality control method information
 #'
@@ -2085,7 +2172,7 @@ verify_import_requirements <- function(obj,
            sprintf('%sxtraneous element%s named %s %s identified.%s',
                    ifelse(length(extra_cols) > 1, "E", "An e"),
                    ifelse(length(extra_cols) > 1, "s", ""),
-                   format_list_of_names(extra_cols, resolve_quotes = TRUE),
+                   format_list_of_names(extra_cols, add_quotes = TRUE),
                    ifelse(length(extra_cols) > 1, "were", "was"),
                    ifelse(ignore_extra, extra_text, "")
            ),
@@ -2100,7 +2187,9 @@ verify_import_requirements <- function(obj,
       mutate(import_object = names(obj)) %>%
       relocate(import_object, .before = )
   } else {
-    out <- as_tibble(out)
+    out <- as_tibble(out) %>%
+      mutate(import_object = "import object") %>%
+      relocate(import_object, .before = everything())
   }
   return(out)
 }
@@ -2296,16 +2385,16 @@ map_import <- function(import_obj,
     } else {
       this_note <- properties$note
       if (!is.na(this_note) && this_note == "key:value pairs") {
-        # Do inserts for straight key:value pair long form tables
+        # TODO inserts for straight key:value pair long form tables
       } else {
         category  <- properties$import_category[1]
         parameter <- properties$import_parameter[1]
         alias_in  <- properties$alias_lookup[1]
         norm_by   <- properties$sql_normalization[1]
         this_val  <- import_obj[[category]][[parameter]]
-        if (!is.na(this_val) && (is.null(this_val) || this_val == "")) this_val <- NA
-        if (!is.na(alias_in) && (is.null(alias_in) || alias_in == "")) alias_in <- NA
-        if (!is.na(norm_by) && (is.null(norm_by) || norm_by == "")) norm_by <- NA
+        if (has_missing_elements(this_val)) this_val <- NA
+        if (has_missing_elements(alias_in)) alias_in <- NA
+        if (has_missing_elements(norm_by)) norm_by <- NA
         if (!is.na(this_val)) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
@@ -2349,7 +2438,7 @@ map_import <- function(import_obj,
                 norm_id <- alias_id %>%
                   select(contains("_id")) %>%
                   pull(1)
-                # log_it("info", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
+                log_it("info", glue::glue("Resolved alias for '{this_field}' = '{this_val}' as id = '{norm_id}'."), log_ns)
               }
             }
             if (!length(norm_id) == 1) {
@@ -2380,7 +2469,7 @@ map_import <- function(import_obj,
             }
             
             if (length(norm_id) == 1 && norm_id == as.integer(norm_id)) {
-              log_it("info", glue::glue("Resolved normalization value for '{this_field}' as id = '{norm_id}' ('{this_val}')."), log_ns)
+              log_it("info", glue::glue("Resolved normalization value for '{this_field}' = '{this_val}' as id = '{norm_id}'."), log_ns)
               this_val <- norm_id
             } else {
               log_it("error", glue::glue("Could not resolve a normalization value for '{this_field}'."), log_ns)
