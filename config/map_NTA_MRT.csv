@@ -112,12 +112,12 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,1,0,0,,,fragment_aliases,alias_type,norm_analyte_alias_references,,
 0,0,1,0,0,,,fragment_aliases,alias,,,
 0,0,1,0,1,,,ms_data,peak_id,,,id from peaks
-1,0,0,0,1,msdata,scanttime,ms_data,scantime,,,
-1,0,0,0,1,msdata,msn,ms_data,ms_n,,,
+1,0,0,0,1,msdata,scantime,ms_data,scantime,,,
+1,0,0,0,1,msdata,ms_n,ms_data,ms_n,,,
 1,0,0,0,1,msdata,baseion,ms_data,base_ion,,,
-1,0,0,0,1,msdata,baseint,ms_data,base_int,,,
-1,0,0,0,1,msdata,masses,ms_data,measured_mz,,,
-1,0,0,0,1,msdata,intensities,ms_data,measured_intensity,,,
+1,0,0,0,1,msdata,base_int,ms_data,base_int,,,
+1,0,0,0,1,msdata,measured_mz,ms_data,measured_mz,,,
+1,0,0,0,1,msdata,measured_intensity,ms_data,measured_intensity,,,
 1,1,0,0,1,qc,,qc_data,sample_id,,,id from samples
 0,0,0,0,1,,,qc_data,parameter,,,
 0,0,0,0,1,,,qc_data,name,,,
