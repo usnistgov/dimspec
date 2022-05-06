@@ -86,7 +86,7 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,0,0,1,peak,rt,peaks,rt_centroid,,,
 1,0,0,0,1,peak,peak_starttime,peaks,rt_start,,,
 1,0,0,0,1,peak,peak_endtime,peaks,rt_end,,,
-1,0,0,0,1,peak,verified,peaks,identification_confidence,norm_peak_confidence,,
+1,0,0,0,1,peak,confidence,peaks,identification_confidence,norm_peak_confidence,,
 0,0,1,1,1,,,compounds,category,compound_categories,,manual for now? Programmatic for later
 1,0,0,0,1,compounddata,NAME,compounds,name,,compound_aliases,
 1,0,0,0,1,compounddata,LOCAL_POS,compounds,local_positive,,,
