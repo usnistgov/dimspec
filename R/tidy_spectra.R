@@ -30,11 +30,11 @@
 #' 
 #' ### Example data.frame
 #' tmp <- data.frame(
-#'   masses = "712.9501 713.1851",
-#'   intensities = "15094.41015625 34809.9765625"
+#'   measured_mz = "712.9501 713.1851",
+#'   measured_intensity = "15094.41015625 34809.9765625"
 #' )
 #' ms_spectra_separated(tmp)
-ms_spectra_separated <- function(df, ms_cols = c("masses", "intensities")) {
+ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intensity")) {
   # Argument validation ----
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -60,11 +60,11 @@ ms_spectra_separated <- function(df, ms_cols = c("masses", "intensities")) {
     rowwise() %>%
     mutate(spectra = list(
       tibble(
-        mass      = as.numeric(masses),
+        mz        = as.numeric(masses),
         intensity = as.numeric(intensities)
       )
     )) %>%
-    select(-masses, -intensities)
+    select(-masses, -intensities, -any_of(ms_cols))
   return(out)
 }
 
@@ -148,8 +148,8 @@ tidy_ms_spectra <- function(df) {
       args       = as.list(environment()),
       conditions = list(
         df = list(c("mode", "data.frame"))
-      ),
-      from_fn    = "tidy_ms_spectra")
+      )
+    )
     if (!arg_check$valid) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
@@ -158,7 +158,7 @@ tidy_ms_spectra <- function(df) {
   df %>%
     drop_na() %>%
     unnest_longer(spectra) %>%
-    mutate(mass = unname(spectra[[1]]),
+    mutate(mz = unname(spectra[[1]]),
            intensity = unname(spectra[[2]])) %>%
     select(-spectra)
 }
