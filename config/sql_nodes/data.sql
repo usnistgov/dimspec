@@ -157,7 +157,7 @@
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		generated_on
-			TEXT NOT NULL,
+			TEXT NOT NULL UNIQUE,
 			/* timestamp of the sample generation to tie in with samples */
 		/* Check constraints */
 		CHECK (generated_on IS strftime("%Y-%m-%d %H:%M:%S", generated_on))
@@ -174,6 +174,7 @@
 			TEXT NOT NULL,
 			/* value of the software setting */
 		/* Check constraints */
+		UNIQUE (linkage_id, setting_value),
 		/* Foreign key relationships */
 		FOREIGN KEY (linkage_id) REFERENCES conversion_software_peaks_linkage(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
@@ -324,7 +325,8 @@
   		  npc.level1 ||
   		  npc.level2 ||
   		  " - " ||
-  		  npc.confidence
+  		  upper(substr(npc.confidence, 1, 1)) ||
+  		  lower(substr(npc.confidence, 2))
   		  )
   		  AS confidence
   			/* Narrative form of confidence from table 'norm_peak_confidence'. */ 
