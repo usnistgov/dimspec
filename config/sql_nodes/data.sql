@@ -255,6 +255,7 @@
 		CHECK (scantime >= 0),
 		CHECK (base_int >= 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
+		UNIQUE (peak_id, ms_n, scantime, base_ion, base_int, measured_mz, measured_intensity),
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
@@ -274,6 +275,7 @@
 		/* Check constraints */
 		CHECK (mz > 0),
 		CHECK (intensity >= 0),
+		UNIQUE (ms_data_id, mz, intensity),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
