@@ -87,7 +87,6 @@ full_import <- function(import_object                  = NULL,
              log_ns)
       return(invisible(NULL))
     }
-    browser()
   }
   if (all(meets_requirements$has_full_detail)) {
     log_it("success",
@@ -150,27 +149,28 @@ full_import <- function(import_object                  = NULL,
   # may not end up being a value they use in the eventual contributors table
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
   # Grab software timestamps to cut down on import chatter
-  browser()
   unique_software_settings <- get_uniques(import_object, software_settings_in)
+  software_timestamps <- vector("list", length(import_object))
   if (is.null(software_timestamp)) {
-    import_object$software_timestamp <- vector("character", length(import_object))
     generated_timestamp <- lubridate::now(tzone = "UTC") - 1
     generated_timestamp <- generated_timestamp + seq_along(generated_timestamp)
-    generated_timestamp <- generated_timestamp %>%
-      lubridate::ymd_hms() %>%
-      format(date_format)
     for (i in 1:length(unique_software_settings)) {
-      import_object$software_timestamp[unique_software_settings[[i]]$import_object$index] <- generated_timestamp[i]
+      software_timestamps[unique_software_settings[[i]]$import_object$index] <- generated_timestamp[i]
     }
   } else {
     if (!(length(unique_software_settings) == 1 ||
-          length(unique_software_settings) == length(to_import)
-          )) {
+          length(unique_software_settings) == length(import_object)
+    )) {
       log_it("warn", "Conversion software timestamp must either be of length 1 or of length matching that of the import object.")
     } else {
-      to_import$software_timestamp <- software_timestamp
+      software_timestamps[1:length(import_object)] <- software_timestamp
     }
   }
+  software_timestamps <- software_timestamps %>%
+    unlist() %>%
+    lubridate::as_datetime() %>%
+    lubridate::ymd_hms() %>%
+    format(date_format)
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
     contributor <- obj[[sample_info_in]]$data_generator
@@ -285,21 +285,25 @@ full_import <- function(import_object                  = NULL,
                                 log_ns = log_ns)
     # - import qc methods
     resolve_qc_methods_NTAMRT(obj = obj,
-                       method_id = ms_method_id,
-                       sample_id = sample_id,
-                       db_conn = db_conn,
-                       log_ns = log_ns)
+                              method_id = ms_method_id,
+                              sample_id = sample_id,
+                              db_conn = db_conn,
+                              log_ns = log_ns)
     # - import qc data
-    resolve_qc_data(obj = obj,
-                    sample_id = sample_id,
-                    db_conn = db_conn,
-                    log_ns = log_ns)
-    # WIP ----
+    resolve_qc_data_NTAMRT(obj = obj,
+                           sample_id = sample_id,
+                           db_conn = db_conn,
+                           log_ns = log_ns)
+    # - import peaks node (includes data)
     resolve_peaks(obj = obj,
                   sample_id = sample_id,
+                  software_timestamp = software_timestamps[i],
                   db_conn = db_conn,
                   log_ns = log_ns)
-    # Add data
+    # WIP ----
+    # - import/resolve compounds
+    # - import/resolve fragments
+    # - build peak/fragment/compound connection
   }
 }
 
@@ -392,15 +396,15 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
            log_ns
     )
     stop()
-  # } else {
-  #   if (length(res_id) > 1) {
-  #     this_id <- tail(res_id, 1)
-  #     log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
-  #   } else if (length(res_id) == 1) {
-  #     this_id <- res_id
-  #     log_it("success", glue("Record found in {db_table} as ID {this_id}."), log_ns)
-  #   }
-  #   return(this_id)
+  } else {
+    if (length(res_id) > 1) {
+      res_id <- tail(res_id, 1)
+      log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
+    }
+    if (length(res_id) == 1) {
+      log_it("success", glue("Record found in {db_table} as ID {res_id}."), log_ns)
+      return(res_id)
+    }
   }
   if (length(res_id) == 0) {
     # Try the insertion
@@ -475,22 +479,29 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 #'
 #' @return status of the insertion
 #' @export
-resolve_software_settings <- function(obj,
-                                      software_timestamp = NULL,
-                                      db_conn = con,
-                                      software_settings_name = "msconvertsettings",
-                                      db_table = "conversion_software_settings",
-                                      log_ns = "db",
-                                      ...) {
+resolve_software_settings_NTAMRT <- function(obj,
+                                             software_timestamp = NULL,
+                                             db_conn = con,
+                                             software_settings_name = "msconvertsettings",
+                                             settings_table = "conversion_software_settings",
+                                             linkage_table = "conversion_software_peaks_linkage",
+                                             as_date_format = "%Y-%m-%d %H:%M:%S",
+                                             format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
+                                             min_datetime = "2000-01-01 00:00:00",
+                                             log_ns = "db") {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, db_conn, software_settings_name, db_table, log_ns),
+      args       = list(obj, db_conn, software_settings_name, settings_table, linkage_table, as_date_format, format_checks, min_datetime, log_ns),
       conditions = list(
         obj                    = list(c("mode", "list")),
         db_conn                = list(c("length", 1)),
         software_settings_name = list(c("mode", "character"), c("length", 1)),
-        db_table               = list(c("mode", "character"), c("length", 1)),
+        settings_table         = list(c("mode", "character"), c("length", 1)),
+        linkage_table          = list(c("mode", "character"), c("length", 1)),
+        as_date_format         = list(c("mode", "character"), c("length", 1)),
+        format_checks          = list(c("mode", "character")),
+        min_datetime           = list(c("mode", "character"), c("length", 1)),
         log_ns                 = list(c("mode", "character"), c("length", 1))
       )
     )
@@ -499,47 +510,82 @@ resolve_software_settings <- function(obj,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (software_settings_name %in% names(obj)) {
-    obj <- get_component(obj, software_settings_name)
+    obj <- get_component(obj, software_settings_name)[[1]]
   } else {
     msg <- sprintf('"%s" not found in the namespace of this object. Using obj directly.', software_settings_name)
     log_it("warn", msg)
   }
-  obj <- tack_on(obj, ...)
+  if (length(obj) == 0) {
+    log_it("info", "The object provided was empty.", log_ns)
+    return(invisible(NULL))
+  }
   # Add entries to conversion_software_peaks_linkage
   if (is.null(software_timestamp)) {
-    software_timestamp <- format(
-      lubridate::now("UTC"),
-      "%Y-%m-%d %H:%M:%S"
-    )
+    software_timestamp <- lubridate::now("UTC")
   } else {
-    # TODO Verify the timestamp is in the appropriate format
+    log_it("info", glue::glue("Checking that '{software_timestamp}' can be coerced to the '{as_date_format}' format using one of {format_list_of_names(format_checks, add_quotes = TRUE)}."), log_ns)
+    if (is.character(software_timestamp)) {
+      software_timestamp_coerced <- try(
+        lubridate::parse_date_time(
+          software_timestamp,
+          orders = format_checks
+        )
+      )
+    } else if (is.numeric(software_timestamp)) {
+      software_timestamp_coerced <- try(
+        lubridate::ymd_hms(
+          lubridate::as_datetime(
+            software_timestamp
+          )
+        )
+      )
+      if (software_timestamp_coerced < as_datetime(min_datetime)) {
+        log_it("error", glue::glue("Parsed numerical software_timestamp of '{software_timestamp}' yielded '{software_timestamp_coerced}' which was before the provided minimum timeframe of '{min_datetime}'."), log_ns)
+        stop()
+      }
+    }
+    if (inherits(software_timestamp_coerced, "try-error") || is.na(software_timestamp_coerced)) {
+      log_it("error", glue::glue("Could not parse '{software_timestamp}' as a datetime object."), log_ns)
+      stop()
+    } else {
+      software_timestamp <- software_timestamp_coerced
+    }
   }
-  link_table <- "conversion_software_peaks_linkage"
-  res <- add_or_get_id(
-    db_table = link_table,
+  software_timestamp <- format(software_timestamp, as_date_format)
+  linkage_id <- add_or_get_id(
+    db_table = linkage_table,
     values = list(generated_on = software_timestamp),
-    ensure_unique = TRUE
+    ensure_unique = TRUE,
+    db_conn = db_conn,
+    log_ns = log_ns
   )
   # Add entries to conversion_software_settings
-  if (is.vector(obj)) {
-    values <- lapply(
-      obj,
-      function(x) {
-        setNames(c(linkage_id, x), c("linkage_id", "setting_value"))
-      }
-    )
+  if (!is.list(obj)) {
+    if (is.character(obj) && length(obj) > 0) {
+      values <- tibble(linkage_id, obj) %>%
+        setNames(dbListFields(db_conn, settings_table))
+    } else {
+      log_it("error", "Could not resolve conversion_software_settings; these should be a character vector of length > 0", log_ns)
+      stop()
+    }
   }
   res <- try(
-    build_db_action(con,
-                    action = "INSERT",
-                    table_name = "conversion_software_settings",
-                    values = values)
+    build_db_action(action = "INSERT",
+                    db_conn = db_conn,
+                    table_name = settings_table,
+                    values = values,
+                    # TODO consider removing this in production; ignoring here
+                    # will ensure that additional entries are not duplicated for
+                    # a given timestamp, and requires the software settings
+                    # table to have a unique constraint
+                    ignore = TRUE,
+                    log_ns = log_ns)
   )
   if (inherits(res, "try-error")) {
-    log_it("error" , glue::glue("There was a problem adding records to table {db_table}."), log_ns)
+    log_it("error" , glue::glue("There was a problem resolving records in table {settings_table}."), log_ns)
     return(res)
   } else {
-    log_it("success", glue::glue("Records added to {db_table}."), log_ns)
+    log_it("success", glue::glue("Records resolved in {settings_table}."), log_ns)
   }
   # Feed linkage id to resolve_peaks
   return(linkage_id)
@@ -551,7 +597,7 @@ resolve_software_settings <- function(obj,
 #' the values provided in the JSON import template. Uses [verify_sample_class]
 #' and [verify_contributor] to parse foreign key relationships, [resolve_method]
 #' to add a record to ms_methods to get the proper id, and
-#' [resolve_software_settings] to insert records into and get the proper
+#' [resolve_software_settings_NTAMRT] to insert records into and get the proper
 #' conversion software linkage id from tables "conversion_software_settings" and
 #' "conversion_software_linkage" if appropriate.
 #' 
@@ -1488,15 +1534,26 @@ resolve_ms_data <- function(obj, log_ns = "db") {
 #' @return INT scalar of the newly inserted or identified peak ID
 #' @export
 #' 
-resolve_peak <- function(obj,
-                         sample_id,
-                         aspect = "peaks",
-                         software_settings_in = "msconvertsettings",
-                         software_timestamp = NULL,
-                         import_map = IMPORT_MAP,
-                         db_conn = con,
-                         log_ns = "db") {
+resolve_peaks <- function(obj,
+                          sample_id,
+                          aspect = "peaks",
+                          software_timestamp = NULL,
+                          software_settings_in = "msconvertsettings",
+                          ms_data_in = "msdata",
+                          ms_data_table = "ms_data",
+                          unpack_spectra = FALSE,
+                          unpack_format = c("separated", "unzipped"),
+                          ms_spectra_table = "ms_spectra",
+                          linkage_table = "conversion_software_peaks_linkage",
+                          settings_table = "conversion_software_settings",
+                          as_date_format = "%Y-%m-%d %H:%M:%S",
+                          format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
+                          min_datetime = "2000-01-01 00:00:00",
+                          import_map = IMPORT_MAP,
+                          db_conn = con,
+                          log_ns = "db") {
   stopifnot(as.integer(sample_id) == sample_id)
+  unpack_format <- match.arg(unpack_format)
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -1513,25 +1570,96 @@ resolve_peak <- function(obj,
     )
     stopifnot(arg_check$valid)
   }
-  peaks_import <- map_import(
+  # Map peaks values
+  peaks_values <- map_import(
     import_obj = obj,
     aspect = aspect,
     import_map = import_map
   )
-  software_settings_id <- resolve_software_settings(
+  # Insert or identify software settings
+  software_settings_id <- resolve_software_settings_NTAMRT(
     obj = obj,
     software_settings_name = software_settings_in,
-    software_timestamp = NULL,
-    db_table = software_settings_in,
+    software_timestamp = software_timestamp,
+    settings_table = settings_table,
+    linkage_table = linkage_table,
+    as_date_format = as_date_format,
+    format_checks = format_checks,
+    min_datetime = min_datetime,
     db_conn = db_conn,
     log_ns = log_ns
   )
-  peaks_import <- peaks_import %>%
+  # Add values to peaks
+  peaks_values <- peaks_values %>%
     tack_on(
       sample_id = sample_id,
-      conversion_peaks_software_linkage_id = software_settings_id
+      conversion_software_peaks_linkage_id = software_settings_id
     )
-  browser()
+  # Insert or identify peaks
+  res <- try(
+    add_or_get_id(
+      db_table = aspect,
+      values = peaks_values,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  if (inherits(res, "try-error")) {
+    msg <- glue::glue('There was an issue adding records to table "{aspect}".')
+    log_it("error", msg)
+    stop(msg)
+  }
+  peak_id <- res
+  # Map ms_data
+  ms_data <- map_import(
+    import_obj = obj,
+    aspect = ms_data_table,
+    import_map = import_map,
+    db_conn = db_conn,
+    log_ns = log_ns
+  ) %>%
+    bind_cols() %>%
+    mutate(peak_id = peak_id)
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = ms_data_table,
+      values = ms_data,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  if (inherits(res, "try-error")) {
+    msg <- glue::glue('There was an issue adding records to table "{ms_data_in}".')
+    log_it("error", msg)
+    stop(msg)
+  }
+  if (unpack_spectra) {
+    ms_spectra <- build_db_action(
+      action = 'select',
+      table_name = ms_data_table,
+      match_criteria = list(peak_id = peak_id)
+    ) %>%
+      select(id, measured_mz, measured_intensity) %>%
+      rename(c("ms_data_id" = "id")) %>%
+      ms_spectra_separated() %>%
+      tidy_ms_spectra()
+    res <- try(
+      build_db_action(
+        action = "insert",
+        table_name = ms_spectra_table,
+        values = ms_spectra,
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+    )
+    if (inherits(res, "try-error")) {
+      msg <- glue::glue('There was an issue adding records to table "{ms_data_in}".')
+      log_it("error", msg)
+      stop(msg)
+    }
+  }
+  
 }
 
 
@@ -1559,13 +1687,13 @@ resolve_peak <- function(obj,
 #' @export
 #' 
 resolve_qc_methods_NTAMRT <- function(obj,
-                               method_id,
-                               sample_id,
-                               qc_method_in = "qcmethod",
-                               db_table = "qc_methods",
-                               reference_in = "source",
-                               db_conn = con,
-                               log_ns = "db") {
+                                      method_id,
+                                      sample_id,
+                                      qc_method_in = "qcmethod",
+                                      db_table = "qc_methods",
+                                      reference_in = "source",
+                                      db_conn = con,
+                                      log_ns = "db") {
   # Check connection
   stopifnot(
     active_connection(db_conn),
@@ -1610,7 +1738,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
                                log_ns = log_ns
                              )
                            }
-      ))
+                         ))
     )
   res <- try(
     build_db_action(action = "insert",
@@ -1620,7 +1748,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
                     log_ns = log_ns)
   )
   if (inherits(res, "try-error")) {
-    msg <- 'There was an issue adding records to table "qc_methods".'
+    msg <- glue::glue('There was an issue adding records to table "{db_table}".')
     log_it("error", msg)
     stop(msg)
   }
@@ -2392,10 +2520,10 @@ map_import <- function(import_obj,
         alias_in  <- properties$alias_lookup[1]
         norm_by   <- properties$sql_normalization[1]
         this_val  <- import_obj[[category]][[parameter]]
-        if (has_missing_elements(this_val)) this_val <- NA
-        if (has_missing_elements(alias_in)) alias_in <- NA
-        if (has_missing_elements(norm_by)) norm_by <- NA
-        if (!is.na(this_val)) {
+        if (has_missing_elements(this_val) && length(this_val) == 1) this_val <- NA
+        if (has_missing_elements(alias_in) && length(this_val) == 1) alias_in <- NA
+        if (has_missing_elements(norm_by) && length(this_val) == 1) norm_by <- NA
+        if (!all(is.na(this_val))) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
             column_names <- character(0)
@@ -2475,18 +2603,11 @@ map_import <- function(import_obj,
               log_it("error", glue::glue("Could not resolve a normalization value for '{this_field}'."), log_ns)
             }
           }
-          out[i] <- this_val
+          out[[i]] <- this_val
         }
       }
     }
   }
-  # Catch date like object and coerce to a specific format
-  # date_likes <- lapply(out,
-  #                      function(x) {
-  #                        if (is.POSIXtst <- suppressWarnings(
-  #                          lubridate::as_datetime(x)
-  #                        )
-  #                      })
   return(out)
 }
 
