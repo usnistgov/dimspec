@@ -482,7 +482,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 resolve_software_settings_NTAMRT <- function(obj,
                                              software_timestamp = NULL,
                                              db_conn = con,
-                                             software_settings_name = "msconvertsettings",
+                                             software_settings_in = "msconvertsettings",
                                              settings_table = "conversion_software_settings",
                                              linkage_table = "conversion_software_peaks_linkage",
                                              as_date_format = "%Y-%m-%d %H:%M:%S",
@@ -492,11 +492,11 @@ resolve_software_settings_NTAMRT <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, db_conn, software_settings_name, settings_table, linkage_table, as_date_format, format_checks, min_datetime, log_ns),
+      args       = list(obj, db_conn, software_settings_in, settings_table, linkage_table, as_date_format, format_checks, min_datetime, log_ns),
       conditions = list(
         obj                    = list(c("mode", "list")),
         db_conn                = list(c("length", 1)),
-        software_settings_name = list(c("mode", "character"), c("length", 1)),
+        software_settings_in = list(c("mode", "character"), c("length", 1)),
         settings_table         = list(c("mode", "character"), c("length", 1)),
         linkage_table          = list(c("mode", "character"), c("length", 1)),
         as_date_format         = list(c("mode", "character"), c("length", 1)),
@@ -509,10 +509,10 @@ resolve_software_settings_NTAMRT <- function(obj,
   }
   # Check connection
   stopifnot(active_connection(db_conn))
-  if (software_settings_name %in% names(obj)) {
-    obj <- get_component(obj, software_settings_name)[[1]]
+  if (software_settings_in %in% names(obj)) {
+    obj <- get_component(obj, software_settings_in)[[1]]
   } else {
-    msg <- sprintf('"%s" not found in the namespace of this object. Using obj directly.', software_settings_name)
+    msg <- sprintf('"%s" not found in the namespace of this object. Using obj directly.', software_settings_in)
     log_it("warn", msg)
   }
   if (length(obj) == 0) {
@@ -723,7 +723,8 @@ resolve_sample_aliases <- function(sample_id,
                                    db_table = "sample_aliases",
                                    db_conn = con,
                                    log_ns = "db") {
-  stopifnot(sample_id == as.integer(sample_id))
+  stopifnot(sample_id == as.integer(sample_id),
+            active_connection(db_conn))
   if (all(is.null(aliases_in), is.null(values))) {
     return(NULL)
   }
@@ -904,7 +905,9 @@ resolve_description_NTAMRT <- function(obj,
                                        fuzzy = TRUE,
                                        log_ns = "db") {
   # Check connection
-  stopifnot(active_connection(db_conn))
+  stopifnot(as.integer(method_id) == method_id,
+            active_connection(db_conn))
+  method_id <- as.integer(method_id)
   log_fn("start")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -912,7 +915,7 @@ resolve_description_NTAMRT <- function(obj,
       args       = list(obj, method_id, type, mass_spec_in, chrom_spec_in, db_conn, fuzzy, log_ns),
       conditions = list(
         obj           = list(c("n>=", 1)),
-        method_id     = list(c("mode", "numeric"), c("length", 1)),
+        method_id     = list(c("mode", "integer"), c("length", 1)),
         type          = list(c("mode", "character"), c("length", 1)),
         mass_spec_in  = list(c("mode", "character"), c("length", 1)),
         chrom_spec_in = list(c("mode", "character"), c("length", 1)),
@@ -1172,6 +1175,8 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                     db_conn = db_conn)$exists,
     is.list(obj)
   )
+  method_id <- as.integer(method_id)
+  sample_id <- as.integer(sample_id)
   obj <- get_component(obj, mobile_phase_props[["in_item"]])[[1]]
   mixes <- obj[names(obj[grep(id_mix_by, names(obj))])]
   mixes <- mixes[-which(mixes %in% exclude_values)]
@@ -1512,23 +1517,168 @@ resolve_mobile_phase_NTAMRT <- function(obj,
 }
 
 # TODO
-#' @note This function is called as part of [full_import]
-resolve_ms_data <- function(obj, log_ns = "db") {
+resolve_ms_data <- function(obj,
+                            peak_id,
+                            peaks_table = "peaks",
+                            ms_data_in = "msdata",
+                            ms_data_table = "ms_data",
+                            unpack_spectra = FALSE,
+                            ms_spectra_table = "ms_spectra",
+                            unpack_format = c("separated", "unzipped"),
+                            import_map = IMPORT_MAP,
+                            db_conn = con,
+                            log_ns = "db") {
   # Check connection
-  stopifnot(active_connection(db_conn))
-  
+  stopifnot(as.integer(peak_id) == peak_id,
+            active_connection(db_conn))
+  peak_id <- as.integer(peak_id)
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(obj, peak_id, peaks_table, ms_data_in, ms_data_table, unpack_spectra, log_ns),
+      conditions = list(
+        obj                  = list(c("mode", "list")),
+        peak_id              = list(c("mode", "integer"), c("length", 1), "no_na"),
+        peaks_table          = list(c("mode", "character"), c("length", 1)),
+        ms_data_in           = list(c("mode", "character"), c("length", 1)),
+        ms_data_table        = list(c("mode", "character"), c("length", 1)),
+        unpack_spectra       = list(c("mode", "logical"), c("length", 1)),
+        log_ns               = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  ms_data <- map_import(
+    import_obj = obj,
+    aspect = ms_data_table,
+    import_map = import_map,
+    db_conn = db_conn,
+    log_ns = log_ns
+  ) %>%
+    bind_cols() %>%
+    mutate(peak_id = peak_id)
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = ms_data_table,
+      values = ms_data,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  if (inherits(res, "try-error")) {
+    msg <- glue::glue('There was an issue adding records to table "{ms_data_table}".')
+    log_it("error", msg, log_ns)
+    stop(msg)
+  } else {
+    log_it("success", glue::glue("Mass spectral data added to table '{ms_data_table}'."), log_ns)
+  }
+  if (unpack_spectra) {
+    unpack_format <- match.arg(unpack_format)
+    resolve_ms_spectra(peak_id = peak_id,
+                       ms_data_in = ms_data_in,
+                       ms_data_table = ms_data_table,
+                       ms_spectra_table = ms_spectra_table,
+                       unpack_format = unpack_format,
+                       import_map = import_map,
+                       db_conn = db_conn,
+                       log_ns = log_ns
+    )
+  }
+}
+
+# TODO
+resolve_ms_spectra <- function(peak_id,
+                               peaks_table = "peaks",
+                               ms_data_in = "msdata",
+                               ms_data_table = "ms_data",
+                               ms_spectra_table = "ms_spectra",
+                               unpack_format = c("separated", "unzipped"),
+                               import_map = IMPORT_MAP,
+                               db_conn = con,
+                               log_ns = "db") {
+  # Check connection
+  stopifnot(as.integer(peak_id) == peak_id,
+            active_connection(db_conn))
+  peak_id <- as.integer(peak_id)
+  if (!check_for_value(peak_id, peaks_table, "id")$exists) {
+    log_it("error", glue::glue("There is no peak record for peak_id = {peak_id}."), log_ns)
+    stop()
+  }
+  if (!check_for_value(peak_id, ms_data_table, "peak_id")$exists) {
+    log_it("error", glue::glue("Mass spectra data have not yet been added in table '{ms_data_table}' for peak_id = {peak_id}. Call 'resolve_ms_data' with 'unpack_spectra = TRUE' to add and unpack in one step."), log_ns)
+    stop()
+  }
+  unpack_format <- match.arg(unpack_format)
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        peak_id              = list(c("mode", "integer"), c("length", 1), "no_na"),
+        peaks_table          = list(c("mode", "character"), c("length", 1)),
+        ms_data_in           = list(c("mode", "character"), c("length", 1)),
+        ms_data_table        = list(c("mode", "character"), c("length", 1)),
+        ms_spectra_table     = list(c("mode", "character"), c("length", 1)),
+        unpack_format        = list(c("mode", "character"), c("length", 1)),
+        import_map           = list(c("mode", "list"), c("n>", 1)),
+        db_conn              = list(c("length", 1)),
+        log_ns               = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  unpack_format <- switch(
+    unpack_format,
+    "separated" = ms_spectra_separated,
+    "unzipped" = ms_spectra_unzipped
+  )
+  ms_spectra <- build_db_action(
+    action = 'select',
+    table_name = ms_data_table,
+    match_criteria = list(peak_id = peak_id)
+  ) %>%
+    select(id, measured_mz, measured_intensity) %>%
+    rename(c("ms_data_id" = "id")) %>%
+    unpack_format() %>%
+    tidy_ms_spectra()
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = ms_spectra_table,
+      values = ms_spectra,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  if (inherits(res, "try-error")) {
+    msg <- glue::glue('There was an issue adding records to table "{ms_data_table}".')
+    log_it("error", msg, log_ns)
+    stop(msg)
+  } else {
+    log_it("success", glue::glue("Mass spectra unpacked into table '{ms_spectra_table}'."), log_ns)
+  }
 }
 
 #' Resolve and import peak information
-#' 
+#'
+#' Call this function to resolve and insert information for the "peaks" node in
+#' the database including software conversion settings (via
+#' [resolve_software_settings_NTAMRT]) and mass spectra data (via
+#' [resolve_ms_data] and, optionally, [resolve_ms_spectra]). This function
+#' relies on the import object being formatted appropriately.
+#'
+#' @note This function is called as part of [full_import]
+#'
 #' @note This function relies on an import map
+#'
+#' @inheritParams resolve_ms_data
+#' @inheritParams resolve_ms_spectra
 #'
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
 #' @param aspect CHR scalar of the database table name holding QC method check
 #'   information (default: "peaks")
-#' @param db_conn
+#' @param db_conn C
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return INT scalar of the newly inserted or identified peak ID
@@ -1552,17 +1702,31 @@ resolve_peaks <- function(obj,
                           import_map = IMPORT_MAP,
                           db_conn = con,
                           log_ns = "db") {
-  stopifnot(as.integer(sample_id) == sample_id)
+  stopifnot(as.integer(sample_id) == sample_id,
+            active_connection(db_conn))
   unpack_format <- match.arg(unpack_format)
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = as.list(environment()),
+      args       = list(obj, sample_id, aspect, software_settings_in,
+                        ms_data_in, ms_data_table, unpack_spectra,
+                        unpack_format, ms_spectra_table, linkage_table,
+                        settings_table, as_date_format, format_checks,
+                        import_map, db_conn, log_ns),
       conditions = list(
         obj                  = list(c("mode", "list")),
         sample_id            = list(c("mode", "integer"), c("length", 1), "no_na"),
         aspect               = list(c("mode", "character"), c("length", 1)),
         software_settings_in = list(c("mode", "character"), c("length", 1)),
+        ms_data_in           = list(c("mode", "character"), c("length", 1)),
+        ms_data_table        = list(c("mode", "character"), c("length", 1)),
+        unpack_spectra       = list(c("mode", "logical"), c("length", 1)),
+        unpack_format        = list(c("mode", "character"), c("length", 1)),
+        ms_spectra_table     = list(c("mode", "character"), c("length", 1)),
+        linkage_table        = list(c("mode", "character"), c("length", 1)),
+        settings_table       = list(c("mode", "character"), c("length", 1)),
+        as_date_format       = list(c("mode", "character"), c("length", 1)),
+        format_checks        = list(c("mode", "character")),
         import_map           = list(c("mode", "list"), c("n>", 1)),
         db_conn              = list(c("length", 1)),
         log_ns               = list(c("mode", "character"), c("length", 1))
@@ -1579,7 +1743,7 @@ resolve_peaks <- function(obj,
   # Insert or identify software settings
   software_settings_id <- resolve_software_settings_NTAMRT(
     obj = obj,
-    software_settings_name = software_settings_in,
+    software_settings_in = software_settings_in,
     software_timestamp = software_timestamp,
     settings_table = settings_table,
     linkage_table = linkage_table,
@@ -1611,55 +1775,18 @@ resolve_peaks <- function(obj,
   }
   peak_id <- res
   # Map ms_data
-  ms_data <- map_import(
-    import_obj = obj,
-    aspect = ms_data_table,
+  resolve_ms_data(
+    obj = obj,
+    peak_id = peak_id,
+    ms_data_in = ms_data_in,
+    ms_data_table = ms_data_table,
+    unpack_spectra = unpack_spectra,
+    ms_spectra_table = ms_spectra_table,
+    unpack_format = unpack_format,
     import_map = import_map,
     db_conn = db_conn,
     log_ns = log_ns
-  ) %>%
-    bind_cols() %>%
-    mutate(peak_id = peak_id)
-  res <- try(
-    build_db_action(
-      action = "insert",
-      table_name = ms_data_table,
-      values = ms_data,
-      db_conn = db_conn,
-      log_ns = log_ns
-    )
   )
-  if (inherits(res, "try-error")) {
-    msg <- glue::glue('There was an issue adding records to table "{ms_data_in}".')
-    log_it("error", msg)
-    stop(msg)
-  }
-  if (unpack_spectra) {
-    ms_spectra <- build_db_action(
-      action = 'select',
-      table_name = ms_data_table,
-      match_criteria = list(peak_id = peak_id)
-    ) %>%
-      select(id, measured_mz, measured_intensity) %>%
-      rename(c("ms_data_id" = "id")) %>%
-      ms_spectra_separated() %>%
-      tidy_ms_spectra()
-    res <- try(
-      build_db_action(
-        action = "insert",
-        table_name = ms_spectra_table,
-        values = ms_spectra,
-        db_conn = db_conn,
-        log_ns = log_ns
-      )
-    )
-    if (inherits(res, "try-error")) {
-      msg <- glue::glue('There was an issue adding records to table "{ms_data_in}".')
-      log_it("error", msg)
-      stop(msg)
-    }
-  }
-  
 }
 
 
@@ -2371,7 +2498,7 @@ tack_on <- function(obj, log_ns = "db", ...) {
 #' This is similar in scope to [purrr::pluck] in many regards, but always
 #' returns items with names, and will search an entire list structure, including
 #' data frames, to return all values associated with that name in individual
-#' elements, though the parent names are not preserved.
+#' elements.
 #' 
 #' @note This is a recursive function.
 #'
@@ -2387,9 +2514,15 @@ tack_on <- function(obj, log_ns = "db", ...) {
 #' @param silence LGL scalar indicating whether to silence recursive messages,
 #'   which may be the same for each element of `obj` (default: TRUE)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#' @param ... Optional additional arguments to [tack_on] to the resulting list
 #'
-#' @return
+#' @return LIST object containing the elements of `obj`
 #' @export
+#' 
+#' @examples
+#' get_component(list(a = letters, b = 1:10), "a")
+#' get_component(list(ex = list(a = letters, b = 1:10), ex2 = list(c = 1:5, a = LETTERS)), "a")
+#' get_component(list(a = letters, b = 1:10), "a", c = 1:5)
 #' 
 get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global", ...) {
   stopifnot(is.character(obj_component), length(obj_component) > 0, is.character(log_ns), length(log_ns) == 1)
@@ -2422,7 +2555,7 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
   }
   kwargs <- list(...)
   if (length(kwargs) > 0) {
-    out <- lapply(out, function(x) tack_on(obj = x, ... = ...))
+    out <- tack_on(obj = out, ... = ...)
   }
   return(out)
 }
@@ -2521,8 +2654,8 @@ map_import <- function(import_obj,
         norm_by   <- properties$sql_normalization[1]
         this_val  <- import_obj[[category]][[parameter]]
         if (has_missing_elements(this_val) && length(this_val) == 1) this_val <- NA
-        if (has_missing_elements(alias_in) && length(this_val) == 1) alias_in <- NA
-        if (has_missing_elements(norm_by) && length(this_val) == 1) norm_by <- NA
+        if (has_missing_elements(alias_in) && length(alias_in) == 1) alias_in <- NA
+        if (has_missing_elements(norm_by) && length(norm_by) == 1) norm_by <- NA
         if (!all(is.na(this_val))) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
