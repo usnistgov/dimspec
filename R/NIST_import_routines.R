@@ -460,6 +460,349 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
   }
 }
 
+resolve_compound <- function(obj,
+                             fragments_in = "fragments",
+                             aliases = NULL,
+                             category = NULL,
+                             import_map = IMPORT_MAP,
+                             db_conn = con,
+                             log_ns = "db") {
+  
+}
+
+resolve_compound_fragments <- function(values = NULL,
+                                       peak_id = NA,
+                                       fragment_id = NA,
+                                       compound_id = NA,
+                                       linkage_table = "compound_fragments",
+                                       peaks_table = "peaks",
+                                       fragments_table = "fragments",
+                                       compounds_table = "compounds",
+                                       db_conn = con,
+                                       log_ns = "db") {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(linkage_table, peaks_table, compounds_table, db_conn, log_ns),
+      conditions = list(
+        linkage_table   = list(c("mode", "character"), c("length", 1)),
+        peaks_table     = list(c("mode", "character"), c("length", 1)),
+        compounds_table = list(c("mode", "character"), c("length", 1)),
+        db_conn         = list(c("length", 1)),
+        log_ns          = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  
+  if (is.null(values)) {
+    if (has_missing_elements(peak_id)) {
+      log_it("error", "A 'peak_id' is required for every row to draw a linkage.", log_ns)
+      stop()
+    }
+    if (has_missing_elements(fragment_id)) {
+      log_it("error", "A 'fragment_id' is required for every row to draw a linkage.", log_ns)
+      stop()
+    }
+    if (!length(peak_id) == length(fragment_id)) {
+      if (!length(fragment_id) == 1 && !length(peak_id) == 1) {
+        log_it("error",
+               glue::glue("Lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)}) must be equal if more than one 'fragment_id' or 'peak_id' is assigned."),
+               log_ns)
+        stop()
+      }
+    }
+    peak_id_check <- suppressWarnings(as.integer(peak_id))
+    if (any(is.na(peak_id_check))) {
+      log_it("error",
+             sprintf("'peak_id%s' = %s%s%s could not be safely coerced to an integer.",
+                     ifelse(length(peak_id) > 1,
+                            "s",
+                            ""),
+                     ifelse(length(peak_id) > 1,
+                            "c(",
+                            ""),
+                     format_list_of_names(peak_id, add_quotes = TRUE),
+                     ifelse(length(peak_id) > 1,
+                            ")",
+                            "")),
+             log_ns)
+      stop()
+    }
+    fragment_id_check <- suppressWarnings(as.integer(fragment_id))
+    if (any(is.na(fragment_id_check))) {
+      log_it("error",
+             sprintf("'fragment_id%s' = %s%s%s could not be safely coerced to an integer.",
+                     ifelse(length(fragment_id) > 1,
+                            "s",
+                            ""),
+                     ifelse(length(fragment_id) > 1,
+                            "c(",
+                            ""),
+                     format_list_of_names(fragment_id, add_quotes = TRUE),
+                     ifelse(length(fragment_id) > 1,
+                            ")",
+                            "")),
+             log_ns)
+      stop()
+    }
+    if (!all(is.na(compound_id))) {
+      if (!length(compound_id) == 1 &&
+          !(length(compound_id) == length(peak_id) || length(peak_id) == 1) &&
+          !(length(compound_id) == length(fragment_id) || length(fragment_id) == 1)) {
+        log_it("error",
+               glue::glue("Length of 'compound_id' ({length(compound_id)}) must be either 1 or match the lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)})."),
+               log_ns)
+        stop()
+      }
+    }
+    compound_id_check <- suppressWarnings(as.integer(compound_id))
+    if (any(is.na(compound_id_check))) {
+      log_it("error",
+             sprintf("'compound_id%s' = %s%s%s could not be safely coerced to an integer.",
+                     ifelse(length(compound_id) > 1,
+                            "s",
+                            ""),
+                     ifelse(length(compound_id) > 1,
+                            "c(",
+                            ""),
+                     format_list_of_names(compound_id, add_quotes = TRUE),
+                     ifelse(length(compound_id) > 1,
+                            ")",
+                            "")),
+             log_ns)
+      stop()
+    }
+    values = data.frame(peak_id = peak_id,
+                        fragment_id = fragment_id,
+                        compound_id = compound_id) %>%
+      mutate(across(.cols = everything(), .fns = ~ as.integer(.x)))
+  }
+  peak_id_check <- peak_id %in%
+    build_db_action(
+      action = "select",
+      table_name = peaks_table,
+      column_names = "id",
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  if (!all(peak_id_check)) {
+    peak_id_check <- peak_id[!peak_id_check]
+    log_it("error",
+           sprintf("'peak_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
+                   ifelse(length(peak_id_check) > 1,
+                          "s",
+                          ""),
+                   ifelse(length(peak_id_check) > 1,
+                          "c(",
+                          ""),
+                   format_list_of_names(peak_id_check, add_quotes = TRUE),
+                   ifelse(length(peak_id_check) > 1,
+                          ")",
+                          ""),
+                   ifelse(length(peak_id_check) > 1,
+                          "were",
+                          "was"),
+                   peaks_table),
+           log_ns
+    )
+    stop()
+  }
+  fragment_id_check <- fragment_id %in%
+    build_db_action(
+      action = "select",
+      table_name = fragments_table,
+      column_names = "id",
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  if (!all(fragment_id_check)) {
+    fragment_id_check <- fragment_id[!fragment_id_check]
+    log_it("error",
+           sprintf("'fragment_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
+                   ifelse(length(fragment_id_check) > 1,
+                          "s",
+                          ""),
+                   ifelse(length(fragment_id_check) > 1,
+                          "c(",
+                          ""),
+                   format_list_of_names(fragment_id, add_quotes = TRUE),
+                   ifelse(length(fragment_id_check) > 1,
+                          ")",
+                          ""),
+                   ifelse(length(fragment_id_check) > 1,
+                          "were",
+                          "was"),
+                   fragments_table),
+           log_ns
+    )
+    stop()
+  }
+  if (!all(is.na(compound_id))) {
+    compound_id_check <- compound_id %in%
+      build_db_action(
+        action = "select",
+        table_name = compounds_table,
+        column_names = "id",
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+    if (!all(compound_id_check)) {
+      compound_id_check <- compound_id[!compound_id_check]
+      log_it("error",
+             sprintf("'compound_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
+                     ifelse(length(compound_id_check) > 1,
+                            "s",
+                            ""),
+                     ifelse(length(compound_id_check) > 1,
+                            "c(",
+                            ""),
+                     format_list_of_names(compound_id, add_quotes = TRUE),
+                     ifelse(length(compound_id_check) > 1,
+                            ")",
+                            ""),
+                     ifelse(length(compound_id_check) > 1,
+                            "were",
+                            "was"),
+                     compounds_table),
+             log_ns
+      )
+      stop()
+    }
+  }
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = linkage_table,
+      values = values
+    )
+  )
+  if (inherits(res, "try-error")) {
+    log_it("error", glue::glue("There was an issue adding records to table '{linkage_table}'."), log_ns)
+    stop()
+  }
+}
+
+resolve_fragments <- function(obj,
+                              sample_id = NULL,
+                              generation_type = NULL,
+                              fragments_in = "annotation",
+                              fragments_table = "fragments",
+                              fragments_sources_table = "fragment_sources",
+                              citation_info_in = "fragment_citation",
+                              aliases = NULL,
+                              import_map = IMPORT_MAP,
+                              db_conn = con,
+                              log_ns = "db") {
+  if (any(is.na(sample_id))) {
+    log_it("error", glue::glue("Could not safely coerce 'sample_id' = c({format_list_of_names(sample_id, add_quotes = TRUE)}) to an integer."), log_ns)
+    stop()
+  }
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, db_conn, log_ns),
+      conditions = list(
+        obj                     = list(c("mode", "list")),
+        fragments_in            = list(c("mode", "character"), c("length", 1)),
+        fragments_table         = list(c("mode", "character"), c("length", 1)),
+        fragments_sources_table = list(c("mode", "character"), c("length", 1)),
+        db_conn                 = list(c("length", 1)),
+        log_ns                  = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  all_annotation <- get_component(obj, fragments_in)
+  fragment_values <- map_import(
+    import_obj = obj,
+    aspect = fragments_table,
+    import_map = import_map,
+    db_conn = db_conn,
+    log_ns = log_ns
+  ) %>%
+    bind_cols()
+  if (is.null(generation_type) && !is.null(sample_id)) {
+    stopifnot(sample_id == as.integer(sample_id))
+    generation_type <- build_db_action(
+          action = "select",
+          table_name = "samples",
+          column_names = "generation_type",
+          match_criteria = list(id = sample_id)
+      )
+  } else {
+    if (length(generation_type) > 1 && !length(generation_type) == length(fragment_values[[1]])) {
+      log_it("error",
+             glue::glue("The length of 'generation_type' (length = {length(generation_type)}) must be either a single value or match the length of input values (length = {length(fragment_values[[1]])})."),
+             log_ns
+      )
+      stop()
+    }
+    generation_type <- sapply(
+      generation_type,
+      function(x) {
+        resolve_normalization_value(
+          this_value = x,
+          db_table = ref_table_from_map(fragments_sources_table),
+          db_conn = db_conn,
+          log_ns = log_ns
+        )
+      }
+    )
+  }
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = fragments_table,
+      values = fragment_values %>%
+        select(any_of(dbListFields(con, fragments_table))),
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  if (inherits(res, "try-error")) {
+    log_it("error", glue::glue("There was an issue adding records to table '{fragments_table}'."), log_ns)
+    stop()
+  }
+  fragment_values <- fragment_values %>%
+    left_join(
+      dbGetQuery(
+        db_conn,
+        glue::glue("select * from {fragments_table} order by `id` desc limit {nrow(fragment_values)}")
+      ) %>%
+        select(any_of(c("id", names(fragment_values)))) %>%
+        mutate(radical = as.logical(as.integer(radical)))
+    )
+  # Add fragment source information
+  citation_info <- get_component(obj, fragments_in)
+  if (!length(citation_info) == nrow(fragment_values)) {
+    log_it("error",
+           glue::glue("Length of citation information (length = {length(citation_info)}) did not match the number of fragments (nrow = {nrow(fragment_values)})."),
+           log_ns)
+    stop()
+  }
+  generation_info <- fragment_values %>%
+    mutate(generation_type = generation_type,
+           citation = citation_info) %>%
+    rename("fragment_id" = "id") %>%
+    select(any_of(dbListFields(db_conn, fragments_sources_table)))
+  res <- try(
+    build_db_action(
+      action = "insert",
+      table_name = fragments_sources_table,
+      values = generation_info,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  )
+  # Record fragment_sources
+  if (!is.null(aliases)) {
+    
+  }
+}
+
 #' Import software settings
 #'
 #' Part of the standard import pipeline, adding rows to the
@@ -494,15 +837,15 @@ resolve_software_settings_NTAMRT <- function(obj,
     arg_check <- verify_args(
       args       = list(obj, db_conn, software_settings_in, settings_table, linkage_table, as_date_format, format_checks, min_datetime, log_ns),
       conditions = list(
-        obj                    = list(c("mode", "list")),
-        db_conn                = list(c("length", 1)),
+        obj                  = list(c("mode", "list")),
+        db_conn              = list(c("length", 1)),
         software_settings_in = list(c("mode", "character"), c("length", 1)),
-        settings_table         = list(c("mode", "character"), c("length", 1)),
-        linkage_table          = list(c("mode", "character"), c("length", 1)),
-        as_date_format         = list(c("mode", "character"), c("length", 1)),
-        format_checks          = list(c("mode", "character")),
-        min_datetime           = list(c("mode", "character"), c("length", 1)),
-        log_ns                 = list(c("mode", "character"), c("length", 1))
+        settings_table       = list(c("mode", "character"), c("length", 1)),
+        linkage_table        = list(c("mode", "character"), c("length", 1)),
+        as_date_format       = list(c("mode", "character"), c("length", 1)),
+        format_checks        = list(c("mode", "character")),
+        min_datetime         = list(c("mode", "character"), c("length", 1)),
+        log_ns               = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
