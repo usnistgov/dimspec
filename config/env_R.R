@@ -27,6 +27,7 @@ DB_VERSION     <- sprintf("%s.%s",
 DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
 DB_CLASS       <- "SQLite"
+DB_CONN_NAME   <- "con"
 DICT_FILE_NAME <- "data_dictionary"
 
 # The last time the main database schema defined in BUILD_FILE was updated.

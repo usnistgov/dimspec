@@ -72,7 +72,7 @@ if (INIT_CONNECT) {
   if ("try-error" %in% class(status)) {
     if (LOGGING_ON) log_it("error", "Could not establish a connection to the database.")
   } else {
-    if (LOGGING_ON) log_it("success", 'Interactive database connection is live as object "con"')
+    if (LOGGING_ON) log_it("success", sprintf('Interactive database connection is live as object "%s".', DB_CONN_NAME))
   }
   db_map <- try(er_map())
   if ("try-error" %in% class(db_map)) {

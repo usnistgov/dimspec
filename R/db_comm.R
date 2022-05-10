@@ -877,7 +877,7 @@ manage_connection <- function(db          = DB_NAME,
                               drv_pack    = DB_PACKAGE,
                               drv         = DB_DRIVER,
                               conn_class  = DB_CLASS,
-                              conn_name   = "con",
+                              conn_name   = DB_CONN_NAME,
                               is_local    = TRUE,
                               rm_objects  = TRUE,
                               reconnect   = TRUE,
@@ -1420,7 +1420,7 @@ update_all <- function(rebuild = TRUE, api_running = TRUE, api_monitor = NULL, l
   if (length(dict_file) == 0) {
     if (exists("log_it")) log_it("warn", "Unable to locate a data dictionary file.", log_ns)
   } else {
-    if (exists("log_it")) log_it("info", "Saving data dictionary to this session as object 'db_dict'.")
+    if (exists("log_it")) log_it("info", "Saving data dictionary to this session as object 'db_dict'.", log_ns)
     db_dict <<- dict_file %>%
       jsonlite::read_json() %>%
       lapply(bind_rows)
@@ -1430,7 +1430,7 @@ update_all <- function(rebuild = TRUE, api_running = TRUE, api_monitor = NULL, l
     if (exists("log_it")) log_it("error", "There was a problem generating the entity relationship map. Build process halted.", log_ns)
     return(tmp)
   }
-  if (exists("log_it")) log_it("info", "Saving entity relationship map to this session as object 'db_map'.")
+  if (exists("log_it")) log_it("info", "Saving entity relationship map to this session as object 'db_map'.", log_ns)
   db_map <<- tmp
   create_fallback_build()
   if (api_running && exists("api_reload")) {
