@@ -90,9 +90,25 @@ if (INIT_CONNECT) {
       if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
     }
   } else {
-    if (LOGGING_ON) log_it("info", "No database dictionary file located. Building...")
-    db_dict <- try(data_dictionary())
-    if ("try-error" %in% class(db_dict)) {
+    if (length(db_dict) == 0) {
+      if (LOGGING_ON) log_it("info", "No database dictionary file located. Building...")
+    } else {
+      if (LOGGING_ON) log_it("info", "Multiple dictionary files located.")
+      if (interactive()) {
+        selected_dictionary <- select.list(
+          choices = c(db_dict, "Build New")
+        )
+        if (selected_dictionary == "Build New") selected_dictionary <- NULL
+      } else {
+        selected_dictionary <- NULL
+      }
+    }
+    if (is.null(selected_dictionary)) {
+      db_dict <- try(data_dictionary())
+    } else {
+      db_dict <- try(lapply(read_json(db_dict), bind_rows))
+    }
+    if (inherits(db_dict, "try-error")) {
       if (LOGGING_ON) log_it("error", 'There was an error building the data dictionary with "data_dictionary()".')
     } else {
       if (LOGGING_ON) log_it("success", 'A data dictionary is available as object "db_dict".')
