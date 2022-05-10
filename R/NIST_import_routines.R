@@ -15,6 +15,14 @@ full_import <- function(import_object                  = NULL,
                         software_settings_in           = "msconvertsettings",
                         date_format                    = "%Y-%m-%d %H:%M:%S",
                         software_timestamp             = NULL,
+                        generation_type                = NULL,
+                        peaks_in                       = "peak",
+                        peaks_table                    = "peaks",
+                        fragments_in                   = "annotation",
+                        fragments_table                = "fragments",
+                        fragments_sources_table        = "fragment_sources",
+                        citation_info_in               = "fragment_citation",
+                        fragment_aliases               = NULL,
                         import_map                     = IMPORT_MAP,
                         log_ns                         = "db") {
   # Check connection
@@ -295,15 +303,24 @@ full_import <- function(import_object                  = NULL,
                            db_conn = db_conn,
                            log_ns = log_ns)
     # - import peaks node (includes data)
-    resolve_peaks(obj = obj,
-                  sample_id = sample_id,
-                  software_timestamp = software_timestamps[i],
-                  db_conn = db_conn,
-                  log_ns = log_ns)
+    peaks <- resolve_peaks(obj = obj,
+                           sample_id = sample_id,
+                           software_timestamp = software_timestamps[i],
+                           db_conn = db_conn,
+                           log_ns = log_ns)
     # WIP ----
     # - import/resolve compounds
+    # compounds <- resolve_compounds()
     # - import/resolve fragments
+    fragments <- resolve_fragments(obj = obj,
+                                   sample_id = sample_id,
+                                   fragments_in = fragmens_in,
+                                   fragments_table = fragments_table,
+                                   fragments_sources_table = fragments_sources_table,
+                                   db_conn = db_conn,
+                                   log_ns = log_ns)
     # - build peak/fragment/compound connection
+    resolve_compound_fragments()
   }
 }
 
@@ -342,7 +359,7 @@ full_import <- function(import_object                  = NULL,
 #' @return
 #' @export
 add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, ignore = FALSE, log_ns = "db") {
-  log_it("info", glue("Adding or identifying a record to {db_table}."), log_ns)
+  log_it("info", glue("Adding to or identifying a record in table '{db_table}'."), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -402,7 +419,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
       log_it("warn", glue("Multiple IDs ({format_list_of_names(res_id)}) match provided values. Using {this_id}."), log_ns)
     }
     if (length(res_id) == 1) {
-      log_it("success", glue("Record found in {db_table} as ID {res_id}."), log_ns)
+      log_it("success", glue("Record found in table '{db_table}' as ID {res_id}."), log_ns)
       return(res_id)
     }
   }
@@ -454,7 +471,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
       } else if (length(res_id) == 1) {
         this_id <- res_id
       }
-      log_it("success", glue("Record added to {db_table} as ID {this_id}."), log_ns)
+      log_it("success", glue("Record added to table '{db_table}' as ID {this_id}."), log_ns)
       return(this_id)
     }
   }
@@ -692,7 +709,7 @@ resolve_fragments <- function(obj,
                               fragments_table = "fragments",
                               fragments_sources_table = "fragment_sources",
                               citation_info_in = "fragment_citation",
-                              aliases = NULL,
+                              fragment_aliases = NULL,
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -715,7 +732,6 @@ resolve_fragments <- function(obj,
     )
     stopifnot(arg_check$valid)
   }
-  all_annotation <- get_component(obj, fragments_in)
   fragment_values <- map_import(
     import_obj = obj,
     aspect = fragments_table,
@@ -752,12 +768,23 @@ resolve_fragments <- function(obj,
       }
     )
   }
+  existing_fragments <- fragment_values %>%
+    rowwise() %>%
+    lapply(function(x) {
+      clause_where(
+           db_conn = db_conn,
+           table_names = fragments_table,
+           match_criteria = x
+           )
+    }) %>%
+      paste0(collapse = ") OR (")
   res <- try(
     build_db_action(
       action = "insert",
       table_name = fragments_table,
       values = fragment_values %>%
         select(any_of(dbListFields(con, fragments_table))),
+      ignore = TRUE,
       db_conn = db_conn,
       log_ns = log_ns
     )
@@ -775,6 +802,17 @@ resolve_fragments <- function(obj,
         select(any_of(c("id", names(fragment_values)))) %>%
         mutate(radical = as.logical(as.integer(radical)))
     )
+  
+  fragment_sources <- all_annotation %>%
+    left_join(
+      dbGetQuery(
+        db_conn,
+        glue::glue("select * from {fragments_table} order by `id` desc limit {nrow(fragment_values)}")
+      ) %>%
+        select(any_of(c("id", names(fragment_values)))) %>%
+        mutate(radical = as.logical(as.integer(radical)))
+    )
+  
   # Add fragment source information
   citation_info <- get_component(obj, fragments_in)
   if (!length(citation_info) == nrow(fragment_values)) {
@@ -798,7 +836,7 @@ resolve_fragments <- function(obj,
     )
   )
   # Record fragment_sources
-  if (!is.null(aliases)) {
+  if (!is.null(fragment_aliases)) {
     
   }
 }
@@ -2019,17 +2057,17 @@ resolve_ms_spectra <- function(peak_id,
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
-#' @param aspect CHR scalar of the database table name holding QC method check
+#' @param peaks_table CHR scalar of the database table name holding QC method check
 #'   information (default: "peaks")
-#' @param db_conn C
+#' @param db_conn Connection object (default: con)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
-#' @return INT scalar of the newly inserted or identified peak ID
+#' @return INT scalar of the newly inserted or identified peak ID(s)
 #' @export
 #' 
 resolve_peaks <- function(obj,
                           sample_id,
-                          aspect = "peaks",
+                          peaks_table = "peaks",
                           software_timestamp = NULL,
                           software_settings_in = "msconvertsettings",
                           ms_data_in = "msdata",
@@ -2051,7 +2089,7 @@ resolve_peaks <- function(obj,
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, sample_id, aspect, software_settings_in,
+      args       = list(obj, sample_id, peaks_table, software_settings_in,
                         ms_data_in, ms_data_table, unpack_spectra,
                         unpack_format, ms_spectra_table, linkage_table,
                         settings_table, as_date_format, format_checks,
@@ -2059,7 +2097,7 @@ resolve_peaks <- function(obj,
       conditions = list(
         obj                  = list(c("mode", "list")),
         sample_id            = list(c("mode", "integer"), c("length", 1), "no_na"),
-        aspect               = list(c("mode", "character"), c("length", 1)),
+        peaks_table               = list(c("mode", "character"), c("length", 1)),
         software_settings_in = list(c("mode", "character"), c("length", 1)),
         ms_data_in           = list(c("mode", "character"), c("length", 1)),
         ms_data_table        = list(c("mode", "character"), c("length", 1)),
@@ -2080,7 +2118,7 @@ resolve_peaks <- function(obj,
   # Map peaks values
   peaks_values <- map_import(
     import_obj = obj,
-    aspect = aspect,
+    aspect = peaks_table,
     import_map = import_map
   )
   # Insert or identify software settings
@@ -2105,14 +2143,14 @@ resolve_peaks <- function(obj,
   # Insert or identify peaks
   res <- try(
     add_or_get_id(
-      db_table = aspect,
+      db_table = peaks_table,
       values = peaks_values,
       db_conn = db_conn,
       log_ns = log_ns
     )
   )
   if (inherits(res, "try-error")) {
-    msg <- glue::glue('There was an issue adding records to table "{aspect}".')
+    msg <- glue::glue('There was an issue adding records to table "{peaks_table}".')
     log_it("error", msg)
     stop(msg)
   }
@@ -2130,6 +2168,7 @@ resolve_peaks <- function(obj,
     db_conn = db_conn,
     log_ns = log_ns
   )
+  return(peak_id)
 }
 
 
