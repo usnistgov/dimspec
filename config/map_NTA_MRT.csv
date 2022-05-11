@@ -102,9 +102,9 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,0,0,1,annotation,fragment_formula,fragments,formula,,,
 1,0,0,0,1,annotation,fragment_SMILES,fragments,smiles,,,
 1,0,0,0,1,annotation,fragment_radical,fragments,radical,,,
-0,0,0,0,0,,,fragments,user_note,,,"optional, future development feature for analyst notes about identity/etc."
-0,0,1,0,0,,,fragments,inspected_by,contributors,,id from contributors
-0,0,1,0,0,,,fragments,inspected_on,,,default current timestamp
+0,0,0,0,0,,,fragment_inspections,user_note,,,"optional, future development feature for analyst notes about identity/etc."
+0,0,1,0,0,,,fragment_inspections,inspected_by,contributors,,id from contributors
+0,0,1,0,0,,,fragment_inspections,inspected_on,,,default current timestamp
 1,0,0,0,1,annotation,fragment_citation,fragment_sources,citation,,,
 0,0,1,0,1,,,fragment_sources,fragment_id,,,id from fragments
 0,0,1,0,1,,,fragment_sources,generated_by,norm_generation_type,,"default to ""empirical"""

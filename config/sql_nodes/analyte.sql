@@ -219,9 +219,8 @@
 			/* smiles structure of fragment ion, can be NULL, user submitted */
 		/* Check constraints */
 		CHECK (radical IN (0, 1)),
-		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
+		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
 		/* Foreign key relationships */
-		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_inspections
