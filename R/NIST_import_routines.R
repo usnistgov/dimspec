@@ -709,7 +709,8 @@ resolve_fragments <- function(obj,
                               fragments_table = "fragments",
                               fragments_sources_table = "fragment_sources",
                               citation_info_in = "fragment_citation",
-                              fragment_aliases = NULL,
+                              inspection_info_in = "fragment_inspections",
+                              fragment_aliases = "fragment_aliases",
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -835,15 +836,21 @@ resolve_fragments <- function(obj,
       action = "insert",
       table_name = fragments_sources_table,
       values = generation_info,
+      ignore = TRUE,
       db_conn = db_conn,
       log_ns = log_ns
     )
   )
   
+  # Add inspection information
+  
   # Add fragment aliases, if any. Assume additional fields are 
   if (!is.null(fragment_aliases)) {
     
+  } else {
+    
   }
+  return(fragment_values$fragment_id)
 }
 
 #' Import software settings
@@ -2846,8 +2853,8 @@ verify_import_requirements <- function(obj,
 #' parameters. If no additional arguments are passed `obj` is returned as
 #' provided.
 #'
-#' @note If duplicate names exists in `obj` and those provided as elipsis
-#'   arguments, those provided as part of the elipsis will replace those in
+#' @note If duplicate names exists in `obj` and those provided as ellipsis
+#'   arguments, those provided as part of the ellipsis will replace those in
 #'   `obj`.
 #'
 #' @param obj LIST of any length to be appended to
