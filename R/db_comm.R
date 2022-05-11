@@ -1367,8 +1367,16 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 
 #' Convenience function to rebuild all database related files
 #'
+#' @note This does not recast the views and triggers files created through
+#'   [sqlite_autoview] and [sqlite_autotrigger] as the output of those may often
+#'   need additional customization. Existing auto-views and -triggers will be
+#'   created as defined. To exclude those, first modify the build file
+#'   referenced by [build_db].
+#'
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
+#'   
+#' @inheritParams build_db
 #'
 #' @param rebuild LGL scalar indicating whether to first rebuild from
 #'   environment settings
@@ -1385,7 +1393,17 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #' @export
 #'
 #' @examples
-update_all <- function(rebuild = TRUE, api_running = TRUE, api_monitor = NULL, log_ns = "db") {
+update_all <- function(rebuild       = TRUE,
+                       api_running   = TRUE,
+                       api_monitor   = NULL,
+                       db            = DB_NAME,
+                       build_from    = DB_BUILD_FILE,
+                       populate      = TRUE,
+                       populate_with = DB_DATA,
+                       archive       = FALSE,
+                       sqlite_cli    = SQLITE_CLI,
+                       connect       = FALSE,
+                       log_ns = "db") {
   if (exists("log_it")) {
     log_fn("start")
     log_it("debug", "Updating database, fallback build, and data dictionary files.", log_ns)
@@ -1403,7 +1421,17 @@ update_all <- function(rebuild = TRUE, api_running = TRUE, api_monitor = NULL, l
   }
   if (rebuild) {
     manage_connection(reconnect = FALSE)
-    tmp <- try(build_db())
+    tmp <- try(
+      build_db(
+        db            = db,
+        build_from    = build_file,
+        populate      = populate,
+        populate_with = populate_with,
+        archive       = archive,
+        sqlite_cli    = sqlite_cli,
+        connect       = connect
+      )
+    )
     if (inherits(tmp, "try-error")) {
       if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
       return(tmp)
