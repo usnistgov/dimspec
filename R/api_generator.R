@@ -636,3 +636,49 @@ build_db_action <- function(action,
     return(query)
   }
 }
+
+
+#' Match multiple values in a database table
+#'
+#' Complex queries are sometimes necessary to match against multiple varied
+#' conditions across multiple items in a list or data frame. Call this function
+#' to apply vectorization to all items in `match_criteria` and create a fully
+#' qualified SQL expression using [clause_where] and execute that query against
+#' the database connection in `db_conn`. Speed is not optimized during the call
+#' to clause where as each clause is built independently and joined together
+#' with "OR" statements.
+#'
+#' This is intended for use with a data frame object
+#'
+#' @inheritParams clause_where
+#'
+#' @param db_conn connection object (default: con)
+#' @param log_ns CHR scalar of the logging namespace to use during execution
+#'   (default: "db")
+#'
+#' @return data.frame of the matching database rows
+#' @export
+#' 
+multiple_match <- function(match_criteria,
+                           table_names,
+                           and_or = "AND",
+                           db_conn = con,
+                           log_ns = "db") {
+  if (is.data.frame(match_criteria)) {
+    match_criteria <- purrr::transpose(match_criteria)
+  }
+  sprintf("select * from %s where (%s)",
+          table_names,
+          match_criteria %>%
+            lapply(function(x) {
+              clause_where(
+                db_conn = db_conn,
+                table_names = table_names,
+                match_criteria = x,
+                and_or = and_or
+              )
+            }) %>%
+            paste0(collapse = ") OR (")
+  ) %>%
+    dbGetQuery(db_conn, .)
+}
