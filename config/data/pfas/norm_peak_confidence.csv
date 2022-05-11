@@ -6,7 +6,7 @@ id,level1,level2,confidence,import_text
 5,2,b,Probable by diagnostic fragmentation evidence,Level 2b - Probable by diagnostic fragmentation evidence
 6,2,c,Probable by diagnostic homologue evidence,Level 2c - Probable by diagnostic homologue evidence
 7,3,a,Positional isomer candidates,Level 3a - Positional isomer candidates
-8,3,b,Fragmentation-basedcandidate,Level 3b - Fragmentation-based candidate
+8,3,b,Fragmentation-based candidate,Level 3b - Fragmentation-based candidate
 9,3,c,Circumstantial candidate based on fragmentation,Level 3c - Circumstantial candidate based on fragmentation
 10,3,d,Circumstantial candidate based on homologues,Level 3d - Circumstantial candidate based on homologues
 11,4,,Unequivocal molecular formula,Level 4 - Unequivocal molecular formula
