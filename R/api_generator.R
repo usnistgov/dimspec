@@ -527,6 +527,14 @@ build_db_action <- function(action,
   
   # Safely escape where clauses
   if (all(!is.null(match_criteria), !action == "INSERT")) {
+    if (fuzzy && case_sensitive) {
+      if (logging) {
+        log_it("warn",
+               "Fuzzy and case sensitive queries cannot be combined...defaulting to fuzzy, case insensitive query.",
+               log_ns)
+      }
+      case_sensitive <- FALSE
+    }
     if (!is.list(match_criteria)) match_criteria <- as.list(match_criteria)
     query <- paste(query, "WHERE",
                    clause_where(db_conn        = db_conn,
@@ -535,13 +543,6 @@ build_db_action <- function(action,
                                 fuzzy          = fuzzy,
                                 match_criteria = match_criteria,
                                 and_or         = and_or))
-    if (fuzzy && case_sensitive) {
-      if (logging) {
-        log_it("warn",
-               "Fuzzy and case sensitive queries cannot be combined...defaulting to fuzzy, case insensitive query.",
-               log_ns)
-      }
-    }
   } else if (all(is.null(match_criteria), !action %in% c("NROW", "INSERT", "SELECT"))) {
     stop('Only "NROW", "INSERT", and "SELECT" actions are valid when argument "match_criteria" is not provided.')
   }

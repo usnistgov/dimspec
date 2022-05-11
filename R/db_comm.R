@@ -1882,7 +1882,8 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #'   coerce value matches by upper, lower, sentence, and title case matches
 #' @param db_conn connection object (default: con)
 #' @param fuzzy LGL scalar of whether to do a "fuzzy" match in the sense that
-#'   values provided are wrapped in an SQL "LIKE '%value%'" clause.
+#'   values provided are wrapped in an SQL "LIKE '%value%'" clause; overrides
+#'   the `case_sensitive` setting if TRUE (default: FALSE).
 #'
 #' @return LIST of length 1-2 containing "exists" as a LGL scalar for whether
 #'   the values were found, and "values" containing the result of the database
@@ -1928,6 +1929,7 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
                                      db_conn        = db_conn,
                                      match_criteria = to_match,
                                      case_sensitive = case_sensitive,
+                                     fuzzy          = fuzzy,
                                      distinct       = TRUE)
   found <- nrow(existing_values) > 0
   out   <- list(
@@ -1940,6 +1942,11 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 
 #' Utility function to resolve multiple choices interactively
 #'
+#' This function is generally not called directly, but rather as a workflow
+#' component from within [resolve_normalization_value] during interactive
+#' sessions to get feedback from users during the normalization value resolution
+#' process.
+#'
 #' @param values CHR vector of possible values
 #' @param search_value CHR scalar of the value to search
 #' @param as_regex LGL scalar of whether to treat `search_value` as a regular
@@ -1950,7 +1957,6 @@ check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, 
 #' @return CHR scalar result of the user's choice
 #' @export
 #'
-#' @examples
 resolve_multiple_values <- function(values, search_value, as_regex = FALSE, db_table = "") {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
@@ -2067,7 +2073,7 @@ resolve_normalization_value <- function(this_value,
     stopifnot(arg_check$valid)
   }
   this_id <- integer(0)
-  if (!case_sensitive && !fuzzy) {
+  if (!case_sensitive || fuzzy) {
     table_fields <- dbListFields(db_conn, db_table)
     # Accelerate this portion
     argument_verification <- VERIFY_ARGUMENTS
