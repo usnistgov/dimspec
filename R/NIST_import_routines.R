@@ -768,63 +768,55 @@ resolve_fragments <- function(obj,
       }
     )
   }
-  existing_fragments <- fragment_values %>%
-    rowwise() %>%
-    lapply(function(x) {
-      clause_where(
-           db_conn = db_conn,
-           table_names = fragments_table,
-           match_criteria = x
-           )
-    }) %>%
-      paste0(collapse = ") OR (")
-  res <- try(
-    build_db_action(
-      action = "insert",
-      table_name = fragments_table,
-      values = fragment_values %>%
-        select(any_of(dbListFields(con, fragments_table))),
-      ignore = TRUE,
-      db_conn = db_conn,
-      log_ns = log_ns
+  existing_fragments <- multiple_match(fragment_values, fragments_table) %>%
+    mutate(radical = as.logical(as.integer(radical)))
+  new_fragments <- fragment_values %>%
+    anti_join(existing_fragments)
+  if (nrow(new_fragments) > 0) {
+    res <- try(
+      build_db_action(
+        action = "insert",
+        table_name = fragments_table,
+        values = new_fragments %>%
+          select(any_of(dbListFields(con, fragments_table))),
+        ignore = TRUE,
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
     )
-  )
-  if (inherits(res, "try-error")) {
-    log_it("error", glue::glue("There was an issue adding records to table '{fragments_table}'."), log_ns)
-    stop()
+    if (inherits(res, "try-error")) {
+      log_it("error", glue::glue("There was an issue adding records to table '{fragments_table}'."), log_ns)
+      stop()
+    } else {
+      fragment_values <- multiple_match(fragment_values, fragments_table)
+    }
+  } else {
+    fragment_values <- existing_fragments
   }
-  fragment_values <- fragment_values %>%
-    left_join(
-      dbGetQuery(
-        db_conn,
-        glue::glue("select * from {fragments_table} order by `id` desc limit {nrow(fragment_values)}")
-      ) %>%
-        select(any_of(c("id", names(fragment_values)))) %>%
-        mutate(radical = as.logical(as.integer(radical)))
-    )
-  
-  fragment_sources <- all_annotation %>%
-    left_join(
-      dbGetQuery(
-        db_conn,
-        glue::glue("select * from {fragments_table} order by `id` desc limit {nrow(fragment_values)}")
-      ) %>%
-        select(any_of(c("id", names(fragment_values)))) %>%
-        mutate(radical = as.logical(as.integer(radical)))
-    )
   
   # Add fragment source information
-  citation_info <- get_component(obj, fragments_in)
-  if (!length(citation_info) == nrow(fragment_values)) {
-    log_it("error",
-           glue::glue("Length of citation information (length = {length(citation_info)}) did not match the number of fragments (nrow = {nrow(fragment_values)})."),
-           log_ns)
-    stop()
+  all_annotation <- get_component(obj, fragments_in)[[1]]
+  for (name_i in names(all_annotation)) {
+    sql_name <- IMPORT_MAP %>%
+      filter(import_parameter == name_i) %>%
+      pull(sql_parameter)
+    if (length(sql_name) == 1) {
+      names(all_annotation)[names(all_annotation) == name_i] <- sql_name
+    } else if (length(sql_name) > 1) {
+      log_it("warn", 
+             glue::glue("Multiple SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
+             log_ns)
+    } else if (length(sql_name) == 0) {
+      log_it("warn", 
+             glue::glue("No SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
+             log_ns)
+    }
   }
+  fragment_values <- fragment_values %>%
+    left_join(all_annotation) %>%
+    mutate(generation_type = generation_type) %>%
+    rename("fragment_id" = "id")
   generation_info <- fragment_values %>%
-    mutate(generation_type = generation_type,
-           citation = citation_info) %>%
-    rename("fragment_id" = "id") %>%
     select(any_of(dbListFields(db_conn, fragments_sources_table)))
   res <- try(
     build_db_action(
@@ -835,7 +827,8 @@ resolve_fragments <- function(obj,
       log_ns = log_ns
     )
   )
-  # Record fragment_sources
+  
+  # Add fragment aliases, if any. Assume additional fields are 
   if (!is.null(fragment_aliases)) {
     
   }
@@ -2952,7 +2945,7 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
 #'
 #' @note The object used for `import_map` must be of a data.frame object that at
 #'   minimum includes names columns that includes import_category,
-#'   import_parameter, alias_lookup, and sql_normalization 
+#'   import_parameter, alias_lookup, and sql_normalization
 #'
 #' @param import_obj LIST object of values to import
 #' @param aspect CHR scalar of the import aspect (e.g. "sample") to map
