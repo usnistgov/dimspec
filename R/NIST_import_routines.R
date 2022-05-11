@@ -768,7 +768,13 @@ resolve_fragments <- function(obj,
       }
     )
   }
-  existing_fragments <- multiple_match(fragment_values, fragments_table) %>%
+  existing_fragments <- dataframe_match(
+    match_criteria = fragment_values,
+    table_names = fragments_table,
+    and_or = "AND",
+    db_conn = db_conn,
+    log_ns = log_ns
+  ) %>%
     mutate(radical = as.logical(as.integer(radical)))
   new_fragments <- fragment_values %>%
     anti_join(existing_fragments)
@@ -788,7 +794,13 @@ resolve_fragments <- function(obj,
       log_it("error", glue::glue("There was an issue adding records to table '{fragments_table}'."), log_ns)
       stop()
     } else {
-      fragment_values <- multiple_match(fragment_values, fragments_table)
+      fragment_values <- dataframe_match(
+        match_criteria = fragment_values,
+        table_names = fragments_table,
+        and_or = "AND",
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
     }
   } else {
     fragment_values <- existing_fragments

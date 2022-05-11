@@ -659,11 +659,11 @@ build_db_action <- function(action,
 #' @return data.frame of the matching database rows
 #' @export
 #' 
-multiple_match <- function(match_criteria,
-                           table_names,
-                           and_or = "AND",
-                           db_conn = con,
-                           log_ns = "db") {
+dataframe_match <- function(match_criteria,
+                            table_names,
+                            and_or = "AND",
+                            db_conn = con,
+                            log_ns = "db") {
   if (is.data.frame(match_criteria)) {
     match_criteria <- purrr::transpose(match_criteria)
   }
