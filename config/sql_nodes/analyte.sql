@@ -211,15 +211,28 @@
 		formula
 			TEXT NOT NULL,
 			/* elemental formula for specific fragment, user submitted */
-		user_note
-			TEXT,
-			/* user-supplied description of the fragment */
 		radical
 			TEXT,
 			/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
 		smiles
 			TEXT,
 			/* smiles structure of fragment ion, can be NULL, user submitted */
+		/* Check constraints */
+		CHECK (radical IN (0, 1)),
+		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
+		/* Foreign key relationships */
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS fragment_inspections
+		/* Fragment inspections by users for ions that are attributed to one or more mass spectra. */
+	(
+	  fragment_id
+	    INTEGER,
+	    /* foreign key to fragments table */
+		user_note
+			TEXT,
+			/* user-supplied description of the fragment */
 		inspected_by
 			INTEGER,
 			/* user inspection id */
@@ -227,11 +240,10 @@
 			TEXT,
 			/* timestamp at which this compound was recorded as inspected (YYYY-MM-DD HH:MM:SS UTC) */
 		/* Check constraints */
-		CHECK (radical IN (0, 1)),
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
-		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]')),
 		/* Foreign key relationships */
-		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_aliases
@@ -247,6 +259,7 @@
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
 		/* Check constraints */
+		UNIQUE (fragment_id, alias_type, alias),
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -265,6 +278,7 @@
 			TEXT NOT NULL,
 			/* DOI, etc. */
 		/* Check constraints */
+		UNIQUE (fragment_id, generation_type, citation),
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE RESTRICT
