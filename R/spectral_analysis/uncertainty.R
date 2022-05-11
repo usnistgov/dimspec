@@ -1,6 +1,6 @@
-# Spectral Uncertainty Functions ----------------------------------------------------------
+#' Spectral Uncertainty Functions ----------------------------------------------------------
 
-#' Create peak list
+#' Create peak list from SQL ms_data table
 #'
 #' The function extracts the relevant information and sorts it into nested lists for
 #' use in the uncertainty functions
@@ -22,6 +22,7 @@ create_peak_list <- function(ms_data) {
     time = ms_data$scantime[x], 
     mslevel = ms_data$ms_n[x]))
 }
+
 
 #' Create peak table for MS2 data
 #'

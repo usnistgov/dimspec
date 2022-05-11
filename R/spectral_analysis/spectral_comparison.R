@@ -12,7 +12,7 @@
 #' @export
 #'
 
-#BJP25022022: needs to be fixed to include two error and minerror values
+
 pair_ums <- function(ums1, ums2, error = 5, minerror = 0.002) {
   ums1 <- as.matrix(ums1)
   ums2 <- as.matrix(ums2)
@@ -73,7 +73,7 @@ pool.sd <- function(sd, n) {
 #' @param minerror the minimum mass error (in Da) of the instrument data
 #' 
 
-#BJP25022022: needs to be fixed to include two error and minerror values
+
 pool.ums <- function(umslist, error = 5, minerror = 0.002) {
   umslist <- lapply(umslist, function(x) {colnames(x) <- c("mz", "mz.u", "int", "int.u", "n"); x})
   ums <- lapply(1:nrow(umslist[[1]]), function(x) data.frame(mz = umslist[[1]][x,"mz"], mz.u = umslist[[1]][x,"mz.u"], int = umslist[[1]][x,"int"], int.u = umslist[[1]][x,"int.u"], n = umslist[[1]][x,"n"]))

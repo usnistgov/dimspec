@@ -1,16 +1,37 @@
-require(XML)
-require(base64enc)
+#' Unzip binary data into vector
+#'
+#' @param x String of binary data to convert
+#' @param type type of compression (see `base::memDecompress`). Default is `gzip`
+#'
+#' @return vector containing data from converted binary data
+#' @export
+#'
+#' @examples
 
 unzip <- function(x, type = "gzip") {
-  #converts string via base encoding, compression, and then binary conversion
+  require(base64enc)
   if (is.null(x)) {return(0)}
   x <- base64decode(x)
   if (type != "none") {x <- memDecompress(x, type = type)}
   readBin(x, what = "double", n = length(x)%/%8, size = 8)
 }
 
+
+
+
+#' Opens file of type mzML into R environment
+#'
+#' @param mzmlfile the name of the mzML file which the data are to be read from.
+#'
+#' @return list containing mzML data with unzipped masses and intensity information
+#' @export
+#'
+#' @examples
+#' 
+
 mzMLtoR <- function(mzmlfile = file.choose()) {
-  #maintains XML structure but adds decoded/unzipped $masses and $intensity information to R Object
+  require(XML)
+  require(base64enc)
   mzml <- xmlToList(mzmlfile)
   scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
   compression <- "none"
@@ -36,19 +57,59 @@ getBIC <- function(mzml, i) {
   as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]) == "cvParam"), function(x) {if(!"base peak intensity" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]][[x]][which(names(mzml$mzML$run$spectrumList[[i]][[x]]) == "value")]})))
 }
 
+#' Get time of a ms scan within mzML object
+#'
+#' @param mzml list mzML object generated from `mzMLtoR` function
+#' @param i integer scan number
+#'
+#' @return numeric of the scan time
+#' @export
+#'
+#' @examples
+
 gettime <- function(mzml, i) {
   as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]$scanList$scan) == "cvParam"), function(x) {if(!"scan start time" %in% mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]][which(names(mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]]) == "value")]})))
 }
 
+#' Get MS Level of a ms scan within mzML object
+#'
+#' @param mzml list mzML object generated from `mzMLtoR` function
+#' @param i integer scan number
+#'
+#' @return integer representing the MS Level (1, 2, ... n)
+#' @export
+#'
+#' @examples
+
 getmslevel <- function(mzml, i) {
   as.integer(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]) == "cvParam"), function(x) {if(!"ms level" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]][[x]][which(names(mzml$mzML$run$spectrumList[[i]][[x]]) == "value")]})))
 }
+
+#' Get precursor ion of a ms scan within mzML object
+#'
+#' @param mzml list mzML object generated from `mzMLtoR` function
+#' @param i integer scan number
+#'
+#' @return numeric designating the precursor ion (or middle of the scan range for SWATCH or DIA), returns NULL if no precursor was selected
+#' @export
+#'
+#' @examples
 
 getprecursor <- function(mzml, i) {
   if (!"precursorList" %in% names(mzml$mzML$run$spectrumList[[i]])) {return(0)}
   as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]$precursorList$precursor$selectedIonList$selectedIon) == "cvParam"), function(x) {if(!"selected ion m/z" %in% mzml$mzML$run$spectrumList[[i]]$precursorList$precursor$selectedIonList$selectedIon[[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]]$precursorList$precursor$selectedIonList$selectedIon[[x]][which(names(mzml$mzML$run$spectrumList[[i]]$precursorList$precursor$selectedIonList$selectedIon[[x]]) == "value")]})))
 }
 
+#' Get polarity of a ms scan within mzML object
+#'
+#' @param mzml list mzML object generated from `mzMLtoR` function
+#' @param i integer scan number
+#'
+#' @return integer representing scan polarity (either 1 (positive) or -1 (negative))
+#' @export
+#'
+#' @examples
+#
 getcharge <- function(mzml, i) {
   do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]) == "cvParam"), function(x) {o <- NULL; if("positive scan" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {o <- 1}; if("negative scan" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {o <- -1}; o}))
 }
