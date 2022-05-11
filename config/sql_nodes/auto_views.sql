@@ -70,7 +70,7 @@ CREATE VIEW IF NOT EXISTS view_fragment_sources AS
 	SELECT 	
 		fragment_sources.fragment_id AS fragment_id, 
 			/* Direct use column 'fragment_id' from table 'fragment_sources'. */ 	
-		norm_generation_type.name AS generated_by, 
+		norm_generation_type.name AS generation_type, 
 			/* Normalized value column 'name' from table 'norm_generation_type'. */ 	
 		fragment_sources.citation AS citation 
 			/* Direct use column 'citation' from table 'fragment_sources'. */ 

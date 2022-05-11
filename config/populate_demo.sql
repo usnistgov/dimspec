@@ -76,7 +76,6 @@ DELETE FROM conversion_software_peaks_linkage;
 .import --csv --skip 1 config/data/demo/affiliations.csv affiliations
 .import --csv --skip 1 config/data/demo/contributors.csv contributors
 .import --csv --skip 1 config/data/demo/carrier_mix_collections.csv carrier_mix_collections
-.import --csv --skip 1 config/data/demo/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/demo/carrier_aliases.csv carrier_aliases
 .import --csv --skip 1 config/data/demo/additive_aliases.csv additive_aliases
 .import --csv --skip 1 config/data/demo/carrier_mixes.csv carrier_mixes
@@ -87,4 +86,5 @@ DELETE FROM conversion_software_peaks_linkage;
 .import --csv --skip 1 config/data/demo/conversion_software_peaks_linkage.csv conversion_software_peaks_linkage
 .import --csv --skip 1 config/data/demo/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/demo/samples.csv samples
+.import --csv --skip 1 config/data/demo/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/demo/norm_peak_confidence.csv norm_peak_confidence

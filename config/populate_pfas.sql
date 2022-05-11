@@ -75,15 +75,15 @@ DELETE FROM samples;
 .import --csv --skip 1 config/data/pfas/affiliations.csv affiliations
 .import --csv --skip 1 config/data/pfas/contributors.csv contributors
 .import --csv --skip 1 config/data/pfas/carrier_mix_collections.csv carrier_mix_collections
-.import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/pfas/carrier_aliases.csv carrier_aliases
 .import --csv --skip 1 config/data/pfas/additive_aliases.csv additive_aliases
 .import --csv --skip 1 config/data/pfas/carrier_mixes.csv carrier_mixes
 .import --csv --skip 1 config/data/pfas/carrier_additives.csv carrier_additives
 .import --csv --skip 1 config/data/pfas/compound_categories.csv compound_categories
-.import --csv --skip 1 config/data/pfas/norm_peak_confidence.csv norm_peak_confidence
 .import --csv --skip 1 config/data/pfas/compounds.csv compounds
 .import --csv --skip 1 config/data/pfas/compound_aliases.csv compound_aliases
 .import --csv --skip 1 config/data/pfas/conversion_software_peaks_linkage.csv conversion_software_peaks_linkage
 .import --csv --skip 1 config/data/pfas/conversion_software_settings.csv conversion_software_settings
 .import --csv --skip 1 config/data/pfas/samples.csv samples
+.import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
+.import --csv --skip 1 config/data/pfas/norm_peak_confidence.csv norm_peak_confidence
