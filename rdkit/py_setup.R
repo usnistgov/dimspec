@@ -554,3 +554,111 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
   if (!success) stop("Unable to set up RDKit.")
   if (exists("log_it")) log_fn("end", log_ns)
 }
+
+#' Create aliases for a molecule from RDKit
+#'
+#' Call this function to generate any number of machine-readable aliases from an
+#' identifier set. Given the `identifiers` and their `type`, RDKit will be
+#' polled for conversion functions to create a mol object. That mol object is
+#' then used to create machine-readable aliases in any number of supported
+#' formats. See the [RDKit Documentation](http://rdkit.org/docs/index.html) for
+#' options. The `type` argument is used to match against a "MolFromX" funtion,
+#' while the `aliases` argument is used to match against a "MolToX" function.
+#'
+#' At the time of authorship, RDK v2021.09.4 was in use, which contained the
+#' following options findable by this function: CMLBlock, CXSmarts, CXSmiles,
+#' FASTA, HELM, Inchi, InchiAndAuxInfo, InchiKey, JSON, MolBlock, PDBBlock,
+#' RandomSmilesVect, Sequence, Smarts, Smiles, TPLBlock, V3KMolBlock, XYZBlock.
+#'
+#' @note Both `type` and `aliases` are case insensitive.
+#' @note If `aliases` is set to NULL, all possible expressions (excluding those
+#'   with "File" in the name) are returned from RDKit, which will likely produce
+#'   NULL values and module ArgumentErrors.
+#'
+#' @inheritParams rdkit_active
+#'
+#' @param identifiers CHR vector of machine-readable molecule identifiers in a
+#'   format matching `type`
+#' @param type CHR scalar of the type of encoding to use for `identifiers`
+#'   (default: smiles)
+#' @param aliases CHR vector of aliases to produce (default: c("inchi",
+#'   "inchikey"))
+#'
+#' @return data.frame object containing the aliases and the original identifiers
+#' @export
+#'
+rdkit_mol_aliases <- function(identifiers, type = "smiles", aliases = c("inchi", "inchikey"), rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
+  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
+  can_calc <- rdkit_active(
+    rdkit_ref = rdkit_ref,
+    log_ns = log_ns,
+    make_if_not = make_if_not
+  )
+  if (can_calc) {
+    rdk <- eval(sym(rdkit_ref))
+    to_mol <- grep(paste0("^MolFrom", type, "$"),
+                   names(rdk$Chem),
+                   ignore.case = TRUE,
+                   value = TRUE)
+    if (length(to_mol) == 0) {
+      msg <- sprintf("Could not identify a function to create a mol structure from type = '%s'.", type)
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      return(NULL)
+    }
+    mols <- lapply(identifiers,
+                   function(x) {
+                     rdk$Chem[[to_mol]](x)
+                   })
+    if (is.null(aliases)) {
+      aliases <- grep("^MolTo", names(rdk$Chem), value = TRUE)
+      aliases <- gsub("^MolTo", "", aliases)
+    } else {
+      aliases <- grep(paste0("^MolTo", aliases, "$"),
+                      names(rdk$Chem),
+                      ignore.case = TRUE,
+                      value = TRUE)
+    }
+    aliases <- aliases[-grep("file", aliases, ignore.case = TRUE)]
+    if (length(aliases) == 0) {
+      msg <- sprintf("Could not identify a function to create an identifer as '%s'.", from_mol)
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      return(NULL)
+    }
+    out <- lapply(mols,
+                  function(x) {
+                    lapply(aliases,
+                           function(y) {
+                             res <- suppressWarnings(try(rdk$Chem[[y]](x)))
+                             if (inherits(res, "try-error")) {
+                               return(NULL)
+                             } else {
+                               return(res)
+                             }
+                           }) %>%
+                      setNames(aliases)
+                  })
+    out <- out %>%
+      bind_rows() %>%
+      select(-which(tolower(names(.)) == type)) %>%
+      mutate(original = identifiers) %>%
+      rename("{type}" := "original") %>%
+      select(any_of(c(type, aliases)))
+    return(out)
+  } else {
+    msg <- sprintf("RDKit is not available at '%s'.", rdkit_ref)
+    if (logging) {
+      log_it("warn", msg, log_ns)
+    } else {
+      warning(msg)
+    }
+    return(NULL)
+  }
+}
