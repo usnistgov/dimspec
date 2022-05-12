@@ -96,6 +96,7 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,1,0,1,compounddata,SOURCE_TYPE,compounds,source_type,norm_source_types,,
 1,0,0,0,1,compounddata,FIXEDMASS,compounds,fixedmass,,,
 1,0,0,0,1,compounddata,NETCHARGE,compounds,netcharge,,,
+1,0,0,0,1,compounddata,FORMULA,compounds,formula,,,
 0,0,1,0,0,,,compounds,inspected_by,contributors,,id from contributors
 0,0,1,0,0,,,compounds,inspected_on,,,default current timestamp
 1,0,0,0,1,annotation,fragment_mz,fragments,mz,,,

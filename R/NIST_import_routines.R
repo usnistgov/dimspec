@@ -314,7 +314,7 @@ full_import <- function(import_object                  = NULL,
     # - import/resolve fragments
     fragments <- resolve_fragments(obj = obj,
                                    sample_id = sample_id,
-                                   fragments_in = fragmens_in,
+                                   fragments_in = fragments_in,
                                    fragments_table = fragments_table,
                                    fragments_sources_table = fragments_sources_table,
                                    db_conn = db_conn,
@@ -345,6 +345,7 @@ full_import <- function(import_object                  = NULL,
 #'   is added before the call getting the ID completes.
 #'   
 #' @inheritParams build_db_action
+#' @inheritParams verify_import_columns
 #'
 #' @param db_table CHR scalar name of the database table being modified
 #' @param values named vector of the values being added, passed to
@@ -358,7 +359,7 @@ full_import <- function(import_object                  = NULL,
 #'
 #' @return
 #' @export
-add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, ignore = FALSE, log_ns = "db") {
+add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, require_all = TRUE, ignore = FALSE, log_ns = "db") {
   log_it("info", glue("Adding to or identifying a record in table '{db_table}'."), log_ns)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -369,6 +370,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
         values        = list(c("n>=", 1)),
         db_conn       = list(c("length", 1)),
         ensure_unique = list(c("mode", "logical"), c("length", 1)),
+        require_all   = list(c("mode", "logical"), c("length", 1)),
         ignore        = list(c("mode", "logical"), c("length", 1)),
         log_ns        = list(c("mode", "character"), c("length", 1))
       ),
@@ -380,10 +382,11 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
   stopifnot(active_connection(db_conn))
   # Make sure required values are present
   values <- verify_import_columns(
-    db_table   = db_table,
-    values     = values,
-    names_only = FALSE,
-    db_conn    = con
+    db_table    = db_table,
+    values      = values,
+    names_only  = FALSE,
+    require_all = require_all,
+    db_conn     = db_conn
   )
   if (ensure_unique) {
     # Check for an existing match
@@ -477,14 +480,63 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
   }
 }
 
-resolve_compound <- function(obj,
-                             fragments_in = "fragments",
-                             aliases = NULL,
-                             category = NULL,
-                             import_map = IMPORT_MAP,
-                             db_conn = con,
-                             log_ns = "db") {
+#' Title
+#'
+#' @inheritParams add_or_get_id
+#' @inheritParams map_import
+#'
+#' @param obj 
+#' @param compounds_in 
+#' @param compounds_table 
+#' @param category 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+resolve_compounds <- function(obj,
+                              compounds_in = "compounddata",
+                              compounds_table = "compounds",
+                              category = NULL,
+                              require_all = FALSE,
+                              import_map = IMPORT_MAP,
+                              ensure_unique = TRUE,
+                              db_conn = con,
+                              log_ns = "db") {
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(obj, compounds_in, compounds_table, import_map, ensure_unique, db_conn, log_ns),
+      conditions = list(
+        obj             = list(c("mode", "list")),
+        compounds_in    = list(c("mode", "character"), c("length", 1)),
+        compounds_table = list(c("mode", "character"), c("length", 1)),
+        import_map      = list(c("mode", "data.frame")),
+        ensure_unique   = list(c("mode", "logical"), c("length", 1)),
+        db_conn         = list(c("length", 1)),
+        log_ns          = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
+  compound_values <- map_import(
+    import_obj = obj,
+    aspect = compounds_table,
+    import_map = import_map
+  )
   
+  compound_ids <- add_or_get_id(
+    db_table = compounds_table,
+    values = compound_values %>%
+      select(any_of("name", "formula", )),
+    db_conn = db_conn,
+    ensure_unique = ensure_unique,
+    require_all = require_all,
+    log_ns = log_ns
+  )
+  return(compound_ids)
 }
 
 resolve_compound_fragments <- function(values = NULL,
@@ -710,7 +762,9 @@ resolve_fragments <- function(obj,
                               fragments_sources_table = "fragment_sources",
                               citation_info_in = "fragment_citation",
                               inspection_info_in = "fragment_inspections",
-                              fragment_aliases = "fragment_aliases",
+                              inspection_table = "fragment_inspections",
+                              fragment_aliases_in = "fragment_aliases",
+                              fragment_aliases_table = "fragment_aliases",
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -721,12 +775,16 @@ resolve_fragments <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, db_conn, log_ns),
+      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, citation_info_in, inspection_info_in, fragment_aliases_in, fragment_aliases_table, db_conn, log_ns),
       conditions = list(
         obj                     = list(c("mode", "list")),
         fragments_in            = list(c("mode", "character"), c("length", 1)),
         fragments_table         = list(c("mode", "character"), c("length", 1)),
         fragments_sources_table = list(c("mode", "character"), c("length", 1)),
+        citation_info_in        = list(c("mode", "character"), c("length", 1)),
+        inspection_info_in      = list(c("mode", "character"), c("length", 1)),
+        fragment_aliases_in     = list(c("mode", "character"), c("length", 1)),
+        fragment_aliases_table  = list(c("mode", "character"), c("length", 1)),
         db_conn                 = list(c("length", 1)),
         log_ns                  = list(c("mode", "character"), c("length", 1))
       )
@@ -762,13 +820,13 @@ resolve_fragments <- function(obj,
       function(x) {
         resolve_normalization_value(
           this_value = x,
-          db_table = ref_table_from_map(fragments_sources_table),
+          db_table = ref_table_from_map(fragments_sources_table, "generation_type"),
           db_conn = db_conn,
           log_ns = log_ns
         )
       }
     )
-  }
+  } %>% unname()
   existing_fragments <- dataframe_match(
     match_criteria = fragment_values,
     table_names = fragments_table,
@@ -843,14 +901,52 @@ resolve_fragments <- function(obj,
   )
   
   # Add inspection information
+  inspection_info <- get_component(obj, inspection_info_in)[[1]]
+  if (length(inspection_info) > 0) {
+    inspection_values <- inspection_info %>%
+      bind_rows() %>%
+      left_join(fragment_values) %>%
+      select(any_of(dbListFields(db_conn, inspection_table)))
+    res <- try(
+      build_db_action(
+        action = "insert",
+        table_name = inspection_table,
+        values = inspection_values,
+        ignore = TRUE,
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+    )
+    if (inherits(res, "try-error")) {
+      log_it("warn", glue::glue("There was an issue adding records to table '{inspection_table}'"), log_ns)
+    }
+  }
   
   # Add fragment aliases, if any. Assume additional fields are 
-  if (!is.null(fragment_aliases)) {
-    
+  fragment_aliases <- get_component(obj, fragment_aliases_in)[[1]]
+  if (length(fragment_aliases) == 0) {
+    if (INFORMATICS && USE_RDKIT) {
+      get_aliases <- c("InChI", "InChIKey")
+    }
   } else {
-    
+    fragment_alias_values <- fragment_aliases %>%
+      bind_rows() %>%
+      left_join(fragment_values) %>%
+      select(any_of(dbListFields(db_conn, fragment_aliases_table)))
+    res <- try(
+      build_db_action(
+        action = "insert",
+        table_name = fragment_aliases_table,
+        values = fragment_alias_values,
+        ignore = TRUE,
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+    )
+    if (inherits(res, "try-error")) {
+      log_it("warn", glue::glue("There was an issue adding records to table '{fragment_aliases_table}'"), log_ns)
+    }
   }
-  return(fragment_values$fragment_id)
 }
 
 #' Import software settings
@@ -2131,6 +2227,7 @@ resolve_peaks <- function(obj,
   peaks_values <- map_import(
     import_obj = obj,
     aspect = peaks_table,
+    fuzzy = TRUE,
     import_map = import_map
   )
   # Insert or identify software settings
@@ -2965,13 +3062,12 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
 #' @note The object used for `import_map` must be of a data.frame object that at
 #'   minimum includes names columns that includes import_category,
 #'   import_parameter, alias_lookup, and sql_normalization
+#'   
+#' @inheritParams resolve_normalization_value
 #'
 #' @param import_obj LIST object of values to import
 #' @param aspect CHR scalar of the import aspect (e.g. "sample") to map
 #' @param import_map data.frame object of the import map (e.g. from a CSV)
-#' @param case_sensitive LGL scalar of whether to match normalization values in
-#'   a case sensitive (TRUE, default) or case insensitive manner; passed to
-#'   [resolve_normalization_values]
 #' @param db_conn connection object (default: con)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
@@ -2983,6 +3079,7 @@ map_import <- function(import_obj,
                        aspect,
                        import_map,
                        case_sensitive = TRUE,
+                       fuzzy = FALSE,
                        db_conn = con,
                        log_ns = "db") {
   if (exists("verify_args")) {
@@ -2993,6 +3090,7 @@ map_import <- function(import_obj,
         aspect         = list(c("mode", "character"), c("length", 1)),
         import_map     = list(c("mode", "data.frame"), c("n>", 0)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
+        fuzzy          = list(c("mode", "logical"), c("length", 1)),
         db_conn        = list(c("length", 1)),
         log_ns         = list(c("mode", "character"), c("length", 1))
       )
@@ -3083,6 +3181,8 @@ map_import <- function(import_obj,
                     alias_id <- resolve_normalization_value(
                       this_value = this_val,
                       db_table = alias_in,
+                      case_sensitive = case_sensitive,
+                      fuzzy = fuzzy,
                       id_column = column_names[1],
                       db_conn = db_conn,
                       log_ns = log_ns
@@ -3101,6 +3201,7 @@ map_import <- function(import_obj,
                 this_value = this_val,
                 db_table = norm_by,
                 case_sensitive = case_sensitive,
+                fuzzy = fuzzy,
                 db_conn = db_conn,
                 log_ns = log_ns
               )
