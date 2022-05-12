@@ -769,6 +769,7 @@ resolve_fragments <- function(obj,
                               rdkit_ref = "rdkit",
                               rdkit_ns = "rdk",
                               rdkit_make_if_not = TRUE,
+                              rdkit_aliases = c("inchi", "inchikey"),
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -779,7 +780,10 @@ resolve_fragments <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, citation_info_in, inspection_info_in, generate_missing_aliases, fragment_aliases_in, fragment_aliases_table, db_conn, log_ns),
+      args       = list(obj, fragments_in, fragments_table, fragments_sources_table,
+                        citation_info_in, inspection_info_in, generate_missing_aliases,
+                        fragment_aliases_in, fragment_aliases_table, rdkit_ref, 
+                        rdkit_ns, rdkit_make_if_not, rdkit_aliases, db_conn, log_ns),
       conditions = list(
         obj                      = list(c("mode", "list")),
         fragments_in             = list(c("mode", "character"), c("length", 1)),
@@ -793,6 +797,7 @@ resolve_fragments <- function(obj,
         rdkit_ref                = list(c("mode", "character"), c("length", 1)),
         rdkit_ns                 = list(c("mode", "character"), c("length", 1)),
         rdkit_make_if_not        = list(c("mode", "logical"), c("length", 1)),
+        rdkit_aliases            = list(c("mode", "character"), c("n>=", 1)),
         db_conn                  = list(c("length", 1)),
         log_ns                   = list(c("mode", "character"), c("length", 1))
       )
@@ -938,7 +943,7 @@ resolve_fragments <- function(obj,
   # Add fragment aliases, if any. Assume the import object containing aliases is
   # in the form of a nested list or a dataframe that can be coerced to a list,
   # named for the SMILES string with components named for the type of alias as
-  # (e.g. list("1" = list("SMILES" = "[C-](F)C(F)(F)F", "INCHI" =
+  # (e.g. list(list("SMILES" = "F[C-](F)C(F)(F)F", "INCHI" =
   # "1S/C2F5/c3-1(4)2(5,6)7/q-1", "INCHIKEY" = "ADQIVSCGHADPRK-UHFFFAOYSA-N"))
   # Alias types listed in table norm_analyte_alias_references are supported;
   # others will be ignored.
@@ -949,7 +954,13 @@ resolve_fragments <- function(obj,
         if (exists("rdkit_active") && rdkit_active(rdkit_ref = rdkit_ref,
                                                    log_ns = rdkit_ns,
                                                    make_if_not = rdkit_make_if_not)) {
-        # TODO Use rdkit here to generate aliases
+        smiles <- fragment_values$smiles
+        fragment_alias_values <- rdkit_mol_aliases(identifiers = smiles,
+                                              type = "smiles",
+                                              aliases = rdkit_aliases,
+                                              rdkit_ref = rdkit_ref,
+                                              log_ns = rdkit_ns,
+                                              make_if_not = rdkit_make_if_not)
         } else {
           log_it("warn", "RDKit does not appear to be available for generation of fragment aliases", log_ns)
         }
@@ -966,9 +977,20 @@ resolve_fragments <- function(obj,
       }
     }
   } else {
-    fragment_alias_values <- fragment_aliases %>%
+    alias_references <- tbl(db_conn, "norm_analyte_alias_references") %>%
+      collect()
+    fragment_alias_values <- fragment_aliases[[1]] %>%
       bind_rows() %>%
-      left_join(fragment_values) %>%
+      left_join(fragment_values,
+                by = c("SMILES" = "smiles")) %>%
+      select(fragment_id, any_of(alias_references$name)) %>%
+      pivot_longer(cols = -fragment_id) %>%
+      left_join(alias_references %>%
+                  select(id, name)) %>%
+      filter(!is.na(id)) %>%
+      select(-name) %>%
+      rename("alias_type" = "id",
+             "alias" = "value") %>%
       select(any_of(dbListFields(db_conn, fragment_aliases_table)))
     res <- try(
       build_db_action(
@@ -2992,9 +3014,9 @@ verify_import_requirements <- function(obj,
 #'   `obj`.
 #'
 #' @param obj LIST of any length to be appended to
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Additional arguments passed to/from the ellipsis parameter of
 #'   calling functions. If named, names are preserved.
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return LIST object of length equal to `obj` plus additional named arguments
 #' @export
@@ -3002,7 +3024,7 @@ verify_import_requirements <- function(obj,
 #' @examples
 #' tack_on(list(a = 1:3), b = letters, c = rnorm(10))
 #' tack_on(list(a = 1:3))
-tack_on <- function(obj, log_ns = "db", ...) {
+tack_on <- function(obj, ..., log_ns = "db") {
   logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   addl_args <- list(...)
   if (any(names(addl_args) %in% names(obj))) {
