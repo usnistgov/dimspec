@@ -763,8 +763,12 @@ resolve_fragments <- function(obj,
                               citation_info_in = "fragment_citation",
                               inspection_info_in = "fragment_inspections",
                               inspection_table = "fragment_inspections",
+                              generate_missing_aliases = FALSE,
                               fragment_aliases_in = "fragment_aliases",
                               fragment_aliases_table = "fragment_aliases",
+                              rdkit_ref = "rdkit",
+                              rdkit_ns = "rdk",
+                              rdkit_make_if_not = TRUE,
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -775,18 +779,22 @@ resolve_fragments <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, citation_info_in, inspection_info_in, fragment_aliases_in, fragment_aliases_table, db_conn, log_ns),
+      args       = list(obj, fragments_in, fragments_table, fragments_sources_table, citation_info_in, inspection_info_in, generate_missing_aliases, fragment_aliases_in, fragment_aliases_table, db_conn, log_ns),
       conditions = list(
-        obj                     = list(c("mode", "list")),
-        fragments_in            = list(c("mode", "character"), c("length", 1)),
-        fragments_table         = list(c("mode", "character"), c("length", 1)),
-        fragments_sources_table = list(c("mode", "character"), c("length", 1)),
-        citation_info_in        = list(c("mode", "character"), c("length", 1)),
-        inspection_info_in      = list(c("mode", "character"), c("length", 1)),
-        fragment_aliases_in     = list(c("mode", "character"), c("length", 1)),
-        fragment_aliases_table  = list(c("mode", "character"), c("length", 1)),
-        db_conn                 = list(c("length", 1)),
-        log_ns                  = list(c("mode", "character"), c("length", 1))
+        obj                      = list(c("mode", "list")),
+        fragments_in             = list(c("mode", "character"), c("length", 1)),
+        fragments_table          = list(c("mode", "character"), c("length", 1)),
+        fragments_sources_table  = list(c("mode", "character"), c("length", 1)),
+        citation_info_in         = list(c("mode", "character"), c("length", 1)),
+        inspection_info_in       = list(c("mode", "character"), c("length", 1)),
+        generate_missing_aliases = list(c("mode", "logical"), c("length", 1)),
+        fragment_aliases_in      = list(c("mode", "character"), c("length", 1)),
+        fragment_aliases_table   = list(c("mode", "character"), c("length", 1)),
+        rdkit_ref                = list(c("mode", "character"), c("length", 1)),
+        rdkit_ns                 = list(c("mode", "character"), c("length", 1)),
+        rdkit_make_if_not        = list(c("mode", "logical"), c("length", 1)),
+        db_conn                  = list(c("length", 1)),
+        log_ns                   = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
@@ -866,42 +874,47 @@ resolve_fragments <- function(obj,
   }
   
   # Add fragment source information
-  all_annotation <- get_component(obj, fragments_in)[[1]]
-  for (name_i in names(all_annotation)) {
-    sql_name <- IMPORT_MAP %>%
-      filter(import_parameter == name_i) %>%
-      pull(sql_parameter)
-    if (length(sql_name) == 1) {
-      names(all_annotation)[names(all_annotation) == name_i] <- sql_name
-    } else if (length(sql_name) > 1) {
-      log_it("warn", 
-             glue::glue("Multiple SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
-             log_ns)
-    } else if (length(sql_name) == 0) {
-      log_it("warn", 
-             glue::glue("No SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
-             log_ns)
+  all_annotation <- get_component(obj, fragments_in)
+  if (length(all_annotation) > 0) {
+    all_annotation <- all_annotation[[1]]
+    if (citation_info_in %in% names(all_annotation)) {
+      for (name_i in names(all_annotation)) {
+        sql_name <- IMPORT_MAP %>%
+          filter(import_parameter == name_i) %>%
+          pull(sql_parameter)
+        if (length(sql_name) == 1) {
+          names(all_annotation)[names(all_annotation) == name_i] <- sql_name
+        } else if (length(sql_name) > 1) {
+          log_it("warn", 
+                 glue::glue("Multiple SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
+                 log_ns)
+        } else if (length(sql_name) == 0) {
+          log_it("warn", 
+                 glue::glue("No SQL fields are mapped to import field '{name_i}' in '{fragments_in}'"),
+                 log_ns)
+        }
+      }
+      fragment_values <- fragment_values %>%
+        left_join(all_annotation) %>%
+        mutate(generation_type = generation_type) %>%
+        rename("fragment_id" = "id")
+      generation_info <- fragment_values %>%
+        select(any_of(dbListFields(db_conn, fragments_sources_table)))
+      res <- try(
+        build_db_action(
+          action = "insert",
+          table_name = fragments_sources_table,
+          values = generation_info,
+          ignore = TRUE,
+          db_conn = db_conn,
+          log_ns = log_ns
+        )
+      )
     }
   }
-  fragment_values <- fragment_values %>%
-    left_join(all_annotation) %>%
-    mutate(generation_type = generation_type) %>%
-    rename("fragment_id" = "id")
-  generation_info <- fragment_values %>%
-    select(any_of(dbListFields(db_conn, fragments_sources_table)))
-  res <- try(
-    build_db_action(
-      action = "insert",
-      table_name = fragments_sources_table,
-      values = generation_info,
-      ignore = TRUE,
-      db_conn = db_conn,
-      log_ns = log_ns
-    )
-  )
   
   # Add inspection information
-  inspection_info <- get_component(obj, inspection_info_in)[[1]]
+  inspection_info <- get_component(obj, inspection_info_in)
   if (length(inspection_info) > 0) {
     inspection_values <- inspection_info %>%
       bind_rows() %>%
@@ -922,11 +935,35 @@ resolve_fragments <- function(obj,
     }
   }
   
-  # Add fragment aliases, if any. Assume additional fields are 
-  fragment_aliases <- get_component(obj, fragment_aliases_in)[[1]]
+  # Add fragment aliases, if any. Assume the import object containing aliases is
+  # in the form of a nested list or a dataframe that can be coerced to a list,
+  # named for the SMILES string with components named for the type of alias as
+  # (e.g. list("1" = list("SMILES" = "[C-](F)C(F)(F)F", "INCHI" =
+  # "1S/C2F5/c3-1(4)2(5,6)7/q-1", "INCHIKEY" = "ADQIVSCGHADPRK-UHFFFAOYSA-N"))
+  # Alias types listed in table norm_analyte_alias_references are supported;
+  # others will be ignored.
+  fragment_aliases <- get_component(obj, fragment_aliases_in)
   if (length(fragment_aliases) == 0) {
-    if (INFORMATICS && USE_RDKIT) {
-      get_aliases <- c("InChI", "InChIKey")
+    if (generate_missing_aliases) {
+      if (INFORMATICS && USE_RDKIT) {
+        if (exists("rdkit_active") && rdkit_active(rdkit_ref = rdkit_ref,
+                                                   log_ns = rdkit_ns,
+                                                   make_if_not = rdkit_make_if_not)) {
+        # TODO Use rdkit here to generate aliases
+        } else {
+          log_it("warn", "RDKit does not appear to be available for generation of fragment aliases", log_ns)
+        }
+      } else {
+        settings <- paste(
+          ifelse(INFORMATICS, "", "INFORMATICS"),
+          ifelse(!INFORMATICS & !USE_RDKIT, "and", ""),
+          ifelse(USE_RDKIT, "", "RDKit integration"),
+          ifelse(!INFORMATICS & !USE_RDKIT, "are", "is"),
+          "turned off."
+        ) %>%
+          stringr::str_squish()
+        log_it("warn", settings, log_ns)
+      }
     }
   } else {
     fragment_alias_values <- fragment_aliases %>%
