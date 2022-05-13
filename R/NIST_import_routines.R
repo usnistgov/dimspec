@@ -7,25 +7,93 @@ full_import <- function(import_object                  = NULL,
                         stop_if_missing_recommended    = TRUE,
                         ignore_extra                   = TRUE,
                         requirements_obj               = "import_requirements",
+                        method_in                      = "massspectrometry",
+                        ms_methods_table               = "ms_methods",
                         sample_info_in                 = "sample",
+                        sample_table                   = "samples",
                         sample_aliases                 = NULL,
-                        method_info_in                 = "massspectrometry",
-                        chrom_info_in                  = "chromatography",
-                        mobile_phases_in               = "chromatography",
-                        software_settings_in           = "msconvertsettings",
-                        date_format                    = "%Y-%m-%d %H:%M:%S",
-                        software_timestamp             = NULL,
                         generation_type                = NULL,
+                        generation_type_norm_table     = "norm_generation_type",
+                        mass_spec_in                   = "massspectrometry",
+                        chrom_spec_in                  = "chromatography",
+                        mobile_phases_in               = "chromatography",
+                        qc_method_in                   = "qcmethod",
+                        qc_method_table                = "qc_methods",
+                        qc_method_norm_table           = "norm_qc_methods_name",
+                        qc_references_in               = "source",
+                        qc_data_in                     = "qc",
+                        qc_data_table                  = "qc_data",
+                        carrier_mix_names              = NULL,
+                        id_mix_by                      = "^mp*[0-9]+",
+                        mix_collection_table           = "carrier_mix_collections",
+                        mobile_phase_props             = list(
+                          in_item = "chromatography",
+                          db_table = "mobile_phases",
+                          props = c(
+                            flow = "flow",
+                            flow_units = "flowunits",
+                            duration = "duration",
+                            duration_units = "durationunits"
+                          )
+                        ),
+                        carrier_props                  = list(
+                          db_table = "carrier_mixes",
+                          norm_by  = "norm_carriers",
+                          alias_in = "carrier_aliases",
+                          props    = c(
+                            id_by       = "solvent",
+                            fraction_by = "fraction"
+                          )
+                        ),
+                        additive_props                 = list(
+                          db_table = "carrier_additives",
+                          norm_by  = "norm_additives",
+                          alias_in = "additive_aliases",
+                          props    = c(
+                            id_by     = "add$",
+                            amount_by = "_amount",
+                            units_by  = "_units")
+                        ),
+                        exclude_values                 = c("none", "", NA),
                         peaks_in                       = "peak",
                         peaks_table                    = "peaks",
+                        software_timestamp             = NULL,
+                        software_settings_in           = "msconvertsettings",
+                        ms_data_in                     = "msdata",
+                        ms_data_table                  = "ms_data",
+                        unpack_spectra                 = FALSE,
+                        unpack_format                  = c("separated", "unzipped"),
+                        ms_spectra_table               = "ms_spectra",
+                        linkage_table                  = "conversion_software_peaks_linkage",
+                        settings_table                 = "conversion_software_settings",
+                        as_date_format                 = "%Y-%m-%d %H:%M:%S",
+                        format_checks                  = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
+                        min_datetime                   = "2000-01-01 00:00:00",
                         fragments_in                   = "annotation",
                         fragments_table                = "fragments",
                         fragments_sources_table        = "fragment_sources",
                         citation_info_in               = "fragment_citation",
+                        inspection_info_in             = "fragment_inspections",
+                        inspection_table               = "fragment_inspections",
+                        generate_missing_aliases       = TRUE,
+                        fragment_aliases_in            = "fragment_aliases",
+                        fragment_aliases_table         = "fragment_aliases",
+                        fragment_alias_type_norm_table = "norm_analyte_alias_references",
+                        inchi_prefix                   = "InChI=1S/",
+                        rdkit_ref                      = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
+                        rdkit_ns                       = "rdk",
+                        rdkit_make_if_not              = TRUE,
+                        rdkit_aliases                  = c("inchi", "inchikey"),
+                        mol_to_prefix                  = "MolTo",
+                        mol_from_prefix                = "MolFrom",
+                        type                           = "smiles",
+                        fuzzy                          = FALSE,
+                        case_sensitive                 = TRUE,
+                        ensure_unique                  = TRUE,
                         fragment_aliases               = NULL,
                         import_map                     = IMPORT_MAP,
                         log_ns                         = "db") {
-  # Check connection
+  # Check connection and requirements ----
   stopifnot(active_connection(db_conn))
   log_fn("start")
   if (all(is.null(file_name), is.null(obj))) {
@@ -155,7 +223,9 @@ full_import <- function(import_object                  = NULL,
   # Resolve contributor and build an internal contributor mapping so they don't
   # have to rely on fuzzy matching as the contributor provided in import files
   # may not end up being a value they use in the eventual contributors table
+  # map contributors ----
   map_contributors_to <- data.frame(provided = character(0), resolved = integer(0))
+  # software timestamps ----
   # Grab software timestamps to cut down on import chatter
   unique_software_settings <- get_uniques(import_object, software_settings_in)
   software_timestamps <- vector("list", length(import_object))
@@ -178,9 +248,11 @@ full_import <- function(import_object                  = NULL,
     unlist() %>%
     lubridate::as_datetime() %>%
     lubridate::ymd_hms() %>%
-    format(date_format)
+    format(as_date_format)
+  # loop through import object elements ----
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
+    # _ID contributor ----
     contributor <- obj[[sample_info_in]]$data_generator
     if (contributor %in% map_contributors_to$provided) {
       contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
@@ -197,17 +269,19 @@ full_import <- function(import_object                  = NULL,
           data.frame(provided = contributor, resolved = contributor_id)
         )
     }
+    # _Methods information ----
     # Method info is optional but heavily encouraged 
-    if (method_info_in %in% names(obj)) {
+    # __resolve method node ----
+    if (method_in %in% names(obj)) {
       ms_method_id <- resolve_method(obj,
-                                     method_in = method_info_in,
+                                     method_in = method_in,
                                      db_conn = db_conn,
                                      log_ns = log_ns)
     } else {
       ms_method_id <- NA
     }
     if (!is.na(ms_method_id)) {
-      # - instrument properties
+      # ___instrument properties ----
       tmp <- map_import(import_obj = obj,
                         aspect = "instrument_properties",
                         import_map = import_map)
@@ -229,25 +303,26 @@ full_import <- function(import_object                  = NULL,
                         # TODO consider removing in production
                         ignore = TRUE)
       )
-      # - ms_description
-      if (method_info_in %in% names(obj)) {
+      # ___mass spec descriptions ----
+      if (mass_spec_in %in% names(obj)) {
         resolve_description_NTAMRT(obj = obj,
                                    method_id = ms_method_id,
-                                   mass_spec_in = method_info_in,
+                                   mass_spec_in = mass_spec_in,
                                    type = "massspec",
                                    db_conn = db_conn,
                                    log_ns = log_ns)
       }
-      # - chromatography description
-      if (chrom_info_in %in% names(obj)) {
+      # ___chromatography descriptions ----
+      if (chrom_spec_in %in% names(obj)) {
         resolve_description_NTAMRT(obj = obj,
                                    method_id = ms_method_id,
-                                   chrom_spec_in = chrom_info_in,
+                                   chrom_spec_in = chrom_spec_in,
                                    type = "chromatography",
                                    db_conn = db_conn,
                                    log_ns = log_ns)
       }
     }
+    # _Sample information ----
     # Sample info is required
     # Conveniently carry forward resolved contributor
     if ("data_generator" %in% names(obj[[sample_info_in]]) &&
@@ -262,13 +337,21 @@ full_import <- function(import_object                  = NULL,
         match_criteria = list(id = contributor_id)
       )
     }
-    # - import samples
+    # __resolve sample node ----
+    # ___resolve sample ----
     sample_id <- resolve_sample(obj = obj,
                                 sample_in = sample_info_in,
+                                sample_table = sample_table,
+                                generation_type = generation_type,
+                                generation_type_norm_table = generation_type_norm_table,
                                 method_id = ms_method_id,
+                                import_map = import_map,
+                                ensure_unique = ensure_unique,
+                                fuzzy = fuzzy,
+                                case_sensitive = case_sensitive,
                                 db_conn = db_conn,
                                 log_ns = log_ns)
-    # - import sample aliases
+    # ___import sample aliases ----
     if (!is.null(sample_aliases)) {
       if (is.list(sample_aliases)) {
         if (length(names(sample_aliases)) == length(sample_aliases)) {
@@ -285,38 +368,77 @@ full_import <- function(import_object                  = NULL,
                                log_ns = log_ns)
       }
     }
-    # - import mobile phases
+    # _Mobile phase node ----
     resolve_mobile_phase_NTAMRT(obj = obj,
                                 method_id = ms_method_id,
+                                ms_methods_table = ms_methods_table,
                                 sample_id = sample_id,
+                                sample_table = sample_table,
+                                carrier_mix_names = carrier_mix_names,
+                                id_mix_by = id_mix_by,
+                                mix_collection_table = mix_collection_table,
+                                mobile_phase_props = mobile_phase_props,
+                                carrier_props = carrier_props,
+                                additive_props = additive_props,
+                                exclude_values = exclude_values,
                                 db_conn = db_conn,
                                 log_ns = log_ns)
-    # - import qc methods
+    # _QC node ----
+    # __QC methods ----
     resolve_qc_methods_NTAMRT(obj = obj,
                               method_id = ms_method_id,
+                              ms_methods_table = ms_methods_table,
                               sample_id = sample_id,
+                              sample_table = sample_table,
+                              qc_method_in = qc_method_in,
+                              qc_method_table = qc_method_table,
+                              qc_method_norm_table = qc_method_norm_table,
+                              qc_method_norm_reference = qc_method_norm_reference,
+                              qc_references_in = qc_references_in,
                               db_conn = db_conn,
                               log_ns = log_ns)
-    # - import qc data
+    # __QC data ----
     resolve_qc_data_NTAMRT(obj = obj,
                            sample_id = sample_id,
+                           qc_data_in = qc_data_in,
+                           qc_data_table = qc_data_table,
                            db_conn = db_conn,
                            log_ns = log_ns)
-    # - import peaks node (includes data)
+    # _Peaks node (includes data) ----
     peaks <- resolve_peaks(obj = obj,
                            sample_id = sample_id,
+                           peaks_table = peaks_table,
+                           software_settings_in = software_settings_in,
+                           ms_data_in = ms_data_in,
+                           ms_data_table = ms_data_table,
+                           unpack_spectra = unpack_spectra,
+                           unpack_format = unpack_format,
+                           ms_spectra_table = ms_spectra_table,
+                           linkage_table = linkage_table,
+                           settings_table = settings_table,
+                           as_date_format = as_date_format,
+                           format_checks = format_checks,
+                           min_datetime = min_datetime,
                            software_timestamp = software_timestamps[i],
                            db_conn = db_conn,
                            log_ns = log_ns)
     # WIP ----
-    # - import/resolve compounds
+    # _Compounds node ----
     # compounds <- resolve_compounds()
-    # - import/resolve fragments
+    # _Fagments node ----
     fragments <- resolve_fragments(obj = obj,
                                    sample_id = sample_id,
                                    fragments_in = fragments_in,
                                    fragments_table = fragments_table,
                                    fragments_sources_table = fragments_sources_table,
+                                   generation_type = generation_type,
+                                   citation_info_in = citation_info_in,
+                                   inspection_info_in = inspection_info_in,
+                                   inspection_table = inspection_table,
+                                   fragment_aliases_in = fragment_aliases_in,
+                                   fragment_aliases_table = fragment_aliases_table,
+                                   fragment_alias_type_norm_table = fragment_alias_type_norm_table,
+                                   generate_missing_aliases = generate_missing_aliases,
                                    db_conn = db_conn,
                                    log_ns = log_ns)
     # - build peak/fragment/compound connection
@@ -754,6 +876,39 @@ resolve_compound_fragments <- function(values = NULL,
   }
 }
 
+#' Resolve fagments in an import
+#' 
+#' Call this function as part of an import routine to resolve the fragments node.
+#' 
+#' @note This function is called as part of [full_import]
+#' 
+#' @inheritParams rdkit_mol_aliases
+#' @inheritParams map_import
+#' @inheritParams 
+#'
+#' @param obj 
+#' @param sample_id 
+#' @param generation_type 
+#' @param fragments_in 
+#' @param fragments_table 
+#' @param fragments_sources_table 
+#' @param citation_info_in 
+#' @param inspection_info_in 
+#' @param inspection_table 
+#' @param generate_missing_aliases 
+#' @param fragment_aliases_in 
+#' @param fragment_aliases_table 
+#' @param fragment_alias_type_norm_table 
+#' @param inchi_prefix 
+#' @param rdkit_ref 
+#' @param rdkit_ns 
+#' @param rdkit_make_if_not 
+#' @param rdkit_aliases 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 resolve_fragments <- function(obj,
                               sample_id = NULL,
                               generation_type = NULL,
@@ -772,6 +927,9 @@ resolve_fragments <- function(obj,
                               rdkit_ns = "rdk",
                               rdkit_make_if_not = TRUE,
                               rdkit_aliases = c("inchi", "inchikey"),
+                              mol_to_prefix = "MolTo",
+                              mol_from_prefix = "MolFrom",
+                              type = "smiles",
                               import_map = IMPORT_MAP,
                               db_conn = con,
                               log_ns = "db") {
@@ -786,7 +944,7 @@ resolve_fragments <- function(obj,
                         fragments_in, fragments_table, fragments_sources_table,
                         citation_info_in, inspection_info_in,
                         generate_missing_aliases, fragment_aliases_in, fragment_aliases_table, fragment_alias_type_norm_table,
-                        rdkit_ref, rdkit_ns, rdkit_make_if_not, 
+                        rdkit_ref, rdkit_ns, rdkit_make_if_not, mol_to_prefix, mol_from_prefix, type,
                         db_conn, log_ns),
       conditions = list(
         obj                            = list(c("mode", "list")),
@@ -802,12 +960,16 @@ resolve_fragments <- function(obj,
         rdkit_ref                      = list(c("mode", "character"), c("length", 1)),
         rdkit_ns                       = list(c("mode", "character"), c("length", 1)),
         rdkit_make_if_not              = list(c("mode", "logical"), c("length", 1)),
+        mol_to_prefix                  = list(c("mode", "character"), c("length", 1)),
+        mol_from_prefix                = list(c("mode", "character"), c("length", 1)),
+        type                           = list(c("mode", "character"), c("length", 1)),
         db_conn                        = list(c("length", 1)),
         log_ns                         = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
   }
+  stopifnot(active_connection(db_conn = db_conn))
   if (!is.null(rdkit_aliases)) {
     stopifnot(is.character(rdkit_aliases), length(rdkit_aliases) > 0)
   }
@@ -879,7 +1041,8 @@ resolve_fragments <- function(obj,
         and_or = "AND",
         db_conn = db_conn,
         log_ns = log_ns
-      )
+      ) %>%
+        mutate(radical = as.logical(as.numeric(radical)))
     }
   } else {
     fragment_values <- existing_fragments
@@ -925,7 +1088,10 @@ resolve_fragments <- function(obj,
     }
   }
   
-  # Add inspection information
+  # Add inspection information Inspection information should be coercible to a
+  # data frame (that is, list objects must be of the same length) and have at
+  # least one identifier name that matches a column in fragment_values (ideally:
+  # "smiles") in order for the join to succeed.
   inspection_info <- get_component(obj, inspection_info_in)
   if (length(inspection_info) > 0) {
     inspection_values <- inspection_info %>%
@@ -981,15 +1147,19 @@ resolve_fragments <- function(obj,
         log_it("warn", settings, log_ns)
       }
     } else {
-      fa_names <- dbListFields(con, fragment_aliases_table)
-      fragment_alias_values <- vector("list", rep("scrub", length(fa_names)))
+      fragment_alias_values <- list(
+        smiles = NA,
+        fragment_id = NA
+      )
     }
   } else {
     fragment_alias_values <- fragment_aliases[[1]]
+    if (!any(names(fragment_values)) %in% names(fragment_alias_values)) {
+      log_it("warn", "Joining aliases requires matching names between supplied fragment aliases and a column in supplied fragments. No aliases will be added.", log_ns)
+    }
   }
   fragment_alias_values <- fragment_alias_values %>%
     bind_rows() %>%
-    filter(!if_any(everything(), ~ .x == "scrub")) %>%
     mutate(across(matches("^inchi$", ignore.case = TRUE),
                   ~ ifelse(test = grepl(inchi_prefix, .x),
                            yes = .x,
@@ -1001,6 +1171,7 @@ resolve_fragments <- function(obj,
                     replacement = gsub("InChI=", "", inchi_prefix)))
     ) %>%
     left_join(fragment_values) %>%
+    filter(!is.na(fragment_id)) %>%
     select(1:fragment_id) %>%
     pivot_longer(col = -fragment_id) %>%
     setNames(dbListFields(db_conn, fragment_aliases_table)) %>%
@@ -1016,6 +1187,7 @@ resolve_fragments <- function(obj,
         action = "insert",
         table_name = fragment_aliases_table,
         values = fragment_alias_values,
+        # TODO consider removing in production and restrict to unique at the table level
         ignore = TRUE,
         db_conn = db_conn,
         log_ns = log_ns
@@ -1031,6 +1203,8 @@ resolve_fragments <- function(obj,
 #'
 #' Part of the standard import pipeline, adding rows to the
 #' `conversion_software_settings` table with a given sample id.
+#' 
+#' @note This function is called as part of [full_import]
 #'
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
@@ -1167,7 +1341,7 @@ resolve_software_settings_NTAMRT <- function(obj,
 #' [resolve_software_settings_NTAMRT] to insert records into and get the proper
 #' conversion software linkage id from tables "conversion_software_settings" and
 #' "conversion_software_linkage" if appropriate.
-#' 
+#'
 #' @note This function is called as part of [full_import]
 #'
 #' @inheritParams add_or_get_id
@@ -1175,10 +1349,18 @@ resolve_software_settings_NTAMRT <- function(obj,
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_id INT scalar of the associated ms_methods record id
-#' @param generation_type CHR scalar of the type of data generated for this
-#'   sample (e.g. default: "empirical" or "in silico")
 #' @param sample_in CHR scalar of the import object name storing sample data
 #'   (default: "sample")
+#' @param sample_table CHR scalar name of the database table holding sample
+#'   information (default: "samples")
+#' @param generation_type CHR scalar of the type of data generated for this
+#'   sample (e.g. "empirical" or "in silico"). The default (NULL) will assign
+#'   based on `generation_type_default`; any other value will override the
+#'   default value and be checked against values in `geneation_type_norm_table`
+#' @param generation_type_default CHR scalar naming the default data generation
+#'   type (default: "empirical")
+#' @param generation_type_norm_table CHR scalar name of the database table
+#'   normalizing sample generation type (default: "empirical")
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to samples as necessary for
 #'   workflow resolution, can be used to pass defaults or additional values.
@@ -1188,24 +1370,29 @@ resolve_software_settings_NTAMRT <- function(obj,
 resolve_sample <- function(obj,
                            db_conn = con,
                            method_id = NULL,
-                           generation_type = "empirical",
                            sample_in = "sample",
-                           db_table = "samples",
+                           sample_table = "samples",
+                           generation_type = NULL,
+                           generation_type_default = "empirical",
+                           generation_type_norm_table = "norm_generation_type",
                            import_map = IMPORT_MAP,
                            ensure_unique = TRUE,
+                           fuzzy = FALSE,
+                           case_sensitive = TRUE,
                            log_ns = "db",
                            ...) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, db_conn, sample_in, db_table, ensure_unique, log_ns),
+      args       = list(obj, db_conn, sample_in, sample_table, generation_type_norm_table, ensure_unique, log_ns),
       conditions = list(
-        obj                  = list(c("n>=", 1)),
-        db_conn              = list(c("length", 1)),
-        sample_in            = list(c("mode", "character"), c("length", 1)),
-        db_table             = list(c("mode", "character"), c("length", 1)),
-        ensure_unique        = list(c("mode", "logical"), c("length", 1)),
-        log_ns               = list(c("mode", "character"), c("length", 1))
+        obj                        = list(c("n>=", 1)),
+        db_conn                    = list(c("length", 1)),
+        sample_in                  = list(c("mode", "character"), c("length", 1)),
+        sample_table               = list(c("mode", "character"), c("length", 1)),
+        generation_type_norm_table = list(c("mode", "character"), c("length", 1)),
+        ensure_unique              = list(c("mode", "logical"), c("length", 1)),
+        log_ns                     = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
@@ -1213,17 +1400,24 @@ resolve_sample <- function(obj,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (!is.null(method_id)) stopifnot(method_id == as.integer(method_id), length(method_id) == 1)
+  if (is.null(generation_type)) {
+    generation_type <- generation_type_default
+  }
   log_fn("start")
   log_it("info", "Preparing sample import.", log_ns)
   sample_values <- map_import(
     import_obj = obj,
-    aspect = db_table,
+    aspect = sample_table,
+    fuzzy = fuzzy,
+    case_sensitive = case_sensitive,
     import_map = IMPORT_MAP
   ) %>%
     tack_on(
       ms_methods_id = method_id,
       generation_type = resolve_normalization_value(this_value = generation_type,
-                                                    db_table = "norm_generation_type",
+                                                    db_table = generation_type_norm_table,
+                                                    case_sensitive = case_sensitive,
+                                                    fuzzy = fuzzy,
                                                     db_conn = db_conn,
                                                     log_ns = log_ns)
     ) %>%
@@ -1237,7 +1431,10 @@ resolve_sample <- function(obj,
     sample_values$generated_on <- starttime
   }
   sample_values <- sample_values %>%
-    verify_import_columns(db_table, db_conn = db_conn)
+    verify_import_columns(
+      db_table = sample_table,
+      db_conn = db_conn
+    )
   is_single_record <- all(unlist(lapply(sample_values, length)) < 2)
   log_it("info", glue("Sample value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
   if (!is_single_record) {
@@ -1245,7 +1442,7 @@ resolve_sample <- function(obj,
   }
   sample_id <- try(
     add_or_get_id(
-      db_table = "samples",
+      db_table = sample_table,
       values   = sample_values,
       db_conn  = db_conn,
       ignore   = FALSE,
@@ -1332,11 +1529,14 @@ resolve_sample_aliases <- function(sample_id,
 #' @inheritParams add_or_get_id
 #' @inheritParams qc_result
 #' @inheritParams map_import
+#' @inheritParams resolve_qc_methods_NTAMRT
+#' @inheritParams resolve_qc_data_NTAMRT
+#' @inheritParams qc_result
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_in CHR scalar name of the `obj` list containing method
 #'   information
-#' @param db_table CHR scalar name of the database table containing method
+#' @param ms_methods_table CHR scalar name of the database table containing method
 #'   information
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to "ms_methods" as necessary
@@ -1347,12 +1547,14 @@ resolve_sample_aliases <- function(sample_id,
 #'   
 resolve_method <- function(obj,
                            method_in = "massspectrometry",
-                           db_table = "ms_methods",
+                           ms_methods_table = "ms_methods",
                            db_conn = con,
                            ensure_unique = TRUE,
                            log_ns = "db",
-                           qc_in = "qc",
+                           qc_data_in = "qc",
+                           qc_data_table = "qc_data",
                            qc_method_in = "qcmethod",
+                           qc_method_table = "qc_methods",
                            search_text_in = "name",
                            search_text = "QC Method Used",
                            value_in = "value",
@@ -1365,11 +1567,11 @@ resolve_method <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, method_in, db_table, db_conn, ensure_unique, log_ns),
+      args       = list(obj, method_in, ms_methods_table, db_conn, ensure_unique, log_ns),
       conditions = list(
         obj           = list(c("n>=", 1)),
         method_in     = list(c("mode", "character"), c("length", 1)),
-        db_table      = list(c("mode", "character"), c("length", 1)),
+        ms_methods_table      = list(c("mode", "character"), c("length", 1)),
         db_conn       = list(c("length", 1)),
         ensure_unique = list(c("mode", "logical"), c("length", 1)),
         log_ns        = list(c("mode", "character"), c("length", 1))
@@ -1389,21 +1591,21 @@ resolve_method <- function(obj,
   log_it("info", "Preparing sample import.", log_ns)
   ms_method_values <- map_import(
     import_obj = obj,
-    aspect = db_table,
+    aspect = ms_methods_table,
     import_map = import_map,
     log_ns = log_ns
   ) %>%
     tack_on(
       has_qc_method = qc_result(
         obj = obj,
-        qc_in = qc_in,
+        qc_data_in = qc_data_in,
         qc_method_in = qc_method_in,
         search_text_in = search_text_in,
         search_text = search_text,
         value_in = value_in)
     ) %>%
     tack_on(...) %>%
-    verify_import_columns(db_table = db_table,
+    verify_import_columns(db_table = ms_methods_table,
                           db_conn = db_conn,
                           log_ns = log_ns)
   is_single_record <- all(unlist(lapply(ms_method_values, length)) < 2)
@@ -1417,7 +1619,7 @@ resolve_method <- function(obj,
   # Insert method if appropriate
   ms_method_id <- try(
     add_or_get_id(
-      db_table      = "ms_methods",
+      db_table  = ms_methods_table,
       values        = ms_method_values,
       db_conn       = db_conn,
       ensure_unique = ensure_unique
@@ -1645,9 +1847,9 @@ resolve_description_NTAMRT <- function(obj,
 #'   collections, this is the main piece of connectivity pulling together the
 #'   descriptions and should only be changed to match different import naming
 #'   schemes
-#' @param methods_table CHR scalar name of the methods table (default:
+#' @param ms_methods_table CHR scalar name of the methods table (default:
 #'   "ms_methods")
-#' @param samples_table CHR scalar name of the methods table (default:
+#' @param sample_table CHR scalar name of the methods table (default:
 #'   "samples")
 #' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
 #' @param mix_collection_table CHR scalar name of the mix collections table
@@ -1692,8 +1894,8 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                                         sample_id,
                                         carrier_mix_names = NULL,
                                         id_mix_by = "^mp*[0-9]+",
-                                        methods_table = "ms_methods",
-                                        samples_table = "samples",
+                                        ms_methods_table = "ms_methods",
+                                        sample_table = "samples",
                                         db_conn = con,
                                         mix_collection_table = "carrier_mix_collections",
                                         mobile_phase_props = list(
@@ -1732,12 +1934,12 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     active_connection(db_conn),
     as.integer(method_id) == method_id,
     check_for_value(values = method_id,
-                    db_table = methods_table,
+                    db_table = ms_methods_table,
                     db_column = "id",
                     db_conn = db_conn)$exists,
     as.integer(sample_id) == sample_id,
     check_for_value(values = sample_id,
-                    db_table = samples_table,
+                    db_table = sample_table,
                     db_column = "id",
                     db_conn = db_conn)$exists,
     is.list(obj)
@@ -2374,9 +2576,9 @@ resolve_peaks <- function(obj,
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
 #' @param qc_method_in CHR scalar of the name in `obj` that contains QC method
 #'   check information (default: "qcmethod")
-#' @param db_table CHR scalar of the database table name holding QC method check
+#' @param qc_method_table CHR scalar of the database table name holding QC method check
 #'   information (default: "qc_methods")
-#' @param reference_in CHR scalar of the name in `obj[[qc_method_in]]` that
+#' @param qc_references_in CHR scalar of the name in `obj[[qc_method_in]]` that
 #'   contains the reference or citation for the QC protocol (default: "source")
 #'
 #' @return None, executes actions on the database
@@ -2386,8 +2588,12 @@ resolve_qc_methods_NTAMRT <- function(obj,
                                       method_id,
                                       sample_id,
                                       qc_method_in = "qcmethod",
-                                      db_table = "qc_methods",
-                                      reference_in = "source",
+                                      qc_method_table = "qc_methods",
+                                      qc_method_norm_table = "norm_qc_methods_name",
+                                      qc_method_norm_reference = "norm_qc_methods_reference",
+                                      qc_references_in = "source",
+                                      ms_methods_table = "ms_methods",
+                                      sample_table = "samples",
                                       db_conn = con,
                                       log_ns = "db") {
   # Check connection
@@ -2395,17 +2601,17 @@ resolve_qc_methods_NTAMRT <- function(obj,
     active_connection(db_conn),
     as.integer(method_id) == method_id,
     check_for_value(values = method_id,
-                    db_table = "ms_methods",
+                    db_table = ms_methods_table,
                     db_column = "id",
                     db_conn = db_conn)$exists,
     check_for_value(values = sample_id,
-                    db_table = "samples",
+                    db_table = sample_table,
                     db_column = "id",
                     db_conn = db_conn)$exists
   )
   obj <- get_component(obj, qc_method_in)[[1]]
   values <- obj %>%
-    rename(c("reference" = !!reference_in)) %>%
+    rename(c("reference" = !!qc_references_in)) %>%
     mutate(
       ms_methods_id = method_id,
       sample_id = sample_id,
@@ -2414,7 +2620,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
         function(x) {
           resolve_normalization_value(
             this_value = x,
-            db_table = "norm_qc_methods_name",
+            db_table = qc_method_norm_table,
             db_conn = db_conn,
             log_ns = log_ns
           )
@@ -2429,7 +2635,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
                            function(x) {
                              resolve_normalization_value(
                                this_value = x,
-                               db_table = "norm_qc_methods_reference",
+                               db_table = qc_method_norm_reference,
                                db_conn = db_conn,
                                log_ns = log_ns
                              )
@@ -2438,13 +2644,13 @@ resolve_qc_methods_NTAMRT <- function(obj,
     )
   res <- try(
     build_db_action(action = "insert",
-                    table_name = db_table,
+                    table_name = qc_method_table,
                     db_conn = db_conn,
                     values = values,
                     log_ns = log_ns)
   )
   if (inherits(res, "try-error")) {
-    msg <- glue::glue('There was an issue adding records to table "{db_table}".')
+    msg <- glue::glue('There was an issue adding records to table "{qc_method_table}".')
     log_it("error", msg)
     stop(msg)
   }
@@ -2463,13 +2669,18 @@ resolve_qc_methods_NTAMRT <- function(obj,
 #' @inheritParams get_component
 #'
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#' @param qc_data_in CHR scalar name of the component in `obj` containing QC
+#'   data (default: "qc")
+#' @param qc_data_table CHR scalar name of the database table holding QC data
+#'   (default: "qc_data")
 #'
 #' @return None, executes actions on the database
 #' @export
 #' 
 resolve_qc_data_NTAMRT <- function(obj,
                                    sample_id,
-                                   obj_component = "qc",
+                                   qc_data_in = "qc",
+                                   qc_data_table = "qc_data",
                                    db_conn = con,
                                    log_ns = "db") {
   # Argument validation relies on verify_args
@@ -2486,7 +2697,7 @@ resolve_qc_data_NTAMRT <- function(obj,
     )
     stopifnot(arg_check$valid)
   }
-  obj <- get_component(obj, obj_component)[[1]]
+  obj <- get_component(obj, qc_data_in)[[1]]
   # Check connection
   # Sanity check that sample_id exists
   stopifnot(
@@ -2507,13 +2718,13 @@ resolve_qc_data_NTAMRT <- function(obj,
   res <- try(
     build_db_action(
       action = "insert",
-      table_name = "qc_data",
+      table_name = qc_data_table,
       db_conn = db_conn,
       values = values
     )
   )
   if (inherits(res, "try-error")) {
-    msg <- 'There was an issue adding records to table "qc_data".'
+    msg <- glue::glue('There was an issue adding records to table "{qc_data_table}".')
     log_it("error", msg)
     return(res)
   }
@@ -3325,7 +3536,7 @@ map_import <- function(import_obj,
 #' method attached.
 #'
 #' @param obj LIST import object of a single import file
-#' @param qc_in CHR scalar name of an item in `obj` containing QC information
+#' @param qc_data_in CHR scalar name of an item in `obj` containing QC information
 #'   (default: "qc")
 #' @param qc_method_in CHR scalar name of an item in `obj` containing QC method
 #'   results as a data.frame object of the form `data.frame(name = character(0),
@@ -3343,17 +3554,17 @@ map_import <- function(import_obj,
 #' @examples
 #' qc_result(list(qc = list(letters), qcmethod = data.frame(name = "QC Method Used", value = TRUE)))
 qc_result <- function(obj,
-                      qc_in = "qc",
+                      qc_data_in = "qc",
                       qc_method_in = "qcmethod",
                       search_text_in = "name",
                       search_text = "QC Method Used",
                       value_in = "value") {
   stopifnot(
-    all(sapply(c(qc_in, qc_method_in, search_text, value_in), is.character)),
-    all(sapply(c(qc_in, qc_method_in, search_text, value_in), length) == 1)
+    all(sapply(c(qc_data_in, qc_method_in, search_text, value_in), is.character)),
+    all(sapply(c(qc_data_in, qc_method_in, search_text, value_in), length) == 1)
   )
-  out <- qc_in %in% names(obj) &&
-    length(obj[[qc_in]]) > 0 &&
+  out <- qc_data_in %in% names(obj) &&
+    length(obj[[qc_data_in]]) > 0 &&
     qc_method_in %in% names(obj) &&
     length(obj[[qc_method_in]]) > 0 &&
     value_in %in% names(obj[[qc_method_in]])
