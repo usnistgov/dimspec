@@ -594,9 +594,9 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
 rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "MolFrom", get_aliases = c("inchi", "inchikey"), mol_to_prefix = "MolTo", rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
   logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   stopifnot(
-    all(unlist(lapply(c(identifiers, type, mol_from_prefix, get_aliases, mol_to_prefix, rdkit_ref, log_ns), is.character))),
+    all(unlist(lapply(c(identifiers, type, mol_from_prefix, mol_to_prefix, rdkit_ref, log_ns), is.character))),
     all(unlist(lapply(c(type, rdkit_ref, log_ns, make_if_not), function(x) length(x) == 1))),
-    all(unlist(lapply(c(identifiers, get_aliases), function(x) length(x) > 0))),
+    length(identifiers) > 0,
     is.logical(make_if_not)
   )
   can_calc <- rdkit_active(
