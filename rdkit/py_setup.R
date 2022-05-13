@@ -587,14 +587,21 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
 #' @return data.frame object containing the aliases and the original identifiers
 #' @export
 #'
-rdkit_mol_aliases <- function(identifiers, type = "smiles", aliases = c("inchi", "inchikey"), rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
+rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inchi", "inchikey"), rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
   logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
+  stopifnot(
+    all(unlist(lapply(c(identifiers, type, get_aliases, rdkit_ref, log_ns), is.character))),
+    all(unlist(lapply(c(type, rdkit_ref, log_ns, make_if_not), function(x) length(x) == 1))),
+    all(unlist(lapply(c(identifiers, get_aliases), function(x) length(x) > 0))),
+    is.logical(make_if_not)
+  )
   can_calc <- rdkit_active(
     rdkit_ref = rdkit_ref,
     log_ns = log_ns,
     make_if_not = make_if_not
   )
   if (can_calc) {
+    aliases <- get_aliases
     rdk <- eval(sym(rdkit_ref))
     to_mol <- grep(paste0("^MolFrom", type, "$"),
                    names(rdk$Chem),
@@ -615,28 +622,40 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", aliases = c("inchi",
                    })
     if (is.null(aliases)) {
       aliases <- grep("^MolTo", names(rdk$Chem), value = TRUE)
-      aliases <- gsub("^MolTo", "", aliases)
+      alias_funcs <- aliases
     } else {
-      aliases <- grep(paste0("^MolTo", aliases, "$"),
+      alias_funcs <- paste0("^MolTo", aliases, "$")
+      aliases <- grep(paste0(alias_funcs, collapse = "|"),
                       names(rdk$Chem),
                       ignore.case = TRUE,
                       value = TRUE)
     }
-    aliases <- aliases[-grep("file", aliases, ignore.case = TRUE)]
-    if (length(aliases) == 0) {
-      msg <- sprintf("Could not identify a function to create an identifer as '%s'.", from_mol)
+    alias_funcs <- gsub("\\^|\\$", "", alias_funcs)
+    file_refs <- grep("file", aliases, ignore.case = TRUE)
+    if (length(file_refs) > 0) {
+      aliases <- aliases[-file_refs]
+    }
+    if (length(aliases) < length(get_aliases)) {
+      unfound <- get_aliases[!tolower(alias_funcs) %in% tolower(aliases)]
+      msg <- sprintf('Could not identify %s function%s to create %salias%s using %s.',
+                     ifelse(length(unfound) > 1, "any", "a"),
+                     ifelse(length(unfound) > 1, "s", ""),
+                     ifelse(length(unfound) > 1, "", "an "),
+                     ifelse(length(unfound) > 1, "es", ""),
+                     format_list_of_names(unfound, add_quotes = TRUE)
+      )
       if (logging) {
         log_it("warn", msg, log_ns)
       } else {
         warning(msg)
       }
-      return(NULL)
+      if (length(aliases) == 0) return(NULL)
     }
     out <- lapply(mols,
                   function(x) {
                     lapply(aliases,
-                           function(y) {
-                             res <- suppressWarnings(try(rdk$Chem[[y]](x)))
+                           function(func) {
+                             res <- try(rdk$Chem[[func]](x))
                              if (inherits(res, "try-error")) {
                                return(NULL)
                              } else {
