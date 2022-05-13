@@ -581,16 +581,20 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
 #'   format matching `type`
 #' @param type CHR scalar of the type of encoding to use for `identifiers`
 #'   (default: smiles)
-#' @param aliases CHR vector of aliases to produce (default: c("inchi",
+#' @param mol_from_prefix CHR scalar of the prefix to identify an RDKit function
+#'   to create a mol object from`identifiers` (default: "MolFrom")
+#' @param get_aliases CHR vector of aliases to produce (default: c("inchi",
 #'   "inchikey"))
+#' @param mol_to_prefix CHR scalar of the prefix to identify an RDKit function
+#'   to create an alias from a mol object (default: "MolTo")
 #'
 #' @return data.frame object containing the aliases and the original identifiers
 #' @export
-#'
-rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inchi", "inchikey"), rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
+#' 
+rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "MolFrom", get_aliases = c("inchi", "inchikey"), mol_to_prefix = "MolTo", rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
   logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   stopifnot(
-    all(unlist(lapply(c(identifiers, type, get_aliases, rdkit_ref, log_ns), is.character))),
+    all(unlist(lapply(c(identifiers, type, mol_from_prefix, get_aliases, mol_to_prefix, rdkit_ref, log_ns), is.character))),
     all(unlist(lapply(c(type, rdkit_ref, log_ns, make_if_not), function(x) length(x) == 1))),
     all(unlist(lapply(c(identifiers, get_aliases), function(x) length(x) > 0))),
     is.logical(make_if_not)
@@ -603,7 +607,7 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inc
   if (can_calc) {
     aliases <- get_aliases
     rdk <- eval(sym(rdkit_ref))
-    to_mol <- grep(paste0("^MolFrom", type, "$"),
+    to_mol <- grep(paste0("^", mol_from_prefix, type, "$"),
                    names(rdk$Chem),
                    ignore.case = TRUE,
                    value = TRUE)
@@ -621,10 +625,10 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inc
                      rdk$Chem[[to_mol]](x)
                    })
     if (is.null(aliases)) {
-      aliases <- grep("^MolTo", names(rdk$Chem), value = TRUE)
+      aliases <- grep(paste0("^", mol_to_prefix), names(rdk$Chem), value = TRUE)
       alias_funcs <- aliases
     } else {
-      alias_funcs <- paste0("^MolTo", aliases, "$")
+      alias_funcs <- paste0("^", mol_to_prefix, aliases, "$")
       aliases <- grep(paste0(alias_funcs, collapse = "|"),
                       names(rdk$Chem),
                       ignore.case = TRUE,
@@ -659,7 +663,7 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inc
                              if (inherits(res, "try-error")) {
                                return(NULL)
                              } else {
-                               return(res)
+                               return(paste0(res, collapse = "; "))
                              }
                            }) %>%
                       setNames(aliases)
@@ -670,6 +674,7 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", get_aliases = c("inc
       mutate(original = identifiers) %>%
       rename("{type}" := "original") %>%
       select(any_of(c(type, aliases)))
+    names(out) <- gsub(mol_to_prefix, "", names(out))
     return(out)
   } else {
     msg <- sprintf("RDKit is not available at '%s'.", rdkit_ref)
