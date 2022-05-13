@@ -327,7 +327,7 @@ full_import <- function(import_object                  = NULL,
                                    method_id = ms_method_id,
                                    chrom_spec_in = chrom_spec_in,
                                    type = "chromatography",
-                                   fuzzy = fuzzy,
+                                   fuzzy = TRUE,
                                    db_conn = db_conn,
                                    log_ns = log_ns)
       }
@@ -425,7 +425,6 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Peak/fragment/compound connection ----
-    browser()
     resolve_compound_fragments(peak_id = peaks,
                                fragment_id = fragments,
                                compound_id = compounds)
