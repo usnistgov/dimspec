@@ -2320,7 +2320,9 @@ resolve_ms_data <- function(obj,
     log_ns = log_ns
   ) %>%
     bind_cols() %>%
-    mutate(peak_id = peak_id)
+    mutate(peak_id = peak_id) %>%
+    filter(!measured_mz == "",
+           !measured_intensity == "")
   res <- try(
     build_db_action(
       action = "insert",
