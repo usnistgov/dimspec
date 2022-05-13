@@ -613,10 +613,13 @@ log_it <- function(log_level,
     LOGGING_ON <- TRUE
   }
   call_i <- -1
-  call_func <- sys.call(call_i)[[1]]
+  call_ii <- 1
+  call_func <- sys.call(call_i)[[call_ii]]
   if (is.function(call_func) && sys.call(-2)[[1]] == "do.call") {
     call_i <- -2
-    call_func <- sys.call(call_i)[[2]]
+    call_ii <- 2
+    call_func <- sys.call(call_i)[[call_ii]]
+    msg <- paste0("call to ", call_func, "(): ", msg)
   }
   if (sys.nframe() > 1) {
     from_log_it <- call_func == "log_it"
@@ -695,7 +698,7 @@ log_it <- function(log_level,
                        format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
                        ifelse(is.na(log_ns), "global", log_ns),
                        log_level,
-                       deparse(sys.call(n_call)[[1]]),
+                       call_func,
                        msg)
         # # Possible integration of package "cli" for this, but it's getting very close to recreating some aspects of "logger", so just use logger.
         # 

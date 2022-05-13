@@ -1661,16 +1661,16 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
     pull(name)
   new_values <- new_values[which(names(new_values) %in% needed)]
   needed     <- needed[!needed %in% names(new_values)]
-  if (exists("log_it")) log_it("info", glue::glue("add_normalization_value: Adding normalization value to {db_table}."), log_ns)
+  if (exists("log_it")) log_it("info", glue::glue("Adding normalization value to {db_table}."), log_ns)
   if (length(needed) == 0) {
     if (exists("log_it")) {
-      log_it("trace", "add_normalization_value: Named values were provided for all columns.", log_ns)
+      log_it("trace", "Named values were provided for all columns.", log_ns)
     }
   } else if (length(needed) > 0) {
     msg <- sprintf('Not all values for table "%s" were supplied.', db_table)
     if (exists("log_it")) {
       log_it("warn",
-             sprintf("add_normalization_value: %s Please provide the following values to continue.%s",
+             sprintf("%s Please provide the following values to continue.%s",
                      msg,
                      ifelse(length(new_values) > 0,
                             sprintf(" You provided '%s' as the initial value%s.",
