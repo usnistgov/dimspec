@@ -766,7 +766,9 @@ resolve_fragments <- function(obj,
                               generate_missing_aliases = FALSE,
                               fragment_aliases_in = "fragment_aliases",
                               fragment_aliases_table = "fragment_aliases",
-                              rdkit_ref = "rdkit",
+                              fragment_alias_type_norm_table = "norm_analyte_alias_references",
+                              inchi_prefix = "InChI=1S/",
+                              rdkit_ref = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
                               rdkit_ns = "rdk",
                               rdkit_make_if_not = TRUE,
                               rdkit_aliases = c("inchi", "inchikey"),
@@ -780,29 +782,34 @@ resolve_fragments <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, fragments_in, fragments_table, fragments_sources_table,
-                        citation_info_in, inspection_info_in, generate_missing_aliases,
-                        fragment_aliases_in, fragment_aliases_table, rdkit_ref, 
-                        rdkit_ns, rdkit_make_if_not, rdkit_aliases, db_conn, log_ns),
+      args       = list(obj, 
+                        fragments_in, fragments_table, fragments_sources_table,
+                        citation_info_in, inspection_info_in,
+                        generate_missing_aliases, fragment_aliases_in, fragment_aliases_table, fragment_alias_type_norm_table,
+                        rdkit_ref, rdkit_ns, rdkit_make_if_not, 
+                        db_conn, log_ns),
       conditions = list(
-        obj                      = list(c("mode", "list")),
-        fragments_in             = list(c("mode", "character"), c("length", 1)),
-        fragments_table          = list(c("mode", "character"), c("length", 1)),
-        fragments_sources_table  = list(c("mode", "character"), c("length", 1)),
-        citation_info_in         = list(c("mode", "character"), c("length", 1)),
-        inspection_info_in       = list(c("mode", "character"), c("length", 1)),
-        generate_missing_aliases = list(c("mode", "logical"), c("length", 1)),
-        fragment_aliases_in      = list(c("mode", "character"), c("length", 1)),
-        fragment_aliases_table   = list(c("mode", "character"), c("length", 1)),
-        rdkit_ref                = list(c("mode", "character"), c("length", 1)),
-        rdkit_ns                 = list(c("mode", "character"), c("length", 1)),
-        rdkit_make_if_not        = list(c("mode", "logical"), c("length", 1)),
-        rdkit_aliases            = list(c("mode", "character"), c("n>=", 1)),
-        db_conn                  = list(c("length", 1)),
-        log_ns                   = list(c("mode", "character"), c("length", 1))
+        obj                            = list(c("mode", "list")),
+        fragments_in                   = list(c("mode", "character"), c("length", 1)),
+        fragments_table                = list(c("mode", "character"), c("length", 1)),
+        fragments_sources_table        = list(c("mode", "character"), c("length", 1)),
+        citation_info_in               = list(c("mode", "character"), c("length", 1)),
+        inspection_info_in             = list(c("mode", "character"), c("length", 1)),
+        generate_missing_aliases       = list(c("mode", "logical"), c("length", 1)),
+        fragment_aliases_in            = list(c("mode", "character"), c("length", 1)),
+        fragment_aliases_table         = list(c("mode", "character"), c("length", 1)),
+        fragment_alias_type_norm_table = list(c("mode", "character"), c("length", 1)),
+        rdkit_ref                      = list(c("mode", "character"), c("length", 1)),
+        rdkit_ns                       = list(c("mode", "character"), c("length", 1)),
+        rdkit_make_if_not              = list(c("mode", "logical"), c("length", 1)),
+        db_conn                        = list(c("length", 1)),
+        log_ns                         = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
+  }
+  if (!is.null(rdkit_aliases)) {
+    stopifnot(is.character(rdkit_aliases), length(rdkit_aliases) > 0)
   }
   fragment_values <- map_import(
     import_obj = obj,
@@ -954,44 +961,56 @@ resolve_fragments <- function(obj,
         if (exists("rdkit_active") && rdkit_active(rdkit_ref = rdkit_ref,
                                                    log_ns = rdkit_ns,
                                                    make_if_not = rdkit_make_if_not)) {
-        smiles <- fragment_values$smiles
-        fragment_alias_values <- rdkit_mol_aliases(identifiers = smiles,
-                                              type = "smiles",
-                                              aliases = rdkit_aliases,
-                                              rdkit_ref = rdkit_ref,
-                                              log_ns = rdkit_ns,
-                                              make_if_not = rdkit_make_if_not)
+          fragment_alias_values <- rdkit_mol_aliases(identifiers = fragment_values$smiles,
+                                                     type = "smiles",
+                                                     get_aliases = rdkit_aliases,
+                                                     rdkit_ref = rdkit_ref,
+                                                     log_ns = rdkit_ns,
+                                                     make_if_not = rdkit_make_if_not)
         } else {
           log_it("warn", "RDKit does not appear to be available for generation of fragment aliases", log_ns)
         }
       } else {
-        settings <- paste(
-          ifelse(INFORMATICS, "", "INFORMATICS"),
-          ifelse(!INFORMATICS & !USE_RDKIT, "and", ""),
-          ifelse(USE_RDKIT, "", "RDKit integration"),
-          ifelse(!INFORMATICS & !USE_RDKIT, "are", "is"),
-          "turned off."
+        settings <- paste(ifelse(INFORMATICS, "", "INFORMATICS"),
+                          ifelse(!INFORMATICS & !USE_RDKIT, "and", ""),
+                          ifelse(USE_RDKIT, "", "RDKit integration"),
+                          ifelse(!INFORMATICS & !USE_RDKIT, "are", "is"),
+                          "turned off."
         ) %>%
           stringr::str_squish()
         log_it("warn", settings, log_ns)
       }
+    } else {
+      fa_names <- dbListFields(con, fragment_aliases_table)
+      fragment_alias_values <- vector("list", rep("scrub", length(fa_names)))
     }
   } else {
-    alias_references <- tbl(db_conn, "norm_analyte_alias_references") %>%
-      collect()
-    fragment_alias_values <- fragment_aliases[[1]] %>%
-      bind_rows() %>%
-      left_join(fragment_values,
-                by = c("SMILES" = "smiles")) %>%
-      select(fragment_id, any_of(alias_references$name)) %>%
-      pivot_longer(cols = -fragment_id) %>%
-      left_join(alias_references %>%
-                  select(id, name)) %>%
-      filter(!is.na(id)) %>%
-      select(-name) %>%
-      rename("alias_type" = "id",
-             "alias" = "value") %>%
-      select(any_of(dbListFields(db_conn, fragment_aliases_table)))
+    fragment_alias_values <- fragment_aliases[[1]]
+  }
+  fragment_alias_values <- fragment_alias_values %>%
+    bind_rows() %>%
+    filter(!if_any(everything(), ~ .x == "scrub")) %>%
+    mutate(across(matches("^inchi$", ignore.case = TRUE),
+                  ~ ifelse(test = grepl(inchi_prefix, .x),
+                           yes = .x,
+                           no = paste0(inchi_prefix, .x))),
+           across(matches("^inchi$", ignore.case = TRUE),
+                  ~ str_replace_all(
+                    string = .x,
+                    pattern = sprintf("(%s){2}", gsub("InChI=", "", inchi_prefix)),
+                    replacement = gsub("InChI=", "", inchi_prefix)))
+    ) %>%
+    left_join(fragment_values) %>%
+    select(1:fragment_id) %>%
+    pivot_longer(col = -fragment_id) %>%
+    setNames(dbListFields(db_conn, fragment_aliases_table)) %>%
+    mutate(alias_type = sapply(alias_type,
+                               function(x) {
+                                 resolve_normalization_value(x, fragment_alias_type_norm_table)
+                               }))
+  if (nrow(fragment_alias_values) > 0) {
+    fragment_alias_values <- fragment_alias_values %>%
+      filter(!is.na(fragment_id), !is.na(alias_type), !alias == "")
     res <- try(
       build_db_action(
         action = "insert",
