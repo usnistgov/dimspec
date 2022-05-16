@@ -296,6 +296,7 @@
 		  TEXT NOT NULL,
 		  /* Value associated with parameter and name */
 		/* Check constraints */
+		UNIQUE (sample_id, parameter, name),
 		/* Foreign key relationships */
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);

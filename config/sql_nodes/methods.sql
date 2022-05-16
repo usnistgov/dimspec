@@ -544,7 +544,8 @@
 			TEXT,
 			/* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */
 		/* Check constraints */
-		CHECK (value IN (0, 1))
+		CHECK (value IN (0, 1)),
+		UNIQUE (ms_methods_id, sample_id, name, value),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
