@@ -9,8 +9,11 @@ full_import <- function(import_object                  = NULL,
                         requirements_obj               = "import_requirements",
                         method_in                      = "massspectrometry",
                         ms_methods_table               = "ms_methods",
+                        instrument_properties_table    = "instrument_properties",
                         sample_info_in                 = "sample",
                         sample_table                   = "samples",
+                        contributor_in                 = "data_generator",
+                        contributors_table             = "contributors",
                         sample_aliases                 = NULL,
                         generation_type                = NULL,
                         generation_type_norm_table     = ref_table_from_map(sample_table, "generation_type"),
@@ -259,11 +262,11 @@ full_import <- function(import_object                  = NULL,
   for (i in 1:length(import_object)) {
     obj <- import_object[[i]]
     # _ID contributor ----
-    contributor <- obj[[sample_info_in]]$data_generator
+    contributor <- obj[[sample_info_in]][[contributor_in]]
     if (contributor %in% map_contributors_to$provided) {
       contributor_id <- map_contributors_to$resolved[map_contributors_to$provided == contributor]
     } else {
-      contributor_id <- resolve_normalization_value(contributor, "contributors")
+      contributor_id <- resolve_normalization_value(contributor, contributors_table)
       if (is.null(contributor_id)) {
         log_it("error",
                "Unable to resolve contributor. Please adjust and try again.",
@@ -286,12 +289,12 @@ full_import <- function(import_object                  = NULL,
         )
       )
     } else {
-      ms_method_id <- NULL
+      ms_method_id <- NA
     }
     if (!is.na(ms_method_id)) {
       # ___instrument properties ----
       tmp <- map_import(import_obj = obj,
-                        aspect = "instrument_properties",
+                        aspect = instrument_properties_table,
                         import_map = import_map)
       tmp <- tibble(
         ms_method_id = ms_method_id,
@@ -304,7 +307,7 @@ full_import <- function(import_object                  = NULL,
       )
       res <- try(
         build_db_action(action = "insert",
-                        table_name = "instrument_properties",
+                        table_name = instrument_properties_table,
                         values = tmp,
                         db_conn = db_conn,
                         log_ns = log_ns,
@@ -335,14 +338,14 @@ full_import <- function(import_object                  = NULL,
     # _Sample information ----
     # Sample info is required
     # Conveniently carry forward resolved contributor
-    if ("data_generator" %in% names(obj[[sample_info_in]]) &&
+    if (contributor_in %in% names(obj[[sample_info_in]]) &&
         !is.null(contributor_id) &&
         !is.na(contributor_id) &&
         is.integer(contributor_id) &&
         length(contributor_id) == 1) {
-      obj[[sample_info_in]][["data_generator"]] <- build_db_action(
+      obj[[sample_info_in]][[contributor_in]] <- build_db_action(
         action = "select",
-        table_name = "contributors",
+        table_name = contributors_table,
         column_names = "username",
         match_criteria = list(id = contributor_id)
       )
@@ -975,6 +978,9 @@ resolve_fragments <- function(obj,
     log_ns = log_ns
   ) %>%
     bind_cols()
+  if (nrow(fragment_values) == 0) {
+    return(NULL)
+  }
   if (is.null(generation_type) && !is.null(sample_id)) {
     stopifnot(sample_id == as.integer(sample_id))
     generation_type <- build_db_action(
@@ -1372,6 +1378,7 @@ resolve_sample <- function(obj,
                            generation_type_norm_table = "norm_generation_type",
                            import_map = IMPORT_MAP,
                            ensure_unique = TRUE,
+                           require_all = TRUE,
                            fuzzy = FALSE,
                            case_sensitive = TRUE,
                            log_ns = "db",
@@ -1440,6 +1447,7 @@ resolve_sample <- function(obj,
       db_table = sample_table,
       values   = sample_values,
       db_conn  = db_conn,
+      require_all = require_all,
       ignore   = FALSE,
       ensure_unique = ensure_unique
     )
@@ -2701,7 +2709,8 @@ resolve_qc_data_NTAMRT <- function(obj,
     active_connection(db_conn),
     check_for_value(sample_id, "samples", "id", db_conn = db_conn)$exists
   )
-  values <- lapply(obj,
+  values <- obj[which(lapply(obj, function(x) length(x) > 1) == TRUE)]
+  values <- lapply(values,
                    function(x) {
                      x %>%
                        mutate_all("as.character") %>%
