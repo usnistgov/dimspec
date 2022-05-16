@@ -605,6 +605,12 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "M
     make_if_not = make_if_not
   )
   if (can_calc) {
+    if (logging) log_it("info", "Verifying existence of identifiers.", log_ns)
+    to_remove <- which(identifiers == "" | is.na(identifiers))
+    if (length(to_remove) > 0) {
+      if (logging) log_it("warn", glue::glue("{length(to_remove)} identifiers were blank or NA."), log_ns)
+    }
+    identifiers <- identifiers[-to_remove]
     aliases <- get_aliases
     rdk <- eval(sym(rdkit_ref))
     to_mol <- grep(paste0("^", mol_from_prefix, type, "$"),
@@ -655,10 +661,12 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "M
       }
       if (length(aliases) == 0) return(NULL)
     }
+    if (logging) log_it("info", "Generating aliases.", log_ns)
     out <- lapply(mols,
                   function(x) {
                     lapply(aliases,
                            function(func) {
+                             if (logging) log_it("trace", glue::glue("Generating {gsub(mol_to_prefix, '', tolower(func))} for {type} = {x}."), log_ns)
                              res <- try(rdk$Chem[[func]](x))
                              if (inherits(res, "try-error")) {
                                return(NULL)
