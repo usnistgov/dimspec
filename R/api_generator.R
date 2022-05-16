@@ -285,6 +285,11 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
   if (length(match_criteria) > 1) {
     out <- paste0(out, collapse = and_or)
   }
+  catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
+  if (str_detect(out, catch_null)) {
+    out <- out %>%
+      str_replace_all(catch_null, " IS NULL")
+  }
   return(out)
 }
 
@@ -617,7 +622,7 @@ build_db_action <- function(action,
   }
   
   if (is.na(query)) return(NULL)
-  
+
   catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
   if (str_detect(query, catch_null)) {
     query <- query %>%
