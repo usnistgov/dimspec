@@ -686,22 +686,22 @@ resolve_compound_fragments <- function(values = NULL,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (is.null(values)) {
-    if (has_missing_elements(peak_id)) {
-      log_it("error", "A 'peak_id' is required for every row to draw a linkage.", log_ns)
-      stop()
-    }
-    if (has_missing_elements(fragment_id)) {
-      log_it("error", "A 'fragment_id' is required for every row to draw a linkage.", log_ns)
-      stop()
-    }
-    if (!length(peak_id) == length(fragment_id)) {
-      if (!length(fragment_id) == 1 && !length(peak_id) == 1) {
-        log_it("error",
-               glue::glue("Lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)}) must be equal if more than one 'fragment_id' or 'peak_id' is assigned."),
-               log_ns)
-        stop()
-      }
-    }
+    # if (has_missing_elements(peak_id)) {
+    #   log_it("error", "A 'peak_id' is required for every row to draw a linkage.", log_ns)
+    #   return(NULL)
+    # }
+    # if (has_missing_elements(fragment_id)) {
+    #   log_it("error", "A 'fragment_id' is required for every row to draw a linkage.", log_ns)
+    #   return(NULL)
+    # }
+    # if (!length(peak_id) == length(fragment_id)) {
+    #   if (!length(fragment_id) == 1 && !length(peak_id) == 1) {
+    #     log_it("error",
+    #            glue::glue("Lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)}) must be equal if more than one 'fragment_id' or 'peak_id' is assigned."),
+    #            log_ns)
+    #     return(NULL)
+    #   }
+    # }
     peak_id_check <- suppressWarnings(as.integer(peak_id))
     if (any(is.na(peak_id_check))) {
       log_it("error",
@@ -717,7 +717,7 @@ resolve_compound_fragments <- function(values = NULL,
                             ")",
                             "")),
              log_ns)
-      stop()
+      return(NULL)
     }
     fragment_id_check <- suppressWarnings(as.integer(fragment_id))
     if (any(is.na(fragment_id_check))) {
@@ -734,7 +734,7 @@ resolve_compound_fragments <- function(values = NULL,
                             ")",
                             "")),
              log_ns)
-      stop()
+      return(NULL)
     }
     if (!all(is.na(compound_id))) {
       if (!length(compound_id) == 1 &&
@@ -743,7 +743,7 @@ resolve_compound_fragments <- function(values = NULL,
         log_it("error",
                glue::glue("Length of 'compound_id' ({length(compound_id)}) must be either 1 or match the lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)})."),
                log_ns)
-        stop()
+        return(NULL)
       }
     }
     compound_id_check <- suppressWarnings(as.integer(compound_id))
@@ -761,7 +761,7 @@ resolve_compound_fragments <- function(values = NULL,
                             ")",
                             "")),
              log_ns)
-      stop()
+      return(NULL)
     }
     values = data.frame(peak_id = peak_id,
                         fragment_id = fragment_id,
@@ -796,7 +796,7 @@ resolve_compound_fragments <- function(values = NULL,
                    peaks_table),
            log_ns
     )
-    stop()
+    peak_id <- peak_id[peak_id_check]
   }
   fragment_id_check <- fragment_id %in%
     build_db_action(
@@ -826,7 +826,7 @@ resolve_compound_fragments <- function(values = NULL,
                    fragments_table),
            log_ns
     )
-    stop()
+    fragment_id <- fragment_id[fragment_id_check]
   }
   if (!all(is.na(compound_id))) {
     compound_id_check <- compound_id %in%
@@ -857,7 +857,7 @@ resolve_compound_fragments <- function(values = NULL,
                      compounds_table),
              log_ns
       )
-      stop()
+      compound_id <- compound_id[compound_id_check]
     }
   }
   res <- try(

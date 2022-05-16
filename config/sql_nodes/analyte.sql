@@ -184,13 +184,13 @@
 		/* Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments. */
 	(
 		peak_id
-			INTEGER NOT NULL,
+			INTEGER,
 			/* foreign key to peaks */
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
 		fragment_id
-			INTEGER NOT NULL,
+			INTEGER,
 			/* foreign key to fragments */
 		/* Check constraints */
 		/* Foreign key relationships */
