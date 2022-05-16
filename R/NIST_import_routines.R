@@ -6,6 +6,7 @@ full_import <- function(import_object                  = NULL,
                         include_if_missing_recommended = FALSE,
                         stop_if_missing_recommended    = TRUE,
                         ignore_extra                   = TRUE,
+                        ignore_insert_conflicts        = TRUE,
                         requirements_obj               = "import_requirements",
                         method_in                      = "massspectrometry",
                         ms_methods_table               = "ms_methods",
@@ -260,6 +261,7 @@ full_import <- function(import_object                  = NULL,
   func_env <- as.list(environment())
   # loop through import object elements ----
   for (i in 1:length(import_object)) {
+    log_it("info", glue::glue("Importing object #{i} of {length(import_object)} with name {names(import_object)[i]}..."), log_ns)
     obj <- import_object[[i]]
     # _ID contributor ----
     contributor <- obj[[sample_info_in]][[contributor_in]]
@@ -391,7 +393,8 @@ full_import <- function(import_object                  = NULL,
       resolve_qc_methods_NTAMRT,
       args = append(list(obj = obj,
                          method_id = ms_method_id,
-                         sample_id = sample_id),
+                         sample_id = sample_id,
+                         ignore = ignore_insert_conflicts),
                     func_env[names(func_env) %in% names(formals(resolve_qc_methods_NTAMRT))]
       )
     )
@@ -399,7 +402,8 @@ full_import <- function(import_object                  = NULL,
     do.call(
       resolve_qc_data_NTAMRT,
       args = append(list(obj = obj,
-                         sample_id = sample_id),
+                         sample_id = sample_id,
+                         ignore = ignore_insert_conflicts),
                     func_env[names(func_env) %in% names(formals(resolve_qc_data_NTAMRT))]
       )
     )
@@ -431,6 +435,7 @@ full_import <- function(import_object                  = NULL,
     resolve_compound_fragments(peak_id = peaks,
                                fragment_id = fragments,
                                compound_id = compounds)
+    log_it("info", glue::glue("Finished importing object #{i} with name {names(import_object)[i]}..."), log_ns)
   }
 }
 
@@ -525,7 +530,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
            ),
            log_ns
     )
-    stop()
+    return(NULL)
   } else {
     if (length(res_id) > 1) {
       res_id <- tail(res_id, 1)
@@ -763,9 +768,10 @@ resolve_compound_fragments <- function(values = NULL,
              log_ns)
       return(NULL)
     }
-    values = data.frame(peak_id = peak_id,
-                        fragment_id = fragment_id,
-                        compound_id = compound_id) %>%
+    values = list(peak_id = peak_id,
+                  fragment_id = fragment_id,
+                  compound_id = compound_id) %>%
+      bind_cols() %>%
       mutate(across(.cols = everything(), .fns = ~ as.integer(.x)))
   }
   peak_id_check <- peak_id %in%
@@ -1124,9 +1130,7 @@ resolve_fragments <- function(obj,
   if (length(fragment_aliases) == 0) {
     if (generate_missing_aliases) {
       if (INFORMATICS && USE_RDKIT) {
-        if (exists("rdkit_active") && rdkit_active(rdkit_ref = rdkit_ref,
-                                                   log_ns = rdkit_ns,
-                                                   make_if_not = rdkit_make_if_not)) {
+        if (exists("rdkit_active")) {
           fragment_alias_values <- rdkit_mol_aliases(identifiers = fragment_values$smiles,
                                                      type = "smiles",
                                                      get_aliases = rdkit_aliases,
@@ -2581,10 +2585,12 @@ resolve_peaks <- function(obj,
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
 #' @param qc_method_in CHR scalar of the name in `obj` that contains QC method
 #'   check information (default: "qcmethod")
-#' @param qc_method_table CHR scalar of the database table name holding QC method check
-#'   information (default: "qc_methods")
+#' @param qc_method_table CHR scalar of the database table name holding QC
+#'   method check information (default: "qc_methods")
 #' @param qc_references_in CHR scalar of the name in `obj[[qc_method_in]]` that
 #'   contains the reference or citation for the QC protocol (default: "source")
+#' @param ignore LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
+#'   constraints; default: FALSE)
 #'
 #' @return None, executes actions on the database
 #' @export
@@ -2599,6 +2605,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
                                       qc_references_in = "source",
                                       ms_methods_table = "ms_methods",
                                       sample_table = "samples",
+                                      ignore = FALSE,
                                       db_conn = con,
                                       log_ns = "db") {
   # Check connection
@@ -2652,6 +2659,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
                     table_name = qc_method_table,
                     db_conn = db_conn,
                     values = values,
+                    ignore = ignore,
                     log_ns = log_ns)
   )
   if (inherits(res, "try-error")) {
@@ -2678,6 +2686,8 @@ resolve_qc_methods_NTAMRT <- function(obj,
 #'   data (default: "qc")
 #' @param qc_data_table CHR scalar name of the database table holding QC data
 #'   (default: "qc_data")
+#' @param ignore LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
+#'   constraints; default: FALSE)
 #'
 #' @return None, executes actions on the database
 #' @export
@@ -2686,6 +2696,7 @@ resolve_qc_data_NTAMRT <- function(obj,
                                    sample_id,
                                    qc_data_in = "qc",
                                    qc_data_table = "qc_data",
+                                   ignore = FALSE,
                                    db_conn = con,
                                    log_ns = "db") {
   # Argument validation relies on verify_args
@@ -2693,11 +2704,13 @@ resolve_qc_data_NTAMRT <- function(obj,
   sample_id <- as.integer(sample_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, sample_id, db_conn),
+      args       = list(obj, sample_id, ignore, db_conn, log_ns),
       conditions = list(
         obj       = list(c("mode", "list")),
         sample_id = list(c("mode", "integer"), c("length", 1), "no_na"),
-        db_conn   = list(c("length", 1))
+        ignore    = list(c("mode", "logical"), c("length", 1)),
+        db_conn   = list(c("length", 1)),
+        log_ns    = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
@@ -2725,6 +2738,7 @@ resolve_qc_data_NTAMRT <- function(obj,
     build_db_action(
       action = "insert",
       table_name = qc_data_table,
+      ignore = ignore,
       db_conn = db_conn,
       values = values
     )
@@ -2800,7 +2814,7 @@ get_uniques <- function(objects, aspect) {
 #' @export
 remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
   log_fn("start")
-  if (sample_ids != as.integer(sample_ids)) stop('Parameter "sample_ids" cannot be safely coerced to integer.')
+  if (any(sample_ids != as.integer(sample_ids))) stop('Parameter "sample_ids" cannot be safely coerced to integer.')
   sample_ids <- as.integer(sample_ids)
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -2808,9 +2822,9 @@ remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
       args       = as.list(environment()),
       conditions = list(
         sample_ids = list(c("mode", "integer"), c("n>=", 1)),
-        db_conn    = list(c("length", 1))
-      ),
-      from_fn = "remove_sample"
+        db_conn    = list(c("length", 1)),
+        log_ns     = list(c("mode", "character"), c("n>=", 1))
+      )
     )
     stopifnot(arg_check$valid)
   }
