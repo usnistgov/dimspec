@@ -1292,7 +1292,7 @@ resolve_software_settings_NTAMRT <- function(obj,
     }
     if (inherits(software_timestamp_coerced, "try-error") || is.na(software_timestamp_coerced)) {
       log_it("error", glue::glue("Could not parse '{software_timestamp}' as a datetime object."), log_ns)
-      stop()
+      return(invisible(NULL))
     } else {
       software_timestamp <- software_timestamp_coerced
     }
@@ -1312,7 +1312,7 @@ resolve_software_settings_NTAMRT <- function(obj,
         setNames(dbListFields(db_conn, settings_table))
     } else {
       log_it("error", "Could not resolve conversion_software_settings; these should be a character vector of length > 0", log_ns)
-      stop()
+      return(invisible(NULL))
     }
   }
   res <- try(
