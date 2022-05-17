@@ -66,7 +66,7 @@ full_import <- function(import_object                  = NULL,
                         ms_data_in                     = "msdata",
                         ms_data_table                  = "ms_data",
                         unpack_spectra                 = FALSE,
-                        unpack_format                  = c("separated", "unzipped"),
+                        unpack_format                  = c("separated", "zipped"),
                         ms_spectra_table               = "ms_spectra",
                         linkage_table                  = "conversion_software_peaks_linkage",
                         settings_table                 = "conversion_software_settings",
@@ -474,6 +474,7 @@ full_import <- function(import_object                  = NULL,
 #'
 #' @return
 #' @export
+#' 
 add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, require_all = TRUE, ignore = FALSE, log_ns = "db") {
   log_it("info", glue("Adding to or identifying a record in table '{db_table}'."), log_ns)
   # Argument validation relies on verify_args
@@ -595,7 +596,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
   }
 }
 
-#' Resolve the compound snode during bulk import
+#' Resolve the compounds node during bulk import
 #' 
 #' Call this function as part of an import routine to resolve the compounds node.
 #' 
@@ -604,7 +605,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 #' @inheritParams add_or_get_id
 #' @inheritParams map_import
 #'
-#' @param obj
+#' @param obj LIST object containing data formatted from the import generator
 #' @param compounds_in CHR scalar name in `obj` holding compound data (default:
 #'   "compounddata")
 #' @param compounds_table CHR scalar name the database table holding compound
@@ -664,6 +665,23 @@ resolve_compounds <- function(obj,
   return(compound_ids)
 }
 
+#' Title
+#'
+#' @inheritParams add_or_get_id
+#'
+#' @param values 
+#' @param peak_id 
+#' @param fragment_id 
+#' @param compound_id 
+#' @param linkage_table 
+#' @param peaks_table 
+#' @param fragments_table 
+#' @param compounds_table 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 resolve_compound_fragments <- function(values = NULL,
                                        peak_id = NA,
                                        fragment_id = NA,
@@ -691,22 +709,6 @@ resolve_compound_fragments <- function(values = NULL,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (is.null(values)) {
-    # if (has_missing_elements(peak_id)) {
-    #   log_it("error", "A 'peak_id' is required for every row to draw a linkage.", log_ns)
-    #   return(NULL)
-    # }
-    # if (has_missing_elements(fragment_id)) {
-    #   log_it("error", "A 'fragment_id' is required for every row to draw a linkage.", log_ns)
-    #   return(NULL)
-    # }
-    # if (!length(peak_id) == length(fragment_id)) {
-    #   if (!length(fragment_id) == 1 && !length(peak_id) == 1) {
-    #     log_it("error",
-    #            glue::glue("Lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)}) must be equal if more than one 'fragment_id' or 'peak_id' is assigned."),
-    #            log_ns)
-    #     return(NULL)
-    #   }
-    # }
     peak_id_check <- suppressWarnings(as.integer(peak_id))
     if (any(is.na(peak_id_check))) {
       log_it("error",
@@ -879,34 +881,38 @@ resolve_compound_fragments <- function(values = NULL,
   }
 }
 
-#' Resolve the fragments node during an import
-#' 
-#' Call this function as part of an import routine to resolve the fragments node.
-#' 
-#' @note This function is called as part of [full_import]
-#' 
-#' @inheritParams rdkit_mol_aliases
-#' @inheritParams map_import
-#' @inheritParams 
+#' Resolve the fragments node during database import
 #'
-#' @param obj 
-#' @param sample_id 
-#' @param generation_type 
-#' @param fragments_in 
-#' @param fragments_table 
-#' @param fragments_sources_table 
-#' @param citation_info_in 
-#' @param inspection_info_in 
-#' @param inspection_table 
-#' @param generate_missing_aliases 
-#' @param fragment_aliases_in 
-#' @param fragment_aliases_table 
-#' @param fragment_alias_type_norm_table 
-#' @param inchi_prefix 
-#' @param rdkit_ref 
-#' @param rdkit_ns 
-#' @param rdkit_make_if_not 
-#' @param rdkit_aliases 
+#' Call this function as part of an import routine to resolve the fragments node
+#' including fragment inspections and aliases. If the python connection to RDKit
+#' is available and no aliases are provided, aliases as defined in
+#' `rdkit_aliases` will be generated and stored if `generate_missing_aliases` is
+#' set to TRUE.
+#'
+#' @note This function is called as part of [full_import]
+#'
+#' @inheritParams map_import
+#' @inheritParams add_or_get_id
+#' @inheritParams rdkit_mol_aliases
+#'
+#' @param obj LIST object containing data formatted from the import generator
+#' @param sample_id
+#' @param generation_type
+#' @param fragments_in
+#' @param fragments_table
+#' @param fragments_sources_table
+#' @param citation_info_in
+#' @param inspection_info_in
+#' @param inspection_table
+#' @param generate_missing_aliases
+#' @param fragment_aliases_in
+#' @param fragment_aliases_table
+#' @param fragment_alias_type_norm_table
+#' @param inchi_prefix
+#' @param rdkit_ref
+#' @param rdkit_ns
+#' @param rdkit_make_if_not
+#' @param rdkit_aliases
 #'
 #' @return
 #' @export
@@ -1208,22 +1214,37 @@ resolve_fragments <- function(obj,
 #'
 #' Part of the standard import pipeline, adding rows to the
 #' `conversion_software_settings` table with a given sample id.
-#' 
+#'
 #' @note This function is called as part of [full_import]
+#'
+#' @inheritParams add_or_get_id
+#' @inheritParams build_db_action
 #'
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
-#' @param timestamp CHR scalar of the sample timestamp (e.g. sample$starttime)
-#'   to use for linking software conversion settings with peak data, with a call
-#'   back to the originating sample. If NULL (the default), the current system
-#'   timestamp in UTC will be used from [lubridate::now].
-#' @param db_conn connection object (default: con)
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
-#' @param ... Other named elements to be appended to records in the
-#'   conversion_software_settings as necessary for workflow resolution, can be
-#'   used to pass defaults or additional values.
+#' @param software_timestamp CHR scalar of the sample timestamp (e.g.
+#'   sample$starttime) to use for linking software conversion settings with peak
+#'   data, with a call back to the originating sample. If NULL (the default),
+#'   the current system timestamp in UTC will be used from [lubridate::now].
+#' @param software_settings_in CHR scalar name of the component in `obj`
+#'   containing software settings (default: "msconvertsettings")
+#' @param settings_table CHR scalar name of the database table containing the
+#'   software settings used for an imported data file (default:
+#'   "conversion_software_settings")
+#' @param linkage_table CHR scalar name of the database table containing the
+#'   linkage between peaks and their software settings (default:
+#'   "conversion_software_peaks_linkage")
+#' @param as_date_format CHR scalar the format to use when storing timestamps
+#'   that matches database column expectations (default: "%Y-%m-%d %H:%M:%S")
+#' @param format_checks CHR vector of the [lubridate::parse_date_time] format
+#'   checks to execute in order of priority; these must match a lubridate
+#'   function of the same name (default: c("ymd_HMS", "ydm_HMS", "mdy_HMS",
+#'   "dmy_HMS"))
+#' @param min_datetime CHR scalar of the minimum reasonable timestamp used as a
+#'   sanity check (default: "2000-01-01 00:00:00")
 #'
-#' @return status of the insertion
+#' @return NULL on errors, INT scalar of the inserted software linkage id if
+#'   successful
 #' @export
 resolve_software_settings_NTAMRT <- function(obj,
                                              software_timestamp = NULL,
@@ -1366,7 +1387,6 @@ resolve_software_settings_NTAMRT <- function(obj,
 #'   type (default: "empirical")
 #' @param generation_type_norm_table CHR scalar name of the database table
 #'   normalizing sample generation type (default: "empirical")
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to samples as necessary for
 #'   workflow resolution, can be used to pass defaults or additional values.
 #'
@@ -1470,6 +1490,8 @@ resolve_sample <- function(obj,
 #' reference or directly by assigning additional values.
 #' 
 #' @note This function is called as part of [full_import]
+#' 
+#' @inheritParams build_db_action
 #'
 #' @param sample_id  INT scalar of the sample id (e.g. from the import workflow)
 #' @param obj (optional) LIST object containing data formatted from the import
@@ -1482,9 +1504,9 @@ resolve_sample <- function(obj,
 #'   sample is drawn) to that alias
 #' @param db_table CHR scalar name of the database table containing sample
 #'   aliases (default: "sample_aliases")
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
 #' @return None, executes actions on the database
+#' 
 #' @export
 #' 
 resolve_sample_aliases <- function(sample_id,
@@ -1545,13 +1567,14 @@ resolve_sample_aliases <- function(sample_id,
 #'   information
 #' @param ms_methods_table CHR scalar name of the database table containing method
 #'   information
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #' @param ... Other named elements to be appended to "ms_methods" as necessary
 #'   for workflow resolution, can be used to pass defaults or additional values.
 #'
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
 #'   
+#' @export
+#'    
 resolve_method <- function(obj,
                            method_in = "massspectrometry",
                            ms_methods_table = "ms_methods",
@@ -1840,7 +1863,6 @@ resolve_description_NTAMRT <- function(obj,
 #' @note This function is called as part of [full_import]
 #'
 #' @inheritParams build_db_action
-#' @inheritParams full_import
 #' @inheritParams resolve_normalization_value
 #'
 #' @param method_id INT scalar of the method id (e.g. from the import workflow)
@@ -2292,7 +2314,28 @@ resolve_mobile_phase_NTAMRT <- function(obj,
   )
 }
 
-# TODO
+#' Resolve and store mass spectral data during import
+#'
+#' Use peak IDs generated by the import workflow to assign and store mass
+#' spectral data (if coming from the NIST NTA Method Reporting Tool, these will
+#' all be in the "separated" format). Optionally also calls [resolve_ms_spectra]
+#' if unpack_spectra = TRUE. Mass spectral data are stored in either one ("zipped")
+#'
+#' @note This function is called as part of [full_import] during the call to
+#'   [resolve_peaks]
+#'
+#' @inheritParams map_import
+#' @inheritParams resolve_ms_spectra
+#'
+#' @param obj LIST object containing mass spectral data with a component name
+#'   matching `ms_data_in`
+#' @param unpack_spectra LGL scalar indicating whether or not to unpack spectral
+#'   data to a long format (i.e. all masses and intensities will become a single
+#'   record) in the table defined by `ms_spectra_table` (default: FALSE)
+#'
+#' @return None, executes database actions
+#' @export
+#' 
 resolve_ms_data <- function(obj,
                             peak_id,
                             peaks_table = "peaks",
@@ -2300,7 +2343,7 @@ resolve_ms_data <- function(obj,
                             ms_data_table = "ms_data",
                             unpack_spectra = FALSE,
                             ms_spectra_table = "ms_spectra",
-                            unpack_format = c("separated", "unzipped"),
+                            unpack_format = c("separated", "zipped"),
                             import_map = IMPORT_MAP,
                             db_conn = con,
                             log_ns = "db") {
@@ -2364,13 +2407,30 @@ resolve_ms_data <- function(obj,
   }
 }
 
-# TODO
+#' Unpack mass spectral data in compressed format
+#' 
+#' For some spectra, searching in a long form is more performant.
+#'
+#' @param peak_id 
+#' @param peaks_table 
+#' @param ms_data_in 
+#' @param ms_data_table 
+#' @param ms_spectra_table 
+#' @param unpack_format 
+#' @param import_map 
+#' @param db_conn 
+#' @param log_ns 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 resolve_ms_spectra <- function(peak_id,
                                peaks_table = "peaks",
                                ms_data_in = "msdata",
                                ms_data_table = "ms_data",
                                ms_spectra_table = "ms_spectra",
-                               unpack_format = c("separated", "unzipped"),
+                               unpack_format = c("separated", "zipped"),
                                import_map = IMPORT_MAP,
                                db_conn = con,
                                log_ns = "db") {
@@ -2407,7 +2467,7 @@ resolve_ms_spectra <- function(peak_id,
   unpack_format <- switch(
     unpack_format,
     "separated" = ms_spectra_separated,
-    "unzipped" = ms_spectra_unzipped
+    "zipped" = ms_spectra_zipped
   )
   ms_spectra <- build_db_action(
     action = 'select',
@@ -2436,7 +2496,7 @@ resolve_ms_spectra <- function(peak_id,
   }
 }
 
-#' Resolve and import peak information
+#' Resolve the peaks node during import
 #'
 #' Call this function to resolve and insert information for the "peaks" node in
 #' the database including software conversion settings (via
@@ -2470,7 +2530,7 @@ resolve_peaks <- function(obj,
                           ms_data_in = "msdata",
                           ms_data_table = "ms_data",
                           unpack_spectra = FALSE,
-                          unpack_format = c("separated", "unzipped"),
+                          unpack_format = c("separated", "zipped"),
                           ms_spectra_table = "ms_spectra",
                           linkage_table = "conversion_software_peaks_linkage",
                           settings_table = "conversion_software_settings",
