@@ -2391,7 +2391,7 @@ resolve_ms_spectra <- function(peak_id,
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        peak_id              = list(c("mode", "integer"), c("length", 1), "no_na"),
+        peak_id              = list(c("mode", "integer"), c("n>=", 1), "no_na"),
         peaks_table          = list(c("mode", "character"), c("length", 1)),
         ms_data_in           = list(c("mode", "character"), c("length", 1)),
         ms_data_table        = list(c("mode", "character"), c("length", 1)),
