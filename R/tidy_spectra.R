@@ -69,15 +69,15 @@ ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intens
 }
 
 
-#' Parse "Unzipped" MS Spectra
+#' Parse "Zipped" MS Spectra
 #'
-#' The "unzipped" format includes spectra packed into one column containing
+#' The "zipped" format includes spectra packed into one column containing
 #' alternating mass and intensity values for all observations. All values are
 #' packed into these columns for a given scan time, separated by spaces, with an
 #' unlimited number of discrete values, and must be in an alternating 1:1
 #' pattern of values of the form "mass intensity mass intensity".
 #'
-#' @param df data.frame object containing spectra compressed in the "unzipped"
+#' @param df data.frame object containing spectra compressed in the "zipped"
 #'   format
 #' @param spectra_col CHR vector of length 2 identifying the column names to use
 #'   for mass and intensity in the source data; must be of length 2, with the
@@ -98,8 +98,8 @@ ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intens
 #' tmp <- data.frame(
 #'   msdata = "712.9501 15094.41015625 713.1851 34809.9765625"
 #' )
-#' ms_spectra_separated(tmp)
-ms_spectra_unzipped <- function(df, spectra_col = "msdata") {
+#' ms_spectra_zipped(tmp)
+ms_spectra_zipped <- function(df, spectra_col = "msdata") {
   # Argument validation ----
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -107,11 +107,9 @@ ms_spectra_unzipped <- function(df, spectra_col = "msdata") {
       conditions = list(
         df          = list(c("mode", "data.frame")),
         spectra_col = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn    = "ms_spectra_unzipped")
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
+      )
+    )
+    stopifnot(arg_check$valid)
   }
   # Function body ----
   out <- df[[spectra_col]] %>%
@@ -132,7 +130,7 @@ ms_spectra_unzipped <- function(df, spectra_col = "msdata") {
 #' Tidy Spectra
 #'
 #' An abstraction function to take outputs from `ms_spectra_separated` and
-#' `ms_spectra_unzipped` and return them as a tidy expression by unpacking the
+#' `ms_spectra_zipped` and return them as a tidy expression by unpacking the
 #' list column "spectra".
 #'
 #' @param df data.frame object containing nested spectra in a column
@@ -169,16 +167,16 @@ tidy_ms_spectra <- function(df) {
 #' Decompress Spectra
 #'
 #' This convenience wrapper will automatically decompress ms spectra in the
-#' "separate" and "unzip" formats and return them as tidy data frames suitable
+#' "separate" and "zipped" formats and return them as tidy data frames suitable
 #' for further manipulation or visualization.
 #'
 #' @param target CHR scalar file path to use OR an R object containing
-#'   compressed spectral data in the "separate" or "unzip" format
+#'   compressed spectral data in the "separate" or "zipped" format
 #' @param is_file BOOL scalar of whether or not `target` is a file. Set to FALSE
 #'   to use an existing R object, which should contain an object with a named
 #'   element matching parameter `spectra_set` (default TRUE)
 #' @param is_format CHR scalar of the compression format, which must be one of
-#'   the supported compression forms ("separate" or "unzip"); ignored if the
+#'   the supported compression forms ("separated" or "zipped"); ignored if the
 #'   compression format can be inferred from the text in `target` (default
 #'   "separate")
 #' @param spectra_set CHR scalar of the object name holding a spectra data frame
@@ -195,12 +193,12 @@ tidy_ms_spectra <- function(df) {
 #'
 #' @examples
 tidy_spectra <- function(target,
-                         is_file     = TRUE,
-                         is_format   = "separate",
-                         spectra_set = "msdata",
-                         ms_col_sep   = c("masses", "intensities"),
+                         is_file      = TRUE,
+                         is_format    = "separated",
+                         spectra_set  = "msdata",
+                         ms_col_sep   = c("measured_mz", "measured_intensity"),
                          ms_col_unzip = "msdata",
-                         from_JSON   = TRUE) {
+                         from_JSON    = TRUE) {
   # Argument validation ----
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -218,20 +216,20 @@ tidy_spectra <- function(target,
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
-  is_format <- match.arg(is_format, c("separate", "unzip"))
+  is_format <- match.arg(is_format, c("separated", "zipped"))
   # Function body ----
   # Check if is file or local object
   if (is_file) {
     out <- read_file(target)
     if (grepl("separate", target)) {
-      is_format <- "separate"
+      is_format <- "separated"
     } else if (grepl("unzip", target)) {
-      is_format <- "unzip"
+      is_format <- "zipped"
     }
   } else {
     out <- target
   }
-  if (from_JSON) {
+  if (is_file && from_JSON) {
     out <- fromJSON(out)
   }
   if (spectra_set %in% names(out)) {
@@ -243,8 +241,50 @@ tidy_spectra <- function(target,
     out <- as.data.frame(out)
   }
   out <- switch(is_format,
-                "separate" = ms_spectra_separated(out, ms_cols = ms_col_sep),
-                "unzip"    = ms_spectra_unzipped(out, spectra_col = ms_col_unzip))
+                "separated" = ms_spectra_separated(out, ms_cols = ms_col_sep),
+                "zipped"    = ms_spectra_zipped(out, spectra_col = ms_col_unzip))
   out <- tidy_ms_spectra(out)
   return(out)
+}
+
+#' Plot a peak from database mass spectral data
+#'
+#' @param data data.frame of spectral data in the form of the `ms_data` table
+#' @param mz_tolerance INT scalar mass to charge ratio tolerance to group peaks,
+#'   with at minimum columns for intensity (as base_int), ion m/z value (as
+#'   base_ion), and scan time (as scantime) - (default: 0 goes to unit
+#'   resolution)
+#' @param drop_ratio NUM scalar threshold of the maximum intensity below which
+#'   traces will be dropped (default: 1e-2 means any trace with a maximum
+#'   intensity less than 1% of the maximum intensity in the plot will be
+#'   dropped)
+#' @param text_offset NUM scalar y-axis offset as a fraction of the maximum
+#'   intensity for trace annotation (default: 0.02 offsets labels in the
+#'   positive direction by 2% of the maximum intensity)
+#'
+#' @return
+#' @export
+#' 
+plot_peak <- function(data, mz_tolerance = 0, drop_ratio = 1e-2, text_offset = 0.02) {
+  cutoff <- max(data$base_int) * drop_ratio 
+  plot_data <- data %>%
+    mutate(ion_group = round(base_ion, mz_tolerance)) %>%
+    group_by(ion_group) %>%
+    filter(max(base_int) > cutoff)
+  annotation_data <- plot_data %>%
+    filter(base_int == max(base_int))
+  out <- plot_data %>%
+    ggplot(
+      aes(x = scantime,
+          y = base_int,
+          group = ion_group)
+    ) +
+    geom_line() +
+    geom_text(data = annotation_data,
+              aes(label = ion_group,
+                  x = scantime,
+                  y = base_int),
+              nudge_y = text_offset * max(data$base_int))
+  out +
+    theme_bw()
 }
