@@ -250,6 +250,15 @@ tidy_spectra <- function(target,
 #' Plot a peak from database mass spectral data
 #'
 #' @param data data.frame of spectral data in the form of the `ms_data` table
+#' @param type CHR scalar of the plot type to draw, must be one of "line",
+#'   "segment", or "area" (dfeault: "line")
+#' @param line_color CHR scalar name of the color to use for the "color"
+#'   aesthetic (only a single color is supported; default: "black")
+#' @param fill_color CHR scalar name of the color to use for the "fill"
+#'   aesthetic (only a single color is supported; default: "grey70")
+#' @param repel_labels LGL scalar on whether to use the [ggrepel] package to
+#'   space out m/z labels in the plot (default: TRUE). If [ggrepel] is not
+#'   installed, it will default to FALSE rather than requiring an installation
 #' @param mz_tolerance INT scalar mass to charge ratio tolerance to group peaks,
 #'   with at minimum columns for intensity (as base_int), ion m/z value (as
 #'   base_ion), and scan time (as scantime) - (default: 0 goes to unit
@@ -265,26 +274,128 @@ tidy_spectra <- function(target,
 #' @return
 #' @export
 #' 
-plot_peak <- function(data, mz_tolerance = 0, drop_ratio = 1e-2, text_offset = 0.02) {
-  cutoff <- max(data$base_int) * drop_ratio 
+plot_peak <- function(data,
+                      type = "line",
+                      line_color = "black",
+                      fill_color = "grey70",
+                      repel_labels = TRUE,
+                      mz_tolerance = 0,
+                      drop_ratio = 1e-2,
+                      text_offset = 0.02) {
+  if (inherits(data, "tbl_sql")) {
+    data <- collect(data)
+  }
+  if (repel_labels && !"ggrepel" %in% installed_packages()) {
+    repel_labels <- FALSE
+  }
+  cutoff <- max(data$base_int) * drop_ratio
   plot_data <- data %>%
-    mutate(ion_group = round(base_ion, mz_tolerance)) %>%
+    mutate(ion_group = round(base_ion, mz_tolerance),
+           ms_n = paste0("MS", ms_n)) %>%
     group_by(ion_group) %>%
     filter(max(base_int) > cutoff)
   annotation_data <- plot_data %>%
     filter(base_int == max(base_int))
+  this_aes <- switch(
+    type,
+    "line" = aes(x = scantime,
+                 y = base_int,
+                 group = ion_group),
+    "segment" = aes(x = scantime,
+                    xend = scantime,
+                    y = base_int,
+                    yend = 0,
+                    group = ion_group),
+    "area" = aes(x = scantime,
+                 y = base_int,
+                 group = ion_group)
+  )
+  this_geom <- switch(
+    type,
+    "line" = geom_line,
+    "segment" = geom_segment,
+    "area" = geom_area
+  )
+  if (repel_labels) {
+    text_geom <- geom_label_repel
+  } else {
+    text_geom <- geom_label
+  }
   out <- plot_data %>%
     ggplot(
-      aes(x = scantime,
-          y = base_int,
-          group = ion_group)
+      mapping = this_aes
     ) +
-    geom_line() +
-    geom_text(data = annotation_data,
-              aes(label = ion_group,
+    suppressWarnings(this_geom(color = line_color, fill = fill_color)) +
+    text_geom(data = annotation_data,
+              aes(label = sprintf("%.*f", mz_tolerance, ion_group),
                   x = scantime,
-                  y = base_int),
-              nudge_y = text_offset * max(data$base_int))
-  out +
-    theme_bw()
+                  y = base_int,
+                  vjust = 0,
+                  hjust = 0.5)) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+    theme_bw() +
+    labs(x = "Scan Time",
+         y = "Signal Intensity",
+         title = if ("peak_id" %in% names(data)) {
+           sprintf("Peak #%s", unique(data$peak_id))
+         } else {
+           waiver()
+         },
+         subtitle = if ("sample_id" %in% names(data)) {
+           sprintf("Sample #%s", unique(data$sample_id))
+         } else {
+           waiver()
+         },
+         caption = sprintf("m/z tolerance: %s  |  intensity threshold: %s",
+                           mz_tolerance,
+                           drop_ratio)
+    ) +
+    facet_wrap(~ ms_n,
+               nrow = 2,
+               scales = "free_y")
+  return(out)
+}
+
+plot_spectra <- function(data, is_file = FALSE, from_JSON = FALSE, animate = FALSE) {
+  if (inherits(data, "tbl_sql")) {
+    data <- collect(data)
+  }
+  if (!is.data.frame(data) && is.list(data.frame)) {
+    data <- bind_rows(data)
+  }
+  if (!"mz" %in% names(data)) {
+    data <- data %>%
+      tidy_spectra(is_file = is_file, from_JSON = from_JSON)
+  }
+  out <- data %>%
+    ggplot(aes(x = mz, y = intensity, xend = mz, yend = 0)) +
+    geom_segment() +
+    theme_bw() +
+    labs(x = "Mass to charge ratio (m/z)",
+         y = "Signal Intensity",
+         title = if ("peak_id" %in% names(data)) {
+           sprintf("Peak #%s", unique(data$peak_id))
+         } else {
+           waiver()
+         },
+         subtitle = if ("sample_id" %in% names(data)) {
+           sprintf("Sample #%s", unique(data$sample_id))
+         } else {
+           waiver()
+         }
+    )
+  if (animate) {
+    require(gganimate)
+    out <- out +
+      transition_time(scantime) +
+      shadow_mark(
+        past = TRUE,
+        future = TRUE,
+        color = "grey",
+        alpha = 0.25
+      ) +
+      ease_aes() +
+      labs(caption = "Scan: {frame_time}")
+  }
+  return(out)
 }
