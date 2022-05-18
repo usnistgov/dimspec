@@ -2441,9 +2441,9 @@ resolve_ms_spectra <- function(peak_id,
            log_ns)
     return(invisible(NULL))
   } else {
-    if (!nrow(peak_id_check$values) == length(peaks)) {
+    if (!nrow(peak_id_check$values) == length(peak_id)) {
       log_it("warn",
-             glue::glue("The following peak_ids were not found in {peaks_table}: {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$id])} and will not be included here. Add to {peak_table} first and then"),
+             glue::glue("The following peak_ids were not found in '{peaks_table}': {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$id])} and will not be included here. Add to '{peak_table}' first and then"),
              log_ns)
       peak_id <- peak_id_check$values$id
     }
@@ -2455,13 +2455,14 @@ resolve_ms_spectra <- function(peak_id,
            log_ns)
     return(invisible(NULL))
   } else {
-    if (!nrow(peak_id_check$values) == length(peaks)) {
+    if (!all(peak_id %in% peak_id_check$values$peak_id)) {
       log_it("warn",
-             glue::glue("The following peak_ids were not found in {ms_data_table}: {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$id])} and will not be included here. Add to {ms_data_table} first and then unpack."),
+             glue::glue("The following peak_ids were not found in '{ms_data_table}': {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$peak_id])}; these will not be included. Call 'resolve_ms_data' with 'unpack_spectra = TRUE' to add and unpack in one step."),
              log_ns)
       peak_id <- peak_id_check$values$id
     }
   }
+  rm(peak_id_check)
   unpack_format <- match.arg(unpack_format)
   if (exists("verify_args")) {
     arg_check <- verify_args(
