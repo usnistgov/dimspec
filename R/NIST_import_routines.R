@@ -2396,11 +2396,9 @@ resolve_ms_data <- function(obj,
   if (unpack_spectra) {
     unpack_format <- match.arg(unpack_format)
     resolve_ms_spectra(peak_id = peak_id,
-                       ms_data_in = ms_data_in,
                        ms_data_table = ms_data_table,
                        ms_spectra_table = ms_spectra_table,
                        unpack_format = unpack_format,
-                       import_map = import_map,
                        db_conn = db_conn,
                        log_ns = log_ns
     )
@@ -2427,24 +2425,42 @@ resolve_ms_data <- function(obj,
 #' @examples
 resolve_ms_spectra <- function(peak_id,
                                peaks_table = "peaks",
-                               ms_data_in = "msdata",
                                ms_data_table = "ms_data",
                                ms_spectra_table = "ms_spectra",
                                unpack_format = c("separated", "zipped"),
-                               import_map = IMPORT_MAP,
                                db_conn = con,
                                log_ns = "db") {
   # Check connection
   stopifnot(as.integer(peak_id) == peak_id,
             active_connection(db_conn))
   peak_id <- as.integer(peak_id)
-  if (!check_for_value(peak_id, peaks_table, "id")$exists) {
-    log_it("error", glue::glue("There is no peak record for peak_id = {peak_id}."), log_ns)
-    stop()
+  peak_id_check <- check_for_value(peak_id, peaks_table, "id")
+  if (!peak_id_check$exists) {
+    log_it("error",
+           glue::glue("There is no peak record for peak_id {format_list_of_names(peak_id)}."),
+           log_ns)
+    return(invisible(NULL))
+  } else {
+    if (!nrow(peak_id_check$values) == length(peaks)) {
+      log_it("warn",
+             glue::glue("The following peak_ids were not found in {peaks_table}: {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$id])} and will not be included here. Add to {peak_table} first and then"),
+             log_ns)
+      peak_id <- peak_id_check$values$id
+    }
   }
-  if (!check_for_value(peak_id, ms_data_table, "peak_id")$exists) {
-    log_it("error", glue::glue("Mass spectra data have not yet been added in table '{ms_data_table}' for peak_id = {peak_id}. Call 'resolve_ms_data' with 'unpack_spectra = TRUE' to add and unpack in one step."), log_ns)
-    stop()
+  peak_id_check <- check_for_value(peak_id, ms_data_table, "peak_id")
+  if (!peak_id_check$exists) {
+    log_it("error",
+           glue::glue("Mass spectra data have not yet been added in table '{ms_data_table}' for peak_id {format_list_of_names(peak_id)}. Call 'resolve_ms_data' with 'unpack_spectra = TRUE' to add and unpack in one step."),
+           log_ns)
+    return(invisible(NULL))
+  } else {
+    if (!nrow(peak_id_check$values) == length(peaks)) {
+      log_it("warn",
+             glue::glue("The following peak_ids were not found in {ms_data_table}: {format_list_of_names(peak_id[!peak_id %in% peak_id_check$values$id])} and will not be included here. Add to {ms_data_table} first and then unpack."),
+             log_ns)
+      peak_id <- peak_id_check$values$id
+    }
   }
   unpack_format <- match.arg(unpack_format)
   if (exists("verify_args")) {
@@ -2453,11 +2469,9 @@ resolve_ms_spectra <- function(peak_id,
       conditions = list(
         peak_id              = list(c("mode", "integer"), c("n>=", 1), "no_na"),
         peaks_table          = list(c("mode", "character"), c("length", 1)),
-        ms_data_in           = list(c("mode", "character"), c("length", 1)),
         ms_data_table        = list(c("mode", "character"), c("length", 1)),
         ms_spectra_table     = list(c("mode", "character"), c("length", 1)),
         unpack_format        = list(c("mode", "character"), c("length", 1)),
-        import_map           = list(c("mode", "list"), c("n>", 1)),
         db_conn              = list(c("length", 1)),
         log_ns               = list(c("mode", "character"), c("length", 1))
       )
@@ -2492,7 +2506,7 @@ resolve_ms_spectra <- function(peak_id,
     log_it("error", msg, log_ns)
     stop(msg)
   } else {
-    log_it("success", glue::glue("Mass spectra unpacked into table '{ms_spectra_table}'."), log_ns)
+    log_it("success", glue::glue("Mass spectra for peak_id {format_list_of_names(peak_id)} unpacked into table '{ms_spectra_table}'."), log_ns)
   }
 }
 
