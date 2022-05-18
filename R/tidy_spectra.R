@@ -276,16 +276,18 @@ tidy_spectra <- function(target,
 #' 
 plot_peak <- function(data,
                       type = "line",
-                      line_color = "black",
-                      fill_color = "grey70",
-                      repel_labels = TRUE,
                       mz_tolerance = 0,
                       drop_ratio = 1e-2,
+                      repel_labels = TRUE,
+                      line_color = "black",
+                      fill_color = "grey50",
+                      fill_alpha = 0.2,
+                      text_size = 3,
                       text_offset = 0.02) {
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
   }
-  if (repel_labels && !"ggrepel" %in% installed_packages()) {
+  if (repel_labels && !"ggrepel" %in% installed.packages()) {
     repel_labels <- FALSE
   }
   cutoff <- max(data$base_int) * drop_ratio
@@ -295,7 +297,8 @@ plot_peak <- function(data,
     group_by(ion_group) %>%
     filter(max(base_int) > cutoff)
   annotation_data <- plot_data %>%
-    filter(base_int == max(base_int))
+    filter(base_int == max(base_int)) %>%
+    mutate(base_int = base_int * (1 + text_offset))
   this_aes <- switch(
     type,
     "line" = aes(x = scantime,
@@ -325,13 +328,18 @@ plot_peak <- function(data,
     ggplot(
       mapping = this_aes
     ) +
-    suppressWarnings(this_geom(color = line_color, fill = fill_color)) +
-    text_geom(data = annotation_data,
-              aes(label = sprintf("%.*f", mz_tolerance, ion_group),
-                  x = scantime,
-                  y = base_int,
-                  vjust = 0,
-                  hjust = 0.5)) +
+    suppressWarnings(this_geom(color = line_color,
+                               fill = fill_color,
+                               alpha = ifelse(type == "area", fill_alpha, 1))) +
+    suppressWarnings(text_geom(data = annotation_data,
+                               aes(label = sprintf("%.*f", mz_tolerance, ion_group),
+                                   x = scantime,
+                                   y = base_int,
+                                   vjust = 0,
+                                   hjust = 0.5),
+                               size = text_size,
+                               check_overlap = FALSE,
+                               max.overlaps = 20)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
     theme_bw() +
     labs(x = "Scan Time",
@@ -348,7 +356,7 @@ plot_peak <- function(data,
          },
          caption = sprintf("m/z tolerance: %s  |  intensity threshold: %s",
                            mz_tolerance,
-                           drop_ratio)
+                           format(drop_ratio * max(data$intensity), scientific = TRUE, digits = 3))
     ) +
     facet_wrap(~ ms_n,
                nrow = 2,
@@ -356,7 +364,19 @@ plot_peak <- function(data,
   return(out)
 }
 
-plot_spectra <- function(data, is_file = FALSE, from_JSON = FALSE, animate = FALSE) {
+plot_spectra <- function(data,
+                         mz_tolerance = 3,
+                         drop_ratio = 1e-2,
+                         repel_labels = TRUE,
+                         repel_line_color = "grey50",
+                         nudge_y_factor = 0.03,
+                         log_y = FALSE,
+                         is_file = FALSE,
+                         from_JSON = FALSE,
+                         animate = FALSE,
+                         text_size = 3,
+                         max_overlaps = 50) {
+  if (animate && !"gganimate" %in% installed.packages()) animate = FALSE
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
   }
@@ -365,11 +385,42 @@ plot_spectra <- function(data, is_file = FALSE, from_JSON = FALSE, animate = FAL
   }
   if (!"mz" %in% names(data)) {
     data <- data %>%
-      tidy_spectra(is_file = is_file, from_JSON = from_JSON)
+      tidy_spectra(is_file = is_file, from_JSON = from_JSON) %>%
+      suppressWarnings()
   }
+  if (repel_labels) {
+    text_geom <- geom_text_repel
+  } else {
+    text_geom <- geom_text
+  }
+  cutoff <- max(data$intensity) * drop_ratio
+  nudge_y_by <- max(data$intensity) * nudge_y_factor
+  plot_data <- data %>%
+    mutate(ion_group = round(mz, mz_tolerance)) %>%
+    group_by(ion_group) %>%
+    filter(max(intensity) > cutoff)
+  drop_ratio_text <- format(drop_ratio * max(data$intensity), scientific = TRUE, digits = 3)
+  annotation_data <- plot_data %>%
+    mutate(mz = ion_group) %>%
+    group_by(mz)
+  if (!animate) {
+    annotation_data <- annotation_data %>%
+      filter(intensity == max(intensity))
+  }
+  
   out <- data %>%
     ggplot(aes(x = mz, y = intensity, xend = mz, yend = 0)) +
     geom_segment() +
+    suppressWarnings(text_geom(
+      data = annotation_data,
+      aes(x = mz,
+          y = intensity,
+          label = sprintf("%.*f", mz_tolerance, mz)),
+      max.overlaps = max_overlaps,
+      segment.color = repel_line_color,
+      nudge_y = nudge_y_by,
+      size = text_size
+    )) +
     theme_bw() +
     labs(x = "Mass to charge ratio (m/z)",
          y = "Signal Intensity",
@@ -382,8 +433,15 @@ plot_spectra <- function(data, is_file = FALSE, from_JSON = FALSE, animate = FAL
            sprintf("Sample #%s", unique(data$sample_id))
          } else {
            waiver()
-         }
+         },
+         caption = sprintf("m/z tolerance: %s  |  intensity threshold: %s",
+                           mz_tolerance,
+                           drop_ratio_text)
     )
+  if (log_y) {
+    out <- out +
+      scale_y_log10()
+  }
   if (animate) {
     require(gganimate)
     out <- out +
@@ -395,7 +453,9 @@ plot_spectra <- function(data, is_file = FALSE, from_JSON = FALSE, animate = FAL
         alpha = 0.25
       ) +
       ease_aes() +
-      labs(caption = "Scan: {frame_time}")
+      labs(caption = "Scan: {frame_time}\n{sprintf('m/z tolerance: %s  |  intensity threshold: %s',
+                           mz_tolerance,
+                           drop_ratio_text)}")
   }
   return(out)
 }
