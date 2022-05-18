@@ -388,44 +388,84 @@ plot_spectra <- function(data,
       tidy_spectra(is_file = is_file, from_JSON = from_JSON) %>%
       suppressWarnings()
   }
+  if (!"scantime" %in% names(data)) animate = FALSE
   if (repel_labels) {
     text_geom <- geom_text_repel
   } else {
     text_geom <- geom_text
   }
   cutoff <- max(data$intensity) * drop_ratio
-  nudge_y_by <- max(data$intensity) * nudge_y_factor
+  if (log_y) {
+    nudge_y_by <- nudge_y_factor
+  } else {
+    nudge_y_by <- max(data$intensity) * nudge_y_factor
+  }
   plot_data <- data %>%
     mutate(ion_group = round(mz, mz_tolerance)) %>%
     group_by(ion_group) %>%
     filter(max(intensity) > cutoff)
-  drop_ratio_text <- format(drop_ratio * max(data$intensity), scientific = TRUE, digits = 3)
-  annotation_data <- plot_data %>%
-    mutate(mz = ion_group) %>%
-    group_by(mz)
+  drop_ratio_text <- format(drop_ratio * max(data$intensity),
+                            scientific = TRUE,
+                            digits = 3)
+  if (!"formula" %in% names(plot_data)) {
+    plot_data <- plot_data %>%
+      left_join(
+        tbl(con, "fragments") %>%
+          select(mz, formula) %>%
+          collect(),
+        by = c("mz" = "mz")
+      )
+  }
   if (!animate) {
-    annotation_data <- annotation_data %>%
+    plot_data <- plot_data %>%
+      group_by(ion_group) %>%
       filter(intensity == max(intensity))
   }
+  annotation_data <- plot_data %>%
+    mutate(label = ifelse(is.na(formula),
+                          sprintf("%.*f", mz_tolerance, mz),
+                          sprintf("%s (%s)", formula, sprintf("%.*f", mz_tolerance, mz))),
+           lab_color = ifelse(is.na(formula), "", "annotated")
+           ) %>%
+    group_by(ion_group)
   
-  out <- data %>%
-    ggplot(aes(x = mz, y = intensity, xend = mz, yend = 0)) +
+  out <- plot_data %>%
+    ggplot(aes(x = mz,
+               y = intensity,
+               xend = mz,
+               yend = 0)) +
     geom_segment() +
     suppressWarnings(text_geom(
       data = annotation_data,
       aes(x = mz,
           y = intensity,
-          label = sprintf("%.*f", mz_tolerance, mz)),
+          label = label,
+          color = lab_color),
       max.overlaps = max_overlaps,
       segment.color = repel_line_color,
       nudge_y = nudge_y_by,
-      size = text_size
+      size = text_size,
+      show.legend = FALSE
     )) +
     theme_bw() +
     labs(x = "Mass to charge ratio (m/z)",
          y = "Signal Intensity",
          title = if ("peak_id" %in% names(data)) {
-           sprintf("Peak #%s", unique(data$peak_id))
+           this_peak <- unique(data$peak_id)
+           compound <- tbl(con, "compound_fragments") %>%
+             filter(peak_id == this_peak) %>%
+             distinct(compound_id) %>%
+             left_join(
+               tbl(con, "compounds"),
+               by = c("compound_id" = "id")
+             ) %>%
+             select(name) %>%
+             collect()
+           if (nrow(compound) > 0) {
+             sprintf("Peak #%s - %s", this_peak, format_list_of_names(compound$name))
+           } else {
+             sprintf("Peak #%s", this_peak)
+           }
          } else {
            waiver()
          },
@@ -437,7 +477,8 @@ plot_spectra <- function(data,
          caption = sprintf("m/z tolerance: %s  |  intensity threshold: %s",
                            mz_tolerance,
                            drop_ratio_text)
-    )
+    ) +
+    scale_x_continuous(expand = expansion(mult = 0.1))
   if (log_y) {
     out <- out +
       scale_y_log10()
@@ -453,7 +494,7 @@ plot_spectra <- function(data,
         alpha = 0.25
       ) +
       ease_aes() +
-      labs(caption = "Scan: {frame_time}\n{sprintf('m/z tolerance: %s  |  intensity threshold: %s',
+      labs(caption = "Scan: {sprintf('%.4f, frame_time)}\n{sprintf('m/z tolerance: %s  |  intensity threshold: %s',
                            mz_tolerance,
                            drop_ratio_text)}")
   }
