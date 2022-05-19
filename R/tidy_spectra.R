@@ -418,11 +418,11 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
   } else {
     this_peak <- NA
   }
-  if (length(this_peak) > 1) {
+  if (length(this_peak) > 1 | !active_connection(db_conn)) {
     return(out)
   }
   if (!any(is.na(this_peak)) && !is.null(db_conn) && active_connection(db_conn)) {
-    compound <- tbl(con, "compound_fragments") %>%
+    compound <- tbl(db_conn, "compound_fragments") %>%
       filter(peak_id %in% this_peak) %>%
       distinct(compound_id) %>%
       left_join(
@@ -440,7 +440,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
       compound_name <- format_list_of_names(compound[[grep("name", names(compound), value = TRUE)]]) %>%
         str_trunc(30)
     }
-    sample <- tbl(con, "peaks") %>%
+    sample <- tbl(db_conn, "peaks") %>%
       filter(id %in% this_peak) %>%
       distinct(sample_id) %>%
       left_join(
@@ -682,11 +682,9 @@ ms_plot_spectra <- function(data,
 #' @param intensity_mz_resolution INT scalar mass to charge ratio tolerance to
 #'   group peaks, with at minimum columns for intensity (as "base_int" or
 #'   "intensity"), ion m/z value (as "base_ion" or "mz"), and scan time (as
-#'   "scantime") - (default: 3)
+#'   "scantime") - (default: 5)
 #' @param intensity_drop_ratio NUM scalar threshold of the maximum intensity
-#'   below which traces will be dropped (default: 1e-2 means any trace with a
-#'   maximum intensity less than 1% of the maximum intensity in the plot will be
-#'   dropped)
+#'   below which traces will be dropped (default: 0 returns all)
 #' @param intensity_facet_by CHR scalar of a column name in `data` by which to
 #'   facet the resulting plot (default: NULL)
 #' @param db_conn database connection (default: con) which must be live to pull
@@ -696,9 +694,10 @@ ms_plot_spectra <- function(data,
 #' @export
 #' 
 ms_plot_spectral_intensity <- function(data,
-                                       intensity_mz_resolution = 3,
-                                       intensity_drop_ratio = 1e-2,
+                                       intensity_mz_resolution = 5,
+                                       intensity_drop_ratio = 0,
                                        intensity_facet_by = NULL,
+                                       intensity_plot_resolution = c("spectra", "peak"),
                                        db_conn = con) {
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
@@ -706,14 +705,27 @@ ms_plot_spectral_intensity <- function(data,
   if (!"scantime" %in% names(data)) {
     stop("Spectral intensity plot requires a scantime column.")
   }
+  intensity_plot_resolution <- match.arg(intensity_plot_resolution)
   plot_data <- data
   stopifnot(any(all(c("base_ion", "base_int") %in% names(data)),
                 all(c("mz", "intensity") %in% names(data)),
                 "scantime" %in% names(data)))
-  if ("base_ion" %in% names(data)) {
+  if (!"mz" %in% names(data)) {
+    if (intensity_plot_resolution == "spectra") {
     plot_data <- plot_data %>%
-      rename("mz" = "base_ion",
-             "intensity" = "base_int")
+      tidy_spectra(is_file = FALSE,
+                   from_JSON = FALSE) %>%
+      suppressWarnings()
+    } else {
+      if ("base_ion" %in% names(data)) {
+        plot_data <- plot_data %>%
+          rename("mz" = "base_ion",
+                 "intensity" = "base_int")
+      } else {
+        log_it("error", "Could not resolve mass spectral data.", "db")
+        return(NULL)
+      }
+    }
   }
   cutoff <- max(plot_data$intensity) * intensity_drop_ratio
   if (cutoff < 1) cutoff <- 0
@@ -751,6 +763,10 @@ ms_plot_spectral_intensity <- function(data,
 #' default settings match those of the called plotting functions, and the output
 #' can be further manipulated with the patchwork package.
 #'
+#' @note Requires a live connection to the database to pull all plots for a
+#'   given peak_id.
+#' @note Defaults are as for called functions
+#'
 #' @inheritParams ms_plot_peak
 #' @inheritParams ms_plot_spectra
 #' @inheritParams ms_plot_spectral_intensity
@@ -784,24 +800,40 @@ ms_plot_peak_overview <- function(plot_peak_id,
                                   spectra_max_overlaps = 50,
                                   intensity_plot_resolution = c("spectra", "peak"),
                                   intensity_mz_resolution = 3,
-                                  intensity_drop_ratio = 1e-2,
+                                  intensity_drop_ratio = 0,
                                   patchwork_design = c(
                                       area(1, 4, 7, 7),
                                       area(1, 1, 4, 2),
                                       area(6, 1, 7, 2)
                                     ),
-                                  as_individual_plots = FALSE
+                                  as_individual_plots = FALSE,
+                                  db_conn = con,
+                                  log_ns = "global"
 ) {
-  stopifnot(require(patchwork))
+  stopifnot(require(patchwork),
+            active_connection(db_conn),
+            length(plot_peak_id) == 1)
   these_args <- as.list(environment())
   intensity_plot_resolution <- match.arg(intensity_plot_resolution)
   peak_type <- match.arg(peak_type)
-  peak_data <- tbl(con, "ms_data") %>%
+  peak_data <- tbl(db_conn, "ms_data") %>%
     filter(peak_id == plot_peak_id) %>%
     collect()
-  spectral_data <- tbl(con, "peak_spectra") %>%
-    filter(peak_id == plot_peak_id) %>%
-    collect()
+  if (nrow(peak_data) == 0) {
+    log_it("error", glue::glue("No data exist for peak {plot_peak_id}."), log_ns)
+    return(NULL)
+  }
+  if (intensity_plot_resolution == "spectra") {
+    spectral_data <- tbl(db_conn, "peak_spectra") %>%
+      filter(peak_id == plot_peak_id) %>%
+      collect()
+    if (nrow(spectral_data) == 0) {
+      log_it("warn", glue::glue("No spectral data exists for peak {plot_peak_id}. Using the peak data instead."))
+      spectral_data <- peak_data
+    }
+  } else {
+    spectral_data <- peak_data
+  }
   
   plot_titles <- ms_plot_titles(peak_data, peak_mz_resolution, peak_drop_ratio)
   
