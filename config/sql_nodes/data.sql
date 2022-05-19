@@ -350,7 +350,7 @@
 				/* measured mass of precursor_mz */
 			msd.scantime,
 				/* ms scantime for this spectrum */
-			msd.measured_mz AS m_z,
+			msd.measured_mz AS mz,
 				/* mass to charge ratios */
 			msd.measured_intensity AS intensity
 				/* measured signal intensities */
