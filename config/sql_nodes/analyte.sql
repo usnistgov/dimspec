@@ -212,7 +212,7 @@
 			TEXT NOT NULL,
 			/* elemental formula for specific fragment, user submitted */
 		radical
-			TEXT,
+			INTEGER,
 			/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
 		smiles
 			TEXT,
