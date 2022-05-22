@@ -1134,6 +1134,10 @@ resolve_fragments <- function(obj,
   # others will be ignored.
   fragment_aliases <- get_component(obj, fragment_aliases_in)
   if (length(fragment_aliases) == 0) {
+    fragment_alias_values <- list(
+      smiles = NA,
+      fragment_id = NA
+    )
     if (generate_missing_aliases) {
       if (INFORMATICS && USE_RDKIT) {
         if (exists("rdkit_active")) {
@@ -1156,11 +1160,6 @@ resolve_fragments <- function(obj,
           stringr::str_squish()
         log_it("warn", settings, log_ns)
       }
-    } else {
-      fragment_alias_values <- list(
-        smiles = NA,
-        fragment_id = NA
-      )
     }
   } else {
     fragment_alias_values <- fragment_aliases[[1]]
