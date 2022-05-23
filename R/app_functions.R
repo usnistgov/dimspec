@@ -698,7 +698,7 @@ log_it <- function(log_level,
                        format(Sys.time(), "%Y-%m-%d %H:%M:%OS3"),
                        ifelse(is.na(log_ns), "global", log_ns),
                        log_level,
-                       call_func,
+                       deparse(call_func),
                        msg)
         # # Possible integration of package "cli" for this, but it's getting very close to recreating some aspects of "logger", so just use logger.
         # 
@@ -934,7 +934,7 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #'
 #' @examples
 rectify_null_from_env <- function(parameter, env_parameter, default, log_ns = NA_character_) {
-  logger <- exists("log_it") && LOGGING_ON
+  logger <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   if (logger) log_fn("start", log_ns)
   if (!is.null(parameter)) {
     par_name <- deparse(substitute(parameter))
