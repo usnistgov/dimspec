@@ -601,6 +601,9 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
 #' 
 rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "MolFrom", get_aliases = c("inchi", "inchikey"), mol_to_prefix = "MolTo", rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
   logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
+  if (type %in% names(identifiers)) {
+      identifiers <- identifiers[[type]]
+    }
   stopifnot(
     all(unlist(lapply(c(identifiers, type, mol_from_prefix, mol_to_prefix, rdkit_ref, log_ns), is.character))),
     all(unlist(lapply(c(type, rdkit_ref, log_ns, make_if_not), function(x) length(x) == 1))),
@@ -617,9 +620,16 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "M
     to_remove <- which(identifiers == "" | is.na(identifiers))
     if (length(to_remove) > 0) {
       if (logging) log_it("warn", glue::glue("{length(to_remove)} identifiers were blank or NA."), log_ns)
+      identifiers <- identifiers[-to_remove]
     }
-    identifiers <- identifiers[-to_remove]
-    aliases <- get_aliases
+    aliases <- tolower(get_aliases)
+    # Check for doubled names
+    if (any(aliases %in% tolower(names(identifiers)))) {
+      aliases <- aliases[!aliases %in% tolower(names(identifiers))]
+    }
+    if (any(aliases %in% tolower(type))) {
+      aliases <- aliases[!aliases %in% tolower(type)]
+    }
     rdk <- eval(sym(rdkit_ref))
     to_mol <- grep(paste0("^", mol_from_prefix, type, "$"),
                    names(rdk$Chem),

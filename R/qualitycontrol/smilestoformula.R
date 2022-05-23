@@ -34,5 +34,5 @@ smilestoformula <- function(SMILES) {
         FORMULA <- gsub("-", "", gsub("\\+", "", gsub("\\[", "", gsub("\\]", "", FORMULA))))
       }
   }
-  data.frame(FORMULA, FIXEDMASS, NETCHARGE)
+  data.frame(SMILES, FORMULA, FIXEDMASS, NETCHARGE)
 }

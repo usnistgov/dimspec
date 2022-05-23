@@ -166,14 +166,14 @@
 		/* List of alternate names or identifiers for compounds */
 	(
 		compound_id
-			INTEGER,
+			INTEGER NOT NULL
 			/* foreign key to compounds */
+		alias_type
+			INTEGER NOT NULL,
+			/* foreign key to norm_analyte_alias_references */
 		alias
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
-		alias_type
-			INTEGER,
-			/* foreign key to norm_analyte_alias_references */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -199,7 +199,7 @@
 		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS fragments
+	CREATE TABLE IF NOT EXISTS annotated_fragments
 		/* Potential annotated fragment ions that are attributed to one or more mass spectra. */
 	(
 		id
@@ -208,25 +208,18 @@
 		mz
 			REAL NOT NULL,
 			/* m/z value for specific fragment, derived */
-		formula
-			TEXT NOT NULL,
-			/* elemental formula for specific fragment, user submitted */
-		radical
-			INTEGER,
-			/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
-		smiles
-			TEXT,
+		fragment_id
+			INTEGER NOT NULL,
 			/* smiles structure of fragment ion, can be NULL, user submitted */
 		/* Check constraints */
-		CHECK (radical IN (0, 1)),
-		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
 		/* Foreign key relationships */
+		FOREIGN KEY (fragment_id) REFERENCES norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_inspections
 		/* Fragment inspections by users for ions that are attributed to one or more mass spectra. */
 	(
-	  fragment_id
+	  annotated_fragment_id
 	    INTEGER,
 	    /* foreign key to fragments table */
 		user_note
@@ -242,7 +235,35 @@
 		CHECK (inspected_on == strftime("%Y-%m-%d %H:%M:%S", inspected_on)),
 		/* Foreign key relationships */
 		FOREIGN KEY (inspected_by) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (annotated_fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_fragments
+	  /* Normalization list of annotated fragments */
+	(
+	  id
+	    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		fixedmass
+		  REAL,
+		  /* fixed molecular formula, generally generated from either rcdk or RDKit */
+		netcharge
+		  INTEGER,
+		  /* net ionic charge for this fragment */
+		formula
+			TEXT NOT NULL,
+			/* elemental formula for specific fragment, user submitted */
+		radical
+			INTEGER,
+			/* TRUE/FALSE: the fragment contains a radical electron, user submitted */
+		smiles
+			TEXT,
+			/* smiles structure of fragment ion, can be NULL, user submitted */
+		/* Check constraints */
+		UNIQUE(fixedmass, netcharge, formula, radical, smiles),
+		CHECK (radical IN (0, 1)),
+		CHECK (formula GLOB Replace(Hex(ZeroBlob(Length(formula))), '00', '[A-Za-z0-9]'))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_aliases
@@ -260,14 +281,14 @@
 		/* Check constraints */
 		UNIQUE (fragment_id, alias_type, alias),
 		/* Foreign key relationships */
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (fragment_id) REFERENCES norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS fragment_sources
 		/* Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical). */
 	(
-		fragment_id
+		annotated_fragments_id
 			INTEGER NOT NULL,
 			/* foreign key to fragments */
 		generation_type
@@ -277,9 +298,9 @@
 			TEXT NOT NULL,
 			/* DOI, etc. */
 		/* Check constraints */
-		UNIQUE (fragment_id, generation_type, citation),
+		UNIQUE (annotated_fragments_id, generation_type, citation),
 		/* Foreign key relationships */
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (annotated_fragments_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
@@ -292,13 +313,14 @@
 				/* compounds.id field */
 			c.formula AS compound,
 				/* compounds.formula field */
-			f.formula AS fragments,
+			nf.formula AS fragments,
 				/* fragments.formula field */
-			f.mz
+			af.mz
 				/* fragments.mz field */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN fragments f ON cf.fragment_id = f.id
+		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_fragment_count AS
@@ -308,11 +330,12 @@
 				/* compounds.name field */
 			c.formula AS compound,
 				/* compounds.formula field */
-			COUNT(f.formula) AS n_fragments
+			COUNT(DISTINCT(nf.formula)) AS n_fragments
 				/* distinct number of fragments associated with this compound as the count of associated fragments.formula */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN fragments f ON cf.fragment_id = f.id
+		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
 	/*magicsplit*/
