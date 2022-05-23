@@ -457,21 +457,28 @@ py_modules_available <- function(required_modules, log_ns = NULL) {
 #'
 #' Given a name of an R object, performs a simple check on RDKit availability on
 #' that object, creating it if it does not exist. A basic structure conversion
-#' check is tried and a TRUE/FALSE result returned.
+#' check is tried and a TRUE/FALSE result returned. Leave all arguments as their
+#' defaults of NULL to ensure they will honor the settings in `rdkit/env_py.R`.
 #'
 #' @param rdkit_ref CHR scalar OR R object of an RDKit binding (default NULL
 #'   goes to "rdk" for convenience with other pipelines in this project)
-#' @param log_ns 
+#' @param rdkit_name CHR scalar the name of a python environment able to run
+#'   rdkit (default NULL goes to "rdkit" for convenience with other pipelines in
+#'   this project)
+#' @param make_if_not LGL scalar of whether or not to create a new python
+#'   environment using [activate_py_env] if the binding is not active
+#' @param log_ns
 #'
 #' @return LGL scalar of whether or not the test of RDKit was successful
 #' @export
 #' 
-rdkit_active <- function(rdkit_ref = NULL, log_ns = NULL, make_if_not = FALSE) {
+rdkit_active <- function(rdkit_ref = NULL, rdkit_name = NULL, log_ns = NULL, make_if_not = FALSE) {
   if (!is.character(rdkit_ref)) rdkit_ref <- deparse(substitute(rdkit_ref))
   if (rdkit_ref == "NULL") rdkit_ref <- NULL
+  rdkit_name <- rectify_null_from_env(rdkit_name, PYENV_NAME, "rdkit")
   rdkit_ref <- rectify_null_from_env(rdkit_ref, PYENV_REF, "rdk")
   log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
-  logging <- exists("log_it")
+  logging <- exists("log_it") && exists("LOGGING_ON") && LOGGING_ON
   if (logging) log_fn("start", log_ns)
   if (!rdkit_ref %in% names(.GlobalEnv)) {
     msg <- sprintf('Object "%s" not found.', rdkit_ref)
@@ -484,6 +491,7 @@ rdkit_active <- function(rdkit_ref = NULL, log_ns = NULL, make_if_not = FALSE) {
       if (logging) {
         log_it("info", sprintf('Tying object "%s" to rdkit in this environment.', rdkit_ref), log_ns)
       }
+      activate_py_env(env_name = rdkit_name)
       assign(rdkit_ref, import("rdkit"), envir = .GlobalEnv)
       return(rdkit_active(rdkit_ref = rdkit_ref, log_ns = log_ns))
     } else {

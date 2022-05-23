@@ -1111,3 +1111,44 @@ obj_name_check <- function(obj, default_name = NULL) {
   if (exists("log_it")) log_it("debug", "Exiting obj_name_check().")
   return(obj_name)
 }
+
+#' Start the RDKit integration
+#'
+#' If the session was started without RDKit integration, e.g. INFORMATICS or
+#' USE_RDKIT were FALSE in [config/env_R.R], start up RDKit in this session.
+#'
+#' @note RDKit and rcdk are incompatible. If the session was started with
+#'   INFORMATICS = TRUE and USE_RDKIT = FALSE, ChemmineR was likely loaded. If
+#'   this is the case, the session will need to be restarted due to java
+#'   conflicts between the two.
+#'
+#' @param src_dir CHR scalar file path to settings and functions enabling rdkit
+#'   (default: file.path(getwd(), "rdkit"))
+#' @param log_ns CHR scalar name of the logging namespace to use for this
+#'   function (default: "rdkit")
+#'
+#' @return LGL scalar indicating whether starting RDKit integration was
+#'   successful
+#' @export
+#'
+start_rdkit <- function(src_dir = file.path(getwd(), "rdkit"), log_ns = "rdkit") {
+  if (any(c("BiocManager", "rcdk", "ChemmineR") %in% loadedNamespaces())) {
+    stop("RDKit cannot be loaded if Bioconductor is already running.")
+  }
+  adding <- character(0)
+  if (!exists("INFORMATICS") || !INFORMATICS) {
+    adding <- c("INFORMATICS", "USE_RDKIT")
+    assign("INFORMATICS", TRUE, envir = .GlobalEnv)
+    assign("USE_RDKIT", TRUE, envir = .GlobalEnv)
+  } else if (INFORMATICS && !USE_RDKIT) {
+    adding <- "USE_RDKIT"
+    assign("USE_RDKIT", TRUE, envir = .GlobalEnv)
+  }
+  if (length(adding) > 0) {
+    log_it("trace", glue::glue("Setting {format_list_of_names(adding)} to TRUE."), log_ns)
+  }
+  sapply(list.files(src_dir, pattern = "\\.R$", recursive = TRUE, full.names = TRUE),
+         source,
+         keep.source = FALSE)
+  rdkit_active(make_if_not = TRUE)
+}
