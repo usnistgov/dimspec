@@ -87,3 +87,4 @@ DELETE FROM samples;
 .import --csv --skip 1 config/data/pfas/samples.csv samples
 .import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/pfas/norm_peak_confidence.csv norm_peak_confidence
+INSERT INTO norm_analyte_alias_references (name, description, reference) VALUES ("NIST Suspect List", "Identifying number in the NIST Suspect List", "https://data.nist.gov/od/id/mds2-2387"), ("XICLISTID", "ID number for the original XIC List", "https://data.nist.gov/od/id/mds2-2387")
