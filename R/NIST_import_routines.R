@@ -423,13 +423,12 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Compounds node ----
-    # WIP ----
-    compounds <- do.call(
-      resolve_compounds,
-      args = append(list(obj = obj),
-                    func_env[names(func_env) %in% names(formals(resolve_compounds))]
-      )
-    )
+    # compounds <- do.call(
+    #   resolve_compounds,
+    #   args = append(list(obj = obj),
+    #                 func_env[names(func_env) %in% names(formals(resolve_compounds))]
+    #   )
+    # )
     # _Fragments node ----
     fragments <- do.call(
       resolve_fragments,
@@ -440,9 +439,9 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Peak/fragment/compound connection ----
-    resolve_compound_fragments(peak_id = peaks,
-                               fragment_id = fragments,
-                               compound_id = compounds)
+    # resolve_compound_fragments(peak_id = peaks,
+    #                            fragment_id = fragments,
+    #                            compound_id = compounds)
     log_it("info", glue::glue("Finished importing object #{i} with name {names(import_object)[i]}..."), log_ns)
   }
 }
@@ -633,6 +632,7 @@ resolve_compounds <- function(obj,
                               compounds_table = "compounds",
                               compound_category = NULL,
                               compound_category_table = "compound_categories",
+                              compound_alias_table = "compound_aliases",
                               require_all = FALSE,
                               import_map = IMPORT_MAP,
                               ensure_unique = TRUE,
@@ -656,11 +656,23 @@ resolve_compounds <- function(obj,
   }
   # Check connection
   stopifnot(active_connection(db_conn))
+  obj_values <- get_component(obj = obj,
+                              obj_component = compounds_table,
+                              log_ns = log_ns)[[1]]
   compound_values <- map_import(
     import_obj = obj,
     aspect = compounds_table,
     import_map = import_map
   )
+  if ("id" %in% tolower(names(obj_values))) {
+    
+  }
+  if (str_detect(compound_values$name, ";")) {
+    all_names <- str_split(compound_values$name, ";")
+    first_names <- lapply(all_names, function(x) x[[1]]) %>%
+      purrr::flatten_chr()
+    compound_values$name <- first_names
+  }
   
   compound_ids <- add_or_get_id(
     db_table = compounds_table,
@@ -670,7 +682,44 @@ resolve_compounds <- function(obj,
     require_all = require_all,
     log_ns = log_ns
   )
+  resolve_compound_aliases(obj = obj,
+                           compounds_in = compounds_in,
+                           compound_alias_table = compound_alias_table,
+                           db_conn = db_conn,
+                           log_ns = log_ns,
+                           other_names)
   return(compound_ids)
+}
+
+resolve_compound_aliases <- function(obj,
+                                     norm_alias_table = "norm_analyte_alias_references",
+                                     norm_alias_name_column = "name",
+                                     compounds_in = "compounddata",
+                                     compound_alias_table = "compound_aliases",
+                                     db_conn = con,
+                                     log_ns = "db",
+                                     ...) {
+  compound_data <- get_component(obj = obj,
+                                 obj_component = compounds_in,
+                                 log_ns = log_ns) %>%
+    .[[1]] %>%
+    tack_on(...) %>%
+    bind_cols() %>%
+    rename_with(tolower)
+  need_headers <- c("ADDITIONAL",
+                    dbGetQuery(db_conn,
+                               glue::glue("select {norm_alias_name_column} from {norm_alias_table}")) %>%
+                      unlist()
+  ) %>%
+    tolower()
+  aliases = list(0L)
+  if (str_detect(compound_values$name, ";")) {
+    aliases <- str_split(compound_values$name, ";") %>%
+      purrr::flatten_chr()
+  }
+  out <- compound_data %>%
+    select(any_of(need_headers))
+  return(out)
 }
 
 #' Title
@@ -696,7 +745,7 @@ resolve_compound_fragments <- function(values = NULL,
                                        compound_id = NA,
                                        linkage_table = "compound_fragments",
                                        peaks_table = "peaks",
-                                       fragments_table = "fragments",
+                                       fragments_table = "annotated_fragments",
                                        compounds_table = "compounds",
                                        db_conn = con,
                                        log_ns = "db") {
@@ -905,8 +954,9 @@ resolve_compound_fragments <- function(values = NULL,
 #' @inheritParams add_rdkit_aliases
 #'
 #' @param obj LIST object containing data formatted from the import generator
-#' @param sample_id
-#' @param generation_type
+#' @param sample_id INT scalar matching a sample ID to which to tie these
+#'   fragments (optional, default: NULL)
+#' @param generation_type 
 #' @param fragments_in
 #' @param fragments_table
 #' @param fragments_sources_table
@@ -925,7 +975,7 @@ resolve_compound_fragments <- function(values = NULL,
 #'
 #' @return
 #' @export
-#'
+#' 
 resolve_fragments <- function(obj,
                               sample_id = NULL,
                               generation_type = NULL,
@@ -1062,6 +1112,8 @@ resolve_fragments <- function(obj,
       column_names = "generation_type",
       match_criteria = list(id = sample_id)
     )
+  } else if (is.null(generation_type) && is.null(sample_id)) {
+    log_it("warn", "No sample id was provided to obtain a generation type. It will be left NULL.", log_ns)
   } else {
     if (length(generation_type) > 1 && !length(generation_type) == length(fragment_values[[1]])) {
       log_it("error",
@@ -3757,21 +3809,16 @@ add_rdkit_aliases <- function(identifiers,
     fragment_id = NA
   )
   if (exists("INFORMATICS") && INFORMATICS && USE_RDKIT) {
-    if (!type %in% names(identifiers)) {
+    if (!tolower(type) %in% tolower(names(identifiers))) {
       log_it("error", glue::glue("Provided data do not include a column named '{type}'."), log_ns)
     } else {
-      if (exists("rdkit_active") && rdkit_active(rdkit_ref = rdkit_ref, rdkit_name = rdkit_name)) {
-        log_it("info", glue::glue("Generating aliases for {alias_category} using rdkit_mol_aliases."), log_ns)
-        alias_values <- rdkit_mol_aliases(identifiers = identifiers,
-                                          type = type,
-                                          get_aliases = rdkit_aliases,
-                                          rdkit_ref = rdkit_ref,
-                                          log_ns = rdkit_ns,
-                                          make_if_not = rdkit_make_if_not)
-      } else {
-        log_it("warn", "RDKit does not appear to be available for generation of {type} aliases.", log_ns)
-        return(alias_values)
-      }
+      log_it("info", glue::glue("Generating aliases for {alias_category} using rdkit_mol_aliases."), log_ns)
+      alias_values <- rdkit_mol_aliases(identifiers = identifiers,
+                                        type = type,
+                                        get_aliases = rdkit_aliases,
+                                        rdkit_ref = rdkit_ref,
+                                        log_ns = rdkit_ns,
+                                        make_if_not = rdkit_make_if_not)
     }
   } else {
     settings <- paste(ifelse(INFORMATICS, "", "INFORMATICS"),
