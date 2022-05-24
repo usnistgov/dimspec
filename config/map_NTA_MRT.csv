@@ -109,9 +109,9 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,1,0,0,,,fragment_inspections,inspected_by,contributors,,id from contributors
 0,0,1,0,0,,,fragment_inspections,inspected_on,,,default current timestamp
 1,0,0,0,1,annotation,fragment_citation,fragment_sources,citation,,,
-0,0,1,0,1,,,fragment_sources,fragment_id,,,id from fragments
+0,0,1,0,1,,,fragment_sources,fragment_id,,,id from annotated_fragments
 0,0,1,0,1,,,fragment_sources,generated_by,norm_generation_type,,"default to ""empirical"""
-0,0,1,0,0,,,fragment_aliases,fragment_id,,,id from fragments
+0,0,1,0,0,,,fragment_aliases,fragment_id,,,id from annotated_fragments
 0,0,1,0,0,,,fragment_aliases,alias_type,norm_analyte_alias_references,,
 0,0,1,0,0,,,fragment_aliases,alias,,,
 0,0,1,0,1,,,ms_data,peak_id,,,id from peaks
