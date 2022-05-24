@@ -166,7 +166,7 @@
 		/* List of alternate names or identifiers for compounds */
 	(
 		compound_id
-			INTEGER NOT NULL
+			INTEGER NOT NULL,
 			/* foreign key to compounds */
 		alias_type
 			INTEGER NOT NULL,
