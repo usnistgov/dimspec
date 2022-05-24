@@ -191,12 +191,12 @@
 			/* foreign key to compounds */
 		fragment_id
 			INTEGER,
-			/* foreign key to fragments */
+			/* foreign key to annotated_fragments */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE SET NULL,
-		FOREIGN KEY (fragment_id) REFERENCES fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS annotated_fragments
@@ -221,7 +221,7 @@
 	(
 	  annotated_fragment_id
 	    INTEGER,
-	    /* foreign key to fragments table */
+	    /* foreign key to annotated_fragments table */
 		user_note
 			TEXT,
 			/* user-supplied description of the fragment */
@@ -290,7 +290,7 @@
 	(
 		annotated_fragments_id
 			INTEGER NOT NULL,
-			/* foreign key to fragments */
+			/* foreign key to annotated_fragments */
 		generation_type
 			INTEGER NOT NULL,
 			/* foreign key to norm_generation_type */
@@ -314,9 +314,9 @@
 			c.formula AS compound,
 				/* compounds.formula field */
 			nf.formula AS fragments,
-				/* fragments.formula field */
+				/* normalized fragments formula field */
 			af.mz
-				/* fragments.mz field */
+				/* annotated fragments mz field */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
 		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
@@ -338,6 +338,27 @@
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
+	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_annotated_fragments AS
+	  /* Measured fragments as compared with fixed masses */
+	  SELECT
+      nf.id, 
+        /* normalized fragment identifier */
+      nf.formula, 
+        /* normalized fragment formula */
+      nf.smiles,
+        /* normalized fragment smiles notation */
+      nf.radical,
+        /* whether or not this fragment was measured as a radical */
+      nf.fixedmass, 
+        /* fixed or ideal mass of the fragment as determined by elemental composition */
+      af.mz, 
+        /* mass at which the annotated fragment was measured */
+      1e6 * (nf.fixedmass - af.mz)/nf.fixedmass AS ppm_error
+        /* mass accuracy of the measurement in parts per million */
+    FROM 
+      annotated_fragments af 
+      INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
