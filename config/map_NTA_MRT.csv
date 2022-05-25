@@ -101,7 +101,7 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,1,0,0,compounddata,INSPECTEDBY,compounds,inspected_by,contributors,,id from contributors
 0,0,1,0,0,,,compounds,inspected_on,,,default current timestamp
 1,0,0,0,1,annotation,fragment_mz,annotated_fragments,mz,,,
-1,0,0,0,1,annotation,fragment_SMILES,annotated_fragments,fragment_id,norm_fragments,,
+1,0,0,0,1,annotation,fragment_SMILES,annotated_fragments,fragment_id,norm_fragments,fragment_aliases,
 1,0,0,0,1,annotation,fragment_formula,norm_fragments,formula,,,
 1,0,0,0,1,annotation,fragment_SMILES,norm_fragments,smiles,,,
 1,0,0,0,1,annotation,fragment_radical,norm_fragments,radical,,,
