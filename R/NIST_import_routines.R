@@ -423,12 +423,12 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Compounds node ----
-    # compounds <- do.call(
-    #   resolve_compounds,
-    #   args = append(list(obj = obj),
-    #                 func_env[names(func_env) %in% names(formals(resolve_compounds))]
-    #   )
-    # )
+    compounds <- do.call(
+      resolve_compounds,
+      args = append(list(obj = obj),
+                    func_env[names(func_env) %in% names(formals(resolve_compounds))]
+      )
+    )
     # _Fragments node ----
     fragments <- do.call(
       resolve_fragments,
@@ -439,9 +439,9 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Peak/fragment/compound connection ----
-    # resolve_compound_fragments(peak_id = peaks,
-    #                            fragment_id = fragments,
-    #                            compound_id = compounds)
+    resolve_compound_fragments(peak_id = peaks,
+                               fragment_id = fragments,
+                               compound_id = compounds)
     log_it("info", glue::glue("Finished importing object #{i} with name {names(import_object)[i]}..."), log_ns)
   }
 }
@@ -657,7 +657,7 @@ resolve_compounds <- function(obj,
   # Check connection
   stopifnot(active_connection(db_conn))
   obj_values <- get_component(obj = obj,
-                              obj_component = compounds_table,
+                              obj_component = compounds_in,
                               log_ns = log_ns)[[1]]
   compound_values <- map_import(
     import_obj = obj,
@@ -676,7 +676,7 @@ resolve_compounds <- function(obj,
   
   compound_ids <- add_or_get_id(
     db_table = compounds_table,
-    values = compound_values,
+    values = compound_values[!names(compound_values) == "additional"],
     db_conn = db_conn,
     ensure_unique = ensure_unique,
     require_all = require_all,
@@ -951,7 +951,6 @@ resolve_compound_fragments <- function(values = NULL,
 #' @inheritParams map_import
 #' @inheritParams add_or_get_id
 #' @inheritParams rdkit_mol_aliases
-#' @inheritParams add_rdkit_aliases
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param sample_id INT scalar matching a sample ID to which to tie these
@@ -967,13 +966,8 @@ resolve_compound_fragments <- function(values = NULL,
 #' @param fragment_aliases_in
 #' @param fragment_aliases_table
 #' @param fragment_alias_type_norm_table
-#' @param inchi_prefix
-#' @param rdkit_ref
-#' @param rdkit_ns
-#' @param rdkit_make_if_not
-#' @param rdkit_aliases
 #'
-#' @return
+#' @return INT vector of resolved fragment IDs
 #' @export
 #' 
 resolve_fragments <- function(obj,
@@ -995,11 +989,13 @@ resolve_fragments <- function(obj,
                               rdkit_ref = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
                               rdkit_ns = "rdk",
                               rdkit_make_if_not = TRUE,
-                              rdkit_aliases = c("inchi", "inchikey"),
+                              rdkit_aliases = c("Inchi", "InchiKey"),
                               mol_to_prefix = "MolTo",
                               mol_from_prefix = "MolFrom",
                               type = "smiles",
                               import_map = IMPORT_MAP,
+                              case_sensitive = FALSE,
+                              fuzzy = FALSE,
                               db_conn = con,
                               log_ns = "db") {
   if (any(is.na(sample_id))) {
@@ -1252,32 +1248,33 @@ resolve_fragments <- function(obj,
     fragment_alias_values <- fragment_aliases[[1]]
     if (!any(names(fragment_values)) %in% names(fragment_alias_values)) {
       log_it("warn", "Joining aliases requires matching names between supplied fragment aliases and a column in supplied fragments. No aliases will be added.", log_ns)
+    } else {
+      fragment_alias_values <- fragment_alias_values %>%
+        bind_rows() %>%
+        mutate(across(matches("^inchi$", ignore.case = TRUE),
+                      ~ ifelse(test = grepl(inchi_prefix, .x),
+                               yes = .x,
+                               no = paste0(inchi_prefix, .x))),
+               across(matches("^inchi$", ignore.case = TRUE),
+                      ~ str_replace_all(
+                        string = .x,
+                        pattern = sprintf("(%s){2}", gsub("InChI=", "", inchi_prefix)),
+                        replacement = gsub("InChI=", "", inchi_prefix)))
+        ) %>%
+        left_join(fragment_values) %>%
+        filter(!is.na(fragment_id)) %>%
+        select(1:fragment_id) %>%
+        pivot_longer(col = -fragment_id) %>%
+        setNames(dbListFields(db_conn, fragment_aliases_table)) %>%
+        mutate(alias_type = sapply(alias_type,
+                                   function(x) {
+                                     resolve_normalization_value(x, fragment_alias_type_norm_table)
+                                   }))
     }
   }
-  fragment_alias_values <- fragment_alias_values %>%
-    bind_rows() %>%
-    mutate(across(matches("^inchi$", ignore.case = TRUE),
-                  ~ ifelse(test = grepl(inchi_prefix, .x),
-                           yes = .x,
-                           no = paste0(inchi_prefix, .x))),
-           across(matches("^inchi$", ignore.case = TRUE),
-                  ~ str_replace_all(
-                    string = .x,
-                    pattern = sprintf("(%s){2}", gsub("InChI=", "", inchi_prefix)),
-                    replacement = gsub("InChI=", "", inchi_prefix)))
-    ) %>%
-    left_join(fragment_values) %>%
-    filter(!is.na(fragment_id)) %>%
-    select(1:fragment_id) %>%
-    pivot_longer(col = -fragment_id) %>%
-    setNames(dbListFields(db_conn, fragment_aliases_table)) %>%
-    mutate(alias_type = sapply(alias_type,
-                               function(x) {
-                                 resolve_normalization_value(x, fragment_alias_type_norm_table)
-                               }))
   if (nrow(fragment_alias_values) > 0) {
     fragment_alias_values <- fragment_alias_values %>%
-      filter(!is.na(fragment_id), !is.na(alias_type), !alias == "")
+      filter(complete.cases(.), !alias == "")
     res <- try(
       build_db_action(
         action = "insert",
@@ -3657,9 +3654,9 @@ map_import <- function(import_obj,
                       stop(msg)
                     }
                     if (!nrow(alias_id) == 1) {
-                      msg <- sprintf("%s aliases identified in %s for value '%s'.",
+                      msg <- sprintf("%s aliases identified in table '%s' for value '%s'.",
                                      ifelse(nrow(alias_id) == 0, "No", "Multiple"),
-                                     this_field,
+                                     alias_in,
                                      this_val)
                       log_it("info", msg, log_ns)
                       if (nrow(alias_id) > 1) {
@@ -3775,7 +3772,7 @@ qc_result <- function(obj,
 }
 
 #' Title
-#'
+#' 
 #' @param identifiers 
 #' @param alias_category 
 #' @param compound_aliases_table 
