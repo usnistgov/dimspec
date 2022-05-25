@@ -3551,6 +3551,9 @@ map_import <- function(import_obj,
                        import_map,
                        case_sensitive = TRUE,
                        fuzzy = FALSE,
+                       ignore = TRUE,
+                       id_column = "_*id$",
+                       alias_column = "^alias$",
                        db_conn = con,
                        log_ns = "db") {
   if (exists("verify_args")) {
@@ -3562,6 +3565,9 @@ map_import <- function(import_obj,
         import_map     = list(c("mode", "data.frame"), c("n>", 0)),
         case_sensitive = list(c("mode", "logical"), c("length", 1)),
         fuzzy          = list(c("mode", "logical"), c("length", 1)),
+        ignore         = list(c("mode", "logical"), c("length", 1)),
+        id_column      = list(c("mode", "character"), c("length", 1)),
+        alias_column   = list(c("mode", "character"), c("length", 1)),
         db_conn        = list(c("length", 1)),
         log_ns         = list(c("mode", "character"), c("length", 1))
       )
@@ -3622,21 +3628,25 @@ map_import <- function(import_obj,
         if (!all(is.na(this_val))) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
+            alias_id <- integer(0)
             column_names <- character(0)
             this_val <- this_val %>%
               sapply(
                 function(this_val) {
                   log_it("info", glue::glue("Attempt resolution of '{this_field}': norm_by = '{norm_by}' and this_val = '{this_val}'."), log_ns)
                   if (!is.na(alias_in)) {
-                    log_it("info", glue::glue("'{this_field}': alias_in = '{alias_in}' and this_val = '{this_val}'; resolving normalization value."), log_ns)
+                    log_it("info", glue::glue("Resolving aliases for '{this_field}' using aliases in '{alias_in}'."), log_ns)
                     column_names <- dbListFields(db_conn, alias_in)
+                    alias_column <- grep(alias_column, column_names, value = TRUE)[1]
+                    id_column <- grep(id_column, column_names, value = TRUE)[1]
                     lookup_val <- list(list(values = this_val, like = TRUE)) %>%
-                      setNames(column_names[2])
+                      setNames(alias_column)
                     alias_id <- try(
                       build_db_action(
                         action = "select",
                         table_name = alias_in,
                         match_criteria = lookup_val,
+                        ignore = ignore,
                         db_conn = db_conn,
                         log_ns = log_ns
                       )
@@ -3645,29 +3655,30 @@ map_import <- function(import_obj,
                       msg <- glue::glue("There was a problem resolving the alias for {this_field}.")
                       log_it("error", msg, log_ns)
                       stop(msg)
-                      if (!nrow(alias_id) == 1) {
-                        msg <- sprintf("%s aliases identified in %s for value '%s'.",
-                                       ifelse(nrow(alias_id) == 0, "No", "Multiple"),
-                                       this_field,
-                                       this_val)
-                        log_it("info", msg, log_ns)
-                        if (nrow(alias_id) > 1) {
-                          alias_id <- resolve_normalization_value(
-                            this_value = this_val,
-                            db_table = alias_in,
-                            case_sensitive = case_sensitive,
-                            fuzzy = fuzzy,
-                            id_column = column_names[1],
-                            db_conn = db_conn,
-                            log_ns = log_ns
-                          )
-                        }
+                    }
+                    if (!nrow(alias_id) == 1) {
+                      msg <- sprintf("%s aliases identified in %s for value '%s'.",
+                                     ifelse(nrow(alias_id) == 0, "No", "Multiple"),
+                                     this_field,
+                                     this_val)
+                      log_it("info", msg, log_ns)
+                      if (nrow(alias_id) > 1) {
+                        alias_id <- resolve_normalization_value(
+                          this_value = this_val,
+                          db_table = alias_in,
+                          case_sensitive = case_sensitive,
+                          fuzzy = fuzzy,
+                          id_column = id_column,
+                          db_conn = db_conn,
+                          log_ns = log_ns
+                        )
+                        norm_id <- alias_id
                       }
                     } else {
                       norm_id <- alias_id %>%
-                        select(contains("_id")) %>%
-                        pull(1)
-                      log_it("info", glue::glue("Resolved alias for '{this_field}' = '{this_val}' as id = '{norm_id}'."), log_ns)
+                        slice(1) %>%
+                        pull(id_column)
+                      log_it("success", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}'."), log_ns)
                     }
                   }
                   if (!length(norm_id) == 1) {
@@ -3685,8 +3696,8 @@ map_import <- function(import_obj,
                           action = "insert",
                           table_name = alias_in,
                           values = list(norm_id, this_val) %>%
-                            setNames(column_names),
-                          ignore = TRUE,
+                            setNames(column_names[1:2]),
+                          ignore = ignore,
                           log_ns = log_ns
                         )
                       )
@@ -3699,7 +3710,9 @@ map_import <- function(import_obj,
                   }
                   
                   if (length(norm_id) == 1 && norm_id == as.integer(norm_id)) {
-                    log_it("info", glue::glue("Resolved normalization value for '{this_field}' = '{this_val}' as id = '{norm_id}'."), log_ns)
+                    if (length(alias_id) == 0) {
+                      log_it("success", glue::glue("Resolved normalization value for '{this_field}' as id = '{norm_id}'."), log_ns)
+                    }
                     this_val <- norm_id
                   } else {
                     log_it("error", glue::glue("Could not resolve a normalization value for '{this_field}'."), log_ns)
