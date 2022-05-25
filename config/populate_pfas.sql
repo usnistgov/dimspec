@@ -58,13 +58,15 @@ DELETE FROM ms_descriptions;
 DELETE FROM contributors;
 DELETE FROM affiliations;
 DELETE FROM chromatography_descriptions;
-DELETE FROM compounds;
 DELETE FROM compound_categories;
 DELETE FROM compound_aliases;
+DELETE FROM compounds;
 DELETE FROM conversion_software_settings;
 DELETE FROM conversion_software_peaks_linkage;
 DELETE FROM norm_peak_confidence;
 DELETE FROM samples;
+DELETE FROM norm_fragments;
+INSERT INTO norm_analyte_alias_references (name, description, reference) VALUES ("NIST Suspect List", "Identifying number in the NIST Suspect List", "https://data.nist.gov/od/id/mds2-2387"), ("XICLISTID", "ID number for the original XIC List", "https://data.nist.gov/od/id/mds2-2387");
 .import --csv --skip 1 config/data/pfas/norm_carriers.csv norm_carriers
 .import --csv --skip 1 config/data/pfas/norm_additives.csv norm_additives
 .import --csv --skip 1 config/data/pfas/norm_sample_classes.csv norm_sample_classes
@@ -87,4 +89,6 @@ DELETE FROM samples;
 .import --csv --skip 1 config/data/pfas/samples.csv samples
 .import --csv --skip 1 config/data/pfas/mobile_phases.csv mobile_phases
 .import --csv --skip 1 config/data/pfas/norm_peak_confidence.csv norm_peak_confidence
-INSERT INTO norm_analyte_alias_references (name, description, reference) VALUES ("NIST Suspect List", "Identifying number in the NIST Suspect List", "https://data.nist.gov/od/id/mds2-2387"), ("XICLISTID", "ID number for the original XIC List", "https://data.nist.gov/od/id/mds2-2387")
+.import --csv --skip 1 config/data/pfas/norm_fragments.csv norm_fragments
+.import --csv --skip 1 config/data/pfas/fragment_aliases.csv fragment_aliases
+.import --csv --skip 1 config/data/pfas/annotated_fragments.csv annotated_fragments
