@@ -399,7 +399,7 @@
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
-	CREATE TRIGGER nullify_blank_compounds_inspected_by
+	CREATE TRIGGER IF NOT EXISTS nullify_blank_compounds_inspected_by
 		AFTER INSERT ON compounds
 		WHEN NEW.inspected_by = ''
 		BEGIN
