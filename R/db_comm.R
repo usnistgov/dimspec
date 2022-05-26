@@ -1050,11 +1050,13 @@ sqlite_parse_build <- function(sql_statements,
     str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
     str_replace_all("PRAGMA ", paste0(magicsplit, "PRAGMA ")) %>%
     str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
+    str_replace_all("\\;\\nDROP ", paste0("; ", magicsplit, "\nDROP ")) %>%
     str_remove_all(to_remove) %>%
     str_split(magicsplit) %>%
     .[[1]] %>%
     str_replace_all("\\n{2,10}", "\n") %>%
-    str_replace_all(" {2,10}", " ") %>%
+    str_squish() %>%
+    # str_replace_all(" {2,10}", " ") %>%
     str_split("\\n") %>%
     lapply(str_squish) %>%
     lapply(function(x) x[! x %in% c("", " ")])
@@ -1165,6 +1167,9 @@ sqlite_parse_import <- function(build_statements) {
                                 return(x)
                               }
                               target    <- tmp[2]
+                              if (nrow(read_data) == 0) {
+                                return("")
+                              }
                               insert_values <- sprintf('("%s")',
                                                        read_data %>%
                                                          tidyr::unite(col = "statement", sep = '", "') %>%
@@ -1172,9 +1177,12 @@ sqlite_parse_import <- function(build_statements) {
                                                          paste0(collapse = '"), ("')
                               ) %>%
                                 stringr::str_replace_all('"NA"|"NULL"|"null"|""', "NULL")
-                              insert_statement <- sprintf("INSERT INTO `%s` VALUES %s;",
-                                                          target,
-                                                          insert_values)
+                              insert_statement <- c(
+                                glue::glue("/* Inserts for table '{target}' were read from file '{data_file}' */"),
+                                sprintf("INSERT INTO `%s` VALUES %s;",
+                                        target,
+                                        insert_values)
+                              )
                               return(insert_statement)
                             } else {
                               return(x)
@@ -1200,6 +1208,7 @@ sqlite_parse_import <- function(build_statements) {
 #'   NULL, will use the environment variable "DB_DATA" if it is available.
 #' @param driver CHR scalar of the database driver class to use to correctly
 #'   interpolate SQL commands (default: "SQLite")
+#' @param comments CHR scalar regex identifying SQLite comments
 #' @param out_file CHR scalar of the output file name and destination. The
 #'   default, NULL, will write to a file named similarly to `build_file`
 #'   suffixed with "_full".
@@ -1212,6 +1221,7 @@ create_fallback_build <- function(build_file    = NULL,
                                   populate      = TRUE,
                                   populate_with = NULL,
                                   driver        = "SQLite",
+                                  comments      = "/\\* [[:alnum:][:punct:] -,\\.\\'/_]+ \\*/",
                                   out_file      = NULL) {
   if (exists("log_it")) log_fn("start")
   if (all(is.null(build_file), exists("DB_BUILD_FILE"))) build_file <- DB_BUILD_FILE
@@ -1244,22 +1254,22 @@ create_fallback_build <- function(build_file    = NULL,
         populate_with = list(c("mode", "character"), c("length", 1)),
         driver        = list(c("mode", "character"), c("length", 1)),
         out_file      = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn    = "create_fallback_build"
+      )
     )
     stopifnot(arg_check$valid)
   }
-  comments   <- "^/\\* [[:alnum:]+ \\.\\',/_]+ \\*/$"
-  has_import <- FALSE
   if (!file.exists(build_file)) {
     stop(sprintf('Could not locate file "%s".', build_file))
   }
-  if (exists("log_it")) log_it("info", "Creating fall back build schema...", "db")
-  build   <- read_file(build_file) %>%
-    sqlite_parse_build()
+  if (exists("log_it")) log_it("info", glue::glue("Creating fallback build schema from {build_file}..."), "db")
+  build   <- c(
+    glue::glue("/* This fallback creation schema was created {Sys.Date()} from '.{.Platform$file.sep}{build_file}'. */"),
+    glue::glue("/* Created under system context {jsonlite::toJSON(R.Version()[c('platform', 'version.string')])}. */"),
+    readr::read_file(build_file) %>%
+      sqlite_parse_build()
+  )
   
   if (populate) {
-    if (exists("log_it")) log_it("info", "Adding data insert reads...", "db")
     if (file.exists(populate_with)) {
       populate_file <- populate_with
     } else {
@@ -1276,50 +1286,71 @@ create_fallback_build <- function(build_file    = NULL,
         populate_file <- populate_files
       }
     }
+    msg <- 
+    if (exists("log_it")) log_it("info", glue::glue("Populating data insert reads from '{populate_file}'..."), "db")
     populate <- readr::read_file(populate_file) %>%
       sqlite_parse_build()
-    build <- c(build, populate)
+    build <- c(
+      build,
+      glue::glue("/* Data were populated according to '.{.Platform$file.sep}{populate_file}' */"),
+      populate)
   }
   
-  # Make SQL build statements
-  if (exists("log_it")) log_it("info", "Expanding .build statements...", "db")
   build   <- unlist(build) %>%
     as.list()
+  
+  # Make SQL build statements
   index_read   <- grep("^.read", build)
-  temp_read    <- lapply(build[index_read],
-                         function(x) {
-                           node_file <- str_remove(x, ".read ")
-                           read_file(node_file) %>%
-                             sqlite_parse_build()
-                         })
-  source_read  <- str_remove(unlist(build[index_read]), ".read ")
-  names(temp_read) <- source_read %>%
-    basename() %>%
-    tools::file_path_sans_ext()
-  for (i in 1:length(temp_read)) {
-    source_comment <- sprintf("/* Sourced from ./%s */", source_read[i])
-    temp_read[[i]] <- c(source_comment, temp_read[[i]])
-  }
-  build[index_read] <- temp_read %>%
-    lapply(function(x) {
-      lapply(x, function(y) {
-        paste0(y, collapse = " ")
+  while(length(index_read) > 0) {
+    if (exists("log_it")) log_it("info", "Expanding .read statements...", "db")
+    temp_read    <- lapply(build[index_read],
+                           function(x) {
+                             node_file <- str_remove(x, ".read ")
+                             read_file(node_file) %>%
+                               sqlite_parse_build()
+                           })
+    source_read  <- str_remove(unlist(build[index_read]), ".read ")
+    names(temp_read) <- source_read %>%
+      basename() %>%
+      tools::file_path_sans_ext()
+    for (i in 1:length(temp_read)) {
+      source_comment <- glue::glue("/* Sourced from '.{.Platform$file.sep}{source_read[i]}' */")
+      temp_read[[i]] <- c(source_comment, temp_read[[i]])
+    }
+    build[index_read] <- temp_read %>%
+      lapply(function(x) {
+        lapply(x, function(y) {
+          paste0(y, collapse = " ")
+        })
       })
-    })
-  build <- unlist(build) %>% as.list()
+    build <- unlist(build) %>% 
+      as.list()
+    index_read <- grep("^.read", build)
+  }
+  
+  # Make SQL insert statements
   index_import <- grep("^.import", build)
-  if (exists("log_it")) log_it("info", "Expanding .import statements...", "db")
-  temp_import  <- lapply(build[index_import],
-                         function(x) {
-                           if (grepl(comments, x)) return(x)
-                           lapply(x, sqlite_parse_import)
-                         }
-  ) %>% unlist()
-  check <- build
-  build[index_import] <- temp_import
-  build <- unlist(build) %>%
+  while (length(index_import) > 0) {
+    if (exists("log_it")) log_it("info", "Expanding .import statements...", "db")
+    temp_import  <- lapply(build[index_import],
+                           function(x) {
+                             if (grepl(comments, x)) return(x)
+                             lapply(x, sqlite_parse_import)
+                           }
+    )
+    check <- build
+    build[index_import] <- temp_import
+    build <- unlist(build) %>%
+      as.list()
+    index_import <- grep("^.import", build)
+  }
+  
+  build <- build %>%
+    purrr::flatten() %>%
+    .[!. == ""] %>%
+    unlist() %>%
     paste0(collapse = "\n")
-  readr::write_file(build, out_file)
+  readr::write_file(x = build, file = out_file, append = FALSE)
   if (exists("log_it")) {
     log_it("info", sprintf('Fallback build file created as "%s".',
                            out_file), "db")
@@ -1424,7 +1455,7 @@ update_all <- function(rebuild       = TRUE,
     tmp <- try(
       build_db(
         db            = db,
-        build_from    = build_file,
+        build_from    = build_from,
         populate      = populate,
         populate_with = populate_with,
         archive       = archive,
