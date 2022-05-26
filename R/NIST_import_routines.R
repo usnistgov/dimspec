@@ -3576,6 +3576,13 @@ map_import <- function(import_obj,
   this_map <- import_map %>%
     filter(sql_table == aspect,
            import_parameter != "")
+  if (!any(names(import_obj) %in% unique(this_map$import_category)) &&
+      any(names(import_obj) %in% unique(this_map$import_parameter))) {
+    log_it("trace", "Import object is not nested but contains referenced names. Recasting.", log_ns)
+    this_map$import_category <- "import"
+    import_obj <- list(import_obj) %>%
+      setNames(unique(this_map$import_category))
+  }
   out <- vector("list", length = nrow(this_map)) %>%
     setNames(this_map$sql_parameter)
   needed_columns <- c("import_category", "import_parameter", "alias_lookup", "sql_normalization")
