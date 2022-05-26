@@ -615,11 +615,11 @@ log_it <- function(log_level,
   call_i <- -1
   call_ii <- 1
   call_func <- sys.call(call_i)[[call_ii]]
-  if (is.function(call_func) && sys.call(-2)[[1]] == "do.call") {
-    call_i <- -2
-    call_ii <- 2
+  uninformative_calls <- c("do.call", "FUN", "apply$", "%>%") %>%
+    paste0(collapse = "|")
+  while(is.function(call_func) || grepl(uninformative_calls, deparse(substitute(call_func)))) {
+    call_i <- call_i - 1
     call_func <- sys.call(call_i)[[call_ii]]
-    msg <- paste0("call to ", call_func, "(): ", msg)
   }
   if (sys.nframe() > 1) {
     from_log_it <- call_func == "log_it"

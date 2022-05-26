@@ -580,6 +580,7 @@ ms_plot_spectra <- function(data,
   }
   if (!"scantime" %in% names(data)) animate = FALSE
   if (spectra_repel_labels) {
+    require(ggrepel)
     text_geom <- geom_text_repel
   } else {
     text_geom <- geom_text
@@ -597,7 +598,7 @@ ms_plot_spectra <- function(data,
   if (!"formula" %in% names(plot_data)) {
     plot_data <- plot_data %>%
       left_join(
-        tbl(db_conn, "fragments") %>%
+        tbl(db_conn, "view_annotated_fragments") %>%
           select(mz, formula) %>%
           collect(),
         by = c("mz" = "mz")

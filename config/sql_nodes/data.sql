@@ -96,9 +96,9 @@
 	  sample_id
 	    INTEGER NOT NULL,
 	    /* foreign key to samples */
-	  name
+	  alias
 	    TEXT NOT NULL,
-	    /* reference name for the sample */
+	    /* reference alias for the sample */
 	  reference
 	    TEXT,
 	    /* source of the name, e.g. external database pointer or PID */

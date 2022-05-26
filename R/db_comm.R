@@ -1686,7 +1686,7 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
   }
   if (interactive()) {
     for (need_this in all_cols) {
-      prompt_field <- ifelse(need_this %in% c("orcid", "PID"),
+      prompt_field <- ifelse(tolower(need_this) %in% c("orcid", "pid"),
                              toupper(need_this),
                              need_this %>%
                                stringr::str_replace_all("_", " ") %>%

@@ -1,7 +1,1 @@
 ms_methods_id,name,value,units
-1,ms1_resolution,70000,
-1,ms2_resolution,15700,
-1,msaccuracy,5,ppm
-2,ms1_resolution,7000,
-2,ms2_resolution,1570,
-2,msaccuracy,15,ppm
