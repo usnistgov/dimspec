@@ -633,6 +633,7 @@ resolve_compounds <- function(obj,
                               compound_category = NULL,
                               compound_category_table = "compound_categories",
                               compound_alias_table = "compound_aliases",
+                              NIST_id_in = "ID",
                               require_all = FALSE,
                               import_map = IMPORT_MAP,
                               ensure_unique = TRUE,
@@ -641,15 +642,22 @@ resolve_compounds <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, compounds_in, compounds_table, import_map, ensure_unique, db_conn, log_ns),
+      args       = list(obj, compounds_in, compounds_table, 
+                        compound_category_table, compound_alias_table,
+                        NIST_id_in, import_map, require_all, ensure_unique,
+                        db_conn, log_ns),
       conditions = list(
-        obj             = list(c("mode", "list")),
-        compounds_in    = list(c("mode", "character"), c("length", 1)),
-        compounds_table = list(c("mode", "character"), c("length", 1)),
-        import_map      = list(c("mode", "data.frame")),
-        ensure_unique   = list(c("mode", "logical"), c("length", 1)),
-        db_conn         = list(c("length", 1)),
-        log_ns          = list(c("mode", "character"), c("length", 1))
+        obj                     = list(c("mode", "list")),
+        compounds_in            = list(c("mode", "character"), c("length", 1)),
+        compounds_table         = list(c("mode", "character"), c("length", 1)),
+        compound_category_table = list(c("mode", "character"), c("length", 1)),
+        compound_alias_table    = list(c("mode", "character"), c("length", 1)),
+        NIST_id_in              = list(c("mode", "character"), c("length", 1)),
+        import_map              = list(c("mode", "data.frame")),
+        ensure_unique           = list(c("mode", "logical"), c("length", 1)),
+        require_all             = list(c("mode", "logical"), c("length", 1)),
+        db_conn                 = list(c("length", 1)),
+        log_ns                  = list(c("mode", "character"), c("length", 1))
       )
     )
     stopifnot(arg_check$valid)
@@ -659,30 +667,70 @@ resolve_compounds <- function(obj,
   obj_values <- get_component(obj = obj,
                               obj_component = compounds_in,
                               log_ns = log_ns)[[1]]
-  compound_values <- map_import(
-    import_obj = obj,
-    aspect = compounds_table,
-    import_map = import_map
-  )
-  if ("id" %in% tolower(names(obj_values))) {
-    
+  if (NIST_id_in %in% names(obj_values)) {
+    check_value <- obj_values[[NIST_id_in]]
+  } else {
+    check_value <- obj_values[["NAME"]]
+    if (str_detect(check_value, ";")) {
+      check_value <- str_split(check_value, ";") %>%
+        unlist()
+      log_it("warn", glue::glue("{length(check_value)} unique compound names detected as potential aliases."), log_ns)
+    }
   }
-  if (str_detect(compound_values$name, ";")) {
-    all_names <- str_split(compound_values$name, ";")
-    first_names <- lapply(all_names, function(x) x[[1]]) %>%
-      purrr::flatten_chr()
-    compound_values$name <- first_names
-  }
-  
-  compound_ids <- add_or_get_id(
-    db_table = compounds_table,
-    values = compound_values[!names(compound_values) == "additional"],
+  exists <- check_for_value(
+    values = check_value,
+    db_table = compound_alias_table,
+    db_column = "alias",
+    case_sensitive = FALSE,
     db_conn = db_conn,
-    ensure_unique = ensure_unique,
-    require_all = require_all,
-    log_ns = log_ns
+    fuzzy = FALSE
   )
+  if (exists$exists) {
+    compound_ids <- exists$values$compound_id
+    if (length(compound_ids) > 1) {
+      log_it("warn", glue::glue("Aliases potentially matched to compound_ids {format_list_of_names(unique(compound_ids))}."), log_ns)
+      likelihood <- table(compound_ids)
+      if (any(likelihood > 1)) {
+        compound_ids <- compound_ids[rev(order(table(compound_ids)))][1]
+        log_it("info", glue::glue("{max(likelihood)} of {length(check_value)} were in agreement to use compound_id {compound_ids} as the most likely alias."), log_ns)
+      } else {
+        log_it("warn", glue::glue("Unresolvable multiple alias matches for {format_list_of_names(check_value, add_quotes = TRUE)}. Please examine and try again."), log_ns)
+        return(NULL)
+      }
+    }
+    alias_type <- build_db_action(
+      action = "select",
+      table_name = "norm_analyte_alias_references",
+      column_name = "name",
+      match_criteria = list(id = exists$values$alias_type),
+      and_or = "OR",
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+    log_it("info", glue::glue("Found as {alias_type} alias for {format_list_of_names(check_value, add_quotes = TRUE)} for compound_id = {compound_ids}."), log_ns)
+  } else {
+    compound_values <- map_import(
+      import_obj = obj,
+      aspect = compounds_table,
+      import_map = import_map
+    )
+    if (str_detect(compound_values$name, ";")) {
+      all_names <- str_split(compound_values$name, ";")
+      first_names <- lapply(all_names, function(x) x[[1]]) %>%
+        purrr::flatten_chr()
+      compound_values$name <- first_names
+    }
+    compound_ids <- add_or_get_id(
+      db_table = compounds_table,
+      values = compound_values,
+      db_conn = db_conn,
+      ensure_unique = ensure_unique,
+      require_all = require_all,
+      log_ns = log_ns
+    )
+  }
   resolve_compound_aliases(obj = obj,
+                           compound_id = compound_ids,
                            compounds_in = compounds_in,
                            compound_alias_table = compound_alias_table,
                            db_conn = db_conn,
@@ -692,6 +740,7 @@ resolve_compounds <- function(obj,
 }
 
 resolve_compound_aliases <- function(obj,
+                                     compound_id,
                                      norm_alias_table = "norm_analyte_alias_references",
                                      norm_alias_name_column = "name",
                                      compounds_in = "compounddata",
@@ -703,10 +752,11 @@ resolve_compound_aliases <- function(obj,
                                  obj_component = compounds_in,
                                  log_ns = log_ns) %>%
     .[[1]] %>%
-    tack_on(...) %>%
+    tack_on(compound_id = compound_id, ...) %>%
     bind_cols() %>%
     rename_with(tolower)
   need_headers <- c("ADDITIONAL",
+                    "compound_id",
                     dbGetQuery(db_conn,
                                glue::glue("select {norm_alias_name_column} from {norm_alias_table}")) %>%
                       unlist()
