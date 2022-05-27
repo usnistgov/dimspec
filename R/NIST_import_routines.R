@@ -430,6 +430,7 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Fragments node ----
+    # WIP
     fragments <- do.call(
       resolve_fragments,
       args = append(list(obj = obj,
@@ -732,8 +733,7 @@ resolve_compounds <- function(obj,
       log_ns = log_ns
     )
   }
-  resolve_compound_aliases(compound_id = compound_ids,
-                           obj = obj,
+  resolve_compound_aliases(obj = obj,
                            compound_id = compound_ids,
                            compounds_in = compounds_in,
                            compound_alias_table = compound_alias_table,
@@ -844,8 +844,8 @@ resolve_compound_aliases <- function(obj,
   alias_types <- alias_refs[[norm_alias_name_column]] %>%
     tolower()
   kwargs <- list(...)
-  names(kwargs) <- tolower(names(kwargs))
   if (length(kwargs) > 0) {
+    names(kwargs) <- tolower(names(kwargs))
     kwarg_aliases <- try(
       tibble(
         compound_id = compound_id,
@@ -893,9 +893,13 @@ resolve_compound_aliases <- function(obj,
       separate(alias, sep = ":", into = c("alias_type", "alias"), extra = "merge")
   ) %>%
     distinct() %>%
-    mutate(is_alias_type = tolower(alias_type) %in% alias_types) %>%
-    group_split(is_alias_type) %>%
-    set_names(c("unknown", "known")) %>%
+    mutate(is_alias_type = tolower(alias_type) %in% alias_types)
+  out <- list(
+    "known" = out %>%
+      filter(is_alias_type),
+    "unknown" = out %>%
+      filter(!is_alias_type)
+  ) %>%
     lapply(function(x) x %>% select(-is_alias_type))
   if (nrow(out$known) > 0) {
     alias_refs[[norm_alias_name_column]] <- tolower(alias_refs[[norm_alias_name_column]])
