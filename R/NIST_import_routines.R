@@ -611,6 +611,7 @@ add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE,
 #'
 #' @inheritParams add_or_get_id
 #' @inheritParams map_import
+#' @inheritParams resolve_compound_aliases
 #'
 #' @param obj LIST object containing data formatted from the import generator
 #' @param compounds_in CHR scalar name in `obj` holding compound data (default:
@@ -633,6 +634,8 @@ resolve_compounds <- function(obj,
                               compound_category = NULL,
                               compound_category_table = "compound_categories",
                               compound_alias_table = "compound_aliases",
+                              norm_alias_table = "norm_analyte_alias_references",
+                              norm_alias_name_column = "name",
                               NIST_id_in = "ID",
                               require_all = FALSE,
                               import_map = IMPORT_MAP,
@@ -707,7 +710,7 @@ resolve_compounds <- function(obj,
       db_conn = db_conn,
       log_ns = log_ns
     )
-    log_it("info", glue::glue("Found as {alias_type} alias for {format_list_of_names(check_value, add_quotes = TRUE)} for compound_id = {compound_ids}."), log_ns)
+    log_it("info", glue::glue("Found {alias_type} alias {format_list_of_names(check_value, add_quotes = TRUE)} for compound_id = {compound_ids}."), log_ns)
   } else {
     compound_values <- map_import(
       import_obj = obj,
@@ -729,47 +732,194 @@ resolve_compounds <- function(obj,
       log_ns = log_ns
     )
   }
-  resolve_compound_aliases(obj = obj,
+  resolve_compound_aliases(compound_id = compound_ids,
+                           obj = obj,
                            compound_id = compound_ids,
                            compounds_in = compounds_in,
                            compound_alias_table = compound_alias_table,
+                           norm_alias_table = norm_alias_table,
+                           norm_alias_name_column = norm_alias_name_column,
                            db_conn = db_conn,
-                           log_ns = log_ns,
-                           other_names)
+                           log_ns = log_ns)
   return(compound_ids)
 }
 
+#' Resolve compound aliases provided as part of the import routine
+#'
+#' Call this to add any aliases for a given `compound_id` that may not be
+#' present in the database. Only those identifiable as part of the accepted
+#' types defined in `norm_alias_table` will be mapped. If multiple items are
+#' provided in the import NAME, ADDITIONAL, or other items matching names in
+#' `norm_alias_table`.name column, indicate the split character in
+#' `split_multiples_by` and any separator between names and values (e.g.
+#' CLASS:example) in `identify_property_by`.
+#'
+#' @note Existing aliases, and aliases for which there is no `compound_id` will
+#'   be ignored and not imported.
+#' @note Compound IDs provided in `compound_id` must be present in the compounds
+#'   table and must be provided explicitly on a 1:1 basis for each element
+#'   extracted from `obj`. If you provide an import object with 10 components
+#'   for compound data, you must provide tying `compound_id` identifiers for
+#'   each. If all extracted components represent aliases for the same
+#'   `compound_id` then one may be provided.
+#' @note Alias types (e.g. "InChI" are case insensitive)
+#'
+#' @inheritParams resolve_compounds
+#'
+#' @param obj LIST object containing data formatted from the import generator
+#' @param compound_id INT scalar of the compound_id to use for these aliases
+#' @param norm_alias_table CHR scalar name of the table normalizing analyte
+#'   alias references (default: "norm_analyte_alias_references")
+#' @param norm_alias_name_column CHR scalar name of the column in
+#'   `norm_alias_table` containing the human-readable expression of alias type
+#'   classes (default: "name")
+#' @param ... Named list of any additional aliases to tack on that are not found
+#'   in the import object, with names matching those found in
+#'   `norm_alias_table`.`norm_alias_name_column`
+#'
+#' @return None, though if unclassifiable aliases (those with alias types not
+#'   present in the normalization table) are found, they will be written to a
+#'   file (`out_file`) in the project directory
+#' @export
+#'
+#' @examples
 resolve_compound_aliases <- function(obj,
                                      compound_id,
-                                     norm_alias_table = "norm_analyte_alias_references",
-                                     norm_alias_name_column = "name",
                                      compounds_in = "compounddata",
                                      compound_alias_table = "compound_aliases",
+                                     norm_alias_table = "norm_analyte_alias_references",
+                                     norm_alias_name_column = "name",
+                                     headers_to_examine = c("ADDITIONAL", "NAME"),
+                                     split_multiples_by = ";",
+                                     identify_property_by = ":",
+                                     out_file = "unknown_compound_aliases.csv",
                                      db_conn = con,
                                      log_ns = "db",
                                      ...) {
+  stopifnot(compound_id == as.integer(compound_id))
+  compound_id <- as.integer(compound_id)
+  # Argument validation relies on verify_args
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(obj, compound_id, compounds_in, compound_alias_table, 
+                        norm_alias_table, norm_alias_name_column,
+                        headers_to_examine, split_multiples_by,
+                        identify_property_by, out_file,
+                        db_conn, log_ns),
+      conditions = list(
+        obj                     = list(c("mode", "list")),
+        compound_id             = list(c("mode", "integer"), c("n>=", 1)),
+        compounds_in            = list(c("mode", "character"), c("length", 1)),
+        compound_alias_table    = list(c("mode", "character"), c("length", 1)),
+        norm_alias_table        = list(c("mode", "character"), c("length", 1)),
+        norm_alias_name_column  = list(c("mode", "character"), c("length", 1)),
+        headers_to_examine      = list(c("mode", "character"), c("n>=", 1)),
+        split_multiples_by      = list(c("mode", "character"), c("length", 1)),
+        identify_property_by    = list(c("mode", "character"), c("length", 1)),
+        out_file                = list(c("mode", "character"), c("length", 1)),
+        db_conn                 = list(c("length", 1)),
+        log_ns                  = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  # Check connection
+  stopifnot(active_connection(db_conn))
   compound_data <- get_component(obj = obj,
                                  obj_component = compounds_in,
-                                 log_ns = log_ns) %>%
-    .[[1]] %>%
-    tack_on(compound_id = compound_id, ...) %>%
-    bind_cols() %>%
+                                 log_ns = log_ns)
+  if (!length(compound_id) == 1 && !length(obj) == length(compound_id)) {
+    log_it("warn", "Lengths of `compound_id` and `obj` must be equal to accept multiple `compound_id` entries.", log_ns)
+    return(invisible(NULL))
+  }
+  while (!compounds_in %in% names(compound_data)) {
+    compound_data <- purrr::flatten(compound_data)
+  }
+  compound_data <- compound_data %>%
+    bind_rows() %>%
+    mutate(compound_id = compound_id) %>%
     rename_with(tolower)
+  alias_refs <- tbl(db_conn, norm_alias_table) %>%
+    collect()
+  alias_types <- alias_refs[[norm_alias_name_column]] %>%
+    tolower()
+  kwargs <- list(...)
+  names(kwargs) <- tolower(names(kwargs))
+  if (length(kwargs) > 0) {
+    kwarg_aliases <- try(
+      tibble(
+        compound_id = compound_id,
+        alias_type = names(kwargs),
+        alias = lapply(kwargs, as.character)
+      ) %>%
+        unnest(c(alias)) %>%
+        mutate(alias = ifelse(alias_type %in% alias_types,
+                              alias,
+                              str_c(toupper(alias_type), alias, sep = ":")))
+    )
+  }
   need_headers <- c("ADDITIONAL",
+                    "NAME",
                     "compound_id",
-                    dbGetQuery(db_conn,
-                               glue::glue("select {norm_alias_name_column} from {norm_alias_table}")) %>%
-                      unlist()
+                    alias_types,
+                    names(list(...))
   ) %>%
     tolower()
-  aliases = list(0L)
-  if (str_detect(compound_values$name, ";")) {
-    aliases <- str_split(compound_values$name, ";") %>%
-      purrr::flatten_chr()
-  }
   out <- compound_data %>%
-    select(any_of(need_headers))
-  return(out)
+    select(any_of(need_headers)) %>%
+    rename(alias = name) %>%
+    pivot_longer(cols = -compound_id) %>%
+    set_names(dbListFields(db_conn, compound_alias_table)) %>%
+      mutate(alias = str_split(alias, pattern = ";"),
+           alias_type = ifelse(tolower(alias_type) %in% alias_types,
+                               tolower(alias_type),
+                               alias_type)) %>%
+    unnest(c(alias))
+  if (length(kwargs) > 0) {
+    out <- bind_rows(
+      out,
+      kwarg_aliases
+    )
+  }
+  out <- bind_rows(
+    out %>%
+      filter(alias_type %in% alias_types),
+    out %>%
+      filter(!alias_type %in% alias_types) %>%
+      mutate(alias = ifelse(!alias_type %in% alias_types,
+                            alias,
+                            paste0(toupper(alias_type), ":", alias))) %>%
+      select(compound_id, alias) %>%
+      separate(alias, sep = ":", into = c("alias_type", "alias"), extra = "merge")
+  ) %>%
+    distinct() %>%
+    mutate(is_alias_type = tolower(alias_type) %in% alias_types) %>%
+    group_split(is_alias_type) %>%
+    set_names(c("unknown", "known")) %>%
+    lapply(function(x) x %>% select(-is_alias_type))
+  if (nrow(out$known) > 0) {
+    alias_refs[[norm_alias_name_column]] <- tolower(alias_refs[[norm_alias_name_column]])
+    out$known <- out$known %>%
+      mutate(alias_type = tolower(alias_type)) %>%
+      left_join(alias_refs,
+                by = c("alias_type" = "name")) %>%
+      mutate(alias_type = id) %>%
+      select(any_of(dbListFields(con, compound_alias_table)))
+    build_db_action(
+      action = "insert",
+      table_name = compound_alias_table,
+      values = out$known,
+      # TODO consider removing in production
+      ignore = TRUE,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  }
+  if (nrow(out$unknown) > 0) {
+    out$unknown$alias_type <- toupper(out$unknown$alias_type)
+    write_csv(out$unknown, out_file, append = file.exists(out_file), quote = "all")
+    log_it("info", glue::glue("Unrecognizeable compound identifiers were provided. See '{out_file}' for more information."), log_ns)
+  }
 }
 
 #' Title
