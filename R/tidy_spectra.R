@@ -3,19 +3,22 @@
 
 # Format Parsers ----------------------------------------------------------
 
-#' Parse "Separated" MS Spectra
+#' Parse "Separated" MS Data
 #'
 #' The "separated" format includes spectra packed into two separate columns, one
 #' for mass and another for intensity. All values for a given scan time are
 #' packed into these columns, separated by space, with an unlimited number of
 #' discrete values, and must be a 1:1 ratio of values between the two columns.
 #'
-#' @param df data.frame object containing spectra compressed in the "separated"
-#'   format
+#' @note ms_cols is treated as regex expressions, but it is safest to provide
+#'   matching column names
+#'
+#' @param df data.frame or json object containing spectra compressed in the
+#'   "separated" format
 #' @param ms_cols CHR vector of length 2 identifying the column names to use for
 #'   mass and intensity in the source data; must be of length 2, with the first
-#'   value identifying the mass column and the second identifying the intensity
-#'   column
+#'   value identifying the mass-to-charge ratio column and the second
+#'   identifying the intensity column
 #'
 #' @return data.frame object of the unpacked spectra as a list column
 #' @export
@@ -23,40 +26,24 @@
 #' @examples
 #' ### JSON Example
 #' tmp <- jsonify::as.json('{
-#'  "masses": "712.9501 713.1851", 
-#'  "intensities": "15094.41015625 34809.9765625"
+#'  "measured_mz": "712.9501 713.1851",
+#'  "measured_intensity": "15094.41015625 34809.9765625"
 #' }')
-#' ms_spectra_separated(as.data.frame(jsonify::from_json(tmp)))
-#' 
+#' ms_spectra_separated(tmp)
+#'
 #' ### Example data.frame
 #' tmp <- data.frame(
 #'   measured_mz = "712.9501 713.1851",
 #'   measured_intensity = "15094.41015625 34809.9765625"
 #' )
 #' ms_spectra_separated(tmp)
-ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intensity")) {
-  # Argument validation ----
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = as.list(environment()),
-      conditions = list(
-        df      = list(c("mode", "data.frame")),
-        ms_cols = list(c("mode", "character"), c("length", 2))
-      ),
-      from_fn    = "ms_spectra_separated")
-    if (!arg_check$valid) {
-      stop(cat(paste0(arg_check$messages, collapse = "\n")))
-    }
-  }
-  # Function body ----
-  if (!all(ms_cols %in% names(df))) {
-    stop(sprintf("Could not find both '%s' in names of the object provided to argument 'df'.",
-                 format_list_of_names(ms_cols))
-    )
-  }
+ms_spectra_separated <- function(df, ms_cols = c("mz", "intensity")) {
+  mz_col <- grep(ms_cols[1], names(df), value = TRUE)[1]
+  int_col <- grep(ms_cols[2], names(df), value = TRUE)[1]
+  ms_cols <- c(mz_col, int_col)
   out <- df %>%
-    mutate(masses = str_split(df[[ms_cols[1]]], " "),
-           intensities = str_split(df[[ms_cols[2]]], " ")) %>%
+    mutate(masses = str_split(df[[mz_col]], " "),
+           intensities = str_split(df[[int_col]], " ")) %>%
     rowwise() %>%
     mutate(spectra = list(
       tibble(
@@ -69,13 +56,16 @@ ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intens
 }
 
 
-#' Parse "Zipped" MS Spectra
+#' Parse "Zipped" MS Data
 #'
 #' The "zipped" format includes spectra packed into one column containing
 #' alternating mass and intensity values for all observations. All values are
 #' packed into these columns for a given scan time, separated by spaces, with an
 #' unlimited number of discrete values, and must be in an alternating 1:1
 #' pattern of values of the form "mass intensity mass intensity".
+#'
+#' @note spectra-col is treated as a regex expression, but it is safest to
+#'   provide a matching column name
 #'
 #' @param df data.frame object containing spectra compressed in the "zipped"
 #'   format
@@ -89,29 +79,28 @@ ms_spectra_separated <- function(df, ms_cols = c("measured_mz", "measured_intens
 #'
 #' @examples
 #' ### JSON Example
-#' tmp <- jsonify::as.json{
-#'  "msdata": "712.9501 15094.41015625 713.1851 34809.9765625"
-#' }
-#' ms_spectra_separated(as.data.frame(jsonify::from_json(tmp)))
-#' 
+#' tmp <- jsonlite::as.json('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}')
+#' ms_spectra_separated(tmp)
+#'
 #' ### Example data.frame
 #' tmp <- data.frame(
 #'   msdata = "712.9501 15094.41015625 713.1851 34809.9765625"
 #' )
 #' ms_spectra_zipped(tmp)
-ms_spectra_zipped <- function(df, spectra_col = "msdata") {
-  # Argument validation ----
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = as.list(environment()),
-      conditions = list(
-        df          = list(c("mode", "data.frame")),
-        spectra_col = list(c("mode", "character"), c("length", 1))
-      )
-    )
-    stopifnot(arg_check$valid)
+ms_spectra_zipped <- function(df, spectra_col = "data") {
+  if (inherits(df, "json")) {
+    df <- jsonlite::fromJSON(df) %>%
+      as_tibble()
   }
-  # Function body ----
+  if (!inherits(df, "data.frame")) {
+    stop("Argument df should be either a data.frame object or JSON coercible to one.")
+  }
+  if (!all(grepl(paste0(spectra_col, collapse = "|"), names(df)))) {
+    stop(sprintf("Could not find both '%s' in names of the object provided to argument 'df'.",
+                 format_list_of_names(ms_cols))
+    )
+  }
+  spectra_col <- grep(spectra_col, names(df), value = TRUE)
   out <- df[[spectra_col]] %>%
     str_split(" ") %>%
     lapply(as.numeric)
@@ -140,7 +129,6 @@ ms_spectra_zipped <- function(df, spectra_col = "msdata") {
 #'
 #' @examples
 tidy_ms_spectra <- function(df) {
-  # Argument validation ----
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
@@ -152,7 +140,6 @@ tidy_ms_spectra <- function(df) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
-  # Function body ----
   df %>%
     drop_na() %>%
     unnest_longer(spectra) %>%
@@ -192,53 +179,67 @@ tidy_ms_spectra <- function(df) {
 #' @export
 #'
 #' @examples
+#' tidy_spectra('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}')
+#' tidy_spectra('{"measured_mz":"712.9501 713.1851","measured_intensity":"15094.41015625 34809.9765625"}')
 tidy_spectra <- function(target,
-                         is_file      = TRUE,
+                         is_file      = FALSE,
                          is_format    = "separated",
                          spectra_set  = "msdata",
-                         ms_col_sep   = c("measured_mz", "measured_intensity"),
-                         ms_col_unzip = "msdata",
-                         from_JSON    = TRUE) {
-  # Argument validation ----
+                         ms_col_sep   = c("mz", "intensity"),
+                         ms_col_unzip = "data",
+                         is_JSON      = FALSE) {
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_unzip, from_JSON),
+      args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_unzip, is_JSON),
       conditions = list(
         is_file = list(c("mode", "logical"), c("length", 1)),
         is_format = list(c("mode", "character"), c("length", 1)),
         spectra_set = list(c("mode", "character"), c("length", 1)),
         ms_col_sep = list(c("mode", "character"), c("length", 2)),
         ms_col_unzip = list(c("mode", "character"), c("length", 1)),
-        from_JSON = list(c("mode", "logical"), c("length", 1))
-      ),
-      from_fn    = "tidy_spectra")
+        is_JSON = list(c("mode", "logical"), c("length", 1))
+      )
+    )
     if (!arg_check$valid) {
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
   is_format <- match.arg(is_format, c("separated", "zipped"))
-  # Function body ----
-  # Check if is file or local object
   if (is_file) {
-    out <- read_file(target)
-    if (grepl("separate", target)) {
-      is_format <- "separated"
-    } else if (grepl("unzip", target)) {
-      is_format <- "zipped"
+    if (file_exists(target)) {
+      if (grepl("separate", target)) {
+        is_format <- "separated"
+      } else if (grepl("unzip", target)) {
+        is_format <- "zipped"
+      }
+      ext <- tools::file_ext(target)
+      if (ext == "csv") {
+        out <- readr::read_csv(target)
+      } else if (ext == "json") {
+        out <- readr::read_file(target)
+        is_JSON <- TRUE
+      }
+    } else {
+      stop("Called with is_file = TRUE but could not find the referenced file.")
     }
   } else {
     out <- target
   }
-  if (is_file && from_JSON) {
-    out <- fromJSON(out)
+  if (is_JSON || inherits(out, "json") || all(inherits(out, "character"), length(out) == 1)) {
+    out <- jsonlite::fromJSON(out) %>%
+      as_tibble()
   }
-  if (spectra_set %in% names(out)) {
-    out <- out[[spectra_set]]
+  if (!inherits(out, "data.frame")) {
+    stop("Argument target should be either a data.frame object or JSON coercible to one.")
+  }
+  if (all(grepl(paste0(ms_col_sep, collapse = "|"), names(out)))) {
+    ms_cols <- ms_col_sep
+    is_format <- "separated"
+  } else if (grepl(ms_col_unzip, names(out))) {
+    ms_cols <- ms_col_unzip
+    is_format <- "zipped"
   } else {
-    warning(sprintf("Could not identify '%s' in object names. Using directly as-is", spectra_set))
-  }
-  if (!is.data.frame(out)) {
-    out <- as.data.frame(out)
+    stop("Could not find required names in the object provided to argument 'target'.")
   }
   out <- switch(is_format,
                 "separated" = ms_spectra_separated(out, ms_cols = ms_col_sep),
