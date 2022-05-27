@@ -176,6 +176,7 @@
 			TEXT NOT NULL,
 			/* Text name of the alias for a compound */
 		/* Check constraints */
+		UNIQUE (compound_id, alias_type, alias),
 		/* Foreign key relationships */
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (alias_type) REFERENCES norm_analyte_alias_references(id) ON UPDATE CASCADE ON DELETE RESTRICT
