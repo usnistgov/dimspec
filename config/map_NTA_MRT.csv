@@ -126,4 +126,4 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,0,0,1,,,qc_data,name,,,
 0,0,0,0,1,,,qc_data,value,,,
 ,,,,,,,,,,,
-,,,,,,,,,,,"LINK peaks.id, compounds.id, and fragments.id in compound_fragments as appropriate"
+,,,,,,,,,,,"LINK peaks.id, compounds.id, and annotated_fragments.id in compound_fragments as appropriate"

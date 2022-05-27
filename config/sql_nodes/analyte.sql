@@ -1,9 +1,10 @@
 /*=============================================================================
 	Description
 		Analyte node schema definition for the NIST high-resolution
-		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
-		contains information relevant to analytical targets (e.g. compounds 
-		and their measured fragments from HRAM-MS experiments).
+		accurate-mass spectrometry spectral database for non-targeted analysis
+		(HRAM-MS-NTA). This node contains information relevant to analytical 
+		targets (e.g. compounds and their measured fragments from HRAM-MS_NTA 
+		experiments).
 	Status
 		Development
 	LastUpdate
