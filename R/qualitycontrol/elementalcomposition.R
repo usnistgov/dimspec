@@ -120,7 +120,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
 monoisotope.list <- function(df, column, exactmasses, remove.elements = c(), adduct = "neutral") {
   if (is.character(column)) {
     column <- grep(column, names(df), value = TRUE)
-    stopifnot(length(column == 1))
+    stopifnot(length(column) == 1)
   }
   formulas <- df[,column]
   masslist <- c()
