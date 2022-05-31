@@ -362,7 +362,7 @@
 		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.id 
-		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = fms.fragment_id 
+		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = vfms.fragment_id 
 		GROUP BY c.id, c.formula, vaf.smiles, vaf.radical, vaf.fixedmass
 		ORDER BY af.mz ASC;
 	/*magicsplit*/
