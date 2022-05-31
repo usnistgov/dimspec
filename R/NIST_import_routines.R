@@ -1244,6 +1244,15 @@ resolve_fragments <- function(obj,
   if (!is.null(rdkit_aliases)) {
     stopifnot(is.character(rdkit_aliases), length(rdkit_aliases) > 0)
   }
+  using_rdkit <- exists("INFORMATICS") &&
+    INFORMATICS &&
+    exists("USE_RDKIT") &&
+    USE_RDKIT &&
+    exists("rdkit_active") &&
+    rdkit_active(rdkit_ref = rdkit_ref,
+                 rdkit_name = rdkit_name,
+                 log_ns = log_ns)
+    
   # Resolve direct aliases first - this will make all smiles aliases resolve
   # automatically during import mapping of the fragment values
   fragment_identifiers <- map_import(
@@ -1252,12 +1261,30 @@ resolve_fragments <- function(obj,
     import_map = import_map,
     db_conn = db_conn,
     log_ns = log_ns
-  ) %>%
+  )
+  if (nrow(bind_cols(fragment_identifiers)) == 0) {
+    log_it("info", glue::glue("No annotated fragments were located at '{fragments_in}' in this import object."), log_ns)
+    return(invisible(NULL))
+  }
+  if (using_rdkit && "smiles" %in% tolower(names(fragment_identifiers))) {
+    rdk <- .GlobalEnv[[rdkit_ref]]
+    mols <- sapply(fragment_identifiers$smiles,
+                   rdk$Chem$MolFromSmiles)
+    charges <- sapply(mols,
+                      rdk$Chem$GetFormalCharge)
+    fixedmasses <- sapply(mols,
+                          rdk$Chem$Descriptors$ExactMolWt)
+    fragment_identifiers <- fragment_identifiers %>%
+      tack_on(netcharge = charges,
+              fixedmass = fixedmasses)
+  }
+  fragment_identifiers <- fragment_identifiers %>%
     bind_cols()
   if (nrow(fragment_identifiers) == 0) {
     log_it("info", "No identifying aliases were located.", log_ns)
     return(NULL)
   }
+  
   fragment_identifiers <- fragment_identifiers %>%
     left_join(
       dataframe_match(
@@ -1274,7 +1301,7 @@ resolve_fragments <- function(obj,
     filter(is.na(id)) %>%
     select(-id)
   if (nrow(new_fragment_identifiers) > 0) {
-    if (exists("INFORMATICS") && INFORMATICS) {
+    if (using_rdkit) {
       new_fragment_identifiers %>%
         select(smiles, radical) %>%
         left_join(
@@ -1300,10 +1327,6 @@ resolve_fragments <- function(obj,
     log_ns = log_ns
   ) %>%
     bind_cols()
-  if (nrow(fragment_values) == 0) {
-    log_it("info", "No annotated fragments were located.", log_ns)
-    return(NULL)
-  }
   if (is.null(generation_type) && !is.null(sample_id)) {
     stopifnot(sample_id == as.integer(sample_id))
     generation_type <- build_db_action(
@@ -1447,6 +1470,10 @@ resolve_fragments <- function(obj,
           these_args
         )
       )
+    } else {
+      fragment_alias_values <- fragment_alias_values %>%
+        bind_rows() %>%
+        filter(!is.na(fragment_id))
     }
   } else {
     fragment_alias_values <- fragment_aliases[[1]]
