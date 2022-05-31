@@ -49,32 +49,59 @@ extract.elements <- function(composition.str, remove.elements = c()) {
 #' @param elementlist list of elemental formula from `extract.elements` function
 #' @param exactmasses list of exact masses of elements
 #' @param adduct character string adduct/charge state to add to the elemental formula, options are `neutral`, `+H`, `-H`, `+Na`, `+K`, `+`, `-`, `-radical`, `+radical`
+#' @param db_conn database connection object, either a CHR scalar name (default: "con") or the connection object itself (preferred)
 #'
 #' @return numeric monoisotopic exact mass
 #' @export
 #'
 #' @examples
 #' elementlist <- extract.elements("C2H5O")
-#' calculate.monoisotope(elementalist, exactmasses, adduct = "neutral")
+#' calculate.monoisotope(elementalist, adduct = "neutral")
 #'
 
-calculate.monoisotope <- function(elementlist, exactmasses, adduct = "neutral") {
-  mass <- 0
-  for (i in 1:length(elementlist$elements)) {
-    mass <- mass + as.numeric(exactmasses[which(exactmasses[,1] == elementlist$elements[i]),2])*elementlist$counts[i]
+calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neutral", db_conn = "con") {
+  if (is.character(elementlist)) {
+    elementlist <- lapply(elementlist, extract.elements)
   }
-  if (adduct != "neutral") {
-    if (adduct == "+H") {mass.adj = -1.0072767}
-    if (adduct == "-H") {mass.adj = 1.0072766}
-    if (adduct == "+Na") {mass.adj = -22.9892213}
-    if (adduct == "+K") {mass.adj = -38.9631585}
-    if (adduct == "+") {mass.adj = 0.0005484}
-    if (adduct == "-") {mass.adj = -0.0005484}
-    if (adduct == "-radical") {mass.adj = 2*-0.0005484}
-    if (adduct == "+radical") {mass.adj = 0}
-    mass <- mass - mass.adj
+  
+  if (is.null(exactmasses)) {
+    if (is.character(db_conn)) {
+      if (exists(db_conn)) {
+        db_conn <- eval(sym(db_conn))
+      }
+    }
+    use_db <- try(DBI::dbIsValid(db_conn))
+    if (inherits(use_db, "try-error")) {
+      use_db <- FALSE
+    }
+    if (use_db) {
+        exactmasses <- tbl(db_conn, "view_exact_masses") %>%
+          select(symbol, exact_mass) %>%
+          collect()
+    } else {
+      exactmasses <- setNames(
+        readRDS("R/misc/exactmasses.RDS"),
+        c("symbol", "exact_mass")
+      )
+    }
   }
-  mass
+  mass <- lapply(elementlist,
+                 function(x) {
+                   tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+                   if (adduct != "neutral") {
+                     if (adduct == "+H") {mass.adj = -1.0072767}
+                     if (adduct == "-H") {mass.adj = 1.0072766}
+                     if (adduct == "+Na") {mass.adj = -22.9892213}
+                     if (adduct == "+K") {mass.adj = -38.9631585}
+                     if (adduct == "+") {mass.adj = 0.0005484}
+                     if (adduct == "-") {mass.adj = -0.0005484}
+                     if (adduct == "-radical") {mass.adj = 2*-0.0005484}
+                     if (adduct == "+radical") {mass.adj = 0}
+                     tmp <- tmp - mass.adj
+                   }
+                   return(tmp)
+                 })
+  unlist(mass)
 }
 
 #' Calculate the monoisotopic mass of a elemental formulas in 
