@@ -107,7 +107,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
 #' Calculate the monoisotopic mass of a elemental formulas in 
 #'
 #' @param df data.frame with at least one column with elemental formulas
-#' @param column integer indicating the column containing the elemental formulas
+#' @param column integer or CHR scalar indicating the column containing the elemental formulas, if CHR then regex match is used
 #' @param exactmasses list of exact masses
 #' @param remove.elements elements to remove from the elemental formulas
 #' @param adduct character string adduct/charge state to add to the elemental formula, options are `neutral`, `+H`, `-H`, `+Na`, `+K`, `+`, `-`, `-radical`, `+radical`
@@ -118,13 +118,15 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
 #' @examples
 
 monoisotope.list <- function(df, column, exactmasses, remove.elements = c(), adduct = "neutral") {
+  if (is.character(column)) {
+    column <- grep(column, names(df), value = TRUE)
+    stopifnot(length(column == 1))
+  }
   formulas <- df[,column]
   masslist <- c()
-  for (i in 1:length(formulas)) {
-    elements <- extract.elements(composition.str = formulas[i], remove.elements = remove.elements)
-    addmass <- calculate.monoisotope(elements, exactmasses, adduct)
-    masslist <- c(masslist, addmass)
-  }
+  elements <- lapply(formulas, extract.elements, remove.elements = remove.elements)
+  addmass <- calculate.monoisotope(elements, exactmasses, adduct)
+  masslist <- c(masslist, addmass)
   cbind(df, masslist)
 }
 
