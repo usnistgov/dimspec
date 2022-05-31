@@ -325,6 +325,47 @@
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_compound_fragments_stats AS 
+		SELECT
+			c.id as compound_id,
+				/* compounds.id field */
+			c.formula AS compound,
+				/* compounds.formula field */
+			nf.formula AS fragment,
+				/* normalized fragments formula field */
+			COUNT(nf.formula) AS measured_n_times,
+			  /* number of times a given fragment has been reported as measured */
+			vaf.smiles,
+			  /* SMILES notation of the fragment */
+			vaf.radical,
+			  /* whether ot not this fragment represents a radical */
+			vaf.fixedmass, 
+			  /* fixed molecular mass of the fragment */
+			AVG(vaf.mz) AS measured_mz_mean,
+			  /* Mean mass to charge value at which the fragment has been measured */
+			MIN(vaf.mz) AS measured_mz_min,
+			  /* Minimum mass to charge value at which the fragment has been measured */
+			MAX(vaf.mz) AS measured_mz_max,
+			  /* Maximum mass to charge value at which the fragment has been measured */
+			SQRT(SUM(POWER(af.mz - vfms.mz_mean, 2))/(COUNT(af.fragment_id) - 1)) AS measured_mz_stdev,
+			  /* Sample standard deviation of the mass to charge values at which the fragment has been measured */
+			AVG(vaf.ppm_error) AS ppm_error_mean,
+			  /* Mean part per million error value at which the fragment has been measured */ 
+			MIN(vaf.ppm_error) AS ppm_error_min, 
+			  /* Minimum part per million error value at which the fragment has been measured */ 
+			MAX(vaf.ppm_error) AS ppm_error_max,
+			  /* Maximum part per million error value at which the fragment has been measured */ 
+			SQRT(SUM(POWER(vaf.ppm_error - vfms.ppm_error_mean, 2))/(COUNT(af.fragment_id) - 1)) AS ppm_error_stdev
+			  /* Sample standard deviation of the part per million error values at which the fragment has been measured */ 
+		FROM compounds c
+		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
+		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
+		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.id 
+		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = fms.fragment_id 
+		GROUP BY c.id, c.formula, vaf.smiles, vaf.radical, vaf.fixedmass
+		ORDER BY af.mz ASC;
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_fragment_count AS
 		/* Number of fragments associated with compounds. */
 		SELECT
@@ -361,6 +402,19 @@
     FROM 
       annotated_fragments af 
       INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
+  /*magicsplit*/
+  CREATE VIEW view_fragment_mz_stats AS 
+    /* Mean measures of measured_mz values - a supplementary calculation table. */
+    SELECT
+      af.fragment_id,
+        /* Annotated fragment id */
+      AVG(af.mz) AS mz_mean,
+        /* Mean mass-to-charge ratio at which a given fragment id has been measured. */
+      AVG(vaf.ppm_error) AS ppm_error_mean
+       /* Mean part per million error of measured fragments compared with idealized fixed mass */
+    FROM annotated_fragments af
+    LEFT JOIN view_annotated_fragments vaf ON af.fragment_id = vaf.id 
+    GROUP BY af.fragment_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
