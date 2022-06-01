@@ -109,10 +109,10 @@ full_import <- function(import_object                  = NULL,
   # Check connection and requirements ----
   stopifnot(active_connection(db_conn))
   log_fn("start")
-  if (all(is.null(file_name), is.null(obj))) {
+  if (all(is.null(file_name), is.null(import_object))) {
     stop('One of either "import_obj" or "file_name" must be provided.')
   }
-  if (is.null(obj)) {
+  if (is.null(import_object)) {
     if (all(file.exists(file_name), grepl(".json", file_name))) {
       import_object <- jsonlite::read_json(file_name)
     }
@@ -431,13 +431,12 @@ full_import <- function(import_object                  = NULL,
       )
     )
     # _Fragments node ----
-    # WIP
     fragments <- do.call(
-      resolve_fragments,
+      resolve_fragments_NTAMRT,
       args = append(list(obj = obj,
                          sample_id = sample_id,
                          alias_type_norm_table = fragment_alias_type_norm_table),
-                    func_env[names(func_env) %in% names(formals(resolve_fragments))]
+                    func_env[names(func_env) %in% names(formals(resolve_fragments_NTAMRT))]
       )
     )
     # _Peak/fragment/compound connection ----
@@ -1179,34 +1178,35 @@ resolve_compound_fragments <- function(values = NULL,
 #' @return INT vector of resolved fragment IDs
 #' @export
 #' 
-resolve_fragments <- function(obj,
-                              sample_id = NULL,
-                              generation_type = NULL,
-                              fragments_in = "annotation",
-                              fragments_table = "annotated_fragments",
-                              fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
-                              fragments_sources_table = "fragment_sources",
-                              citation_info_in = "fragment_citation",
-                              inspection_info_in = "fragment_inspections",
-                              inspection_table = "fragment_inspections",
-                              generate_missing_aliases = FALSE,
-                              fragment_aliases_in = "fragment_aliases",
-                              fragment_aliases_table = "fragment_aliases",
-                              alias_type_norm_table = ref_table_from_map(fragment_aliases_table, "alias_type"),
-                              inchi_prefix = "InChI=1S/",
-                              rdkit_name = ifelse(exists("PYENV_NAME"), PYENV_NAME, "rdkit"),
-                              rdkit_ref = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
-                              rdkit_ns = "rdk",
-                              rdkit_make_if_not = TRUE,
-                              rdkit_aliases = c("Inchi", "InchiKey"),
-                              mol_to_prefix = "MolTo",
-                              mol_from_prefix = "MolFrom",
-                              type = "smiles",
-                              import_map = IMPORT_MAP,
-                              case_sensitive = FALSE,
-                              fuzzy = FALSE,
-                              db_conn = con,
-                              log_ns = "db") {
+resolve_fragments_NTAMRT <- function(obj,
+                                     sample_id = NULL,
+                                     generation_type = NULL,
+                                     fragments_in = "annotation",
+                                     fragments_table = "annotated_fragments",
+                                     fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
+                                     fragments_sources_table = "fragment_sources",
+                                     citation_info_in = "fragment_citation",
+                                     inspection_info_in = "fragment_inspections",
+                                     inspection_table = "fragment_inspections",
+                                     generate_missing_aliases = FALSE,
+                                     fragment_aliases_in = "fragment_aliases",
+                                     fragment_aliases_table = "fragment_aliases",
+                                     alias_type_norm_table = ref_table_from_map(fragment_aliases_table, "alias_type"),
+                                     inchi_prefix = "InChI=1S/",
+                                     rdkit_name = ifelse(exists("PYENV_NAME"), PYENV_NAME, "rdkit"),
+                                     rdkit_ref = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
+                                     rdkit_ns = "rdk",
+                                     rdkit_make_if_not = TRUE,
+                                     rdkit_aliases = c("Inchi", "InchiKey"),
+                                     mol_to_prefix = "MolTo",
+                                     mol_from_prefix = "MolFrom",
+                                     type = "smiles",
+                                     import_map = IMPORT_MAP,
+                                     case_sensitive = FALSE,
+                                     fuzzy = FALSE,
+                                     db_conn = con,
+                                     log_ns = "db") {
+  log_fn("start")
   if (any(is.na(sample_id))) {
     log_it("error", glue::glue("Could not safely coerce 'sample_id' = c({format_list_of_names(sample_id, add_quotes = TRUE)}) to an integer."), log_ns)
     stop()
@@ -1260,13 +1260,13 @@ resolve_fragments <- function(obj,
   if (using_rdkit) {
     rdk <- eval(sym(rdkit_ref))
   }
-    
   # Resolve direct aliases first - this will make all smiles aliases resolve
   # automatically during import mapping of the fragment values
   fragment_identifiers <- map_import(
     import_obj = obj,
     aspect = fragments_norm_table,
     import_map = import_map,
+    resolve_normalization = FALSE,
     db_conn = db_conn,
     log_ns = log_ns
   )
@@ -1328,41 +1328,31 @@ resolve_fragments <- function(obj,
       db_conn = db_conn,
       log_ns = log_ns
     )
+    new_fragment_identifiers <- dataframe_match(
+      match_criteria = new_fragment_identifiers,
+      table_names = fragments_norm_table,
+      and_or = "AND",
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
     fragment_identifiers <- bind_rows(
       existing_fragment_identifiers,
       new_fragment_identifiers
     )
   }
   
-  fragment_identifiers <- dataframe_match(
-        match_criteria = fragment_identifiers %>%
-          select(-id),
-        table_names = fragments_norm_table,
-        and_or = "AND",
-        db_conn = db_conn,
-        log_ns = log_ns
-      )
-  # In order to allow for non-structural fragment notation (e.g. formula), map
-  # any places in obj where SMILES is blank and copy the formula into the mapped
-  # field to create a hybrid-mapped field
-  col_smiles <- grep("smiles", names(obj[[fragments_in]]), ignore.case = TRUE, value = TRUE)
-  col_formula <- grep("formula", names(obj[[fragments_in]]), ignore.case = TRUE, value = TRUE)
-  no_smiles <- which(obj[[fragments_in]][[col_smiles]] == '')
-  if (length(no_smiles) > 0) {
-    obj[[fragments_in]][[col_smiles]][no_smiles] <- obj[[fragments_in]][[col_formula]][no_smiles]
-  }
-  fragment_values <- map_import(
-    import_obj = obj,
-    aspect = fragments_table,
-    import_map = import_map,
-    db_conn = db_conn,
-    log_ns = log_ns
-  ) %>%
-    bind_cols()
-  # Now set them back to avoid failed triggers in alias creation later
-  if (length(no_smiles) > 0) {
-    obj[[fragments_in]][[col_smiles]][no_smiles] <- ""
-  }
+  # Originally tried to map_import here, but inconsistent presence of SMILES
+  # strings proved this to be too strict. Instead, map it directly, which means
+  # this is now an NTAMRT function only.
+  fragment_values <- get_component(obj, fragments_in)[[1]] %>%
+    bind_rows() %>%
+    setNames(tolower(str_remove_all(names(.), "fragment_"))) %>%
+    mutate(radical = as.numeric(radical),
+           smiles = ifelse(smiles == "", NA, smiles)) %>%
+    left_join(fragment_identifiers) %>%
+    rename("fragment_id" = "id") %>%
+    select(any_of(dbListFields(db_conn, fragments_table)))
+  
   if (is.null(generation_type) && !is.null(sample_id)) {
     stopifnot(sample_id == as.integer(sample_id))
     generation_type <- build_db_action(
@@ -3822,6 +3812,7 @@ map_import <- function(import_obj,
                        ignore = TRUE,
                        id_column = "_*id$",
                        alias_column = "^alias$",
+                       resolve_normalization = TRUE,
                        db_conn = con,
                        log_ns = "db") {
   if (exists("verify_args")) {
@@ -3836,6 +3827,7 @@ map_import <- function(import_obj,
         ignore         = list(c("mode", "logical"), c("length", 1)),
         id_column      = list(c("mode", "character"), c("length", 1)),
         alias_column   = list(c("mode", "character"), c("length", 1)),
+        resolve_normalization  = list(c("mode", "logical"), c("length", 1)),
         db_conn        = list(c("length", 1)),
         log_ns         = list(c("mode", "character"), c("length", 1))
       )
@@ -3938,7 +3930,7 @@ map_import <- function(import_obj,
                                      alias_in,
                                      this_val)
                       log_it("info", msg, log_ns)
-                      if (nrow(alias_id) > 1) {
+                      if (nrow(alias_id) > 1 && resolve_normalization) {
                         alias_id <- resolve_normalization_value(
                           this_value = this_val,
                           db_table = alias_in,
@@ -3957,7 +3949,7 @@ map_import <- function(import_obj,
                       log_it("success", glue::glue("Resolved alias for '{this_field}' as id = '{norm_id}'."), log_ns)
                     }
                   }
-                  if (!length(norm_id) == 1) {
+                  if (!length(norm_id) == 1 && resolve_normalization) {
                     norm_id <- resolve_normalization_value(
                       this_value = this_val,
                       db_table = norm_by,
