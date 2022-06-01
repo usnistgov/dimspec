@@ -1272,7 +1272,7 @@ resolve_fragments_NTAMRT <- function(obj,
   )
   if (nrow(bind_cols(fragment_identifiers)) == 0) {
     log_it("info", glue::glue("No annotated fragments were located at '{fragments_in}' in this import object."), log_ns)
-    return(invisible(NULL))
+    return(NA)
   }
   fragment_identifiers <- fragment_identifiers %>%
     bind_cols() %>%
@@ -3987,8 +3987,8 @@ map_import <- function(import_obj,
                   }
                 })
           }
-          out[[i]] <- unname(this_val)
         }
+        out[[i]] <- unname(this_val)
       }
     }
   }
