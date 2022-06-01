@@ -397,7 +397,7 @@
         /* fixed or ideal mass of the fragment as determined by elemental composition */
       af.mz, 
         /* mass at which the annotated fragment was measured */
-      1e6 * (nf.fixedmass - af.mz)/nf.fixedmass AS ppm_error
+      1e6 * (af.mz - nf.fixedmass)/nf.fixedmass AS ppm_error
         /* mass accuracy of the measurement in parts per million */
     FROM 
       annotated_fragments af 
