@@ -76,6 +76,7 @@ full_import <- function(import_object                  = NULL,
                         fragments_in                   = "annotation",
                         fragments_table                = "annotated_fragments",
                         fragments_sources_table        = "fragment_sources",
+                        fragments_norm_table           = "norm_fragments",
                         citation_info_in               = "fragment_citation",
                         inspection_info_in             = "fragment_inspections",
                         inspection_table               = "fragment_inspections",
@@ -96,8 +97,8 @@ full_import <- function(import_object                  = NULL,
                         compounds_table                = "compounds",
                         compound_category              = NULL,
                         compound_category_table        = "compound_categories",
-                        compound_aliases_in            = "fragment_aliases",
-                        compound_aliases_table         = "fragment_aliases",
+                        compound_aliases_in            = "compound_aliases",
+                        compound_aliases_table         = "compound_aliases",
                         compound_alias_type_norm_table = ref_table_from_map(compound_aliases_table, "alias_type"),
                         fuzzy                          = FALSE,
                         case_sensitive                 = TRUE,
@@ -443,7 +444,11 @@ full_import <- function(import_object                  = NULL,
     resolve_compound_fragments(peak_id = peaks,
                                fragment_id = fragments,
                                compound_id = compounds)
-    log_it("info", glue::glue("Finished importing object #{i} with name {names(import_object)[i]}..."), log_ns)
+    if (is.null(names(import_object))) {
+      log_it("info", "Finished single object import.", log_ns)
+    } else {
+      log_it("info", glue::glue("Finished importing object #{i} with name {names(import_object)[i]}..."), log_ns)
+    }
   }
 }
 
@@ -1252,6 +1257,9 @@ resolve_fragments <- function(obj,
     rdkit_active(rdkit_ref = rdkit_ref,
                  rdkit_name = rdkit_name,
                  log_ns = log_ns)
+  if (using_rdkit) {
+    rdk <- eval(sym(rdkit_ref))
+  }
     
   # Resolve direct aliases first - this will make all smiles aliases resolve
   # automatically during import mapping of the fragment values
@@ -1266,20 +1274,9 @@ resolve_fragments <- function(obj,
     log_it("info", glue::glue("No annotated fragments were located at '{fragments_in}' in this import object."), log_ns)
     return(invisible(NULL))
   }
-  if (using_rdkit && "smiles" %in% tolower(names(fragment_identifiers))) {
-    rdk <- .GlobalEnv[[rdkit_ref]]
-    mols <- sapply(fragment_identifiers$smiles,
-                   rdk$Chem$MolFromSmiles)
-    charges <- sapply(mols,
-                      rdk$Chem$GetFormalCharge)
-    fixedmasses <- sapply(mols,
-                          rdk$Chem$Descriptors$ExactMolWt)
-    fragment_identifiers <- fragment_identifiers %>%
-      tack_on(netcharge = charges,
-              fixedmass = fixedmasses)
-  }
   fragment_identifiers <- fragment_identifiers %>%
-    bind_cols()
+    bind_cols() %>%
+    mutate(smiles = ifelse(smiles == "", NA, smiles))
   if (nrow(fragment_identifiers) == 0) {
     log_it("info", "No identifying aliases were located.", log_ns)
     return(NULL)
@@ -1290,35 +1287,70 @@ resolve_fragments <- function(obj,
       dataframe_match(
         match_criteria = fragment_identifiers,
         table_names = fragments_norm_table,
-        and_or = "OR",
+        and_or = "AND",
         db_conn = db_conn,
         log_ns = log_ns
       )
     ) %>% select(
       any_of(dbListFields(con, fragments_norm_table))
     )
+  existing_fragment_identifiers <- fragment_identifiers %>%
+    filter(!is.na(id))
   new_fragment_identifiers <- fragment_identifiers %>%
     filter(is.na(id)) %>%
     select(-id)
   if (nrow(new_fragment_identifiers) > 0) {
-    if (using_rdkit) {
-      new_fragment_identifiers %>%
-        select(smiles, radical) %>%
-        left_join(
-          smilestoformula(.[["smiles"]]) %>%
-            rename_with(tolower)
-        ) %>%
-        build_db_action(
-          action = "insert",
-          values = .,
-          table_name = fragments_norm_table,
-          ignore = TRUE,
-          db_conn = db_conn,
-          log_ns = log_ns
-        )
+    fixed_masses <- new_fragment_identifiers$fixedmass
+    fixedmass_missing <- which(is.na(fixed_masses) | fixed_masses == 0)
+    if (length(fixedmass_missing) > 0) {
+      new_fragment_identifiers$fixedmass[fixedmass_missing] <- calculate.monoisotope(new_fragment_identifiers$formula[fixedmass_missing])
     }
+    netcharge_missing <- with(new_fragment_identifiers,
+                              which(is.na(netcharge) & !is.na(smiles) & !smiles == "")
+    )
+    if (length(netcharge_missing) > 0) {
+      if (using_rdkit) {
+        new_fragment_identifiers$netcharge[netcharge_missing] <- sapply(
+          new_fragment_identifiers$smiles[netcharge_missing],
+          function(x) {
+            rdk$Chem$GetFormalCharge(
+              rdk$Chem$MolFromSmiles(x)
+            )
+          }
+        )
+      }
+    }
+    build_db_action(
+      action = "insert",
+      values = new_fragment_identifiers,
+      table_name = fragments_norm_table,
+      ignore = TRUE,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+    fragment_identifiers <- bind_rows(
+      existing_fragment_identifiers,
+      new_fragment_identifiers
+    )
   }
   
+  fragment_identifiers <- dataframe_match(
+        match_criteria = fragment_identifiers %>%
+          select(-id),
+        table_names = fragments_norm_table,
+        and_or = "AND",
+        db_conn = db_conn,
+        log_ns = log_ns
+      )
+  # In order to allow for non-structural fragment notation (e.g. formula), map
+  # any places in obj where SMILES is blank and copy the formula into the mapped
+  # field to create a hybrid-mapped field
+  col_smiles <- grep("smiles", names(obj[[fragments_in]]), ignore.case = TRUE, value = TRUE)
+  col_formula <- grep("formula", names(obj[[fragments_in]]), ignore.case = TRUE, value = TRUE)
+  no_smiles <- which(obj[[fragments_in]][[col_smiles]] == '')
+  if (length(no_smiles) > 0) {
+    obj[[fragments_in]][[col_smiles]][no_smiles] <- obj[[fragments_in]][[col_formula]][no_smiles]
+  }
   fragment_values <- map_import(
     import_obj = obj,
     aspect = fragments_table,
@@ -1327,6 +1359,10 @@ resolve_fragments <- function(obj,
     log_ns = log_ns
   ) %>%
     bind_cols()
+  # Now set them back to avoid failed triggers in alias creation later
+  if (length(no_smiles) > 0) {
+    obj[[fragments_in]][[col_smiles]][no_smiles] <- ""
+  }
   if (is.null(generation_type) && !is.null(sample_id)) {
     stopifnot(sample_id == as.integer(sample_id))
     generation_type <- build_db_action(
@@ -1456,20 +1492,24 @@ resolve_fragments <- function(obj,
       fragment_id = NA
     )
     if (generate_missing_aliases) {
-      these_args <- as.list(environment())[names(formals(add_rdkit_aliases))]
-      these_args <- these_args[!is.na(names(these_args))]
-      fragment_alias_values <- do.call(
-        add_rdkit_aliases,
-        args = append(
-          list(
-            identifiers = fragment_values %>%
-              left_join(tbl(con, fragments_norm_table), copy = TRUE) %>%
-              select(fragment_id, smiles),
-            alias_category = "fragments"
-          ),
-          these_args
+      if (!using_rdkit) {
+        log_it("warn", "Alias generation was requested but rdkit was not available.", log_ns)
+      } else {
+        these_args <- as.list(environment())[names(formals(add_rdkit_aliases))]
+        these_args <- these_args[!is.na(names(these_args))]
+        fragment_alias_values <- do.call(
+          add_rdkit_aliases,
+          args = append(
+            list(
+              identifiers = fragment_identifiers %>%
+                filter(!smiles == "" | !is.na(smiles)) %>%
+                select(id, smiles),
+              alias_category = "fragments"
+            ),
+            these_args
+          )
         )
-      )
+      }
     } else {
       fragment_alias_values <- fragment_alias_values %>%
         bind_rows() %>%
@@ -3868,6 +3908,7 @@ map_import <- function(import_obj,
             this_val <- this_val %>%
               sapply(
                 function(this_val) {
+                  if (this_val == "" || is.na(this_val)) return(NA)
                   log_it("info", glue::glue("Attempt resolution of '{this_field}': norm_by = '{norm_by}' and this_val = '{this_val}'."), log_ns)
                   if (!is.na(alias_in)) {
                     log_it("info", glue::glue("Resolving aliases for '{this_field}' using aliases in '{alias_in}'."), log_ns)
