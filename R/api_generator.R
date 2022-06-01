@@ -479,6 +479,8 @@ build_db_action <- function(action,
                                       function(y) {
                                         if (any(tolower(y) == "null", y == "", is.na(y), is.null(y))) {
                                           "null"
+                                        } else if (str_detect(y, "\\\\")) {
+                                          dbQuoteString(db_conn, str_replace_all(y, "\\\\", "\\\\\\\\"))
                                         } else {
                                           dbQuoteLiteral(db_conn, y)
                                         }
@@ -628,6 +630,7 @@ build_db_action <- function(action,
     query <- query %>%
       str_replace_all(catch_null, " = null")
   }
+  query <- sql(query)
   if (execute) {
     if (logging) log_it("trace", glue::glue("Executing: {query}."), log_ns)
     if (grepl("^SELECT", query)) {
