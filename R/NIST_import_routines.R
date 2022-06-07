@@ -435,7 +435,8 @@ full_import <- function(import_object                  = NULL,
       resolve_fragments_NTAMRT,
       args = append(list(obj = obj,
                          sample_id = sample_id,
-                         alias_type_norm_table = fragment_alias_type_norm_table),
+                         alias_type_norm_table = fragment_alias_type_norm_table,
+                         strip_na = TRUE),
                     func_env[names(func_env) %in% names(formals(resolve_fragments_NTAMRT))]
       )
     )
@@ -874,7 +875,7 @@ resolve_compound_aliases <- function(obj,
     rename(alias = name) %>%
     pivot_longer(cols = -compound_id) %>%
     set_names(dbListFields(db_conn, compound_alias_table)) %>%
-      mutate(alias = str_split(alias, pattern = ";"),
+    mutate(alias = str_split(alias, pattern = ";"),
            alias_type = ifelse(tolower(alias_type) %in% alias_types,
                                tolower(alias_type),
                                alias_type)) %>%
@@ -974,164 +975,99 @@ resolve_compound_fragments <- function(values = NULL,
   # Check connection
   stopifnot(active_connection(db_conn))
   if (is.null(values)) {
-    peak_id_check <- suppressWarnings(as.integer(peak_id))
-    if (any(is.na(peak_id_check))) {
-      log_it("error",
-             sprintf("'peak_id%s' = %s%s%s could not be safely coerced to an integer.",
-                     ifelse(length(peak_id) > 1,
-                            "s",
-                            ""),
-                     ifelse(length(peak_id) > 1,
-                            "c(",
-                            ""),
-                     format_list_of_names(peak_id, add_quotes = TRUE),
-                     ifelse(length(peak_id) > 1,
-                            ")",
-                            "")),
-             log_ns)
-      return(NULL)
-    }
-    fragment_id_check <- suppressWarnings(as.integer(fragment_id))
-    if (any(is.na(fragment_id_check))) {
-      log_it("error",
-             sprintf("'fragment_id%s' = %s%s%s could not be safely coerced to an integer.",
-                     ifelse(length(fragment_id) > 1,
-                            "s",
-                            ""),
-                     ifelse(length(fragment_id) > 1,
-                            "c(",
-                            ""),
-                     format_list_of_names(fragment_id, add_quotes = TRUE),
-                     ifelse(length(fragment_id) > 1,
-                            ")",
-                            "")),
-             log_ns)
-      return(NULL)
-    }
-    if (!all(is.na(compound_id))) {
-      if (!length(compound_id) == 1 &&
-          !(length(compound_id) == length(peak_id) || length(peak_id) == 1) &&
-          !(length(compound_id) == length(fragment_id) || length(fragment_id) == 1)) {
-        log_it("error",
-               glue::glue("Length of 'compound_id' ({length(compound_id)}) must be either 1 or match the lengths of 'peak_id' (length = {length(peak_id)}) and 'fragment_id' (length = {length(fragment_id)})."),
-               log_ns)
-        return(NULL)
+    # Pre check coercion to integer
+    for (check_arg in c("peak_id", "fragment_id", "compound_id")) {
+      arg <- environment()[[check_arg]]
+      not_na <- which(!is.na(arg))
+      if (length(not_na) > 0) {
+        check <- suppressWarnings(as.integer(arg[not_na]))
+        if (any(is.na(check))) {
+          check <- arg[not_na][which(is.na(check))]
+          log_it("error",
+                 sprintf("'%s%s' = %s%s%s could not be safely coerced to an integer.",
+                         check_arg,
+                         ifelse(length(check) > 1,
+                                "s",
+                                ""),
+                         ifelse(length(check) > 1,
+                                "c(",
+                                ""),
+                         format_list_of_names(check, add_quotes = TRUE),
+                         ifelse(length(check) > 1,
+                                ")",
+                                "")),
+                 log_ns)
+          return(NULL)
+        }
       }
     }
-    compound_id_check <- suppressWarnings(as.integer(compound_id))
-    if (any(is.na(compound_id_check))) {
-      log_it("error",
-             sprintf("'compound_id%s' = %s%s%s could not be safely coerced to an integer.",
-                     ifelse(length(compound_id) > 1,
-                            "s",
-                            ""),
-                     ifelse(length(compound_id) > 1,
-                            "c(",
-                            ""),
-                     format_list_of_names(compound_id, add_quotes = TRUE),
-                     ifelse(length(compound_id) > 1,
-                            ")",
-                            "")),
-             log_ns)
-      return(NULL)
+  }
+  # Check presence of IDs
+  for (check_arg in c("peak_id", "fragment_id", "compound_id")) {
+    ids <- environment()[[check_arg]]
+    ids <- ids[!is.na(ids)]
+    if (length(ids) > 0) {
+      associated_table <- paste0(gsub("_id", "", check_arg), "s_table")
+      check_table <- environment()[[associated_table]]
+      check_val <- ids %in%
+        build_db_action(
+          action = "select",
+          table_name = check_table,
+          column_names = "id",
+          db_conn = db_conn,
+          log_ns = log_ns
+        )
+      if (!all(check_val)) {
+        id_check <- ids[!check_val]
+        log_it("error",
+               sprintf("`%s` id%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
+                       check_arg,
+                       ifelse(length(id_check) > 1,
+                              "s",
+                              ""),
+                       ifelse(length(id_check) > 1,
+                              "c(",
+                              ""),
+                       format_list_of_names(id_check, add_quotes = TRUE),
+                       ifelse(length(id_check) > 1,
+                              ")",
+                              ""),
+                       ifelse(length(id_check) > 1,
+                              "were",
+                              "was"),
+                       check_table),
+               log_ns
+        )
+        legit_ids <- ids[check_val]
+        if (length(legit_ids) == 0) {
+          legit_ids <- NA
+        }
+        assign(x = check_arg, value = legit_ids)
+      }
     }
-    values = list(peak_id = peak_id,
-                  fragment_id = fragment_id,
-                  compound_id = compound_id) %>%
-      bind_cols() %>%
-      mutate(across(.cols = everything(), .fns = ~ as.integer(.x)))
   }
-  peak_id_check <- peak_id %in%
-    build_db_action(
-      action = "select",
-      table_name = peaks_table,
-      column_names = "id",
-      db_conn = db_conn,
-      log_ns = log_ns
-    )
-  if (!all(peak_id_check)) {
-    peak_id_check <- peak_id[!peak_id_check]
+  values <- list(peak_id = as.integer(peak_id),
+                fragment_id = as.integer(fragment_id),
+                compound_id = as.integer(compound_id))
+  values <- try(bind_cols(values))
+  if (inherits(values, 'try-error')) {
     log_it("error",
-           sprintf("'peak_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
-                   ifelse(length(peak_id_check) > 1,
-                          "s",
-                          ""),
-                   ifelse(length(peak_id_check) > 1,
-                          "c(",
-                          ""),
-                   format_list_of_names(peak_id_check, add_quotes = TRUE),
-                   ifelse(length(peak_id_check) > 1,
-                          ")",
-                          ""),
-                   ifelse(length(peak_id_check) > 1,
-                          "were",
-                          "was"),
-                   peaks_table),
-           log_ns
-    )
-    peak_id <- peak_id[peak_id_check]
+           glue::glue("Lengths of 'compound_id' ({length(compound_id)}), 'peak_id' (length = {length(peak_id)}), and 'fragment_id' (length = {length(fragment_id)}) must be compatible for combination into a data frame."),
+           log_ns)
+    return(NULL)
   }
-  fragment_id_check <- fragment_id %in%
-    build_db_action(
-      action = "select",
-      table_name = fragments_table,
-      column_names = "id",
-      db_conn = db_conn,
-      log_ns = log_ns
+  # Ensure there is at least one relationship remaining to draw
+  at_least_two <- values %>%
+    mutate(across(everything(), ~ !is.na(.))) %>%
+    rowSums() > 1
+  if (any(!at_least_two)) {
+    n_affected <- length(at_least_two[!at_least_two])
+    log_it("warning",
+           glue::glue("At least two of peak_id, compound_id, or fragment_id must evaluate to integer values present in the database for every record being added. This affected {n_affected} record{ifelse(n_affected > 1, 's', '')}."),
+                      log_ns
     )
-  if (!all(fragment_id_check)) {
-    fragment_id_check <- fragment_id[!fragment_id_check]
-    log_it("error",
-           sprintf("'fragment_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
-                   ifelse(length(fragment_id_check) > 1,
-                          "s",
-                          ""),
-                   ifelse(length(fragment_id_check) > 1,
-                          "c(",
-                          ""),
-                   format_list_of_names(fragment_id, add_quotes = TRUE),
-                   ifelse(length(fragment_id_check) > 1,
-                          ")",
-                          ""),
-                   ifelse(length(fragment_id_check) > 1,
-                          "were",
-                          "was"),
-                   fragments_table),
-           log_ns
-    )
-    fragment_id <- fragment_id[fragment_id_check]
-  }
-  if (!all(is.na(compound_id))) {
-    compound_id_check <- compound_id %in%
-      build_db_action(
-        action = "select",
-        table_name = compounds_table,
-        column_names = "id",
-        db_conn = db_conn,
-        log_ns = log_ns
-      )
-    if (!all(compound_id_check)) {
-      compound_id_check <- compound_id[!compound_id_check]
-      log_it("error",
-             sprintf("'compound_id'%s = %s%s%s %s not present in the '%s' table. Please address and try again.",
-                     ifelse(length(compound_id_check) > 1,
-                            "s",
-                            ""),
-                     ifelse(length(compound_id_check) > 1,
-                            "c(",
-                            ""),
-                     format_list_of_names(compound_id, add_quotes = TRUE),
-                     ifelse(length(compound_id_check) > 1,
-                            ")",
-                            ""),
-                     ifelse(length(compound_id_check) > 1,
-                            "were",
-                            "was"),
-                     compounds_table),
-             log_ns
-      )
-      compound_id <- compound_id[compound_id_check]
-    }
+    
+    values <- values[at_least_two, ]
   }
   res <- try(
     build_db_action(
@@ -1204,6 +1140,7 @@ resolve_fragments_NTAMRT <- function(obj,
                                      import_map = IMPORT_MAP,
                                      case_sensitive = FALSE,
                                      fuzzy = FALSE,
+                                     strip_na = TRUE,
                                      db_conn = con,
                                      log_ns = "db") {
   log_fn("start")
@@ -1219,7 +1156,7 @@ resolve_fragments_NTAMRT <- function(obj,
                         citation_info_in, inspection_info_in,
                         generate_missing_aliases, fragment_aliases_in, fragment_aliases_table, alias_type_norm_table,
                         rdkit_name, rdkit_ref, rdkit_ns, rdkit_make_if_not, mol_to_prefix, mol_from_prefix, type,
-                        db_conn, log_ns),
+                        strip_na, db_conn, log_ns),
       conditions = list(
         obj                      = list(c("mode", "list")),
         fragments_in             = list(c("mode", "character"), c("length", 1)),
@@ -1239,6 +1176,7 @@ resolve_fragments_NTAMRT <- function(obj,
         mol_to_prefix            = list(c("mode", "character"), c("length", 1)),
         mol_from_prefix          = list(c("mode", "character"), c("length", 1)),
         type                     = list(c("mode", "character"), c("length", 1)),
+        strip_na                 = list(c("mode", "logical"), c("length", 1)),
         db_conn                  = list(c("length", 1)),
         log_ns                   = list(c("mode", "character"), c("length", 1))
       )
@@ -1246,6 +1184,21 @@ resolve_fragments_NTAMRT <- function(obj,
     stopifnot(arg_check$valid)
   }
   stopifnot(active_connection(db_conn = db_conn))
+  # Resolve direct aliases first - this will make all smiles aliases resolve
+  # automatically during import mapping of the fragment values
+  fragment_identifiers <- map_import(
+    import_obj = obj,
+    aspect = fragments_norm_table,
+    import_map = import_map,
+    resolve_normalization = FALSE,
+    strip_na = strip_na,
+    db_conn = db_conn,
+    log_ns = log_ns
+  )
+  if (nrow(bind_cols(fragment_identifiers)) == 0) {
+    log_it("info", glue::glue("No annotated fragments were located at '{fragments_in}' in this import object."), log_ns)
+    return(NA)
+  }
   if (!is.null(rdkit_aliases)) {
     stopifnot(is.character(rdkit_aliases), length(rdkit_aliases) > 0)
   }
@@ -1260,20 +1213,7 @@ resolve_fragments_NTAMRT <- function(obj,
   if (using_rdkit) {
     rdk <- eval(sym(rdkit_ref))
   }
-  # Resolve direct aliases first - this will make all smiles aliases resolve
-  # automatically during import mapping of the fragment values
-  fragment_identifiers <- map_import(
-    import_obj = obj,
-    aspect = fragments_norm_table,
-    import_map = import_map,
-    resolve_normalization = FALSE,
-    db_conn = db_conn,
-    log_ns = log_ns
-  )
-  if (nrow(bind_cols(fragment_identifiers)) == 0) {
-    log_it("info", glue::glue("No annotated fragments were located at '{fragments_in}' in this import object."), log_ns)
-    return(NA)
-  }
+  if (!"smiles" %in% names(fragment_identifiers)) fragment_identifiers$smiles <- NA
   fragment_identifiers <- fragment_identifiers %>%
     bind_cols() %>%
     mutate(smiles = ifelse(smiles == "", NA, smiles))
@@ -1932,6 +1872,7 @@ resolve_method <- function(obj,
                            search_text_in = "name",
                            search_text = "QC Method Used",
                            value_in = "value",
+                           require_all = TRUE,
                            import_map = IMPORT_MAP,
                            ...) {
   # Check connection
@@ -1941,13 +1882,14 @@ resolve_method <- function(obj,
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(obj, method_in, ms_methods_table, db_conn, ensure_unique, log_ns),
+      args       = list(obj, method_in, ms_methods_table, db_conn, ensure_unique, require_all, log_ns),
       conditions = list(
         obj           = list(c("n>=", 1)),
         method_in     = list(c("mode", "character"), c("length", 1)),
         ms_methods_table      = list(c("mode", "character"), c("length", 1)),
         db_conn       = list(c("length", 1)),
         ensure_unique = list(c("mode", "logical"), c("length", 1)),
+        require_all   = list(c("mode", "logical"), c("length", 1)),
         log_ns        = list(c("mode", "character"), c("length", 1))
       )
     )
@@ -1981,6 +1923,7 @@ resolve_method <- function(obj,
     tack_on(...) %>%
     verify_import_columns(db_table = ms_methods_table,
                           db_conn = db_conn,
+                          require_all = require_all,
                           log_ns = log_ns)
   is_single_record <- all(unlist(lapply(ms_method_values, length)) < 2)
   log_it("trace", glue("Mass spectromtery value lengths {ifelse(is_single_record, 'are', 'are not')} appropriate."), log_ns)
@@ -3470,7 +3413,7 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
   columns_present <- table_needs %in% provided
   if (!all(columns_present)) {
     missing_columns <- table_needs[!columns_present]
-    stop(glue('Required column{ifelse(length(missing_columns) > 1, "s are", " is")}} missing: {format_list_of_names(missing_columns)}.'))
+    stop(glue('Required column{ifelse(length(missing_columns) > 1, "s are", " is")} missing: {format_list_of_names(missing_columns)}.'))
   } else {
     valid_columns <- provided %in% table_info$name
     if (!all(valid_columns)) {
@@ -3813,6 +3756,7 @@ map_import <- function(import_obj,
                        id_column = "_*id$",
                        alias_column = "^alias$",
                        resolve_normalization = TRUE,
+                       strip_na = FALSE,
                        db_conn = con,
                        log_ns = "db") {
   if (exists("verify_args")) {
@@ -3870,7 +3814,8 @@ map_import <- function(import_obj,
           import_cat  <- properties$import_category[j]
           param_name  <- properties$import_parameter[j]
           param_value <- import_obj[[import_cat]][[param_name]]
-          out[j] <- param_value
+          if (is.null(param_value)) param_value <- NA
+          out[[j]] <- param_value
           names(out)[j] <- param_name
         }
         i <- j
@@ -3889,9 +3834,9 @@ map_import <- function(import_obj,
         alias_in  <- properties$alias_lookup[1]
         norm_by   <- properties$sql_normalization[1]
         this_val  <- import_obj[[category]][[parameter]]
-        if (has_missing_elements(this_val) && length(this_val) == 1) this_val <- NA
-        if (has_missing_elements(alias_in) && length(alias_in) == 1) alias_in <- NA
-        if (has_missing_elements(norm_by) && length(norm_by) == 1) norm_by <- NA
+        if (has_missing_elements(this_val) && length(this_val) < 2) this_val <- NA
+        if (has_missing_elements(alias_in) && length(alias_in) < 2) alias_in <- NA
+        if (has_missing_elements(norm_by) && length(norm_by) < 2) norm_by <- NA
         if (!all(is.na(this_val))) {
           if (!is.na(norm_by)) {
             norm_id <- integer(0)
@@ -3987,8 +3932,17 @@ map_import <- function(import_obj,
                   }
                 })
           }
+          
         }
         out[[i]] <- unname(this_val)
+      }
+    }
+  }
+  if (all(lapply(out, length) == 1)) {
+    if (strip_na) {
+      na_only <- which(lapply(out, is.na) == TRUE)
+      if (length(na_only)) {
+        out <- out[-na_only]
       }
     }
   }
