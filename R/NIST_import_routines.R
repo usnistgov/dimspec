@@ -3260,6 +3260,7 @@ remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
 #' @return writes a file to the project directory (based on the found location
 #'   of `file_name`) with the JSON structure
 #' @export
+#' 
 make_requirements <- function(example_import,
                               file_name = "import_requirements.json",
                               archive = TRUE,
@@ -3376,6 +3377,7 @@ make_requirements <- function(example_import,
 #' @return An object of the same type as `values` with extraneous values (i.e.
 #'   those not matching a database column header) stripped away.
 #' @export
+#' 
 verify_import_columns <- function(values, db_table, names_only = FALSE, require_all = TRUE, db_conn = con, log_ns = "db") {
   log_fn("start")
   log_it("info", glue('Verifying column requirements for table "{db_table}".'), log_ns)
@@ -3494,6 +3496,7 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
 #'   frame with the names of the list components
 #'
 #' @export
+#' 
 verify_import_requirements <- function(obj,
                                        ignore_extra = TRUE,
                                        requirements_obj = "import_requirements",
@@ -3979,6 +3982,7 @@ map_import <- function(import_obj,
 #'
 #' @examples
 #' qc_result(list(qc = list(letters), qcmethod = data.frame(name = "QC Method Used", value = TRUE)))
+#' 
 qc_result <- function(obj,
                       qc_data_in = "qc",
                       qc_method_in = "qcmethod",
@@ -4001,6 +4005,7 @@ qc_result <- function(obj,
   return(as.numeric(out))
 }
 
+#TODO
 #' Title
 #' 
 #' @param identifiers 
