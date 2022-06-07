@@ -485,7 +485,7 @@ full_import <- function(import_object                  = NULL,
 #'   IGNORE" SQL statement (default: FALSE)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
-#' @return
+#' @return INT scalar of the record identifier
 #' @export
 #' 
 add_or_get_id <- function(db_table, values, db_conn = con, ensure_unique = TRUE, require_all = TRUE, ignore = FALSE, log_ns = "db") {
@@ -787,7 +787,6 @@ resolve_compounds <- function(obj,
 #'   file (`out_file`) in the project directory
 #' @export
 #'
-#' @examples
 resolve_compound_aliases <- function(obj,
                                      compound_id,
                                      compounds_in = "compounddata",
@@ -931,6 +930,7 @@ resolve_compound_aliases <- function(obj,
   }
 }
 
+#TODO
 #' Title
 #'
 #' @inheritParams add_or_get_id
@@ -1082,6 +1082,7 @@ resolve_compound_fragments <- function(values = NULL,
   }
 }
 
+#TODO
 #' Resolve the fragments node during database import
 #'
 #' Call this function as part of an import routine to resolve the fragments node
@@ -1676,6 +1677,9 @@ resolve_software_settings_NTAMRT <- function(obj,
 #'
 #' @return INT scalar if successful, result of the call to [add_or_get_id]
 #'   otherwise
+#'   
+#' @export
+#' 
 resolve_sample <- function(obj,
                            db_conn = con,
                            method_id = NULL,
@@ -1980,7 +1984,7 @@ resolve_method <- function(obj,
 #'   the type of description to add; much of the logic is shared, only details
 #'   differ
 #'
-#' @return
+#' @return None, executes actions on the database
 #' @export
 #'
 resolve_description_NTAMRT <- function(obj,
@@ -2621,7 +2625,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
 #'   data to a long format (i.e. all masses and intensities will become a single
 #'   record) in the table defined by `ms_spectra_table` (default: FALSE)
 #'
-#' @return None, executes database actions
+#' @return None, executes actions on the database
 #' @export
 #' 
 resolve_ms_data <- function(obj,
@@ -2693,6 +2697,7 @@ resolve_ms_data <- function(obj,
   }
 }
 
+#TODO
 #' Unpack mass spectral data in compressed format
 #' 
 #' For some spectra, searching in a long form is more performant.
@@ -3173,7 +3178,7 @@ get_uniques <- function(objects, aspect) {
 #' @param db_conn connection object (default: con)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
-#' @return
+#' @return None, executes actions on the database
 #' @export
 remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
   log_fn("start")
