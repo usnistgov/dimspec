@@ -53,7 +53,7 @@ USE_API        = FALSE
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
 # this session will provide support for RDKit or ChemMineR, and set USE_RDKIT
 # to determine which (if false, ChemMineR) will be used.
-INFORMATICS    = FALSE
+INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
 # Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
