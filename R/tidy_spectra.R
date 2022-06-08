@@ -172,7 +172,7 @@ tidy_ms_spectra <- function(df) {
 #'   intensities in the "separate" format (default c("masses", "intensities"))
 #' @param ms_col_unzip CHR scalar of the name of the column holding spectral
 #'   masses and intensities in the "unzip" format (default "msdata")
-#' @param from_JSON BOOL scalar of whether or not `target` is a JSON expression
+#' @param is_JSON BOOL scalar of whether or not `target` is a JSON expression
 #'   needing conversion (default TRUE)
 #'
 #' @return data.frame object containing unpacked spectra
@@ -183,11 +183,12 @@ tidy_ms_spectra <- function(df) {
 #' tidy_spectra('{"measured_mz":"712.9501 713.1851","measured_intensity":"15094.41015625 34809.9765625"}')
 tidy_spectra <- function(target,
                          is_file      = FALSE,
-                         is_format    = "separated",
+                         is_format    = c("separated", "zipped"),
                          spectra_set  = "msdata",
                          ms_col_sep   = c("mz", "intensity"),
                          ms_col_unzip = "data",
                          is_JSON      = FALSE) {
+  is_format <- match.arg(is_format)
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_unzip, is_JSON),
@@ -204,12 +205,11 @@ tidy_spectra <- function(target,
       stop(cat(paste0(arg_check$messages, collapse = "\n")))
     }
   }
-  is_format <- match.arg(is_format, c("separated", "zipped"))
   if (is_file) {
     if (file_exists(target)) {
       if (grepl("separate", target)) {
         is_format <- "separated"
-      } else if (grepl("unzip", target)) {
+      } else if (grepl("zip", target)) {
         is_format <- "zipped"
       }
       ext <- tools::file_ext(target)
@@ -226,24 +226,25 @@ tidy_spectra <- function(target,
     out <- target
   }
   if (is_JSON || inherits(out, "json") || all(inherits(out, "character"), length(out) == 1)) {
-    out <- jsonlite::fromJSON(out) %>%
+    out <- out %>%
+      jsonlite::fromJSON() %>%
       as_tibble()
   }
   if (!inherits(out, "data.frame")) {
     stop("Argument target should be either a data.frame object or JSON coercible to one.")
   }
-  if (all(grepl(paste0(ms_col_sep, collapse = "|"), names(out)))) {
+  if (stringr::str_detect(names(out), ms_col_sep) %>% sum() == 2) {
     ms_cols <- ms_col_sep
     is_format <- "separated"
-  } else if (grepl(ms_col_unzip, names(out))) {
+  } else if (stringr::str_detect(names(out), ms_col_sep) %>% sum() == 1) {
     ms_cols <- ms_col_unzip
     is_format <- "zipped"
   } else {
     stop("Could not find required names in the object provided to argument 'target'.")
   }
   out <- switch(is_format,
-                "separated" = ms_spectra_separated(out, ms_cols = ms_col_sep),
-                "zipped"    = ms_spectra_zipped(out, spectra_col = ms_col_unzip))
+                "separated" = ms_spectra_separated(df = out, ms_cols = ms_col_sep),
+                "zipped"    = ms_spectra_zipped(df = out, spectra_col = ms_col_unzip))
   out <- tidy_ms_spectra(out)
   return(out)
 }
@@ -295,7 +296,7 @@ tidy_spectra <- function(target,
 #' @param peak_drop_ratio NUM scalar threshold of the maximum intensity below
 #'   which traces will be dropped (default: 1e-2 means any trace with a maximum
 #'   intensity less than 1% of the maximum intensity in the plot will be
-#'   dropped)
+#'   dropped); if > 1 the inversion will be used (1e5 -> 1e-5)
 #' @param peak_text_offset NUM scalar y-axis offset as a fraction of the maximum
 #'   intensity for trace annotation (default: 0.02 offsets labels in the
 #'   positive direction by 2% of the maximum intensity)
@@ -320,10 +321,15 @@ ms_plot_peak <- function(data,
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
   }
-  if (peak_repel_labels && !"ggrepel" %in% installed.packages()) {
-    peak_repel_labels <- FALSE
+  if (peak_repel_labels) {
+    if(!"ggrepel" %in% installed.packages()) {
+      peak_repel_labels <- FALSE
+    } else {
+      require(ggrepel)
+    }
   }
   peak_type <- match.arg(peak_type)
+  if (peak_drop_ratio > 1) peak_drop_ratio <- 1 / peak_drop_ratio
   cutoff <- max(data$base_int) * peak_drop_ratio
   plot_data <- data %>%
     mutate(ion_group = round(base_ion, peak_mz_resolution),
@@ -523,7 +529,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
 #' @param spectra_drop_ratio NUM scalar threshold of the maximum intensity below
 #'   which traces will be dropped (default: 1e-2 means any trace with a maximum
 #'   intensity less than 1% of the maximum intensity in the plot will be
-#'   dropped)
+#'   dropped); if > 1 the inversion will be used (1e5 -> 1e-5)
 #' @param spectra_repel_labels LGL scalar on whether to use the [ggrepel]
 #'   package to space out m/z labels in the plot (default: TRUE). If [ggrepel]
 #'   is not installed, it will default to FALSE rather than requiring an
@@ -554,6 +560,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
 #' @export
 #' 
 ms_plot_spectra <- function(data,
+                            spectra_type = c("separated", "zipped"),
                             spectra_mz_resolution = 3,
                             spectra_drop_ratio = 1e-2,
                             spectra_repel_labels = TRUE,
@@ -575,8 +582,9 @@ ms_plot_spectra <- function(data,
   }
   if (!"mz" %in% names(data)) {
     data <- data %>%
-      tidy_spectra(is_file = spectra_is_file,
-                   from_JSON = spectra_from_JSON) %>%
+      tidy_spectra(is_format = spectra_type,
+                   is_file = spectra_is_file,
+                   is_JSON = spectra_from_JSON) %>%
       suppressWarnings()
   }
   if (!"scantime" %in% names(data)) animate = FALSE
@@ -586,6 +594,7 @@ ms_plot_spectra <- function(data,
   } else {
     text_geom <- geom_text
   }
+  if (spectra_drop_ratio > 1) spectra_drop_ratio <- 1 / spectra_drop_ratio
   cutoff <- max(data$intensity) * spectra_drop_ratio
   if (spectra_log_y) {
     nudge_y_by <- spectra_nudge_y_factor
@@ -686,7 +695,8 @@ ms_plot_spectra <- function(data,
 #'   "intensity"), ion m/z value (as "base_ion" or "mz"), and scan time (as
 #'   "scantime") - (default: 5)
 #' @param intensity_drop_ratio NUM scalar threshold of the maximum intensity
-#'   below which traces will be dropped (default: 0 returns all)
+#'   below which traces will be dropped (default: 0 returns all); if > 1 the
+#'   inversion will be used (1e5 -> 1e-5)
 #' @param intensity_facet_by CHR scalar of a column name in `data` by which to
 #'   facet the resulting plot (default: NULL)
 #' @param db_conn database connection (default: con) which must be live to pull
@@ -716,7 +726,7 @@ ms_plot_spectral_intensity <- function(data,
     if (intensity_plot_resolution == "spectra") {
     plot_data <- plot_data %>%
       tidy_spectra(is_file = FALSE,
-                   from_JSON = FALSE) %>%
+                   is_JSON = FALSE) %>%
       suppressWarnings()
     } else {
       if ("base_ion" %in% names(data)) {
@@ -729,6 +739,7 @@ ms_plot_spectral_intensity <- function(data,
       }
     }
   }
+  if (intensity_drop_ratio > 1) intensity_drop_ratio <- 1 / intensity_drop_ratio
   cutoff <- max(plot_data$intensity) * intensity_drop_ratio
   if (cutoff < 1) cutoff <- 0
   plot_data <- plot_data %>%
@@ -815,9 +826,9 @@ ms_plot_peak_overview <- function(plot_peak_id,
   stopifnot(require(patchwork),
             active_connection(db_conn),
             length(plot_peak_id) == 1)
-  these_args <- as.list(environment())
   intensity_plot_resolution <- match.arg(intensity_plot_resolution)
   peak_type <- match.arg(peak_type)
+  these_args <- as.list(environment())
   peak_data <- tbl(db_conn, "ms_data") %>%
     filter(peak_id == plot_peak_id) %>%
     collect()
@@ -830,7 +841,7 @@ ms_plot_peak_overview <- function(plot_peak_id,
       filter(peak_id == plot_peak_id) %>%
       collect()
     if (nrow(spectral_data) == 0) {
-      log_it("warn", glue::glue("No spectral data exists for peak {plot_peak_id}. Using the peak data instead."))
+      log_it("warn", glue::glue("Spectra are not unpacked for peak {plot_peak_id}. Using the peak data instead."), log_ns)
       spectral_data <- peak_data
     }
   } else {
