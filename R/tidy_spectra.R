@@ -317,6 +317,7 @@ ms_plot_peak <- function(data,
                          peak_fill_alpha = 0.2,
                          peak_text_size = 3,
                          peak_text_offset = 0.02,
+                         include_method = TRUE,
                          db_conn = con) {
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
@@ -337,6 +338,7 @@ ms_plot_peak <- function(data,
     group_by(ion_group) %>%
     filter(max(base_int) > cutoff)
   annotation_data <- plot_data %>%
+    group_by(.data[[peak_facet_by]]) %>%
     filter(base_int == max(base_int)) %>%
     mutate(base_int = base_int * (1 + peak_text_offset))
   this_aes <- switch(
@@ -365,7 +367,11 @@ ms_plot_peak <- function(data,
     text_geom <- geom_label
   }
   
-  plot_titles <- ms_plot_titles(plot_data, peak_mz_resolution, peak_drop_ratio, db_conn)
+  plot_titles <- ms_plot_titles(plot_data = plot_data,
+                                mz_resolution = peak_mz_resolution,
+                                drop_ratio = peak_drop_ratio,
+                                include_method = include_method,
+                                db_conn = db_conn)
   
   out <- plot_data %>%
     ggplot(
@@ -393,8 +399,10 @@ ms_plot_peak <- function(data,
          caption = plot_titles$caption
     ) +
     facet_wrap(as.formula(paste("~", peak_facet_by)),
-               nrow = 2,
+               nrow = n_distinct(plot_data[[peak_facet_by]]),
                scales = "free_y")
+    # facet_wrap(as.formula(paste("~", peak_facet_by)),
+    #            nrow = 2)
   return(out)
 }
 
@@ -407,6 +415,8 @@ ms_plot_peak <- function(data,
 #' @param plot_data data.frame object passed from the plotting function
 #' @param mz_resolution NUM scalar passed from the plotting function
 #' @param drop_ratio NUM scalar passed from the plotting function
+#' @param include_method LGL scalar indicating whether or not to get the method
+#'   narrative from the database
 #' @param db_conn database connection (default: con) which must be live to pull
 #'   sample and compound identification information
 #'
@@ -414,7 +424,7 @@ ms_plot_peak <- function(data,
 #'   and "caption"
 #' @export
 #' 
-ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) {
+ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, include_method, db_conn = con) {
   out <- list(
     plot_title = NULL,
     plot_subtitle = NULL,
@@ -445,7 +455,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
       compound_name <- NULL
     } else {
       compound_name <- format_list_of_names(compound[[grep("name", names(compound), value = TRUE)]]) %>%
-        str_trunc(30)
+        str_trunc(60)
     }
     sample <- tbl(db_conn, "peaks") %>%
       filter(id %in% this_peak) %>%
@@ -458,7 +468,14 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
       collect()
     sample_id <- NULL
     sample_name <- NULL
+    method_info <- NULL
     if (nrow(sample) == 1) {
+      if (include_method) {
+        method_info <- tbl(db_conn, "samples") %>%
+          filter(id == local(sample$sample_id)) %>%
+          left_join(tbl(db_conn, "view_method_narrative"), by = c("ms_methods_id" = "Method ID")) %>%
+          pull(Narrative)
+      }
       sample_id <- sprintf("as measured in sample #%s", sample$sample_id)
       sample_name <- sample[[grep("name", names(sample), value = TRUE)]]
     } else if (nrow(sample) > 1) {
@@ -469,6 +486,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
     sample_id <- NULL
     compound_name <- NULL
     sample_name <- NULL
+    method_info <- NULL
   }
   drop_ratio_text <- paste0("ratio > ",
                             round(drop_ratio * 100, 2),
@@ -497,9 +515,15 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, db_conn = con) 
                     str_to_sentence(peak_id),
                     sample_id
     ),
-    subtitle = sprintf("%s in %s",
-                       compound_name,
-                       sample_name
+    subtitle = sprintf("%s in %s%s",
+              compound_name,
+              sample_name,
+              ifelse(is.null(method_info),
+                     '',
+                     sprintf("\n%s",
+                             stringr::str_wrap(string = method_info, width = 180)
+                     )
+              )
     ),
     caption = plot_caption
   )
@@ -572,6 +596,7 @@ ms_plot_spectra <- function(data,
                             spectra_animate = FALSE,
                             spectra_text_size = 3,
                             spectra_max_overlaps = 50,
+                            include_method = TRUE,
                             db_conn = con) {
   if (spectra_animate && !"gganimate" %in% installed.packages()) animate = FALSE
   if (inherits(data, "tbl_sql")) {
@@ -627,7 +652,11 @@ ms_plot_spectra <- function(data,
            ) %>%
     group_by(ion_group)
   
-  plot_titles <- ms_plot_titles(plot_data, spectra_mz_resolution, spectra_drop_ratio, db_conn)
+  plot_titles <- ms_plot_titles(plot_data = plot_data,
+                                mz_resolution = spectra_mz_resolution,
+                                drop_ratio = spectra_drop_ratio,
+                                include_method = include_method,
+                                db_conn = db_conn)
   
   out <- plot_data %>%
     ggplot(aes(x = mz,
@@ -654,7 +683,9 @@ ms_plot_spectra <- function(data,
          subtitle = plot_titles$subtitle,
          caption = plot_titles$caption
     ) +
-    scale_x_continuous(expand = expansion(mult = 0.1))
+    scale_x_continuous(expand = expansion(mult = 0.1)) +
+    scale_y_continuous(expand = expansion(c(0, 0.1)),
+                       labels = scales::label_scientific(digits = 2))
   if (spectra_log_y) {
     out <- out +
       scale_y_log10()
@@ -710,6 +741,7 @@ ms_plot_spectral_intensity <- function(data,
                                        intensity_drop_ratio = 0,
                                        intensity_facet_by = NULL,
                                        intensity_plot_resolution = c("spectra", "peak"),
+                                       include_method = TRUE,
                                        db_conn = con) {
   if (inherits(data, "tbl_sql")) {
     data <- collect(data)
@@ -747,7 +779,11 @@ ms_plot_spectral_intensity <- function(data,
     group_by(ion_group) %>%
     filter(max(intensity) > cutoff) %>%
     arrange(intensity)
-  plot_labs <- ms_plot_titles(plot_data, intensity_mz_resolution, intensity_drop_ratio, db_conn)
+  plot_labs <- ms_plot_titles(plot_data = plot_data,
+                              mz_resolution = intensity_mz_resolution,
+                              drop_ratio = intensity_drop_ratio,
+                              include_method = include_method,
+                              db_conn = db_conn)
   out <- plot_data %>%
     ggplot(aes(x = scantime,
                y = ion_group,
@@ -820,6 +856,7 @@ ms_plot_peak_overview <- function(plot_peak_id,
                                       area(6, 1, 7, 2)
                                     ),
                                   as_individual_plots = FALSE,
+                                  include_method = TRUE,
                                   db_conn = con,
                                   log_ns = "global"
 ) {
@@ -848,7 +885,11 @@ ms_plot_peak_overview <- function(plot_peak_id,
     spectral_data <- peak_data
   }
   
-  plot_titles <- ms_plot_titles(peak_data, peak_mz_resolution, peak_drop_ratio)
+  plot_titles <- ms_plot_titles(plot_data = peak_data,
+                                mz_resolution = peak_mz_resolution,
+                                drop_ratio = peak_drop_ratio,
+                                include_method = include_method,
+                                db_conn = db_conn)
   
   plot_peak <- do.call(
     ms_plot_peak,
