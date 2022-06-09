@@ -40,6 +40,8 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     ind <- which(annotated_cmpds == methodjson$peaks[[i]]$name)
     if (length(ind) > 0) {
       out[[i]]$annotation <- do.call(rbind, lapply(which(names(methodjson$annotation[[ind]]) == "fragment"), function(x) data.frame(methodjson$annotation[[ind]][[x]])))
+      #reorder fragments to formal order
+      out[[i]]$annotation$fragment_formula <- sapply(out[[i]]$annotation$fragment_formula, formulalize)
     }
     all_scans <- which(times >= as.numeric(methodjson$peaks[[i]]$peak_starttime) & times <= as.numeric(methodjson$peaks[[i]]$peak_endtime))
     ms1scans <- all_scans[which(mslevels[all_scans] == 1)]
