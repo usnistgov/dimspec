@@ -118,8 +118,8 @@ ms_spectra_zipped <- function(df, spectra_col = "data") {
 
 #' Tidy Spectra
 #'
-#' An abstraction function to take outputs from `ms_spectra_separated` and
-#' `ms_spectra_zipped` and return them as a tidy expression by unpacking the
+#' A convenience function to take outputs from `ms_spectra_separated` and
+#' `ms_spectra_zipped` and return them as a tidy data frame by unpacking the
 #' list column "spectra".
 #'
 #' @param df data.frame object containing nested spectra in a column
@@ -231,7 +231,11 @@ tidy_spectra <- function(target,
       as_tibble()
   }
   if (!inherits(out, "data.frame")) {
-    stop("Argument target should be either a data.frame object or JSON coercible to one.")
+    if (all(inherits(x = out, what = c("tbl_sql", "tbl_lazy"), which = TRUE) > 0)) {
+      out <- collect(out)
+    } else {
+      stop("Argument target should be either a data.frame object or JSON coercible to one.")
+    }
   }
   if (stringr::str_detect(names(out), ms_col_sep) %>% sum() == 2) {
     ms_cols <- ms_col_sep
