@@ -170,7 +170,7 @@ tidy_ms_spectra <- function(df) {
 #'   to decompress (default "msdata")
 #' @param ms_col_sep CHR vector of the column names holding spectral masses and
 #'   intensities in the "separate" format (default c("masses", "intensities"))
-#' @param ms_col_unzip CHR scalar of the name of the column holding spectral
+#' @param ms_col_zip CHR scalar of the name of the column holding spectral
 #'   masses and intensities in the "unzip" format (default "msdata")
 #' @param is_JSON BOOL scalar of whether or not `target` is a JSON expression
 #'   needing conversion (default TRUE)
@@ -182,22 +182,22 @@ tidy_ms_spectra <- function(df) {
 #' tidy_spectra('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}')
 #' tidy_spectra('{"measured_mz":"712.9501 713.1851","measured_intensity":"15094.41015625 34809.9765625"}')
 tidy_spectra <- function(target,
-                         is_file      = FALSE,
-                         is_format    = c("separated", "zipped"),
-                         spectra_set  = "msdata",
-                         ms_col_sep   = c("mz", "intensity"),
-                         ms_col_unzip = "data",
-                         is_JSON      = FALSE) {
+                         is_file     = FALSE,
+                         is_format   = c("separated", "zipped"),
+                         spectra_set = "msdata",
+                         ms_col_sep  = c("mz", "intensity"),
+                         ms_col_zip  = "data",
+                         is_JSON     = FALSE) {
   is_format <- match.arg(is_format)
   if (exists("verify_args")) {
     arg_check <- verify_args(
-      args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_unzip, is_JSON),
+      args       = list(is_file, is_format, spectra_set, ms_col_sep, ms_col_zip, is_JSON),
       conditions = list(
         is_file = list(c("mode", "logical"), c("length", 1)),
         is_format = list(c("mode", "character"), c("length", 1)),
         spectra_set = list(c("mode", "character"), c("length", 1)),
         ms_col_sep = list(c("mode", "character"), c("length", 2)),
-        ms_col_unzip = list(c("mode", "character"), c("length", 1)),
+        ms_col_zip = list(c("mode", "character"), c("length", 1)),
         is_JSON = list(c("mode", "logical"), c("length", 1))
       )
     )
@@ -220,7 +220,7 @@ tidy_spectra <- function(target,
         is_JSON <- TRUE
       }
     } else {
-      stop("Called with is_file = TRUE but could not find the referenced file.")
+      stop("Called with `is_file` == TRUE but could not find the referenced file.")
     }
   } else {
     out <- target
@@ -234,21 +234,22 @@ tidy_spectra <- function(target,
     if (all(inherits(x = out, what = c("tbl_sql", "tbl_lazy"), which = TRUE) > 0)) {
       out <- collect(out)
     } else {
-      stop("Argument target should be either a data.frame object or JSON coercible to one.")
+      stop("Argument `target` should be either a data.frame object or JSON coercible to one.")
     }
   }
-  if (stringr::str_detect(names(out), ms_col_sep) %>% sum() == 2) {
-    ms_cols <- ms_col_sep
-    is_format <- "separated"
-  } else if (stringr::str_detect(names(out), ms_col_sep) %>% sum() == 1) {
-    ms_cols <- ms_col_unzip
-    is_format <- "zipped"
-  } else {
-    stop("Could not find required names in the object provided to argument 'target'.")
+  if (is_format == "separated") {
+    check_cols <- ms_col_sep
+  } else if (is_format == "zipped") {
+    check_cols <- ms_col_zip
+  }
+  req_col_count <- stringr::str_detect(names(out), paste0(check_cols, collapse = "|")) %>% sum()
+  if (any(is_format == "separated" && !req_col_count == 2,
+          is_format == "zipped" && !req_col_count == 1)) {
+    stop(glue::glue("Could not find required names ({format_list_of_names(check_cols, add_quote = TRUE)}) in the object provided to argument `target`."))
   }
   out <- switch(is_format,
                 "separated" = ms_spectra_separated(df = out, ms_cols = ms_col_sep),
-                "zipped"    = ms_spectra_zipped(df = out, spectra_col = ms_col_unzip))
+                "zipped"    = ms_spectra_zipped(df = out, spectra_col = ms_col_zip))
   out <- tidy_ms_spectra(out)
   return(out)
 }
