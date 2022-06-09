@@ -687,24 +687,24 @@ save_data_dictionary <- function(db_conn            = con,
                "db")
       }
     }
-  i <- 0
-  if (all(file.exists(f_name), overwrite_existing)) {
-    file.remove(f_name)
-  }
-  while (file.exists(f_name)) {
-    i <- i + 1
-    f_name <- str_replace(f_name,
-                          sprintf("%s%s.%s", 
-                                  DICT_FILE_NAME,
-                                  ifelse(i == 1, "",
-                                         sprintf(" (%s)", i - 1)),
-                                  f_ext),
-                          sprintf("%s (%s).%s",
-                                  DICT_FILE_NAME,
-                                  i,
-                                  f_ext)
-    )
-  }
+    i <- 0
+    if (all(file.exists(f_name), overwrite_existing)) {
+      file.remove(f_name)
+    }
+    while (file.exists(f_name)) {
+      i <- i + 1
+      f_name <- str_replace(f_name,
+                            sprintf("%s%s.%s", 
+                                    DICT_FILE_NAME,
+                                    ifelse(i == 1, "",
+                                           sprintf(" (%s)", i - 1)),
+                                    f_ext),
+                            sprintf("%s (%s).%s",
+                                    DICT_FILE_NAME,
+                                    i,
+                                    f_ext)
+      )
+    }
     switch(output_format,
            "json"       = out %>%
              jsonlite::toJSON() %>%
@@ -1287,7 +1287,7 @@ create_fallback_build <- function(build_file    = NULL,
       }
     }
     msg <- 
-    if (exists("log_it")) log_it("info", glue::glue("Populating data insert reads from '{populate_file}'..."), "db")
+      if (exists("log_it")) log_it("info", glue::glue("Populating data insert reads from '{populate_file}'..."), "db")
     populate <- readr::read_file(populate_file) %>%
       sqlite_parse_build()
     build <- c(
@@ -2143,30 +2143,28 @@ resolve_normalization_value <- function(this_value,
       log_it("info",
              glue::glue("No direct match for '{this_value}' found in table '{db_table}'."),
              log_ns)
-      if (match_fail) {
-        if (fuzzy) {
+      if (fuzzy) {
+        log_it("info",
+               glue::glue("Executing fuzzy match on table '{db_table}'."),
+               log_ns)
+        check <- dbReadTable(db_conn, db_table) %>%
+          filter(if_any(everything(), .fns = ~ grepl(this_value, .x))) %>%
+          distinct()
+        match_fail <- nrow(check) == 0
+        if (match_fail) {
           log_it("info",
-                 glue::glue("Executing fuzzy match on table '{db_table}'."),
+                 glue::glue("No fuzzy matches found for '{this_value}' in table '{db_table}'."),
                  log_ns)
-          check <- dbReadTable(db_conn, db_table) %>%
-            filter(if_any(everything(), .fns = ~ grepl(this_value, .x))) %>%
-            distinct()
-          match_fail <- nrow(check) == 0
-          if (match_fail) {
-            log_it("info",
-                   glue::glue("No fuzzy matches found for '{this_value}' in table '{db_table}'."),
-                   log_ns)
-          } else {
-            possibles <- grep(
-              unlist(check),
-              pattern = this_value,
-              ignore.case = TRUE,
-              value = TRUE
-            )
-            log_it("info",
-                   glue::glue("Fuzzy match {format_list_of_names(possibles, add_quotes = TRUE)} found for '{this_value}' in table '{db_table}'."),
-                   log_ns)
-          }
+        } else {
+          possibles <- grep(
+            unlist(check),
+            pattern = this_value,
+            ignore.case = TRUE,
+            value = TRUE
+          )
+          log_it("info",
+                 glue::glue("Fuzzy match {format_list_of_names(possibles, add_quotes = TRUE)} found for '{this_value}' in table '{db_table}'."),
+                 log_ns)
         }
       }
     }
@@ -2258,8 +2256,9 @@ resolve_normalization_value <- function(this_value,
 #'   empty character string if no match is located (i.e. `table_column` is not a
 #'   defined foreign key).
 #' @export
+#' 
+#' @usage ref_table_from_map("table1", "fk_column1", er_map(con), "references")
 #'
-#' @examples
 ref_table_from_map <- function(table_name, table_column, this_map = db_map, fk_refs_in = "references") {
   if (exists("log_it")) {
     log_fn("start")
