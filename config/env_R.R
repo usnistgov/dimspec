@@ -80,7 +80,13 @@ EXCLUSIONS       <- c(".RDS",
                       "metadata_xml")
 
 # Import map to use ------------------------------------------------------------
-IMPORT_MAP       <- read.csv(file.path("config", "map_NTA_MRT.csv"))
+IMPORT_MAP       <- file.path("config", "map_NTA_MRT.csv")
+if (!file.exists(IMPORT_MAP)) IMPORT_MAP <- file.path("..", "..", IMPORT_MAP)
+if (file.exists(IMPORT_MAP)) {
+  IMPORT_MAP <- readr::read_csv(IMPORT_MAP)
+} else {
+  IMPORT_MAP <- NULL
+}
 
 # Runtime quality assurance/control --------------------------------------------
 # Whether to use application logging to print or record log messages during use.

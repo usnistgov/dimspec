@@ -45,7 +45,7 @@ CONDA_CLI      = "conda"
 INIT_CONNECT   = TRUE
 
 # Whether to activate logging for this session. (requires R)
-LOGGING_ON     = TRUE
+LOGGING_ON     = FALSE
 
 # Whether to activate plumber integration. (requires R)
 USE_API        = FALSE
@@ -53,7 +53,7 @@ USE_API        = FALSE
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
 # this session will provide support for RDKit or ChemMineR, and set USE_RDKIT
 # to determine which (if false, ChemMineR) will be used.
-INFORMATICS    = TRUE
+INFORMATICS    = FALSE
 USE_RDKIT      = TRUE
 
 # Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
