@@ -1,24 +1,44 @@
-/*====================================================================================================
-Description:	Contributors node for NIST high-resolution-accurate-mass spectrometric database for 
-				non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/contributors.sql
-				
-				Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script. 
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		Contributors node schema definition for the NIST high-resolution
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains information relevant to identifying contributors, similar to 
+		a "users" table.
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/contributors.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are not available in the "config/sql_nodes" directory but should 
+		instead be populated directly from those applicable to the current 
+		project, if any. Examples are provided in the "config/data" directory 
+		and subdirectories; population scripts are available as 
+		"config/populate_X.sql" files.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/
@@ -26,7 +46,7 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		/* Contact information for individuals contributing data to this database */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		username
 			TEXT NOT NULL UNIQUE,
@@ -50,24 +70,23 @@ Usage:			Run this script from the terminal to create a sketch of the SQLite data
 		CHECK (orcid
 			GLOB('[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9X]')
 			OR (orcid in ('NULL', 'null', 'NA', 'na', ''))
-		)
-		CHECK (length(contact) = length(replace(replace(replace(replace(replace(replace(contact, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
-		CHECK (length(first_name) = length(replace(replace(replace(replace(replace(replace(first_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
-		CHECK (length(last_name) = length(replace(replace(replace(replace(replace(replace(last_name, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
-		CHECK (length(username) = length(replace(replace(replace(replace(replace(replace(username, ";", ""), "delete", ""), "select", ""), "alter", ""), "drop", ""), "update", ""))),
+		),
 		/* Foreign key relationships */
-		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE
+		FOREIGN KEY (affiliation) REFERENCES affiliations(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS affiliations
 		/* Normalization table for contributor.affiliation */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* name of professional affiliation */
+		PID
+		  TEXT
+		  /* URL resolvable persistent identifier for affiliation organization, typically a ROR (https://ror.org/) or GRID (https://grid.ac/) identifier */
 	);
 		/* Check constraints */
 		/* Foreign key relationships */

@@ -63,7 +63,7 @@ LOGGING <- list(
                 ns = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
                 to = "both",
                 file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"))),
-                threshold = "trace"),
+                threshold = "info"),
   SHINY  = list(log = FALSE,
                 ns = "shiny",
                 to = "both",

@@ -26,20 +26,17 @@ INSTALL_FROM <- "local"
 # )
 INSTALL_FROM_FILE <- file.path("rdkit", "environment.yml")
 
-# [OPTIONAL]--------------------------------------------------------------------
+# [OPTIONAL] -------------------------------------------------------------------
 # [ADVANCED] Set required conda libraries to install, depending on it to define
 # its dependencies. This will be used if INSTALL_FROM = "conda". Note that the
 # r-reticulate python package will automatically be added to this list during
 # installation.
-# ------------------------------------------------------------------------------
 PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
 PYENV_MODULES <- "rdkit"
 # Channel from which to install packages.
 PYENV_CHANNELS <- "conda-forge"
-# ------------------------------------------------------------------------------
 
-# [ADVANCED] Set the path for advanced conda setups.
-# ------------------------------------------------------------------------------
+# [ADVANCED] -------------------------------------------------------------------
+# Set the path for advanced conda setups.
 CONDA_PATH <- "auto"
 # CONDA_PATH <- "~/miniforge3/bin/conda" # Example
-# ------------------------------------------------------------------------------

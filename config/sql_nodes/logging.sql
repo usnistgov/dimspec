@@ -1,31 +1,44 @@
-/*====================================================================================================
-Description:	Logging node for NIST high-resolution-accurate-mass spectrometric database for 
-				non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/logging.sql
-				
-Details:		Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script.
-				
-				The comment "magicsplit" is present to provide a hook for external processing,
-				allowing for direct building via R or Python when the CLI is unavailable. 
-				
-				Log triggers should be set up separately and only after other tables and views have
-				been created. This should be called last during the build if any autologging is 
-				desired.
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		[OPTIONAL] Logging node schema definition for the NIST high-resolution 
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains logs as defined by any added triggers, applications, or other 
+		avenues as well as a version history for this database. Its primary 
+		purpose is to support application development and provide user support 
+		for longer running implementations. It is not used as of v0.9 of the 
+		NIST HRMS-MS database for NTA.
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/logging.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are added here as a convenience for the normalization tables 
+		"norm_log_executed_from" and "norm_log_effect" rather than imported.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/
@@ -33,7 +46,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for logs(executed_from) */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -47,13 +60,13 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for logs(effect) */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 			/* plain text of the type of database action */
 		/* Check constraints */
-		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema"))
+		CHECK (name IN ("INSERT", "UPDATE", "DELETE", "schema", "insert", "update", "delete"))
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
@@ -82,7 +95,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Placeholder for logs */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		category
 			TEXT NOT NULL,
@@ -120,8 +133,8 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (executed_on==strftime("%Y-%m-%d %H:%M:%S", executed_on)),
 		/* Foreign key relationships */
-		FOREIGN KEY (effect) REFERENCES norm_log_effect(id),
-		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id)
+		FOREIGN KEY (effect) REFERENCES norm_log_effect(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (executed_from) REFERENCES norm_log_executed_from(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Data */

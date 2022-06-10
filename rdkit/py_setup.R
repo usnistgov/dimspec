@@ -29,6 +29,7 @@
 #' @export
 #' 
 activate_py_env <- function(env_name = NULL, required_libraries = NULL, required_modules = NULL, log_ns = NULL, conda_path = NULL) {
+  stopifnot(require(reticulate))
   logger <- exists("log_it")
   if (logger) log_fn("start")
   log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
@@ -36,7 +37,6 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
   required_libraries <- rectify_null_from_env(required_libraries, PYENV_LIBRARIES, NULL, log_ns)
   required_modules <- rectify_null_from_env(required_modules, PYENV_MODULES, NULL, log_ns)
   conda_path <- rectify_null_from_env(conda_path, CONDA_PATH, NULL, log_ns)
-  stopifnot(require(reticulate))
   # if (!is.null(env_name)) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -108,10 +108,7 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
   if (!py_modules_available(required_modules)) {
     return(invisible(FALSE))
   }
-  if (logger) {
-    log_it("success", "Python environment activated.", log_ns)
-    log_fn("end", log_ns)
-  }
+  if (logger) log_fn("end", log_ns)
   return(invisible(TRUE))
 }
 
@@ -207,7 +204,7 @@ update_env_from_file <- function(env_name, requirements_file, conda_alias = NULL
 #' @examples
 #' create_py_env()
 create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = NULL, conda_path = NULL, activate = TRUE) {
-  require(reticulate)
+  stopifnot(require(reticulate))
   if (is.null(required_libraries)) {
     if (exists("PYENV_LIBRARIES")) {
       required_libraries <- PYENV_LIBRARIES
@@ -460,21 +457,28 @@ py_modules_available <- function(required_modules, log_ns = NULL) {
 #'
 #' Given a name of an R object, performs a simple check on RDKit availability on
 #' that object, creating it if it does not exist. A basic structure conversion
-#' check is tried and a TRUE/FALSE result returned.
+#' check is tried and a TRUE/FALSE result returned. Leave all arguments as their
+#' defaults of NULL to ensure they will honor the settings in `rdkit/env_py.R`.
 #'
 #' @param rdkit_ref CHR scalar OR R object of an RDKit binding (default NULL
 #'   goes to "rdk" for convenience with other pipelines in this project)
-#' @param log_ns 
+#' @param rdkit_name CHR scalar the name of a python environment able to run
+#'   rdkit (default NULL goes to "rdkit" for convenience with other pipelines in
+#'   this project)
+#' @param make_if_not LGL scalar of whether or not to create a new python
+#'   environment using [activate_py_env] if the binding is not active
+#' @param log_ns
 #'
 #' @return LGL scalar of whether or not the test of RDKit was successful
 #' @export
 #' 
-rdkit_active <- function(rdkit_ref = NULL, log_ns = NULL, make_if_not = FALSE) {
+rdkit_active <- function(rdkit_ref = NULL, rdkit_name = NULL, log_ns = NULL, make_if_not = FALSE) {
   if (!is.character(rdkit_ref)) rdkit_ref <- deparse(substitute(rdkit_ref))
   if (rdkit_ref == "NULL") rdkit_ref <- NULL
+  rdkit_name <- rectify_null_from_env(rdkit_name, PYENV_NAME, "rdkit")
   rdkit_ref <- rectify_null_from_env(rdkit_ref, PYENV_REF, "rdk")
   log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
-  logging <- exists("log_it")
+  logging <- exists("log_it") && exists("LOGGING_ON") && LOGGING_ON
   if (logging) log_fn("start", log_ns)
   if (!rdkit_ref %in% names(.GlobalEnv)) {
     msg <- sprintf('Object "%s" not found.', rdkit_ref)
@@ -487,6 +491,7 @@ rdkit_active <- function(rdkit_ref = NULL, log_ns = NULL, make_if_not = FALSE) {
       if (logging) {
         log_it("info", sprintf('Tying object "%s" to rdkit in this environment.', rdkit_ref), log_ns)
       }
+      activate_py_env(env_name = rdkit_name)
       assign(rdkit_ref, import("rdkit"), envir = .GlobalEnv)
       return(rdkit_active(rdkit_ref = rdkit_ref, log_ns = log_ns))
     } else {
@@ -556,4 +561,159 @@ setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NU
   success <- rdkit_active(rdkit_ref = env_ref, log_ns = log_ns, make_if_not = TRUE)
   if (!success) stop("Unable to set up RDKit.")
   if (exists("log_it")) log_fn("end", log_ns)
+}
+
+#' Create aliases for a molecule from RDKit
+#'
+#' Call this function to generate any number of machine-readable aliases from an
+#' identifier set. Given the `identifiers` and their `type`, RDKit will be
+#' polled for conversion functions to create a mol object. That mol object is
+#' then used to create machine-readable aliases in any number of supported
+#' formats. See the [RDKit Documentation](http://rdkit.org/docs/index.html) for
+#' options. The `type` argument is used to match against a "MolFromX" funtion,
+#' while the `aliases` argument is used to match against a "MolToX" function.
+#'
+#' At the time of authorship, RDK v2021.09.4 was in use, which contained the
+#' following options findable by this function: CMLBlock, CXSmarts, CXSmiles,
+#' FASTA, HELM, Inchi, InchiAndAuxInfo, InchiKey, JSON, MolBlock, PDBBlock,
+#' RandomSmilesVect, Sequence, Smarts, Smiles, TPLBlock, V3KMolBlock, XYZBlock.
+#'
+#' @note Both `type` and `aliases` are case insensitive.
+#' @note If `aliases` is set to NULL, all possible expressions (excluding those
+#'   with "File" in the name) are returned from RDKit, which will likely produce
+#'   NULL values and module ArgumentErrors.
+#'
+#' @inheritParams rdkit_active
+#'
+#' @param identifiers CHR vector of machine-readable molecule identifiers in a
+#'   format matching `type`
+#' @param type CHR scalar of the type of encoding to use for `identifiers`
+#'   (default: smiles)
+#' @param mol_from_prefix CHR scalar of the prefix to identify an RDKit function
+#'   to create a mol object from`identifiers` (default: "MolFrom")
+#' @param get_aliases CHR vector of aliases to produce (default: c("inchi",
+#'   "inchikey"))
+#' @param mol_to_prefix CHR scalar of the prefix to identify an RDKit function
+#'   to create an alias from a mol object (default: "MolTo")
+#'
+#' @return data.frame object containing the aliases and the original identifiers
+#' @export
+#' 
+rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "MolFrom", get_aliases = c("inchi", "inchikey"), mol_to_prefix = "MolTo", rdkit_ref = "rdk", log_ns = "rdk", make_if_not = TRUE) {
+  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
+  stopifnot(
+    all(unlist(lapply(c(type, mol_from_prefix, mol_to_prefix, rdkit_ref, log_ns), is.character))),
+    all(unlist(lapply(c(type, rdkit_ref, log_ns, make_if_not), function(x) length(x) == 1))),
+    length(identifiers) > 0,
+    is.logical(make_if_not)
+  )
+  can_calc <- rdkit_active(
+    rdkit_ref = rdkit_ref,
+    log_ns = log_ns,
+    make_if_not = make_if_not
+  )
+  if (!can_calc) return(NULL)
+  if (tolower(type) %in% tolower(names(identifiers))) {
+    link_i <- which(tolower(names(identifiers)) == tolower(type))
+    original_name <- names(identifiers)[link_i]
+    identifiers <- identifiers[[link_i]]
+  } else {
+    original_name <- type
+  }
+  if (can_calc) {
+    if (logging) log_it("info", "Verifying existence of identifiers.", log_ns)
+    to_remove <- which(identifiers == "" | is.na(identifiers))
+    if (length(to_remove) > 0) {
+      if (logging) log_it("warn", glue::glue("{length(to_remove)} identifiers were blank or NA."), log_ns)
+      identifiers <- identifiers[-to_remove]
+    }
+    aliases <- tolower(get_aliases)
+    # Check for doubled names
+    if (any(aliases %in% tolower(names(identifiers)))) {
+      aliases <- aliases[!aliases %in% tolower(names(identifiers))]
+    }
+    if (any(aliases %in% tolower(type))) {
+      aliases <- aliases[!aliases %in% tolower(type)]
+    }
+    rdk <- eval(sym(rdkit_ref))
+    to_mol <- grep(paste0("^", mol_from_prefix, type, "$"),
+                   names(rdk$Chem),
+                   ignore.case = TRUE,
+                   value = TRUE)
+    if (length(to_mol) == 0) {
+      msg <- sprintf("Could not identify a function to create a mol structure from type = '%s'.", type)
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      return(NULL)
+    }
+    mols <- lapply(identifiers,
+                   function(x) {
+                     rdk$Chem[[to_mol]](x)
+                   })
+    if (is.null(aliases)) {
+      aliases <- grep(paste0("^", mol_to_prefix), names(rdk$Chem), value = TRUE)
+      alias_funcs <- aliases
+    } else {
+      alias_funcs <- paste0("^", mol_to_prefix, aliases, "$")
+      aliases <- grep(paste0(alias_funcs, collapse = "|"),
+                      names(rdk$Chem),
+                      ignore.case = TRUE,
+                      value = TRUE)
+    }
+    alias_funcs <- gsub("\\^|\\$", "", alias_funcs)
+    file_refs <- grep("file", aliases, ignore.case = TRUE)
+    if (length(file_refs) > 0) {
+      aliases <- aliases[-file_refs]
+    }
+    if (length(aliases) < length(get_aliases)) {
+      unfound <- get_aliases[!tolower(alias_funcs) %in% tolower(aliases)]
+      msg <- sprintf('Could not identify %s function%s to create %salias%s using %s.',
+                     ifelse(length(unfound) > 1, "any", "a"),
+                     ifelse(length(unfound) > 1, "s", ""),
+                     ifelse(length(unfound) > 1, "", "an "),
+                     ifelse(length(unfound) > 1, "es", ""),
+                     format_list_of_names(unfound, add_quotes = TRUE)
+      )
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      if (length(aliases) == 0) return(NULL)
+    }
+    if (logging) log_it("info", "Generating aliases.", log_ns)
+    out <- lapply(mols,
+                  function(x) {
+                    lapply(aliases,
+                           function(func) {
+                             if (logging) log_it("trace", glue::glue("Generating {gsub(mol_to_prefix, '', tolower(func))} for {type} = {x}."), log_ns)
+                             res <- try(rdk$Chem[[func]](x))
+                             if (inherits(res, "try-error")) {
+                               return(NULL)
+                             } else {
+                               return(paste0(res, collapse = "; "))
+                             }
+                           }) %>%
+                      setNames(aliases)
+                  })
+    out <- out %>%
+      bind_rows() %>%
+      select(-which(tolower(names(.)) == tolower(type))) %>%
+      mutate(original = identifiers) %>%
+      rename("{original_name}" := "original") %>%
+      select(any_of(c(original_name, aliases)))
+    names(out) <- gsub(mol_to_prefix, "", names(out))
+    return(out)
+  } else {
+    msg <- sprintf("RDKit is not available at '%s'.", rdkit_ref)
+    if (logging) {
+      log_it("warn", msg, log_ns)
+    } else {
+      warning(msg)
+    }
+    return(NULL)
+  }
 }

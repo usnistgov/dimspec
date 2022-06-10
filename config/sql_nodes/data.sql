@@ -1,27 +1,45 @@
-/*====================================================================================================
-Description:	Analytical results (data) node for NIST high-resolution-accurate-mass spectrometric
-				database for non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/data.sql
-				
-Details:		Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script.
-				
-				The comment "magicsplit" is present to provide a hook for external processing,
-				allowing for direct building via R or Python when the CLI is unavailable. 
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		Data node schema definition for the NIST high-resolution
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains information relevant to analytical results (e.g. descriptions 
+		of samples, chromatographic peaks derived from them, resulting mass 
+		spectra, and descriptive information to describe those results).
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/data.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are not available in the "config/sql_nodes" directory but should 
+		instead be populated directly from those applicable to the current 
+		project, if any. Examples are provided in the "config/data" directory 
+		and subdirectories; population scripts are available as 
+		"config/populate_X.sql" files.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/
@@ -29,7 +47,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for fragmenet generation source type */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL,
@@ -43,35 +61,57 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table linking to samples to hold controlled vocabulary. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of the sample class */
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_peak_confidence
+  	/* Normalization levels for peak identification confidence */
+  (
+  	id
+  		INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  		/* primary key */
+  	level1
+  		TEXT,
+  		/* primary level of confidence */
+  	level2
+  		TEXT,
+  		/* confidence sublevel */
+  	confidence
+  		TEXT UNIQUE,
+  		/* description of the confidence level */
+  	import_text
+  		TEXT UNIQUE
+  		/* customized import format expression of the confidence level */
+  	/* Check constraints */
+  	/* Foreign key relationships */
+  );
+  /*magicsplit*/
 	CREATE TABLE IF NOT EXISTS sample_aliases
 		/* Alternative names by which this sample may be identified e.g. laboratory or repository names, external reference IDs, URIs, etc. */
 	(
 	  sample_id
 	    INTEGER NOT NULL,
 	    /* foreign key to samples */
-	  name
+	  alias
 	    TEXT NOT NULL,
-	    /* reference name for the sample */
+	    /* reference alias for the sample */
 	  reference
 	    TEXT,
 	    /* source of the name, e.g. external database pointer or PID */
 	  /* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS samples
 		/* Samples from which analytical data are derived. What goes into an analytical instrument. Deleting a contributor from the contributors table will also remove their data from the system. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		mzml_name
 		  TEXT NOT NULL,
@@ -97,38 +137,60 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ms_methods_id
 			INTEGER,
 			/* foreign key to ms_methods */
+		sample_solvent
+		  INTEGER,
+		  /* foreign key to norm_solvents */
 		/* Check constraints */
-		CHECK (generated_on == strftime("%Y-%m-%dT%H:%M:%SZ", generated_on))
+		CHECK (generated_on IS strftime("%Y-%m-%d %H:%M:%S", generated_on)),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (sample_class_id) REFERENCES norm_sample_classes(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (sample_contributor) REFERENCES contributors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (generation_type) REFERENCES norm_generation_type(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_solvent) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS conversion_software_peaks_linkage
+		/* Linkage reference tying peaks with the conversion software settings used to generate them. */
+	(
+		id
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		generated_on
+			TEXT NOT NULL UNIQUE,
+			/* timestamp of the sample generation to tie in with samples */
+		/* Check constraints */
+		CHECK (generated_on IS strftime("%Y-%m-%d %H:%M:%S", generated_on))
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS conversion_software_settings
 		/* Settings specific to the software package used to preprocess raw data. */
 	(
-		sample_id
+		linkage_id
 			INTEGER,
-			/* foreign key to samples */
+			/* foreign key to conversion_software_peaks_linkage */
 		setting_value
 			TEXT NOT NULL,
 			/* value of the software setting */
 		/* Check constraints */
+		UNIQUE (linkage_id, setting_value),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id)
+		FOREIGN KEY (linkage_id) REFERENCES conversion_software_peaks_linkage(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS peaks
 		/* Peaks (or features) identified within the results from a sample. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		sample_id
 			INTEGER NOT NULL,
 			/* foreign key to samples */
+		conversion_software_peaks_linkage_id
+			INTEGER NOT NULL,
+			/* foreign key to conversion_software_peaks_linkage */
 		num_points
 		  INTEGER NOT NULL,
 		  /* number of points collected across this peak */
@@ -138,9 +200,6 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ion_state
 			INTEGER NOT NULL,
 			/* ion state (e.g. [M]+, [M+H]+, etc.); foreign key to norm_ion_states */
-		charge
-			INTEGER NOT NULL,
-			/* ion charge state (constrained to -1 ["negative"] or 1 ["positive"]) */
 		rt_start
 			REAL NOT NULL,
 			/* peak retention time start point (constrained to positive numbers) */
@@ -150,22 +209,26 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		rt_end
 			REAL NOT NULL,
 			/* peak retention time end point (constrained to positive numbers) */
+		identification_confidence
+		  INTEGER,
+		  /* confidence in this peak's identification */
 		/* Check constraints */
 		CHECK (precursor_mz > 0),
-		CHECK (charge IN (-1, 1)),
 		CHECK (rt_start >= 0),
 		CHECK (rt_centroid > 0),
 		CHECK (rt_end > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (conversion_software_peaks_linkage_id) REFERENCES conversion_software_peaks_linkage(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ion_state) REFERENCES norm_ion_states(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (identification_confidence) REFERENCES norm_peak_confidence(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_data
 		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		peak_id
 			INTEGER NOT NULL,
@@ -192,8 +255,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		CHECK (scantime >= 0),
 		CHECK (base_int >= 0),
 		CHECK (ms_n > 0 AND ms_n < 9),
+		UNIQUE (peak_id, ms_n, scantime, base_ion, base_int, measured_mz, measured_intensity),
 		/* Foreign key relationships */
-		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE
+		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_spectra
@@ -211,8 +275,9 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (mz > 0),
 		CHECK (intensity >= 0),
+		UNIQUE (ms_data_id, mz, intensity),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id)
+		FOREIGN KEY (ms_data_id) REFERENCES ms_data(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS qc_data
@@ -231,11 +296,46 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		  TEXT NOT NULL,
 		  /* Value associated with parameter and name */
 		/* Check constraints */
+		UNIQUE (sample_id, parameter, name),
 		/* Foreign key relationships */
-		FOREIGN KEY (sample_id) REFERENCES samples(id)
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 /* Views */
+	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_peaks AS 
+  		/* View of "peaks" with text values displayed from normalization tables. */ 
+  	SELECT 	
+  		p.id AS id, 
+  			/* Direct use column 'id' from table 'p'. */ 	
+  		p.sample_id AS sample_id, 
+  			/* Direct use column 'sample_id' from table 'p'. */ 	
+  		p.num_points AS num_points, 
+  			/* Direct use column 'num_points' from table 'p'. */ 	
+  		p.precursor_mz AS precursor_mz, 
+  			/* Direct use column 'precursor_mz' from table 'p'. */ 	
+  		nis.name AS ion_state, 
+  			/* Normalized value column 'name' from table 'nis'. */ 	
+  		p.rt_start AS rt_start, 
+  			/* Direct use column 'rt_start' from table 'p'. */ 	
+  		p.rt_centroid AS rt_centroid, 
+  			/* Direct use column 'rt_centroid' from table 'p'. */ 	
+  		p.rt_end AS rt_end, 
+  			/* Direct use column 'rt_end' from table 'p'. */ 	
+  		iif(npc.level1 = "",
+  		  confidence,
+  		  "Level " ||
+  		  npc.level1 ||
+  		  npc.level2 ||
+  		  " - " ||
+  		  upper(substr(npc.confidence, 1, 1)) ||
+  		  lower(substr(npc.confidence, 2))
+  		  )
+  		  AS confidence
+  			/* Narrative form of confidence from table 'norm_peak_confidence'. */ 
+  	FROM peaks p
+  	LEFT JOIN norm_ion_states nis ON p.ion_state = nis.id 
+  	LEFT JOIN norm_peak_confidence npc ON p.identification_confidence = npc.id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS peak_data AS
 		/* View raw peak data for a specific peak */
@@ -250,7 +350,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* measured mass of precursor_mz */
 			msd.scantime,
 				/* ms scantime for this spectrum */
-			msd.measured_mz AS m_z,
+			msd.measured_mz AS mz,
 				/* mass to charge ratios */
 			msd.measured_intensity AS intensity
 				/* measured signal intensities */

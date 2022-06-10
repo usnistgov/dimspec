@@ -1,0 +1,74 @@
+---
+title: "Quality Control"
+output: html_document
+params:
+  jsonfile : 'example/PFAC30PAR_PFCA2_mzML_cmpd2628.JSON'
+---
+
+```{r echo=FALSE, include=FALSE}
+result_json <- jsonlite::read_json(params$jsonfile)
+```
+
+# Peak Name: **`r result_json$peak[[1]]$name`** 
+# File Name: **`r result_json$sample$name`**
+
+
+
+### MS1 Chromatogram
+
+```{r echo=FALSE}
+  chrom = do.call(rbind, lapply(result_json$msdata, function(x) if (x$ms_n == 1) {data.frame(time = x$scantime, intensity = x$base_int)}))
+  plot(x = chrom$time, y = chrom$intensity, type = "l")
+```
+
+## Quality Control Check
+
+### *Measured Accuracy of Precursor Ion*
+
+```{r echo = FALSE}
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[1]], function(x) x)))
+```
+
+### *MS1 Isotopic Pattern Match*
+
+```{r echo = FALSE}
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[2]], function(x) x)))
+```
+
+### *Precursor Ion in MS1 Spectrum*
+
+```{r echo = FALSE}
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[3]], function(x) x)))
+```
+
+### *Annotated Fragment Ions Detected*
+
+```{r echo = FALSE}
+if (length(result_json$qc) >= 4) {
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[4]], function(x) x)))
+}
+```
+
+### *Measured Accuracy of Annotated Fragments*
+
+```{r echo = FALSE}
+if (length(result_json$qc) >= 5) {
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[5]], function(x) x)))
+}
+```
+
+### *Fragments are Subset of Parent Formula*
+
+```{r echo = FALSE}
+if (length(result_json$qc) >= 6) {
+  knitr::kable(do.call(rbind, lapply(result_json$qc[[6]], function(x) x)))
+}
+```
+
+### *SMILES Calculated Formula Matches Reported Formula*
+
+```{r echo = FALSE}
+  if (length(result_json$qc) >= 7) {
+    knitr::kable(do.call(rbind, lapply(result_json$qc[[7]], function(x) x)))
+  }
+```

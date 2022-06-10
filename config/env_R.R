@@ -27,6 +27,7 @@ DB_VERSION     <- sprintf("%s.%s",
 DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
 DB_CLASS       <- "SQLite"
+DB_CONN_NAME   <- "con"
 DICT_FILE_NAME <- "data_dictionary"
 
 # The last time the main database schema defined in BUILD_FILE was updated.
@@ -48,7 +49,7 @@ DEPENDS_ON     <- c("base64enc",
                     "dbplyr",
                     "jsonlite",
                     "tools",
-                    # "xlsx",
+                    "usethis",
                     "XML")
 
 # Decide whether to use ChemmineR, which is only available through Bioconductor,
@@ -56,8 +57,8 @@ DEPENDS_ON     <- c("base64enc",
 # in env_glob.txt by default. Reticulate and the "rcdk" package often cause
 # conflicts due to the "rJava" package, making "rpytools" unavailable to
 # reticulate.
-if (ifelse(exists("INFORMATICS"), INFORMATICS, TRUE)) {
-  if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, TRUE)) {
+if (ifelse(exists("INFORMATICS"), INFORMATICS, FALSE)) {
+  if (ifelse(exists("USE_RDKIT"), !USE_RDKIT, FALSE)) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
     }
@@ -71,11 +72,15 @@ if (ifelse(exists("INFORMATICS"), INFORMATICS, TRUE)) {
 }
 
 # Files matching these patterns will be excluded from sourcing at startup.
-EXCLUSIONS     <- c(".RDS",
-                    "compliance",
-                    "create_method_list",
-                    "generate_db",
-                    "metadata_xml")
+EXCLUSIONS       <- c(".RDS",
+                      paste0("suspectlist", .Platform$file.sep),
+                      "compliance",
+                      "create_method_list",
+                      "generate_db",
+                      "metadata_xml")
+
+# Import map to use ------------------------------------------------------------
+IMPORT_MAP       <- read.csv(file.path("config", "map_NTA_MRT.csv"))
 
 # Runtime quality assurance/control --------------------------------------------
 # Whether to use application logging to print or record log messages during use.
@@ -94,14 +99,6 @@ if (MINIMIZE) {
   VERIFY_ARGUMENTS <- FALSE
   LOGGING_ON       <- FALSE
 }
-
-# WIP: Import namespace checks
-IMPORT_HEADERS <- list(
-  software = "msconvertsettings",
-  samples  = "sample",
-  method   = c("chromatography", "massspectrometry", "qcmethod"),
-  data     = c("peak", "compounddata", "annotation", "msdata", "qc")
-)
 
 # Plumber API ------------------------------------------------------------------
 # Plumber host options. [ADVANCED USE ONLY]

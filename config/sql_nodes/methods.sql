@@ -1,68 +1,89 @@
-/*====================================================================================================
-Description:	Analytical methods node for NIST high-resolution-accurate-mass spectrometric database 
-				for non-target analysis (HRAM-NTA).
-Status:			Development version
-LastUpdate:		2021-06-15
-Support:		For information or support, contact the development team at
-					- NIST PFAS Program	PFAS@nist.gov
-					- Jared M. Ragland	jared.ragland@nist.gov	*author
-					- Benjamin J. Place	benjamin.place@nist.gov
-Dependencies:	sqlite3
-Usage:			Run this script from the terminal to create a sketch of the SQLite database. It is 
-				recommended to run from the project directory as
-				
-					sqlite3 nist_nta_dev.sqlite
-					.read config/sql_nodes/methods.sql
-				
-Details:		Node build files are located in the "config/sql_nodes" directory and serve to allow
-				for modular construction and reuse. Local paths will need to be referenced 
-				appropriately, which may require modifications to scripts referencing this script.
-				
-				The comment "magicsplit" is present to provide a hook for external processing,
-				allowing for direct building via R or Python when the CLI is unavailable. 
-				
-====================================================================================================*/
+/*=============================================================================
+	Description
+		Methods node schema definition for the NIST high-resolution
+		accurate-mass spectrometry spectral database (HRAM-MS-NTA). This node 
+		contains information relevant to methodological descriptions of HRAM-MS 
+		experiments (e.g. chromatographic and mass spectrometer settings and 
+		properties, and quality control data reported for those methods).
+	Status
+		Development
+	LastUpdate
+		2022-03-31
+	Support
+		For information or support, contact the development team at
+			- NIST PFAS Program	PFAS@nist.gov
+			- Jared M. Ragland	jared.ragland@nist.gov	*author
+			- Benjamin J. Place	benjamin.place@nist.gov
+	Dependencies
+		sqlite3
+	Usage
+		Run this script from the terminal to create a sketch of the SQLite 
+		database. It is recommended to run from the project directory as
+		
+			sqlite3 nist_nta_dev.sqlite
+			.read config/sql_nodes/methods.sql
+		
+	Details
+		Node build files are located in the "config/sql_nodes" directory and 
+		serve to allow for modular construction and reuse. Local paths will 
+		need to be referenced appropriately, which may require modifications 
+		to scripts referencing this script.
+		
+		The comment "magicsplit" is present to provide a hook for external 
+		processing,	allowing for direct building via R or Python when the CLI 
+		is unavailable. 
+		
+		Data are not available in the "config/sql_nodes" directory but should 
+		instead be populated directly from those applicable to the current 
+		project, if any. Examples are provided in the "config/data" directory 
+		and subdirectories; population scripts are available as 
+		"config/populate_X.sql" files.
+		
+=============================================================================*/
 
 /* Tables */
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_voltage
+	CREATE TABLE IF NOT EXISTS norm_ionization
 		/* Normalization table for mass spectrometer ionization source types */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source names */
 		acronym
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* validation list of ionization source acronyms */
+		import_text
+		  TEXT UNIQUE
+		  /* NTA MRT controlled vocabulary expression */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_solvents
-		/* Mobile phase solvent list: controlled. */
+	CREATE TABLE IF NOT EXISTS norm_carriers
+		/* Mobile phase carrier list: controlled. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
-			/* IUPAC name for mobile phase norm_solvents */
+			/* IUPAC name for mobile phase norm_carriers */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_additives
-		/* Solvent additives list: controlled. */
+		/* carrier additives list: controlled. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
-			/* IUPAC name for solvent additives */
+			/* IUPAC name for carrier additives */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -71,7 +92,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table holding commercial instrument vendor information. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -84,7 +105,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for quality control reference types. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -97,7 +118,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for quality control types. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -110,7 +131,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for collision energy description. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -123,11 +144,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for collision energy units. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT NOT NULL UNIQUE,
 			/* collision energy units */
+		abbreviation
+		  TEXT
+			/* collision energy unit abbreviation, if any */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -136,12 +160,12 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for ionization energy units. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 			/* ionization energy units */
-		acronym
+		abbreviation
 			TEXT NOT NULL UNIQUE
 			/* ionization energy units acronym */
 		/* Check constraints */
@@ -152,7 +176,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for mass spectrometer types. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -168,14 +192,17 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for types of ms_n experiments. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
 			/* type of the mass analyzer */
 		acronym
-			TEXT NOT NULL UNIQUE
+			TEXT UNIQUE,
 			/* common acronym for the mass spectrometer type */
+		import_text
+		  TEXT UNIQUE
+		  /* NTA MRT controlled vocabulary expression */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -184,7 +211,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for fragmentation type. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -200,7 +227,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for ionization polarity. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -214,7 +241,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for chromatography types. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -230,7 +257,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for chromatographic column type. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -243,7 +270,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Normalization table for chromatographic column position */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE
@@ -256,7 +283,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	  /* Normalization table for mobile phase duration units */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -272,7 +299,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	  /* Normalization table for mobile phase additive units */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -288,7 +315,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	  /* Normalization table for mobile phase flow rate units */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
 			TEXT NOT NULL UNIQUE,
@@ -300,14 +327,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_mix_collections
-		/* An intermediary identification table linking mobile_phases and solvent_mixes */
+	CREATE TABLE IF NOT EXISTS carrier_mix_collections
+		/* An intermediary identification table linking mobile_phases and carrier_mixes */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		name
-			TEXT NOT NULL UNIQUE
+			TEXT
 			/* short hand name of the mixture */
 		/* Check constraints */
 		/* Foreign key relationships */
@@ -319,12 +346,15 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to methods */
-		solvent_mix_collection_id
+		sample_id
+		  INTEGER,
+		  /* foreign key to samples */
+		carrier_mix_collection_id
 			INTEGER NOT NULL,
-			/* foreign key to solvent_mixes */
+			/* foreign key to carrier_mixes */
 		flow
 		  REAL,
-		  /* flow rate of carrier described in solvent_mix_collection_id */
+		  /* flow rate of carrier described in carrier_mix_collection_id */
 		flow_units
 		  INTEGER,
 		  /* foreign key to norm_flow_units */
@@ -337,10 +367,11 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (duration > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (solvent_mix_collection_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (carrier_mix_collection_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_descriptions
@@ -355,12 +386,39 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		vendor_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_vendors */
+		vendor_model
+		  TEXT,
+		  /* free text entry for mass spectrometry system model */
+		reference
+		  TEXT,
+		  /* resolvable reference for this mass spectrometry model, e.g. a URL to the product */
 		/* Check constraints */
 		UNIQUE(ms_methods_id, ms_types_id, vendor_id),
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (ms_types_id) REFERENCES norm_ms_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS instrument_properties
+	  /* Expandable properties describing performance properties of the ms at the time the method was run. */
+	(
+	  ms_methods_id
+			INTEGER NOT NULL,
+			/* foreign key to ms_methods */
+		name
+		  TEXT NOT NULL,
+		  /* performance property name */
+		value
+		  TEXT NOT NULL,
+		  /* property value, either in numerical form or in text description */
+		value_unit
+		  TEXT,
+		  /* units associated with this value; open text */
+		/* Check constraints */
+		UNIQUE(ms_methods_id, name, value, value_unit),
+		/* Foreign key relationships */
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS chromatography_descriptions
@@ -371,35 +429,57 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* foreign key to ms_methods */
 		chromatography_types_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_ms_types */
+			/* foreign key to norm_chromatography_types */
+		system_vendor_id
+		  INTEGER,
+		  /* foreign key to norm_vendors */
+		system_vendor_model
+		  TEXT,
+		  /* free text entry for chromatography system model */
 		column_chemistry_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_column_chemistries */
 		column_position_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_column_positions */
-		vendor_id
+		column_vendor_id
 			INTEGER NOT NULL,
 			/* foreign key to norm_vendors */
+		column_vendor_model
+		  TEXT,
+		  /* free text entry for chromatography column model */
+		internal_diameter
+		  REAL,
+		  /* internal diameter of this column in micrometers */
+		column_length
+		  REAL,
+		  /* column length in centimeters (LC or CE) or meters (GC) */
+		particle_diameter
+		  REAL,
+		  /* diameter of particles for packed columns (applicable to LC or CE columns only) */
+		citation
+		  TEXT,
+		  /* citation for this chromatography method */
 		/* Check constraints */
-		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id, column_position_id, vendor_id),
+		UNIQUE(ms_methods_id, chromatography_types_id, column_chemistry_id, column_position_id, column_vendor_id),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE CASCADE
-		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (column_chemistry_id) REFERENCES norm_column_chemistries(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (chromatography_types_id) REFERENCES norm_chromatography_types(id) ON UPDATE CASCADE ON DELETE RESTRICT
+		FOREIGN KEY (column_position_id) REFERENCES norm_column_positions(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (system_vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (column_vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_methods
 		/* Mass spectrometer method settings. */
 	(
 		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		ionization
 			INTEGER,
-			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_voltage */
+			/* ionization mode (ESI, APCI, EI, etc.); foreign key to norm_ionization */
 		voltage
 			REAL,
 			/* ionization voltage/current (depending on mode) */
@@ -433,52 +513,58 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		/* Check constraints */
 		CHECK (has_qc_method IN (0, 1))
 		/* Foreign key relationships */
-		FOREIGN KEY (ionization) REFERENCES norm_voltage(id) ON UPDATE CASCADE,
-		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE,
-		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE,
-		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE
+		FOREIGN KEY (ionization) REFERENCES norm_ionization(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (voltage_units) REFERENCES norm_voltage_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (polarity) REFERENCES norm_polarity_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ce_desc) REFERENCES norm_ce_desc(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS qc_methods
 		/* References to quality control (QC) methods used to vet experimental results */
 	(
-		id
-			INTEGER PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
 		ms_methods_id
 			INTEGER NOT NULL,
 			/* foreign key to ms_methods */
+		sample_id
+			INTEGER NOT NULL,
+			/* foreign key to samples */
 		name
 			INTEGER NOT NULL,
 			/* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */
+	  value
+	    INTEGER NOT NULL,
+	    /* constrained to (0, 1) boolean: the result of the QC check */
 		reference
-			INTEGER NOT NULL,
+			INTEGER,
 			/* the category of the QC method; controlled vocabulary must be one of "SOP (Internal)", "SOP (External/Published)", or "Manuscript" */
 		reference_text
 			TEXT,
 			/* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */
 		/* Check constraints */
+		CHECK (value IN (0, 1)),
+		UNIQUE (ms_methods_id, sample_id, name, value),
 		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE,
-		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_aliases
-		/* List of common aliases for each entry in TABLE norm_solvents */
+	CREATE TABLE IF NOT EXISTS carrier_aliases
+		/* List of common aliases for each entry in TABLE norm_carriers */
 	(
-		solvent_id
+		carrier_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		alias
 			TEXT NOT NULL UNIQUE,
-			/* human meaningful name(s) associated with a solvent */
+			/* human meaningful name(s) associated with a carrier */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (solvent_id) REFERENCES norm_solvents(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (carrier_id) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS additive_aliases
@@ -486,55 +572,55 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 	(
 		additive_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		alias
 			TEXT NOT NULL UNIQUE,
 			/* human meaningful name(s) associated with an additive */
 		/* Check constraints */
 		/* Foreign key relationships */
-		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+		FOREIGN KEY (additive_id) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_mixes
-		/* Mobile phase solvent mixture for a given elution method */
+	CREATE TABLE IF NOT EXISTS carrier_mixes
+		/* Mobile phase carrier mixture for a given elution method */
 	(
 		mix_id
 			INTEGER NOT NULL,
-			/* mixture identifier to gather discrete components; foreign key to solvent_mix_collections */
+			/* mixture identifier to gather discrete components; foreign key to carrier_mix_collections */
 		component
 			INTEGER NOT NULL,
-			/* foreign key to norm_solvents */
+			/* foreign key to norm_carriers */
 		fraction
-			REAL NOT NULL,
-			/* amount fraction of this solvent in the mixture, contrained from 0 - 1 */
+			REAL,
+			/* amount fraction of this carrier in the mixture, constrained from 0 - 1 */
 		/* Check constraints */
 		CHECK (fraction BETWEEN 0 AND 1),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (component) REFERENCES norm_solvents(id) ON UPDATE CASCADE
+		FOREIGN KEY (mix_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_carriers(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS solvent_additives
-		/* Mobile phase additives mixture for a given solvent mix collection */
+	CREATE TABLE IF NOT EXISTS carrier_additives
+		/* Mobile phase additives mixture for a given carrier mix collection */
 	(
 		mix_id
 			INTEGER NOT NULL,
-			/* mixture identifier to gather discrete additives; foreign key to solvent_mix_collections */
+			/* mixture identifier to gather discrete additives; foreign key to carrier_mix_collections */
 		component
 			INTEGER NOT NULL,
 			/* foreign key to norm_additives */
 		amount
-			REAL NOT NULL,
-			/* amount fraction amount of this solvent in the mixture, contrained from 0 - 1 */
+			REAL,
+			/* amount fraction amount of this carrier in the mixture, contrained from 0 - 1 */
 		units
-		  INTEGER NOT NULL,
+		  INTEGER,
 		  /* additive units, foreign key to norm_additive_units */
 		/* Check constraints */
 		CHECK (amount > 0),
 		/* Foreign key relationships */
-		FOREIGN KEY (mix_id) REFERENCES solvent_mix_collections(id) ON UPDATE CASCADE,
-		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE,
-		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE
+		FOREIGN KEY (mix_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (component) REFERENCES norm_additives(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+		FOREIGN KEY (units) REFERENCES norm_additive_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 /* Data */
@@ -567,62 +653,64 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 		FROM chromatography_descriptions cd
 		INNER JOIN norm_chromatography_types nct ON nct.id = cd.chromatography_types_id;
 	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_solvent_mix AS
+	CREATE VIEW IF NOT EXISTS view_carrier_mix AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
 			sm.mix_id AS "mix_id",
-				/* solvent mix id */
+				/* carrier mix id */
 			ns.name AS "component",
-				/* solvent name */
-			sm.fraction * 100 AS "amount",
-				/* solvent fraction in this mix */
-			"percent" AS "unit_name",
-			  /* full name of solvent amount unit */
-			"%" AS "unit"
-			  /* solvent unit abbreviation */
-		FROM solvent_mixes sm
-		INNER JOIN norm_solvents ns ON ns.id = sm.component;
+				/* carrier name */
+			CASE WHEN sm.fraction IS NULL THEN "" ELSE sm.fraction * 100 END "amount",
+				/* carrier fraction in this mix */
+			CASE WHEN sm.fraction IS NULL THEN "" ELSE "percent" END "unit_name",
+			  /* full name of carrier amount unit */
+			CASE WHEN sm.fraction IS NULL THEN "" ELSE "%" END "unit"
+			  /* carrier unit abbreviation */
+		FROM carrier_mixes sm
+		LEFT JOIN norm_carriers ns ON ns.id = sm.component;
 	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_solvent_additives AS
+	CREATE VIEW IF NOT EXISTS view_carrier_additives AS
 		/* View complete mobile phase used in a mixture */
 		SELECT
 			sa.mix_id AS "mix_id",
-				/* solvent mix id */
+				/* carrier mix id */
 			na.name AS "component",
 				/* additive name */
-			sa.amount,
+			CASE WHEN sa.amount IS NULL THEN "" ELSE sa.amount END "amount",
 				/* additive amount in this mix */
-			nau.name AS "unit_name",
+			CASE WHEN sa.amount IS NULL THEN "" ELSE nau.name END "unit_name",
 			  /* full name of additive units */
-			nau.abbreviation AS "unit"
+			CASE WHEN sa.amount IS NULL THEN "" ELSE nau.abbreviation END "unit"
 			  /* additive units abbreviation */
-		FROM solvent_additives sa
-		INNER JOIN norm_additive_units nau ON sa.units = nau.id
-		INNER JOIN norm_additives na ON sa.component = na.id;
+		FROM carrier_additives sa
+		LEFT JOIN norm_additive_units nau ON sa.units = nau.id
+		LEFT JOIN norm_additives na ON sa.component = na.id;
 	/*magicsplit*/
-  CREATE VIEW IF NOT EXISTS view_solvent_mix_collection AS
-		/* Tabular view of solvent mix components by mixture ID */
+  CREATE VIEW IF NOT EXISTS view_carrier_mix_collection AS
+		/* Tabular view of carrier mix components by mixture ID */
   	SELECT
   	  smc.id,
-  	    /* solvent mix collection id */
+  	    /* carrier mix collection id */
+  	  smc.name,
+  	    /* carrier mix user-supplied name */
   	  vst.component,
-  	    /* solvent mix component name */
+  	    /* carrier mix component name */
   	  vst.component_type,
-  	    /* solvent mix component type, whether a solvent or an additive */
+  	    /* carrier mix component type, whether a carrier or an additive */
   	  vst.amount,
-  	    /* solvent mix component amount */
+  	    /* carrier mix component amount */
   	  vst.unit
-  	    /* solvent mix component units associated with the amount */
-  		FROM solvent_mix_collections smc JOIN
+  	    /* carrier mix component units associated with the amount */
+  		FROM carrier_mix_collections smc JOIN
   			(SELECT
   				*,
-  				"solvent" AS "component_type"
-  				FROM view_solvent_mix vsm
+  				"carrier" AS "component_type"
+  				FROM view_carrier_mix vsm
   			UNION
   			SELECT
   				*,
   				"additive" AS "component_type"
-  				FROM view_solvent_additives vsa
+  				FROM view_carrier_additives vsa
   			) AS vst
   		ON mix_id = smc.id
   		ORDER BY id, component_type DESC, amount DESC;
@@ -632,32 +720,41 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
     SELECT
     	mp.ms_methods_id,
     	  /* MS Methods ID, foreign key to ms_methods.id */
-    	solvents ||
-    		CASE ifnull(additives, "nullval") WHEN "nullval" THEN "" ELSE " with " || additives || " amendment" END ||
-    		" for " || mp.duration || 
-    		" " || ndu.abbreviation ||
-    		" at " || mp.flow ||
-    		" " || nfu.abbreviation || "."
+    	mp.sample_id,
+    	  /* Sample ID, foreign key to samples.id */
+    	CASE ifnull(carriers, "") WHEN "" THEN "" ELSE carriers END ||
+    		CASE ifnull(additives, "") WHEN "" THEN "" ELSE
+    			CASE ifnull(carriers, "") WHEN "" THEN "" ELSE " with " END
+    			|| additives || " amendment" END ||
+    		CASE ifnull(mp.duration, "") WHEN "" THEN "" ELSE " for " || mp.duration END ||
+    		CASE ifnull(ndu.abbreviation, "") WHEN "" THEN "" ELSE " " || ndu.abbreviation END ||
+    		CASE ifnull(mp.flow, "") WHEN "" THEN "" ELSE " at " || mp.flow END ||
+    		CASE ifnull(nfu.abbreviation, "") WHEN "" THEN "" ELSE " " || nfu.abbreviation END
     		AS narrative
     		/* Summary narrative of this elution profile */
   	FROM 
   		mobile_phases mp
-  		JOIN norm_duration_units ndu ON mp.duration_units = ndu.id 
-  		JOIN norm_flow_units nfu ON mp.flow_units = nfu.id
-  	LEFT JOIN (
-  	    (SELECT
-  	    	mix_id,
-  		    REPLACE(group_concat(vsm.component || " (" || vsm.amount || " " || vsm.unit || ")"), ",", "/") AS "solvents"
-  		    FROM view_solvent_mix vsm    
-  	        GROUP BY vsm.mix_id)
-  	    LEFT JOIN
-  	   	(SELECT
-  	    	mix_id as mix2,
-  		    REPLACE(group_concat(vsa.component || " (" || vsa.amount || " " || vsa.unit || ")"), ",", "/") AS "additives"
-  		    FROM view_solvent_additives vsa
-  	        GROUP BY vsa.mix_id)
-  	    ON mix_id = mix2
-      ) ON mp.solvent_mix_collection_id = mix_id;
+  		LEFT JOIN norm_duration_units ndu ON mp.duration_units = ndu.id 
+  		LEFT JOIN norm_flow_units nfu ON mp.flow_units = nfu.id
+		LEFT JOIN(
+			SELECT
+				CASE ifnull(mix_id, "") WHEN "" THEN mix2 ELSE mix_id END AS mix_id,
+				carriers,
+				additives
+			FROM
+				(SELECT
+		  	    	mix_id as mix2,
+		  		    REPLACE(REPLACE(group_concat(vsa.component || " (" || vsa.amount || " " || vsa.unit || ")"), ",", " / "), " ( )", "") AS "additives"
+		  		    FROM view_carrier_additives vsa
+		  	        GROUP BY vsa.mix_id)
+		  	    LEFT JOIN
+		  	    (SELECT
+		  	    	mix_id,
+		  		    REPLACE(REPLACE(group_concat(vsm.component || " (" || vsm.amount || " " || vsm.unit || ")"), ",", " / "), " ( )", "") AS "carriers"
+		  		    FROM view_carrier_mix vsm    
+		  	        GROUP BY vsm.mix_id)
+	  	    	ON mix_id = mix2
+	  	) ON mp.carrier_mix_collection_id = mix_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_detectors AS
 		/* Convenience view to build view_method_as by providing a single character string for detectors used in this method */
@@ -691,12 +788,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 				/* chromatography_descriptions id */
 			REPLACE(GROUP_CONCAT(DISTINCT(nv.name)), ",", " x ") AS "chrom_vendor",
 				/* chromatography system vendor */
-			REPLACE(GROUP_CONCAT(DISTINCT(ct.acronym)), ",", " x ") AS "chrom_type"
+			REPLACE(GROUP_CONCAT(DISTINCT(cd.system_vendor_model)), ",", " x ") AS "chrom_model",
+				/* chromatography system vendor */
+			REPLACE(GROUP_CONCAT(ct.acronym), ",", " x ") AS "chrom_type"
 				/* chromatography type (e.g. LC, GC, etc.) */
 		FROM 
 			chromatography_descriptions cd 
 		LEFT JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id
-		LEFT JOIN norm_vendors nv ON cd.vendor_id = nv.id
+		LEFT JOIN norm_vendors nv ON cd.system_vendor_id = nv.id
 		GROUP BY cd.ms_methods_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_method AS
@@ -706,10 +805,14 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			/* Method id */
 			vst.chrom_vendor AS "chromatography_system_vendor",
 			/* Chromatograhic system vendor */
+			vst.chrom_model AS "chromatograph_model",
+			/* Chromatographic system model */
 			vst.chrom_type AS "chromatographic_type",
 			/* Chromatographic separation type name */
 			nv.name AS "mass_spectrometer_vendor",
 			/* Vendor name */
+			msd.vendor_model AS "mass_spectrometer_model",
+			/* Mass spectrometer system model */
 			vd.detectors AS "detector",
 			/* Mass spectrometer type */
 			vcc.columns AS "columns",
@@ -729,7 +832,7 @@ Details:		Node build files are located in the "config/sql_nodes" directory and s
 			ncd.name AS "collision_energy_description"
 			/* Collision energy description */
 		FROM ms_methods msm 
-		LEFT JOIN norm_voltage ni ON msm.ionization = ni.id
+		LEFT JOIN norm_ionization ni ON msm.ionization = ni.id
 		LEFT JOIN ms_descriptions msd ON msm.id = msd.ms_methods_id
 		LEFT JOIN norm_vendors nv ON msd.vendor_id = nv.id
 		LEFT JOIN view_detectors vd ON msm.id = vd.ms_methods_id

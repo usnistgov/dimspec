@@ -48,7 +48,7 @@ INIT_CONNECT   = TRUE
 LOGGING_ON     = TRUE
 
 # Whether to activate plumber integration. (requires R)
-USE_API        = TRUE
+USE_API        = FALSE
 
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
 # this session will provide support for RDKit or ChemMineR, and set USE_RDKIT

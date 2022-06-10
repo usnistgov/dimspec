@@ -23,7 +23,8 @@ Project Reference
 			- compound_categories			(table)	Normalization table for self-hierarchical chemical classes of compounds.
 			- compound_url					(view)	Combine information from the compounds table to form a URL link to the resource.
 			- compound_fragments			(table) Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments.
-			- fragments						(table)	Potential annotated fragment ions that are attributed to one or more mass spectra.
+			- annotated_fragments			(table)	Potential annotated fragment ions that are attributed to one or more peak ID by identification from their mass spectra.
+			- norm_fragments          (table) Normalization table of all fragments that have been annotated and their properties.
 			- fragment_sources				(table)	Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical).
 			- norm_fragment_generation_type	(table)	Normalization table for fragmenet generation source type.
 			- view_compound_fragments		(view)	Fragments associated with compounds.
