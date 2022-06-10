@@ -243,7 +243,7 @@ tidy_spectra <- function(target,
     check_cols <- ms_col_zip
   }
   req_col_count <- stringr::str_detect(names(out), paste0(check_cols, collapse = "|")) %>% sum()
-  if (any(is_format == "separated" && !req_col_count == 2,
+  if (any(is_format == "separated" && !req_col_count > 1,
           is_format == "zipped" && !req_col_count == 1)) {
     stop(glue::glue("Could not find required names ({format_list_of_names(check_cols, add_quote = TRUE)}) in the object provided to argument `target`."))
   }
