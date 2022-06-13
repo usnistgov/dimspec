@@ -80,7 +80,7 @@ if (INIT_CONNECT) {
   } else {
     if (LOGGING_ON) log_it("success", 'A database map is available as object "db_map".')
   }
-  db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
+  db_dict <- list.files(path = here::here(), pattern = "dictionary", full.names = TRUE)
   if (length(db_dict) == 1) {
     if (LOGGING_ON) log_it("info", sprintf('Dictionary file located at %s', db_dict))
     db_dict <- try(lapply(read_json(db_dict), bind_rows))

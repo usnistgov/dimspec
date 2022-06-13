@@ -960,7 +960,7 @@ manage_connection <- function(db          = DB_NAME,
     if (is_local) {
       # Resolve database file location
       if (logger) log_it("trace", glue::glue('Finding local database file "{db}"'), log_ns)
-      db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
+      db_where  <- list.files(path = here::here(), pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
       }
