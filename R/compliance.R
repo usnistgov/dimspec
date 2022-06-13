@@ -25,15 +25,15 @@ invisible(
 
 # Ensure compliant environment -------------------------------------------------
 # _Verify required directory presence ------------------------------------------
-if (!dir.exists("input")) {dir.create("input")}
-if (!dir.exists("output")) {dir.create("output")}
-if (!dir.exists(file.path("output", "gather"))) {dir.create(file.path("output", "gather"))}
-if (!dir.exists(file.path("output", "aggregate"))) {dir.create(file.path("output", "aggregate"))}
-if (!dir.exists(file.path("output", "extract"))) {dir.create(file.path("output", "extract"))}
-if (!dir.exists(file.path("output", "example"))) {dir.create(file.path("output", "example"))}
+if (!dir.exists(here::here("input"))) {dir.create(here::here("input"))}
+if (!dir.exists(here::here("output"))) {dir.create(here::here("output"))}
+if (!dir.exists(here::here("output", "gather"))) {dir.create(here::here("output", "gather"))}
+if (!dir.exists(here::here("output", "aggregate"))) {dir.create(here::here("output", "aggregate"))}
+if (!dir.exists(here::here("output", "extract"))) {dir.create(here::here("output", "extract"))}
+if (!dir.exists(here::here("output", "example"))) {dir.create(here::here("output", "example"))}
 
 # _Set operational env variables -----------------------------------------------
-source(file.path("config", "env_R.R"))
+source(here::here("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
 # - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the
@@ -52,13 +52,13 @@ rm(packs, unload_packs, packs_TRUE, packs_FALSE)
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
-sources <- list.files("R", pattern = ".R$", full.names = TRUE, recursive = TRUE)
+sources <- list.files(path = here::here("R"), pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source, keep.source = FALSE))
 
 # _Set up logger ---------------------------------------------------------------
 if (LOGGING_ON) {
-  source(file.path("config", "env_logger.R"))
+  source(here::here("config", "env_logger.R"))
   update_logger_settings()
   log_it("info", "Setting up logger for use with this session...")
 } else {
@@ -120,7 +120,7 @@ if (INIT_CONNECT) {
 if (USE_API) {
   log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
-  source(file.path("plumber", "api_control.R"))
+  source(here::here("plumber", "api_control.R"))
   api_reload(
     pr = "plumber_service",
     background = TRUE,
@@ -143,8 +143,8 @@ if (INFORMATICS) {
     log_it("info", "Using RDKit for this session. Setting up...", "rdk")
     if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
     require(reticulate)
-    source(file.path("rdkit", "env_py.R"))
-    source(file.path("rdkit", "py_setup.R"))
+    source(here::here("rdkit", "env_py.R"))
+    source(here::here("rdkit", "py_setup.R"))
     if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
     if (!exists("PYENV_LIBRARIES")) PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
     if (!exists("PYENV_REF")) PYENV_REF <- "rdk"

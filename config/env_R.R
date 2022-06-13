@@ -3,12 +3,15 @@
 # A collection of these items is available using `support_info()` as a
 # troubleshooting convenience once `source("compliance.R")` is complete.
 
+available_packages <- installed.packages()
+if (!"here" %in% available_packages) install.packages("here")
+
 # Several settings reference project variables defined in env_glob.txt
-if (!exists("DB_NAME")) source(file.path("config", "env_glob.txt"))
+if (!exists("DB_NAME")) source(here::here("config", "env_glob.txt"))
 
 # Database ---------------------------------------------------------------------
 # Current version of the database and the date it was created (if present)
-DB_DATE        <- file.info(list.files(pattern = sprintf("%s$", DB_NAME), recursive = !EXPLICIT_PATHS))$ctime
+DB_DATE        <- file.info(list.files(path = here::here(), pattern = sprintf("%s$", DB_NAME), recursive = !EXPLICIT_PATHS))$ctime
 DB_BUILT       <- length(DB_DATE) > 0
 # Releases will be coded by:
 #   - First position: major version (e.g. schema changes)
@@ -27,19 +30,20 @@ DB_VERSION     <- sprintf("%s.%s",
 DB_PACKAGE     <- "RSQLite"
 DB_DRIVER      <- "SQLite"
 DB_CLASS       <- "SQLite"
-DB_CONN_NAME   <- "con"
+DB_CONN_NAME   <- ifelse(exists("DB_CONN_NAME"), DB_CONN_NAME, "con")
 DICT_FILE_NAME <- "data_dictionary"
 
 # The last time the main database schema defined in BUILD_FILE was updated.
-LAST_DB_SCHEMA <- file.info(list.files(pattern = DB_BUILD_FILE, recursive = !EXPLICIT_PATHS))$mtime
+LAST_DB_SCHEMA <- file.info(list.files(path = here::here(), pattern = DB_BUILD_FILE, recursive = !EXPLICIT_PATHS))$mtime
 
 # The last time any file in this project was modified.
-LAST_MODIFIED  <- max(file.info(list.files(recursive = !EXPLICIT_PATHS))$mtime)
+LAST_MODIFIED  <- max(file.info(list.files(path = here::here(), recursive = !EXPLICIT_PATHS))$mtime)
 
 # Dependencies -----------------------------------------------------------------
 # These are the packages on which the project depends and must be loaded.
 DEPENDS_ON     <- c("base64enc",
                     "logger",
+                    "here",
                     "DBI",
                     "RSQLite",
                     "lubridate",
@@ -74,19 +78,19 @@ if (ifelse(exists("INFORMATICS"), INFORMATICS, FALSE)) {
 # Files matching these patterns will be excluded from sourcing at startup.
 EXCLUSIONS       <- c(".RDS",
                       paste0("suspectlist", .Platform$file.sep),
-                      "compliance",
-                      "create_method_list",
-                      "generate_db",
-                      "metadata_xml")
+                      paste0("apps", .Platform$file.sep),
+                      paste0("plumber", .Platform$file.sep),
+                      "compliance")
 
 # Import map to use ------------------------------------------------------------
-IMPORT_MAP       <- file.path("config", "map_NTA_MRT.csv")
-if (!file.exists(IMPORT_MAP)) IMPORT_MAP <- file.path("..", "..", IMPORT_MAP)
-if (file.exists(IMPORT_MAP)) {
-  IMPORT_MAP <- readr::read_csv(IMPORT_MAP)
-} else {
-  IMPORT_MAP <- NULL
-}
+if (!"readr" %in% available_packages) install.packages("readr")
+IMPORT_MAP       <- readr::read_csv(here::here("config", "map_NTA_MRT.csv"))
+# if (!file.exists(IMPORT_MAP)) IMPORT_MAP <- file.path("..", "..", IMPORT_MAP)
+# if (file.exists(IMPORT_MAP)) {
+#   IMPORT_MAP <- readr::read_csv(IMPORT_MAP)
+# } else {
+#   IMPORT_MAP <- NULL
+# }
 
 # Runtime quality assurance/control --------------------------------------------
 # Whether to use application logging to print or record log messages during use.
@@ -114,7 +118,7 @@ if (USE_API) {
   PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
   PLUMBER_PORT <- getOption("plumber.port", 8080)
   PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
-  PLUMBER_FILE <- file.path("plumber", "plumber.R")
+  PLUMBER_FILE <- here::here("plumber", "plumber.R")
 }
 
 # Shiny options ----------------------------------------------------------------
@@ -123,6 +127,9 @@ if (USE_API) {
 USE_SHINY <- ifelse(exists("USE_SHINY"), USE_SHINY, TRUE)
 if (USE_SHINY) {
   USE_SHINY    <- ifelse(exists("USE_SHINY"), USE_SHINY, FALSE)
-  SHINY_APPS   <- list.dirs("apps", full.names = TRUE)
+  SHINY_APPS   <- list.dirs(here::here("apps"), full.names = TRUE)
+  SHINY_APPS   <- setNames(SHINY_APPS, stringr::str_remove_all(basename(SHINY_APPS), "apps"))
   SHINY_HOST   <- getOption("shiny.host", "127.0.0.1")
 }
+
+rm(available_packages)
