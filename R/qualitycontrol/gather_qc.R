@@ -1,3 +1,5 @@
+# exactmasschart <- readRDS(file.path("R", "qualitycontrol", "exactmasschart.RDS"))
+
 #' Quality Control Check of Import Data
 #' 
 #' Performs the quality control check on the imported data from the peak gather function.
@@ -12,8 +14,6 @@
 #' @export
 #'
 #' @examples
-
-exactmasschart <- readRDS(file.path("R", "qualitycontrol", "exactmasschart.RDS"))
 
 gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {
   #performs quality check on the submitted data and adds 'check' list item
