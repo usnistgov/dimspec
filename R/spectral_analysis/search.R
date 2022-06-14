@@ -14,14 +14,16 @@
 #'
 #' @examples
 
-create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masserror, minerror) {
+create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masserror, minerror, ms2exp, isowidth) {
   data.frame(filename = filename,
              precursormz = precursormz,
              rt = rt,
              rt_start = rt_start,
              rt_end = rt_end,
              masserror = masserror,
-             minerror = minerror)
+             minerror = minerror,
+             ms2exp = ms2exp,
+             isowidth = isowidth)
 }
 
 
@@ -63,7 +65,21 @@ getmzML <- function(search_df) {
 get_search_object <- function(searchmzml, zoom = c(1,4)) {
   scans <- which(names(searchmzml$mzML$run$spectrumList) == "spectrum")
   times <- sapply(scans, gettime, mzml=searchmzml)
-  peak_scans <- scans[which(times >= searchmzml$search_df$rt_start & times <= searchmzml$search_df$rt_end)]
+  mslevels <- sapply(scans, getmslevel, mzml=searchmzml)
+  precursors <- sapply(scans, getprecursor, mzml=searchmzml)
+  
+  all_scans <- scans[which(times >= searchmzml$search_df$rt_start & times <= searchmzml$search_df$rt_end)]
+  ms1scans <- all_scans[which(mslevels[all_scans] == 1)]
+  if (searchmzml$search_df$ms2exp == "data-independent acquisition (DIA/AIF)" | searchmzml$search_df$ms2exp == "DIA") {
+    ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
+  }
+  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA") {
+    ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - as.numeric(searchmzml$search_df$isowidth) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + as.numeric(searchmzml$search_df$isowidth))]
+  }
+  if (searchmzml$search_df$ms2exp == "SWATH") {
+    ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - (as.numeric(searchmzml$search_df$isowidth)/2) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + (as.numeric(searchmzml$search_df$isowidth)/2))]
+  }
+  peak_scans <- sort(c(ms1scans, ms2scans))
   mz <- searchmzml$search_df$precursormz
   masserror <- searchmzml$search_df$masserror
   minerror <- searchmzml$search_df$minerror
