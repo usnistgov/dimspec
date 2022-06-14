@@ -80,6 +80,7 @@ EXCLUSIONS       <- c(".RDS",
                       paste0("suspectlist", .Platform$file.sep),
                       paste0("apps", .Platform$file.sep),
                       paste0("plumber", .Platform$file.sep),
+                      "env_",
                       "compliance")
 
 # Import map to use ------------------------------------------------------------
@@ -126,10 +127,10 @@ if (USE_API) {
 # Whether to spin up Shiny apps. [SET IN env_glob.txt]
 USE_SHINY <- ifelse(exists("USE_SHINY"), USE_SHINY, TRUE)
 if (USE_SHINY) {
-  USE_SHINY    <- ifelse(exists("USE_SHINY"), USE_SHINY, FALSE)
-  SHINY_APPS   <- list.dirs(here::here("apps"), full.names = TRUE)
+  SHINY_APPS   <- list.dirs(here::here("apps"))
   SHINY_APPS   <- setNames(SHINY_APPS, stringr::str_remove_all(basename(SHINY_APPS), "apps"))
   SHINY_HOST   <- getOption("shiny.host", "127.0.0.1")
 }
 
+RENV_ESTABLISHED <- TRUE
 rm(available_packages)

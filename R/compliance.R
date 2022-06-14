@@ -33,7 +33,7 @@ if (!dir.exists(here::here("output", "extract"))) {dir.create(here::here("output
 if (!dir.exists(here::here("output", "example"))) {dir.create(here::here("output", "example"))}
 
 # _Set operational env variables -----------------------------------------------
-source(here::here("config", "env_R.R"))
+if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
 
 # _Load required packages ------------------------------------------------------
 # - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the

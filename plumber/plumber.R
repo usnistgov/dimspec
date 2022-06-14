@@ -78,7 +78,12 @@ function(table_name      = as.character("contributors"),
 #* @param peak_id A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @get /peak_data
 function(peak_id = integer(), tidy_spectra = as.logical("true")) {
-  ms_data <- dbGetQuery(con, glue::glue("select * from peak_data where peak_id = {peak_id}"))
+  ms_data <- dbGetQuery(
+    con,
+    DBI::sqlInterpolate(con,
+                        "select * from peak_data where peak_id = ?peak_id",
+                        peak_id = peak_id)
+  )
   if (tidy_spectra) {
     ms_data <- tidy_spectra(ms_data)
   }
@@ -100,3 +105,7 @@ function() {
   out <- out[grep("^view_", out)]
   return(out)
 }
+
+#* Is the connection valid
+#* @get /active
+function() return(dbIsValid(con))

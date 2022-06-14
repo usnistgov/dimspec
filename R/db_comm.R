@@ -963,6 +963,14 @@ manage_connection <- function(db          = DB_NAME,
       db_where  <- list.files(path = here::here(), pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
+      } else if (length(db_where) > 1) {
+        if (length(db_where[basename(db_where) == db]) == 1) {
+          db <- db_where[basename(db_where) == db]
+        } else {
+          stop(sprintf('More than one file named "%s" were located and none matched completely.', db))
+        }
+      } else {
+        db <- db_where
       }
     }
     global_env       <- as.list(.environ)

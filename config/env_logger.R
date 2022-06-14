@@ -3,7 +3,7 @@ require(logger)
 require(glue)
 # Universal settings -----------------------------------------------------------
 # Set the desired directory to store logs.
-LOG_DIRECTORY  <- file.path("logs")
+LOG_DIRECTORY  <- here::here("logs")
 
 # Set custom layouts here as needed here for each level or destination.
 layout_console <- layout_glue_generator(
@@ -42,36 +42,37 @@ LOGGING <- list(
   GLOBAL = list(log = TRUE,
                 ns = "global",
                 to = "both",
-                file = file.path(LOG_DIRECTORY, "log.txt"),
+                file = here::here(LOG_DIRECTORY, "log.txt"),
                 threshold = "info"),
   DB     = list(log = TRUE,
                 ns = "db",
                 to = "both",
-                file = file.path(LOG_DIRECTORY, "log_db.txt"),
+                file = here::here(LOG_DIRECTORY, "log_db.txt"),
                 threshold = "info"),
   API    = list(log = TRUE,
                 ns = "api",
                 to = "file",
-                file = file.path(LOG_DIRECTORY, "log_api.txt"),
+                file = here::here(LOG_DIRECTORY, "log_api.txt"),
                 threshold = "info"),
   API_DB = list(log = TRUE,
                 ns = "api_db",
                 to = "file",
-                file = file.path(LOG_DIRECTORY, "log_api_db.txt"),
+                file = here::here(LOG_DIRECTORY, "log_api_db.txt"),
                 threshold = "info"),
   RDK    = list(log = TRUE,
                 ns = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
                 to = "both",
-                file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"))),
+                file = here::here(LOG_DIRECTORY, sprintf("log_%s.txt", ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"))),
                 threshold = "info"),
   SHINY  = list(log = FALSE,
                 ns = "shiny",
                 to = "both",
-                file = file.path(LOG_DIRECTORY, "log_shiny.txt"),
+                file = here::here(LOG_DIRECTORY, "log_shiny.txt"),
                 threshold = "info")
 )
 LOGGING_WARNS  <- TRUE
 LOGGING_ERRORS <- TRUE
+RENV_ESTABLISHED_LOGGER <- TRUE
 
 # Supporting functions ---------------------------------------------------------
 
@@ -204,9 +205,9 @@ read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
   if (!file.exists(file)) {
     if (!exists("LOG_DIRECTORY")) stop("Session object LOG_DIRECTORY is not set.")
     if (is.null(file)) {
-      file <- file.path(LOG_DIRECTORY, "log.txt")
+      file <- here::here(LOG_DIRECTORY, "log.txt")
     } else {
-      file <- file.path(LOG_DIRECTORY, file)
+      file <- here::here(LOG_DIRECTORY, file)
     }
   }
   stopifnot(file.exists(file))
@@ -239,6 +240,7 @@ read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
 #' @examples
 update_logger_settings <- function() {
   if (!exists("LOGGING")) stop("Object LOGGING containing logger settings is not available.")
+  if (!exists("LOG_DIRECTORY")) LOG_DIRECTORY <- here::here("logs")
   lapply(LOGGING,
          function(x) {
            if (x$log) {

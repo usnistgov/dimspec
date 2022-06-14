@@ -28,11 +28,9 @@ api_start <- function(plumber_file = NULL,
     } else {
       msg <- 'Provide a file path to a plumber file for "plumber_file" or set variable "PLUMBER_FILE" in the "config/env_R.R" file.'
       if (exists("log_it")) {
-        log_it("error", msg, ns = "api")
-      } else {
-        stop(msg)
+        log_it("error", msg, "api")
       }
-      stop()
+      stop(msg)
     }
   }
   if (is.null(on_host)) {
@@ -42,7 +40,7 @@ api_start <- function(plumber_file = NULL,
       if (exists("log_it")) {
         log_it("error",
                'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "config/env_R.R" file.',
-               ns = "api")
+               "api")
         on_host <- getOption("plumber.host", "127.0.0.1")
       }
     }
@@ -54,7 +52,7 @@ api_start <- function(plumber_file = NULL,
       if (exists("log_it")) {
         log_it("error",
                'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "config/env_R.R" file.',
-               ns = "api")
+               "api")
         on_port <- getOption("plumber.port", 8080)
       }
     }
@@ -69,8 +67,7 @@ api_start <- function(plumber_file = NULL,
         plumber_file = list(c("mode", "character"), "file_exists", c("length", 1)),
         on_host      = list(c("mode", "character"), c("length", 1)),
         on_port      = list(c("mode", "numeric"), c("length", 1), "no_na")
-        ),
-      from_fn = "api_start"
+      )
     )
     stopifnot(arg_check$valid)
   } else {
@@ -91,7 +88,8 @@ api_start <- function(plumber_file = NULL,
     )
   )
   url <- sprintf("%s:%s", on_host, on_port)
-  success <- inherits(attempt, "try-error") && attempt$is_alive()
+  success <- inherits(attempt, "try-error") && attempt$is_alive() &&
+    api_endpoint("active")
   if (success) {
     if (exists("log_it")) {
       log_it("success", sprintf("Plumber API started from api_start() on %s.", url), "api")
@@ -205,15 +203,19 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 #'   instance is currently running
 #' @param background LGL scalar of whether to load the plumber server as a
 #'   background service (default: TRUE); set to FALSE for testing
+#' @param on_host CHR scalar of the URL directing to the plumber service;
+#'   default (NULL) obtains its value from that set as PLUMBER_HOST in config/env_R.R
+#' @param on_port CHR scalar of the remote port for the plumber service;
+#'   default (NULL) obtains its value from that set as PLUMBER_PORT in config/env_R.R
+#' @param log_ns CHR scalar namespace to use for logging (default: "api")
 #'
-#' @return
+#' @return None, launches the plumber API service on your local machine
 #' @export
 #'
-#' @examples
-api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL) {
+api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL, log_ns = "api") {
   if (exists("log_it")) {
     log_fn("start")
-    log_it("debug", "Run api_reload().", "api")
+    log_it("debug", "Run api_reload().", log_ns)
   }
   if (is.null(on_host)) on_host <- PLUMBER_HOST
   if (is.null(on_port)) on_port <- PLUMBER_PORT
@@ -261,10 +263,10 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
       log_it("warn",
              sprintf("Plumber was launched on a url (%s) other than that defined in the environment (%s).",
                      url, PLUMBER_URL),
-             "api"
+             log_ns
       )
     }
-    log_it("debug", "Calling api_start() from api_reload()", "api")
+    log_it("debug", "Calling api_start() from api_reload()", log_ns)
   }
   if (background) {
     assign(
@@ -288,20 +290,20 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
     )
   }
   this_pr <- eval(sym(pr_name))
-  if (exists("log_it")) log_it("trace", "Evaluating service...", "api")
+  if (exists("log_it")) log_it("trace", "Evaluating service...", log_ns)
   if (this_pr$is_alive()) {
     if (exists("log_it")) {
       log_it("info",
              sprintf(
                "\nRunning plumber API at %s",
                url
-             ), "api"
+             ), log_ns
       )
       log_it("info",
              sprintf(
                "\nView docs at %s/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`",
                url
-             ), "api"
+             ), log_ns
       )
     }
   } else {
@@ -310,12 +312,100 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
              sprintf(
                'Unknown error restarting the plumber API. Inspect "%s" for details.',
                pr_name
-             ), "api"
+             ), log_ns
       )
     }
   }
   if (exists("log_it")) {
     log_fn("end")
-    log_it("debug", "Exiting api_reload().", "api")
+    log_it("debug", "Exiting api_reload().", log_ns)
+  }
+}
+
+
+#' Build an API endpoint programmatically
+#'
+#' This is a convenience function intended to support plumber endpoints. It only
+#' assists in the construction (and execution if `execute` == TRUE) of
+#' endpoints. Endpoints must still be understood. Validity checking, execution,
+#' and opening in a web browser are supported. Invalid endpoints will not be
+#' executed or opened for viewing.
+#'
+#' @note Special support is provided for the way in which the NIST Public Data
+#'   Repository treats fragments
+#'
+#' @param server_addr CHR scalar uniforme resource locator (URL) address of an
+#'   API server (e.g. "https://myapi.com:8080") (defaults to the current
+#'   environment variable "PLUMBER_URL")
+#' @param ... Additional named parameters added to the endpoint, most typically
+#'   the query portion. If only one is provided, it can remain unnamed and a
+#'   query is assumed. If more than one is provided, all must be named. Named
+#'   elements must be components of the return from [httr::parse_url] (see
+#'   https://tools.ietf.org/html/rfc3986) for details of the parsing algorithm;
+#'   unrecognized elements will be ignored.
+#' @param check_valid LGL scalar on whether or not to first check that an
+#'   endpoint returns a valid status code (200-299) (default: FALSE).
+#' @param execute LGL scalar of whether or not to execute the constructed
+#'   endpoint and return the result; will be defaulted to FALSE if `check_valid`
+#'   == TRUE and the endpoint returns anything other than a valid status code.
+#' @param open_in_browser LGL scalar of whether or not to open the resulting
+#'   endpoint in the system's default browser; will be defaulted to FALSE if
+#'   `check_valid` == TRUE and the endpoint returns anything other than a valid
+#'   status code.
+#'
+#' @return CHR scalar of the constructed endpoint, with messages regarding
+#'   status checks, return from the endpoint (typically JSON) if valid and
+#'   `execute` == TRUE, or NONE if `open_in_browser` == TRUE
+#' @export
+#'
+#' @examples
+#' api_endpoint("https://www.google.com/search", list(q = "something"), open_in_browser = TRUE)
+#' api_endpoint("https://www.google.com/search", query = list(q = "NIST Public Data Repository"))
+api_endpoint <- function(server_addr     = PLUMBER_URL,
+                         ...,
+                         check_valid     = TRUE,
+                         execute         = FALSE,
+                         open_in_browser = FALSE) {
+  require(httr)
+  url <- parse_url(server_addr)
+  kwargs <- list(...)
+  if (length(kwargs) == 1 && is.null(names(kwargs))) {
+    message("Single arguments provided to the ellipsis will be assumed to be query text.")
+    url[["query"]] <- kwargs[[1]]
+  } else {
+    if (!is.null(names(kwargs))) {
+      if (any(names(kwargs) == "")) warning("All arguments should be named if any are.")
+      for (kwarg in names(kwargs)[!names(kwargs) == ""]) {
+        if (kwarg %in% names(url)) {
+          url[[kwarg]] <- kwargs[[kwarg]]
+        }
+      }
+    } else {
+      warning("If more than one ellipsis argument is provided they must be named.")
+    }
+  }
+  if (url$hostname == "data.nist.gov" && !is.null(url$fragment)) {
+    url$path <- paste0(url$path, "#", url$fragment, collapse = "/")
+    url$fragment <- NULL
+  }
+  url <- build_url(url)
+  if (check_valid) {
+    res <- httr::GET(url)
+    if (dplyr::between(res$status_code, 200, 299)) {
+      message("Endpoint is valid.")
+    } else {
+      warning(httr::http_status(res)$message)
+      execute <- FALSE
+      open_in_browser <- FALSE
+    }
+  }
+  if (execute || open_in_browser) {
+    if (open_in_browser) {
+      utils::browseURL(url)
+    } else {
+      return(httr::content(httr::GET(url)))
+    }
+  } else {
+    return(url)
   }
 }
