@@ -344,14 +344,15 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #'   https://tools.ietf.org/html/rfc3986) for details of the parsing algorithm;
 #'   unrecognized elements will be ignored.
 #' @param check_valid LGL scalar on whether or not to first check that an
-#'   endpoint returns a valid status code (200-299) (default: FALSE).
+#'   endpoint returns a valid status code (200-299) (default: TRUE).
 #' @param execute LGL scalar of whether or not to execute the constructed
 #'   endpoint and return the result; will be defaulted to FALSE if `check_valid`
 #'   == TRUE and the endpoint returns anything other than a valid status code.
+#'   (default: TRUE)
 #' @param open_in_browser LGL scalar of whether or not to open the resulting
 #'   endpoint in the system's default browser; will be defaulted to FALSE if
 #'   `check_valid` == TRUE and the endpoint returns anything other than a valid
-#'   status code.
+#'   status code. (default: FALSE)
 #'
 #' @return CHR scalar of the constructed endpoint, with messages regarding
 #'   status checks, return from the endpoint (typically JSON) if valid and
@@ -364,8 +365,9 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 api_endpoint <- function(server_addr     = PLUMBER_URL,
                          ...,
                          check_valid     = TRUE,
-                         execute         = FALSE,
-                         open_in_browser = FALSE) {
+                         execute         = TRUE,
+                         open_in_browser = FALSE,
+                         return_format   = c("vector", "data.frame", "list")) {
   require(httr)
   url <- parse_url(server_addr)
   kwargs <- list(...)
@@ -403,7 +405,13 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
     if (open_in_browser) {
       utils::browseURL(url)
     } else {
-      return(httr::content(httr::GET(url)))
+      return_format <- match.arg(return_format)
+      out <- httr::content(httr::GET(url))
+      out <- switch(return_format,
+                    "vector" = unlist(out),
+                    "data.frame" = out %>% bind_rows(),
+                    "list" = out)
+      return(out)
     }
   } else {
     return(url)
