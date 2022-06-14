@@ -163,4 +163,4 @@ if (INFORMATICS) {
 
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions)
-
+RENV_ESTABLISHED_COMPLIANCE <- TRUE
