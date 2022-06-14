@@ -185,28 +185,34 @@ getmergedind <- function(masses, addms, masserror, minerror) {
 
 get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "sum", cormethod = "pearson") {
   
-  if (attr(peaktable, "mslevel") == 2) {eic <- peaktable$EIC$intensity[which(peaktable$ms1scans %in% (peaktable$ms2scans - 1))]}
+  if (attr(peaktable, "mslevel") == 2) {eic <- peaktable$EIC$intensity[sapply(peaktable$ms2scans, function(x) which.min(abs(x - peaktable$ms1scans)))]}
   if (attr(peaktable, "mslevel") == 1) {eic <- peaktable$EIC$intensity}
   if (!is.null(correl)) {
-    cors <- apply(peaktable$peaktable_int, 1, function(y) cor(eic, y, use = "complete.obs", method = cormethod))
+    if (!is.na(correl)) {
+    suppressWarnings(cors <- apply(peaktable$peaktable_int, 1, function(y) cor(eic, y, use = "complete.obs", method = cormethod)))
     ind <- which(cors >= correl)
     peaktable$peaktable_int <- peaktable$peaktable_int[ind,]
     peaktable$peaktable_mass <- peaktable$peaktable_mass[ind,]
+    }
   }
   if (!is.null(ph)) {
+    if (!is.na(ph)) {
     ph = ph/100
     minph <- (ph * (max(eic) - min(eic)))+min(eic)
     scans <- which(eic >= minph)
     peaktable$peaktable_int <- peaktable$peaktable_int[,scans]
     peaktable$peaktable_mass <- peaktable$peaktable_mass[,scans]
+    }
   }
   if (!is.null(freq)) {
+    if (!is.na(freq)) {
     tot <- ncol(peaktable$peaktable_mass)
     freq <- tot*freq/100
     ns <- apply(peaktable$peaktable_mass, 1, function(x) length(which(!is.na(x))))
     ind <- which(ns >= freq)
     peaktable$peaktable_int <- peaktable$peaktable_int[ind,]
     peaktable$peaktable_mass <- peaktable$peaktable_mass[ind,]
+    }
   }
   peaktable$peaktable_int <- do.call(cbind, lapply(1:ncol(peaktable$peaktable_int), function(i) peaktable$peaktable_int[,i]/get(normfn)(peaktable$peaktable_int[,i], na.rm = TRUE)))
   mz <- apply(peaktable$peaktable_mass, 1, mean, na.rm = TRUE)
@@ -215,7 +221,10 @@ get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "
   int.u <- apply(peaktable$peaktable_int, 1, sd, na.rm = TRUE)
   n <- apply(peaktable$peaktable_mass, 1, function(x) length(which(!is.na(x))))
   x <- which(!is.nan(mz))
-  data.frame(mz = mz[x], mz.u = mz.u[x], int = int[x], int.u = int.u[x], n = n[x])
+  out <- data.frame(mz = mz[x], mz.u = mz.u[x], int = int[x], int.u = int.u[x], n = n[x])
+  attr(out, "numscans") <- ncol(peaktable$peaktable_mass)
+
+  out
 }
 
 #' Generate consensus mass spectrum

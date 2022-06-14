@@ -112,6 +112,14 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   if (FALSE %in% value) {result <- FALSE}
   check[[length(check)+1]] <- data.frame(parameter = "annfragments_elementalmatch", reportedformula = fragment_form, reported_smiles = fragment_smiles, calculatedformula = value, result = result)
   }
+  
+  #added 06142022, get optimal ums settings
+  ms1empirical <- create_peak_table_ms1(peaklist, mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
+  opt_ums1_params <- optimal_ums(ms1empirical, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson")
+  ms2empirical <- create_peak_table_ms2(peaklist,mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
+  opt_ums2_params <- optimal_ums(ms2empirical, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson")
+  check[[length(check) + 1]] <- data.frame(parameter = optimized_ums_parameters_ms1, mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
+  
   #return results
 
   check
