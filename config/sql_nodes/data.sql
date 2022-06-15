@@ -301,6 +301,33 @@
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS opt_ums_params
+	  /* table of optimal parameters for uncertainty mass spectra */
+	(
+	peak_id
+	  INTEGER NOT NULL,
+	/* foreign key to peaks(id) */
+	mslevel
+	  INTEGER NOT NULL,
+	/* mslevel for the optimal parameters */
+	correl
+	  TEXT,
+	/* optimal correlation limit setting */
+	ph
+	  TEXT,
+	/* optimal peak height setting */
+	freq
+	  TEXT,
+	/* optimal observational frequency setting */
+	n
+	  TEXT,
+	/**number of scans using optimal settings */
+	/* Check constraints */
+	 UNIQUE (peak_id, mslevel),
+	/* Foreign key relationships */
+	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
+	);
+	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
   CREATE VIEW IF NOT EXISTS view_peaks AS 
