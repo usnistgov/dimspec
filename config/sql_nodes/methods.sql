@@ -572,7 +572,7 @@
 	(
 		additive_id
 			INTEGER NOT NULL,
-			/* foreign key to norm_carriers */
+			/* foreign key to norm_additives */
 		alias
 			TEXT NOT NULL UNIQUE,
 			/* human meaningful name(s) associated with an additive */
