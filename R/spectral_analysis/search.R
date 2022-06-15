@@ -14,14 +14,16 @@
 #'
 #' @examples
 
-create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masserror, minerror) {
+create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masserror, minerror, ms2exp, isowidth) {
   data.frame(filename = filename,
              precursormz = precursormz,
              rt = rt,
              rt_start = rt_start,
              rt_end = rt_end,
              masserror = masserror,
-             minerror = minerror)
+             minerror = minerror,
+             ms2exp = ms2exp,
+             isowidth = isowidth)
 }
 
 
@@ -36,7 +38,7 @@ create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masser
 #' @examples
 
 getmzML <- function(search_df) {
-  ext <-  sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(search_df$filename))
+  ext <-  gsub(pattern = "[[:print:]]*\\.(.*)$", replacement = "\\1", basename(search_df$filename))
   mzmlfile = search_df$filename
   if (ext != "mzML") {
     outdir = getwd()
@@ -60,10 +62,24 @@ getmzML <- function(search_df) {
 #'
 #' @examples
 
-get_search_object <- function(searchmzml, zoom = c(0.5,4)) {
+get_search_object <- function(searchmzml, zoom = c(1,4)) {
   scans <- which(names(searchmzml$mzML$run$spectrumList) == "spectrum")
   times <- sapply(scans, gettime, mzml=searchmzml)
-  peak_scans <- scans[which(times >= searchmzml$search_df$rt_start & times <= searchmzml$search_df$rt_end)]
+  mslevels <- sapply(scans, getmslevel, mzml=searchmzml)
+  precursors <- sapply(scans, getprecursor, mzml=searchmzml)
+  
+  all_scans <- scans[which(times >= searchmzml$search_df$rt_start & times <= searchmzml$search_df$rt_end)]
+  ms1scans <- all_scans[which(mslevels[all_scans] == 1)]
+  if (searchmzml$search_df$ms2exp == "data-independent acquisition (DIA/AIF)" | searchmzml$search_df$ms2exp == "DIA") {
+    ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
+  }
+  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA") {
+    ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - as.numeric(searchmzml$search_df$isowidth) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + as.numeric(searchmzml$search_df$isowidth))]
+  }
+  if (searchmzml$search_df$ms2exp == "SWATH") {
+    ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - (as.numeric(searchmzml$search_df$isowidth)/2) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + (as.numeric(searchmzml$search_df$isowidth)/2))]
+  }
+  peak_scans <- sort(c(ms1scans, ms2scans))
   mz <- searchmzml$search_df$precursormz
   masserror <- searchmzml$search_df$masserror
   minerror <- searchmzml$search_df$minerror
@@ -118,13 +134,13 @@ create_search_ms <- function(searchobj, correl = NULL, ph = NULL, freq = NULL, n
   ms1 <- try(get_ums(searchobj$pt_ms1, correl, ph, freq, normfn, cormethod), silent = TRUE)
   ms2 <- try(get_ums(searchobj$pt_ms2, correl, ph, freq, normfn, cormethod), silent = TRUE)
   #failsafe, for now to perform ums
-  if (is.null(ms1) | class(ms1) == "try-error") {
-    ms1params <- list(correl = NULL, ph = NULL, freq = NULL, normfn = normfn, cormethod = cormethod)
-    ms1 <- get_ums(searchobj$pt_ms1, NULL, NULL, NULL, normfn, cormethod)
+  if (is.null(ms1) | class(ms1) == "try-error" | nrow(ms1) == 0) {
+    ms1params <- optimal_ums(searchobj$pt_ms1, max_correl = correl, max_ph = ph, max_freq = freq, cormethod = cormethod)
+    ms1 <- get_ums(searchobj$pt_ms1, as.numeric(ms1params["correl"]), as.numeric(ms1params["ph"]), as.numeric(ms1params["freq"]), normfn, cormethod)
   }
-  if (is.null(ms2) | class(ms2) == "try-error") {
-    ms2params <- list(correl = NULL, ph = NULL, freq = NULL, normfn = normfn, cormethod = cormethod)
-    ms2 <- get_ums(searchobj$pt_ms2, NULL, NULL, NULL, normfn, cormethod)
+  if (is.null(ms2) | class(ms2) == "try-error" | nrow(ms2) == 0) {
+    ms2params <- optimal_ums(searchobj$pt_ms2, max_correl = correl, max_ph = ph, max_freq = freq, cormethod = cormethod)
+    ms2 <- get_ums(searchobj$pt_ms2, as.numeric(ms2params["correl"]), as.numeric(ms2params["ph"]), as.numeric(ms2params["freq"]), normfn, cormethod)
   }
   list(ums1 = ms1, ms1params = ms1params, ums2 = ms2, ms2params = ms2params, search_df = searchobj$search_df)
 }
@@ -389,6 +405,16 @@ get_compoundid <- function(con, peakid) {
                   ))
 }
 
+get_errorinfo <- function(con, peakid) {
+  DBI::dbGetQuery(conn = con,
+                  paste0(
+                    "SELECT * FROM view_masserror
+                    WHERE peak_id IN (",
+                    paste(peakid, collapse = ","),
+                    ")"
+                  ))
+}
+
 #' Search the database for all compounds with matching precursor ion m/z values
 #'
 #' @param con SQLite database connection 
@@ -399,15 +425,18 @@ get_compoundid <- function(con, peakid) {
 #'
 #' @examples
 
-search_precursor <- function(con, searchms) {
+search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
   msdata <- get_msdata_precursors(con, searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
   peak_ids <- unique(msdata$peak_id)
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
-  ptms2 <- lapply(mslist, create_peak_table_ms2, mass = searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
-  l.ums2 <- lapply(ptms2, get_ums, correl = NULL, ph = NULL, freq = NULL) #need to adjust to be recursive
+  errorinfo <- get_errorinfo(con, peak_ids)
+  opt_params <- get_opt_params(con, peak_ids)
+  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  l.ums2 <- lapply(1:length(ptms2), function(x) get_ums(ptms2[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
   
-  ptms1 <- lapply(mslist, create_peak_table_ms1, mass = searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
-  l.ums1 <- lapply(ptms1, get_ums, correl = NULL, ph = NULL, freq = NULL) #need to adjust to be recursive
+  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  l.ums1 <- lapply(1:length(ptms1), function(x) get_ums(ptms1[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)]))
   
   #match_compare algorithm
   ms2match.scores <- do.call(rbind, lapply(l.ums2, compare_ms, ms1 = searchms$ums2))
@@ -428,7 +457,11 @@ search_precursor <- function(con, searchms) {
   compounds <- get_compoundid(con, peak_ids)
   
   #scoring report
-  data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
+  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
+  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
+  list(result = result,
+       ums2_compare = l.ums2,
+       ums1_compare = l.ums1)
 }
 
 #' Search all mass spectra within database against unknown mass spectrum
@@ -441,15 +474,18 @@ search_precursor <- function(con, searchms) {
 #'
 #' @examples
 
-search_all <- function(con, searchms) {
+search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
-  ptms2 <- lapply(mslist, create_peak_table_ms2, mass = searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
-  l.ums2 <- lapply(ptms2, get_ums, correl = NULL, ph = NULL, freq = NULL) #need to adjust to be recursive
+  errorinfo <- get_errorinfo(con, peak_ids)
+  opt_params <- get_opt_params(con, peak_ids)
+  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  l.ums2 <- lapply(1:length(ptms2), function(x) get_ums(ptms2[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
   
-  ptms1 <- lapply(mslist, create_peak_table_ms1, mass = searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
-  l.ums1 <- lapply(ptms1, get_ums, correl = NULL, ph = NULL, freq = NULL) #need to adjust to be recursive
+  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  l.ums1 <- lapply(1:length(ptms1), function(x) get_ums(ptms1[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)]))
   
   #match_compare algorithm
   ms2match.scores <- do.call(rbind, lapply(l.ums2, compare_ms, ms1 = searchms$ums2))
@@ -469,6 +505,10 @@ search_all <- function(con, searchms) {
   #get compound identities
   compounds <- get_compoundid(con, peak_ids)
   
-  #scoring report, this is broken at the moment BJP
-  data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
+  #scoring report, still doesn't work due to db issues 06152022 BJP
+  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
+  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
+  list(result = result,
+       ums2_compare = l.ums2,
+       ums1_compare = l.ums1)
 }

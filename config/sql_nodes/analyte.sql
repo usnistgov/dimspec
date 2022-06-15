@@ -453,6 +453,22 @@
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
 		INNER JOIN norm_analyte_alias_references car ON ca.alias_type = car.id;
 	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_masserror AS 
+    /* Get the mass error information for all peaks */
+    SELECT 
+      peaks.id AS peak_id, 
+      /* Foreign key to peaks.id */
+      samples.id AS sample_id, 
+      /* Foreign key to samples.id */
+      peaks.precursor_mz AS precursor_mz, 
+      /* Precursor mass of the peak */
+      value FROM qc_data
+      /* msaccuracy value from qc_data */
+    INNER JOIN samples ON qc_data.sample_id = samples.id
+    INNER JOIN peaks ON samples.id = peaks.sample_id
+    WHERE qc_data.name = "msaccuracy"
+    GROUP BY peaks.id;
+	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
 	CREATE TRIGGER IF NOT EXISTS nullify_blank_compounds_inspected_by
