@@ -15,6 +15,14 @@
 #'
 #' @examples
 optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson") {
+  if (ncol(peaktable$peaktable_mass) < min_n_peaks) {min_n_peaks <- 1}
+  opt_ums <- try(get_ums(peaktable, correl = max_correl, ph = max_ph, freq = max_freq), silent = TRUE)
+  if (attr(opt_ums, "class") != "try-error") {
+    if (attr(opt_ums, "numscans") >= min_n_peaks) {
+      #if the optimal settings are good enough for the 
+      return(data.frame(correl = max_correl, ph = max_ph, freq = max_freq, n = attr(opt_ums, "numscans")))
+    }
+  }
   correl_range <- c(seq(from = max_correl, to = 0, by = -correl_bin), NA)
   ph_range <- c(seq(from = max_ph, to = 0, by = -ph_bin), NA)
   freq_range <- c(seq(from = max_freq, to = 0, by = -freq_bin), NA)
