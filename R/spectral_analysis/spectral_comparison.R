@@ -113,6 +113,7 @@ pool.ums <- function(umslist, error = 5, minerror = 0.002) {
 compare_ms <- function(ms1, ms2, error = c(5,5), minerror = c(0.002,0.002), m = 1, n = 0.5) {
   if (length(error) == 1) {error <- rep(error, 2)}
   if (length(minerror) == 1) {minerror <- rep(minerror, 2)}
+  if (nrow(ms1) == 0 | nrow(ms2) == 0) {return(data.frame(dp = NA, rdp = NA))}
   ms1 <- data.frame(mz = ms1[,"mz"], int = ms1[,"int"]/sum(ms1[,"int"]))
   ms2 <- data.frame(mz = ms2[,"mz"], int = ms2[,"int"]/sum(ms2[,"int"]))
   m1 <- ms1[,"mz"]
