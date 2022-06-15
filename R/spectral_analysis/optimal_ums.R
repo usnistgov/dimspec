@@ -29,3 +29,28 @@ optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph 
   combos <- combos[order(combos$n, decreasing = TRUE),]
   combos[1,]
 }
+
+#' Get optimized uncertainty mass spectra parameters for a peak
+#'
+#' @param con SQLite database connection
+#' @param peak_ids integer vector of primary keys for peaks table
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_opt_params <- function(con, peak_ids) {
+  output <- DBI::dbGetQuery(conn = con, 
+                  paste0(
+                    "SELECT * FROM opt_ums_params
+                    WHERE peak_id IN (",
+                    paste(peak_ids, collapse = ","),
+                    ")"
+                  ))
+  data.frame(peak_id = output$peak_id, 
+             mslevel = output$mslevel,
+             correl = suppressWarnings(as.numeric(output$correl)),
+             ph = suppressWarnings(as.numeric(output$ph)),
+             freq = suppressWarnings(as.numeric(output$freq)),
+             n = suppressWarnings(as.numeric(output$n)))
+}
