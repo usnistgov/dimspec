@@ -394,7 +394,7 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
   if (check_valid) {
     res <- httr::GET(url)
     if (dplyr::between(res$status_code, 200, 299)) {
-      message("Endpoint is valid.")
+      message(sprintf("Endpoint %s is valid.", url))
     } else {
       warning(httr::http_status(res)$message)
       execute <- FALSE
