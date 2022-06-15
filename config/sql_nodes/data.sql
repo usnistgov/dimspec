@@ -301,7 +301,7 @@
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS opt_ums_params
+		CREATE TABLE IF NOT EXISTS opt_ums_params
 	  /* table of optimal parameters for uncertainty mass spectra */
 	(
 	peak_id
@@ -311,16 +311,16 @@
 	  INTEGER NOT NULL,
 	/* mslevel for the optimal parameters */
 	correl
-	  TEXT,
+	  REAL,
 	/* optimal correlation limit setting */
 	ph
-	  TEXT,
+	  REAL,
 	/* optimal peak height setting */
 	freq
-	  TEXT,
+	  REAL,
 	/* optimal observational frequency setting */
 	n
-	  TEXT,
+	  INTEGER,
 	/**number of scans using optimal settings */
 	/* Check constraints */
 	 UNIQUE (peak_id, mslevel),

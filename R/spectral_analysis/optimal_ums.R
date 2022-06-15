@@ -19,7 +19,8 @@ optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph 
   opt_ums <- try(get_ums(peaktable, correl = max_correl, ph = max_ph, freq = max_freq), silent = TRUE)
   if (attr(opt_ums, "class") != "try-error") {
     if (attr(opt_ums, "numscans") >= min_n_peaks) {
-      #if the optimal settings are good enough for the 
+      #if the optimal settings are good enough for the requirements, do not do the recursive route
+    
       return(data.frame(correl = max_correl, ph = max_ph, freq = max_freq, n = attr(opt_ums, "numscans")))
     }
   }
@@ -32,8 +33,9 @@ optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph 
   errors <- sapply(results, function(x) attr(x, "class"))
   combos <- cbind(combos, n = n_peaks)
   combos <- combos[which(n_peaks >= min_n_peaks & errors != "try-error"),]
-  norm_combos <- t(t(combos) / c(max_correl, max_ph, max_freq,1))
-  combos <- combos[which.max(rowSums(norm_combos[,1:3])),]
+  norm_combos <- t(t(combos) / c(max_correl, max_ph, max_freq,max(n_peaks, na.rm = TRUE)))
+  norm_combos[which(is.na(norm_combos), arr.ind = TRUE)] <- 0
+  combos <- combos[which.max(rowSums(norm_combos)),]
   combos <- combos[order(combos$n, decreasing = TRUE),]
   combos[1,]
 }
