@@ -101,6 +101,7 @@ create_peak_table_ms1 <- function(peak, mass, masserror = 5, minerror = 0.002, i
   out
 }
 
+# TODO documentation
 getEIC <- function(peak, mass, masserror = 5, minerror = 0.002, mslevel = "MS1") {
   #creates extracted ion chromatogram for a specific mass using the peak list
   mass.diff <- max(masserror*mass/(10^6), minerror)
@@ -121,6 +122,7 @@ getEIC <- function(peak, mass, masserror = 5, minerror = 0.002, mslevel = "MS1")
   list(time = time, intensity = int)
 }
 
+# TODO documentation
 mergems <- function(mslist, peakindex, masserror = 5, minerror = 0.001) {
   ms <- mslist[[peakindex]]
   if (nrow(ms) == 1) {
@@ -147,6 +149,7 @@ mergems <- function(mslist, peakindex, masserror = 5, minerror = 0.001) {
   mergedms
 }
 
+# TODO documentation
 mergemass <- function(masses, ints, scans, addms, ind, masserror, minerror) {
   minmass <- min(min(masses) - min(masses)*masserror/(10^6),min(masses) - minerror)
   maxmass <- max(max(masses) + max(masses)*masserror/(10^6),max(masses) + minerror)
@@ -158,6 +161,7 @@ mergemass <- function(masses, ints, scans, addms, ind, masserror, minerror) {
   output
 }
 
+# TODO documentation
 getmergedind <- function(masses, addms, masserror, minerror) {
   minmass <- min(min(masses) - min(masses)*masserror/(10^6),min(masses) - minerror)
   maxmass <- max(max(masses) + max(masses)*masserror/(10^6),max(masses) + minerror)
@@ -228,6 +232,8 @@ get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "
 }
 
 #' Generate consensus mass spectrum
+#' 
+#' TODO update documentation
 #'
 #' The function extracts the relevant information and sorts it into nested lists for
 #' use in the uncertainty functions
