@@ -1,3 +1,4 @@
+# TODO documentation
 full_import <- function(import_object                  = NULL,
                         file_name                      = NULL,
                         db_conn                        = con,
@@ -423,6 +424,8 @@ full_import <- function(import_object                  = NULL,
                     func_env[names(func_env) %in% names(formals(resolve_peaks))]
       )
     )
+    # TODO uncertainty mass spectrum if applicable
+    
     # _Compounds node ----
     compounds <- do.call(
       resolve_compounds,
@@ -3063,6 +3066,49 @@ resolve_peaks <- function(obj,
     log_ns = log_ns
   )
   return(peak_id)
+}
+
+# TODO stub to add uncertainty mass spectral parameters for a given peak
+resolve_peak_ums_params <- function(obj,
+                                    peak_id,
+                                    ums_params_in = c("optimized_ums_parameters_ms1", "optimized_ums_parameters_ms2"),
+                                    ums_params_table = "opt_ums_params",
+                                    db_conn = con,
+                                    log_ns = "db") {
+  stopifnot(peak_id == as.integer(peak_id))
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = as.list(environment()),
+      conditions = list(
+        obj              = list(c("mode", "list")),
+        peak_id          = list(c("mode", "integer"), c("length", 1), "no_na"),
+        ums_params_in    = list(c("mode", "character"), c("n>=", 1), c("n<=", 2)),
+        ums_params_table = list(c("mode", "character"), c("length", 1)),
+        db_conn          = list(c("length", 1)),
+        log_ns           = list(c("mode", "character"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
+  ums_params <- lapply(
+    get_component(obj, ums_params_in),
+    function(x) {
+      if (!inherits(x, "data.frame")) {
+        bind_rows(x) %>%
+          mutate(peak_id = peak_id)
+      }
+    }
+  ) %>%
+    bind_rows()
+  res <- try(
+    build_db_action("insert", ums_params_table, values = ums_params)
+  )
+  if (inherits(res, "try-error")) {
+    log_it("error", glue::glue('There was a problem inserting records into "{ums_params_table}."'), log_ns)
+    return(ums_params_table)
+  } else {
+    return(NULL)
+  }
 }
 
 
