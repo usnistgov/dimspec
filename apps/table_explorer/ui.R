@@ -3,9 +3,10 @@ dashboardPage(
     skin = "blue",
     title = DB_TITLE,
     header = dashboardHeader(
-        title = img(src = "NIST_logo.png",
-                    height = "40px",
-                    width = "152px")
+        title = a(
+            img(src = "NIST_logo.png"),
+            href = "https://www.nist.gov/programs-projects/measurement-science-and-polyfluoroalkyl-substances-pfas#:~:text=Overview%20of%20the%20NIST%20program%20on%20per-%20and,for%20a%20variety%20of%20commercial%20and%20industrial%20applications."
+        )
     ),
     sidebar = dashboardSidebar(
         if (dev) {
@@ -31,6 +32,7 @@ dashboardPage(
         )
     ),
     body = dashboardBody(
+        tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
         tabItems(
             tabItem("table_viewer",
                     fluidRow(

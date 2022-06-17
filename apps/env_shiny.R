@@ -17,7 +17,8 @@ packs <- c("shiny",
            "shinythemes",
            "DT",
            "httr",
-           "readr")
+           "readr",
+           "readxl")
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 rm(packs)
 RENV_ESTABLISHED_SHINY <- TRUE
