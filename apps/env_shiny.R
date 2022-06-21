@@ -8,7 +8,6 @@ LOGGING_ON   <- TRUE
 DB_CONN_NAME <- "con"
 if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
 if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) source(here::here("R", "compliance.R"))
-if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) source(here::here("R", "compliance.R"))
 packs <- c("shiny",
            "shinyalert",
            "shinydashboard",
@@ -16,12 +15,19 @@ packs <- c("shiny",
            "shinydisconnect",
            "shinythemes",
            "DT",
+           "plotly",
            "httr",
            "readr",
            "readxl")
+packs_TRUE  <- which(packs %in% installed.packages())
+packs_FALSE <- packs[-packs_TRUE]
+if (length(packs_FALSE) > 0) {
+  install.packages(pkgs         = packs_FALSE,
+                   quiet        = TRUE,
+                   dependencies = TRUE)
+}
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 rm(packs)
-RENV_ESTABLISHED_SHINY <- TRUE
 # 
 # # Set up logger ----------------------------------------------------------------
 # # Set this as the name of the "LOGGING" element referring to the API settings
@@ -46,5 +52,7 @@ if (!exists("LOGGING")) {
   )
 }
 require(logger)
+update_logger_settings()
 
+RENV_ESTABLISHED_SHINY <- TRUE
 log_it("info", "Shiny environment established.", "shiny")
