@@ -272,6 +272,20 @@ update_logger_settings <- function() {
            }
          }
   )
-  if (exists("LOGGING_WARNS") && LOGGING_WARNS) log_warnings()
-  if (exists("LOGGING_ERRORS") && LOGGING_ERRORS) log_errors()
+  if (exists("LOGGING_WARNS") && LOGGING_WARNS) {
+    if ("warning" %in% names(globalCallingHandlers())) {
+      if (!stringr::str_detect(paste0(deparse(globalCallingHandlers()$warning), collapse = ""), "logger::log"))
+        log_warnings()
+    } else {
+      log_warnings()
+    }
+  }
+  if (exists("LOGGING_ERRORS") && LOGGING_ERRORS) {
+    if ("error" %in% names(globalCallingHandlers())) {
+      if (!stringr::str_detect(paste0(deparse(globalCallingHandlers()$error), collapse = ""), "logger::log"))
+        log_errors()
+    } else {
+      log_errors()
+    }
+  }
 }
