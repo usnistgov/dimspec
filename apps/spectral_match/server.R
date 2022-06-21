@@ -14,38 +14,22 @@ shinyServer(function(input, output, session) {
     )
   )
   search_fragments_results <- reactiveVal(
-    # tibble(
-    #   fragment_mz = numeric(0),
-    #   formula = numeric(0),
-    #   exactmass = numeric(0),
-    #   mass_error = numeric(0),
-    #   compounds = character(0),
-    #   confidence = character(0)
-    # )
     tibble(
-      fragment_mz = 1,
-      formula = 2,
-      exactmass = 3,
-      mass_error = 4,
-      compounds = "a"
+      formula = character(0),
+      fragment_mz = numeric(0),
+      exactmass = numeric(0),
+      mass_error = numeric(0),
+      compounds = character(0)
     )
   )
   search_compounds_results <- reactiveVal(
-    # tibble(
-    #   compound_id = character(0),
-    #   ms1_dp = numeric(0),
-    #   ms2_dp = numeric(0),
-    #   num_fragments = numeric(0),
-    #   source = character(0),
-    #   confidence = character(0)
-    # )
     tibble(
-      compound_id = 9,
-      ms1_dp = 8,
-      ms2_dp = 7,
-      num_fragments = 6,
-      source = "z",
-      confidence = "y"
+      compound_id = character(0),
+      ms1_dot_product = numeric(0),
+      ms2_dot_product = numeric(0),
+      num_fragments = numeric(0),
+      source = character(0),
+      confidence = character(0)
     )
   )
   mod_search_params <- c(
@@ -60,6 +44,10 @@ shinyServer(function(input, output, session) {
     "mod_upload_parameter_rt_start",
     "mod_upload_parameter_rt_end"
   )
+  
+  # Style adjustments ----
+  runjs("$('.box-body.left').parent().parent().addClass('box-left');")
+  runjs("$('.box-body.right').parent().parent().addClass('box-right');")
   
   # Element Display ----
   observe({
@@ -96,7 +84,8 @@ shinyServer(function(input, output, session) {
   output$data_input_dt_peak_list <- renderDT(
     server = FALSE,
     expr = DT::datatable(
-      data_input_search_parameters(),
+      data_input_search_parameters() %>%
+        select(precursor:rt_end),
       rownames = FALSE,
       selection = "single",
       editable = TRUE,
@@ -137,21 +126,22 @@ shinyServer(function(input, output, session) {
       rownames = FALSE,
       selection = "single",
       autoHideNavigation = TRUE,
-      colnames = c("Fragment m/z", "Elemental Formula", "Exact Mass", "Mass Error (ppm)", "Compounds"),
+      colnames = c("Elemental Formula", "Fragment m/z", "Exact Mass", "Mass Error (ppm)", "Compounds"),
       caption = "Select a row to view the matching fragment.",
       options = list(
         pageLength = 15,
         extensions = c("Responsive", "Buttons"),
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
-          list(className = "dt-center", targets = c(0, 2, 3)),
-          list(className = "dt-left", targets = c(1, 4))
+          list(className = "dt-center", targets = c(1, 2, 3)),
+          list(className = "dt-left", targets = c(0, 4))
         )
       )
     )
   )
   # Data Input observers ----
   observeEvent(data_input_search_parameters(), {
+    req(nrow(data_input_search_parameters()) > 0)
     n_orig <- nrow(data_input_search_parameters())
     n_uniq <- nrow(distinct(data_input_search_parameters()))
     if (!n_orig == n_uniq) {
@@ -170,6 +160,14 @@ shinyServer(function(input, output, session) {
       distinct() %>%
       arrange(rt) %>%
       data_input_search_parameters()
+    updateSelectizeInput(
+      inputId = "search_compounds_mzrt",
+      choices = data_input_search_parameters() %>%
+        mutate(label = glue::glue("{precursor} m/z @ {rt_start} - {rt_end}")) %>%
+        pull(label) %>%
+        setNames(object = 1:length(.),
+                 nm = .)
+    )
   })
   # _Data file upload ----
   observeEvent(input$data_input_filename, {

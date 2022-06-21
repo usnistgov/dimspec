@@ -18,3 +18,15 @@
 .logo > a {
   float: left;
 }
+
+.btn {
+  white-space: normal;
+}
+
+.box-left {
+  padding-right: 7px;
+}
+
+.box-right {
+  padding-left: 8px;
+}

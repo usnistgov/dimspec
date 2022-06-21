@@ -52,11 +52,14 @@ dashboardPage(
                     fluidRow(
                         box(title = "Load Data",
                             width = 4,
+                            solidHeader = TRUE,
+                            status = "primary",
+                            class = "left",
                             fileInput(inputId = "data_input_filename",
                                       label = "Choose a data file (.mzML or .raw)",
                                       multiple = FALSE,
                                       accept = c(".mzML", ".raw"),
-                                      buttonLabel = "Choose File",
+                                      buttonLabel = "Load",
                                       placeholder = "Select a file to begin"
                             ),
                             tags$label("Set instrument parameters"),
@@ -88,6 +91,9 @@ dashboardPage(
                         ),
                         box(title = "Select Data Extraction Parameters",
                             width = 8,
+                            solidHeader = TRUE,
+                            status = "primary",
+                            class = "right",
                             tags$label("Select parameters identifying peakss to examine."),
                             div(class = "flex-container",
                                 actionButton(inputId = "data_input_dt_peak_list_add_row",
@@ -106,7 +112,7 @@ dashboardPage(
                             DTOutput(outputId = "data_input_dt_peak_list"),
                             fileInput(inputId = "data_input_import_search",
                                       label = NULL,
-                                      buttonLabel = "Import Parameters",
+                                      buttonLabel = "Import",
                                       multiple = FALSE,
                                       accept = c(".csv", ".xls", ".xlsx"),
                                       width = "100%",
@@ -130,55 +136,65 @@ dashboardPage(
                     fluidRow(
                         box(title = "Spectral Comparison",
                             width = 12,
+                            solidHeader = TRUE,
+                            status = "primary",
+                            h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
-                                column(6,
-                                       selectizeInput(inputId = "search_compounds_search_type",
-                                                      label = "Search Type",
-                                                      choices = c("Precursor Search" = 1, "All" = 2),
-                                                      selected = 1,
-                                                      multiple = FALSE,
-                                                      width = "100%"),
-                                       selectizeInput(inputId = "search_compounds_mzrt",
-                                                      label = "Feature Location",
-                                                      choices = NULL,
-                                                      selected = NULL,
-                                                      multiple = FALSE,
-                                                      width = "100%"),
+                                column(12,
+                                       fluidRow(
+                                           column(3,
+                                                  selectizeInput(inputId = "search_compounds_search_type",
+                                                                 label = "Search Type",
+                                                                 choices = c("Precursor Search" = 1, "All" = 2),
+                                                                 selected = 1,
+                                                                 multiple = FALSE,
+                                                                 width = "100%")
+                                           ),
+                                           column(9,
+                                                  selectizeInput(inputId = "search_compounds_mzrt",
+                                                                 label = "Feature Location",
+                                                                 choices = NULL,
+                                                                 selected = NULL,
+                                                                 multiple = FALSE,
+                                                                 width = "100%")
+                                           )
+                                       ),
                                        actionButton(inputId = "search_compounds_search_btn",
                                                     label = "Search",
                                                     icon = icon("magnifying-glass", verify_fa = FALSE),
-                                                    width = "100%")
-                                ),
-                                column(6,
+                                                    width = "100%"),
                                        textOutput(outputId = "search_compounds_status")
                                 )
                             ),
-                            span(id = "search_compounds_results_span",
-                                 fluidRow(
-                                     column(12,
-                                            DTOutput(outputId = "search_compounds_dt",
-                                                     width = "100%")
-                                     )
-                                 ),
-                                 fluidRow(
-                                     column(8,
-                                            plotlyOutput(outputId = "search_compounds_butterfly_plot",
-                                                         width = "100%"),
-                                            textOutput(outputId = "search_compounds_method_description")       
-                                     ),
-                                     column(4,
-                                            numericInput(inputId = "search_compounds_uncertainty_iterations",
-                                                         label = "Bootstrap Iterations",
-                                                         value = 1e4,
-                                                         min = 1e2,
-                                                         max = 1e5,
-                                                         step = 1e2),
-                                            actionButton(inputId = "search_compounds_uncertainty_btn",
-                                                         label = "Send to Uncertainty Estimate",
-                                                         width = "100%",
-                                                         icon = icon("arrows-left-right-to-line", verify_fa = FALSE))
-                                     )
-                                 )
+                            fluidRow(
+                                column(12,
+                                       id = "search_compounds_results_span",
+                                       fluidRow(
+                                           column(12,
+                                                  DTOutput(outputId = "search_compounds_dt",
+                                                           width = "100%")
+                                           )
+                                       ),
+                                       fluidRow(
+                                           column(8,
+                                                  plotlyOutput(outputId = "search_compounds_butterfly_plot",
+                                                               width = "100%"),
+                                                  textOutput(outputId = "search_compounds_method_description")       
+                                           ),
+                                           column(4,
+                                                  numericInput(inputId = "search_compounds_uncertainty_iterations",
+                                                               label = "Bootstrap Iterations",
+                                                               value = 1e4,
+                                                               min = 1e2,
+                                                               max = 1e5,
+                                                               step = 1e2),
+                                                  actionButton(inputId = "search_compounds_uncertainty_btn",
+                                                               label = "Send to Uncertainty Estimate",
+                                                               width = "100%",
+                                                               icon = icon("arrows-left-right-to-line", verify_fa = FALSE))
+                                           )
+                                       )
+                                )
                             )
                         )
                     )
@@ -191,6 +207,9 @@ dashboardPage(
                     fluidRow(
                         box(title = "Uncertainty Analysis",
                             width = 12,
+                            solidHeader = TRUE,
+                            status = "primary",
+                            h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
                                 column(6,
                                        textOutput(outputId = "uncertainty_method_description"),  
@@ -216,26 +235,33 @@ dashboardPage(
                     fluidRow(
                         box(title = "Fragment Analysis",
                             width = 12,
+                            solidHeader = TRUE,
+                            status = "primary",
+                            h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
-                                column(6,
-                                       selectizeInput(inputId = "search_fragments_search_type",
-                                                      label = "Search Type",
-                                                      choices = c("Fragment Search" = 1, "All" = 2),
-                                                      selected = 1,
-                                                      multiple = FALSE,
-                                                      width = "100%"),
-                                       selectizeInput(inputId = "search_fragments_mzrt",
-                                                      label = "Feature Location",
-                                                      choices = NULL,
-                                                      selected = NULL,
-                                                      multiple = FALSE,
-                                                      width = "100%"),
+                                column(12,
+                                       fluidRow(
+                                           column(3,
+                                                  selectizeInput(inputId = "search_fragments_search_type",
+                                                                 label = "Search Type",
+                                                                 choices = c("Fragment Search" = 1, "All" = 2),
+                                                                 selected = 1,
+                                                                 multiple = FALSE,
+                                                                 width = "100%")
+                                           ),
+                                           column(9,
+                                                  selectizeInput(inputId = "search_fragments_mzrt",
+                                                                 label = "Feature Location",
+                                                                 choices = NULL,
+                                                                 selected = NULL,
+                                                                 multiple = FALSE,
+                                                                 width = "100%")
+                                           )
+                                       ),
                                        actionButton(inputId = "search_fragments_search_btn",
                                                     label = "Search",
                                                     icon = icon("magnifying-glass", verify_fa = FALSE),
-                                                    width = "100%")
-                                ),
-                                column(6,
+                                                    width = "100%"),
                                        textOutput(outputId = "search_fragments_status")
                                 )
                             ),
@@ -264,6 +290,8 @@ dashboardPage(
                     fluidRow(
                         box(title = "About this tool",
                             width = 12,
+                            solidHeader = TRUE,
+                            status = "primary",
                             height = "calc(100vh - 100px)",
                             includeHTML("about.html")
                         )
