@@ -30,3 +30,8 @@
 .box-right {
   padding-left: 8px;
 }
+
+div.one-line > p {
+  display: inline;
+  padding-top: 2px;
+}

@@ -152,7 +152,7 @@ dashboardPage(
                                            ),
                                            column(9,
                                                   selectizeInput(inputId = "search_compounds_mzrt",
-                                                                 label = "Feature Location",
+                                                                 label = "Feature of Interest",
                                                                  choices = NULL,
                                                                  selected = NULL,
                                                                  multiple = FALSE,
@@ -213,7 +213,7 @@ dashboardPage(
                             fluidRow(
                                 column(6,
                                        textOutput(outputId = "uncertainty_method_description"),  
-                                       plotlyOutput(outputId = "uncertainty_plot",
+                                       plotlyOutput(outputId = "uncertainty_butterfly_plot",
                                                     width = "100%"),
                                        # If ALL match criteria, then provide a DT object here instead
                                        # Download can go off DT object if using DT ot present
@@ -251,7 +251,7 @@ dashboardPage(
                                            ),
                                            column(9,
                                                   selectizeInput(inputId = "search_fragments_mzrt",
-                                                                 label = "Feature Location",
+                                                                 label = "Feature of Interest",
                                                                  choices = NULL,
                                                                  selected = NULL,
                                                                  multiple = FALSE,
