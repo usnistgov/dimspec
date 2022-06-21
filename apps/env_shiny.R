@@ -50,6 +50,8 @@ if (!exists("LOGGING")) {
     LOGGING,
     logger_settings
   )
+} else if (!LOGGING[[log_ns]]$log) {
+  LOGGING[[log_ns]]$log <- TRUE
 }
 require(logger)
 update_logger_settings()
