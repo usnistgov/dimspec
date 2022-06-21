@@ -47,6 +47,7 @@ dashboardPage(
         tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
         tags$script(type = "text/javascript", jscode),
         tabItems(
+            # Data Input ----
             tabItem("data_input",
                     fluidRow(
                         box(title = "Load Data",
@@ -87,7 +88,7 @@ dashboardPage(
                         ),
                         box(title = "Select Data Extraction Parameters",
                             width = 8,
-                            tags$label("Extraction parameters determine which peaks are selected for examination."),
+                            tags$label("Select parameters identifying peakss to examine."),
                             div(class = "flex-container",
                                 actionButton(inputId = "data_input_dt_peak_list_add_row",
                                              label = "Add",
@@ -121,53 +122,151 @@ dashboardPage(
                         )
                     )
             ),
+            # Search Compounds ----
             tabItem("search_compounds",
-                    # h3("Find compounds for a peak"),
-                    div(id = "search_compounds_overlay",
-                        class = "overlay",
-                        width = "100%",
-                        height = "100%",
-                        h3("Please load data first")),
+                    # div(id = "search_compounds_overlay",
+                    #     class = "overlay",
+                    #     h3("Please load data first")),
                     fluidRow(
-                        column(4,
-                               ),
-                        column(8,
-                               )
+                        box(title = "Spectral Comparison",
+                            width = 12,
+                            fluidRow(
+                                column(6,
+                                       selectizeInput(inputId = "search_compounds_search_type",
+                                                      label = "Search Type",
+                                                      choices = c("Precursor Search" = 1, "All" = 2),
+                                                      selected = 1,
+                                                      multiple = FALSE,
+                                                      width = "100%"),
+                                       selectizeInput(inputId = "search_compounds_mzrt",
+                                                      label = "Feature Location",
+                                                      choices = NULL,
+                                                      selected = NULL,
+                                                      multiple = FALSE,
+                                                      width = "100%"),
+                                       actionButton(inputId = "search_compounds_search_btn",
+                                                    label = "Search",
+                                                    icon = icon("magnifying-glass", verify_fa = FALSE),
+                                                    width = "100%")
+                                ),
+                                column(6,
+                                       textOutput(outputId = "search_compounds_status")
+                                )
+                            ),
+                            span(id = "search_compounds_results_span",
+                                 fluidRow(
+                                     column(12,
+                                            DTOutput(outputId = "search_compounds_dt",
+                                                     width = "100%")
+                                     )
+                                 ),
+                                 fluidRow(
+                                     column(8,
+                                            plotlyOutput(outputId = "search_compounds_butterfly_plot",
+                                                         width = "100%"),
+                                            textOutput(outputId = "search_compounds_method_description")       
+                                     ),
+                                     column(4,
+                                            numericInput(inputId = "search_compounds_uncertainty_iterations",
+                                                         label = "Bootstrap Iterations",
+                                                         value = 1e4,
+                                                         min = 1e2,
+                                                         max = 1e5,
+                                                         step = 1e2),
+                                            actionButton(inputId = "search_compounds_uncertainty_btn",
+                                                         label = "Send to Uncertainty Estimate",
+                                                         width = "100%",
+                                                         icon = icon("arrows-left-right-to-line", verify_fa = FALSE))
+                                     )
+                                 )
+                            )
+                        )
                     )
             ),
+            # Uncertainty ----
             tabItem("uncertainty",
-                    # h3("Evaluate Uncertainty"),
-                    div(id = "uncertainty_overlay",
-                        class = "overlay",
-                        width = "100%",
-                        height = "100%",
-                        h3("Please load data first")),
+                    # div(id = "uncertainty_overlay",
+                    #     class = "overlay",
+                    #     h3("Please load data first")),
                     fluidRow(
-                        column(4,
-                        ),
-                        column(8,
+                        box(title = "Uncertainty Analysis",
+                            width = 12,
+                            fluidRow(
+                                column(6,
+                                       textOutput(outputId = "uncertainty_method_description"),  
+                                       plotlyOutput(outputId = "uncertainty_plot",
+                                                    width = "100%"),
+                                       # If ALL match criteria, then provide a DT object here instead
+                                       # Download can go off DT object if using DT ot present
+                                       verbatimTextOutput(outputId = "uncertainty_summary")
+                                ),
+                                column(6,
+                                       plotlyOutput(outputId = "uncertainty_boxplot",
+                                                    width = "100%")
+                                )
+                            )
                         )
                     )
             ),
+            # Search Fragments ----
             tabItem("search_fragments",
-                    # h3("Find matching fragments"),
-                    div(id = "search_fragments_overlay",
-                        class = "overlay",
-                        width = "100%",
-                        height = "100%",
-                        h3("Please load data first")),
+                    # div(id = "search_fragments_overlay",
+                    #     class = "overlay",
+                    #     h3("Please load data first")),
                     fluidRow(
-                        column(4,
-                        ),
-                        column(8,
+                        box(title = "Fragment Analysis",
+                            width = 12,
+                            fluidRow(
+                                column(6,
+                                       selectizeInput(inputId = "search_fragments_search_type",
+                                                      label = "Search Type",
+                                                      choices = c("Fragment Search" = 1, "All" = 2),
+                                                      selected = 1,
+                                                      multiple = FALSE,
+                                                      width = "100%"),
+                                       selectizeInput(inputId = "search_fragments_mzrt",
+                                                      label = "Feature Location",
+                                                      choices = NULL,
+                                                      selected = NULL,
+                                                      multiple = FALSE,
+                                                      width = "100%"),
+                                       actionButton(inputId = "search_fragments_search_btn",
+                                                    label = "Search",
+                                                    icon = icon("magnifying-glass", verify_fa = FALSE),
+                                                    width = "100%")
+                                ),
+                                column(6,
+                                       textOutput(outputId = "search_fragments_status")
+                                )
+                            ),
+                            span(id = "search_fragments_results_span",
+                                 fluidRow(
+                                     column(12,
+                                            DTOutput(outputId = "search_fragments_dt",
+                                                     width = "100%")
+                                     )
+                                 ),
+                                 fluidRow(
+                                     column(ifelse(rdkit_active(), 6, 12),
+                                            plotlyOutput(outputId = "search_fragments_spectral_plot",
+                                                         width = "100%")
+                                     ),
+                                     column(ifelse(rdkit_active(), 6, 0),
+                                            imageOutput(outputId = "search_fragment_ballstick")
+                                     )
+                                 )
+                            )
                         )
                     )
             ),
+            # About ----
             tabItem("about",
-                    box(title = "About this tool",
-                        width = 12,
-                        height = "90vh",
-                        includeHTML("about.html")
+                    fluidRow(
+                        box(title = "About this tool",
+                            width = 12,
+                            height = "calc(100vh - 100px)",
+                            includeHTML("about.html")
+                        )
                     )
             )
         )
