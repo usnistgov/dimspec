@@ -82,7 +82,10 @@ api_start <- function(plumber_file = NULL,
   if (exists("log_it")) log_it("trace", "Request received to start plumber API.", "api")
   attempt <- try(
     plumber::pr_run(
-      pr = plumber::pr(plumber_file),
+      pr = plumber::pr(plumber_file) %>%
+        pr_hook("exit", function() {
+          if (exists("log_it")) log_it("info", glue::glue("Plumber API shut down at {Sys.time()}."), "api")
+        }),
       host = on_host,
       port = on_port
     )
@@ -92,11 +95,11 @@ api_start <- function(plumber_file = NULL,
     api_endpoint("active")
   if (success) {
     if (exists("log_it")) {
-      log_it("success", sprintf("Plumber API started from api_start() on %s.", url), "api")
+      log_it("success", glue::glue("Plumber API started at {Sys.time()} from api_start() on {url}."), "api")
     }
   } else {
     if (exists("log_it")) {
-      log_it("error", sprintf("Could not start plumber API using api_start() on %s.", url), "api")
+      log_it("error", glue::glue("Could not start plumber API using api_start() on {url}."), "api")
     }
   }
   if (exists("log_it")) log_fn("end")
@@ -121,8 +124,7 @@ api_open_doc <- function(url = PLUMBER_URL) {
       args       = as.list(environment()),
       conditions = list(
         url      = list(c("mode", "character"), c("length", 1))
-      ),
-      from_fn = "api_open_doc"
+      )
     )
     stopifnot(arg_check$valid)
   } else {
@@ -133,7 +135,7 @@ api_open_doc <- function(url = PLUMBER_URL) {
   if (!stringi::stri_detect(str = url, regex = docs)) {
     url <- sprintf("%s/%s/", url, docs)
   }
-  if (exists("log_it")) log_it("debug", sprintf("Open swagger docs at %s.", url), "api")
+  if (exists("log_it")) log_it("debug", glue::glue("API documentation accessed at {Sys.time()} on {url}."), "api")
   utils::browseURL(url)
   if (exists("log_it")) log_fn("end")
 }
@@ -371,21 +373,25 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
   require(httr)
   url <- parse_url(server_addr)
   kwargs <- list(...)
+  query <- list()
   if (length(kwargs) == 1 && is.null(names(kwargs))) {
     message("Single arguments provided to the ellipsis will be assumed to be query text.")
-    url[["query"]] <- kwargs[[1]]
+    query <- kwargs[[1]]
   } else {
     if (!is.null(names(kwargs))) {
       if (any(names(kwargs) == "")) warning("All arguments should be named if any are.")
       for (kwarg in names(kwargs)[!names(kwargs) == ""]) {
         if (kwarg %in% names(url)) {
           url[[kwarg]] <- kwargs[[kwarg]]
+        } else {
+          query <- append(query, setNames(kwargs[[kwarg]], kwarg))
         }
       }
     } else {
       warning("If more than one ellipsis argument is provided they must be named.")
     }
   }
+  url$query <- append(url$query, query)
   if (url$hostname == "data.nist.gov" && !is.null(url$fragment)) {
     url$path <- paste0(url$path, "#", url$fragment, collapse = "/")
     url$fragment <- NULL
@@ -406,7 +412,7 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
       utils::browseURL(url)
     } else {
       return_format <- match.arg(return_format)
-      out <- httr::content(httr::GET(url))
+      out <- httr::content(res)
       out <- switch(return_format,
                     "vector" = unlist(out),
                     "data.frame" = out %>% bind_rows(),
