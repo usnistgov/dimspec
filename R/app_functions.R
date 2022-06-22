@@ -26,16 +26,17 @@ support_info <- function(app_info = TRUE) {
     system          = sessionInfo(),
     project_dir     = getwd(),
     files_available = sort(list.files(full.names = TRUE, recursive  = TRUE)),
-    packs_installed = sort(installed.packages()[, 3]),
+    packs_installed = sort(installed.packages()[, 3]) %>% as.list(),
     packs_active    = sort((.packages()))
   )
   if (app_info) {
     if (exists("log_it")) log_it("debug", "Gathering application information...")
     global <- as.list(.GlobalEnv)
     app <- list(
-      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grepl("DB_", sort(names(global)))] else "Not set",
+      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grep("DB_", sort(names(global)), value = TRUE)] else "Not set",
       BUILD_FILE      = if (exists("DB_BUILD_FILE")) {
-        fpath <- list.files(pattern = DB_BUILD_FILE,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_BUILD_FILE,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_BUILD_FILE,
@@ -45,7 +46,8 @@ support_info <- function(app_info = TRUE) {
         "Not set"
       },
       BUILD_FILE_FULL = if (exists("DB_BUILD_FULL")) {
-        fpath <- list.files(pattern = DB_BUILD_FULL,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_BUILD_FULL,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_BUILD_FULL,
@@ -55,7 +57,8 @@ support_info <- function(app_info = TRUE) {
         "Not set"
       },
       POPULATED_WITH  = if (exists("DB_DATA")) {
-        fpath <- list.files(pattern = DB_DATA,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_DATA,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_DATA,
@@ -91,15 +94,17 @@ support_info <- function(app_info = TRUE) {
           lapply(get_settings,
                  function(x) {
                    if (exists(x)) {
+                     tmp <- eval(sym(x))
                      if (x == "PLUMBER_FILE") {
-                       fpath <- list.files(pattern = x,
+                       fpath <- list.files(path = here::here(),
+                                           pattern = basename(tmp),
                                            full.names = TRUE,
                                            recursive = TRUE)
-                       list(file = eval(sym(x)),
+                       list(file = tmp,
                             exists = !length(fpath) == 0,
                             location = fpath)
                      } else {
-                       eval(sym(x))
+                       tmp
                      }
                    } else {
                      "Not set"
@@ -122,6 +127,7 @@ support_info <- function(app_info = TRUE) {
   } else {
     out <- sys_info
   }
+  out$packs_installed
   log_fn("end")
   return(out)
 }
