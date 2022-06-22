@@ -37,19 +37,58 @@ create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masser
 #'
 #' @examples
 
-getmzML <- function(search_df) {
+getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE) {
   ext <-  gsub(pattern = "[[:print:]]*\\.(.*)$", replacement = "\\1", basename(search_df$filename))
   mzmlfile = search_df$filename
   if (ext != "mzML") {
-    outdir = getwd()
-    mzmlfile <- mzMLconvert(search_df$filename, msconvert = NULL, config = NULL, outdir = outdir)
-    while (!file.exists(paste(outdir, "/convert_done.txt", sep = ""))) {
-      Sys.sleep(1)
+  if (CONVERT == TRUE) {
+      outdir = getwd()
+      mzmlfile <- mzMLconvert(search_df$filename, msconvert = NULL, config = NULL, outdir = outdir)
+      while (!file.exists(paste(outdir, "/convert_done.txt", sep = ""))) {
+        Sys.sleep(1)
+      }
+  }
+    if (CONVERT == FALSE) {
+      stop("The raw file is not an mzML file, please use Proteowizard MSConvert to convert the file to mzML. \n See Documentation for more information.")
     }
   }
-  outmzml <- mzMLtoR(mzmlfile)
+  outmzml <- try(mzMLtoR(mzmlfile), silent = TRUE)
+  if (class(outmzml) == "try-error") {stop("The raw file has not be properly converted to an mzML file, please use Proteowizard MSConvert to convert the file to mzML. \n See Documentation for more information.")}
+  if (CHECKCONVERT == TRUE) {
+    check <- check_mzML_convert(outmzml)
+    if (FALSE %in% check$result) {
+      stop(paste("mzML File was converted incorrectly \n", paste(check$msg[which(check$result == FALSE)], collapse = "\n")))
+    }
+  }
   outmzml$search_df <- search_df
   outmzml
+}
+
+#' Check mzML file for specific MSConvert parameters
+#'
+#' @param mzml list of msdata from `mzMLtoR` function
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check_mzML_convert <- function(mzml) {
+  msconvertdata <- do.call(c, get_msconvert_data(mzml))
+  result <- c(TRUE, TRUE, TRUE)
+  msg <- c("","","")
+  if (length(grep("Conversion to mzML pwiz", msconvertdata)) == 0) {
+    result[1] <- FALSE
+    msg[1] <- "The file must be converted to mzML using Proteowizard MSConver.t"
+  }
+  if (length(grep("peak picking [[:print:]]* pwiz", msconvertdata)) == 0) {
+    result[2] <- FALSE
+    msg[2] <- "You must include a peak picking algorithm when converting the mzML file."
+  }
+  if (length(grep("absolute intensity greater than [[:digit:]]* pwiz", msconvertdata)) == 0) {
+    result[3] <- FALSE
+    msg[3] <- "You should use the threshold function to remove low level signals to reduce the file size."
+  }
+  data.frame(result = result, msg = msg)
 }
 
 #' Generate msdata object from input peak data
