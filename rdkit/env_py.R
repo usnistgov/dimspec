@@ -40,3 +40,5 @@ PYENV_CHANNELS <- "conda-forge"
 # Set the path for advanced conda setups.
 CONDA_PATH <- "auto"
 # CONDA_PATH <- "~/miniforge3/bin/conda" # Example
+
+RENV_ESTABLISHED_RDKIT <- TRUE

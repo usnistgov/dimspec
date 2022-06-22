@@ -84,7 +84,7 @@ function(peak_id = integer(), tidy_spectra = as.logical("true")) {
                         "select * from peak_data where peak_id = ?peak_id",
                         peak_id = peak_id)
   )
-  if (tidy_spectra) {
+  if (tidy_spectra && nrow(ms_data) > 0) {
     ms_data <- tidy_spectra(ms_data)
   }
   return(ms_data)
@@ -109,3 +109,31 @@ function() {
 #* Is the connection valid
 #* @get /active
 function() return(dbIsValid(con))
+
+#* Is RDKit available?
+#* @get /rdkit_active
+function() return(rdkit_active())
+
+
+#* Search for matches in a mass spectrum
+#* @param search_on The type of search to run, either "precursor" or "all". A precursor search limits your search to only the chosen precursor, while searching the entire database may give more results, but will be much slower.
+#* @param search_ms String or JSON expression of the mass spectrum to be searched.
+#* @param norm_fn The normalization function to use as part of the search, one of "sum" or "mean".
+#* @param cor_method The correlation function to use as part of the search; the default is "pearson".
+#* @get /search_ms
+function(search_on = c("precursor", "all"),
+         search_ms = as.character(""),
+         norm_fn = c("sum", "mean"),
+         cor_method = "pearson") {
+  search_on <- match.arg(search_on)
+  norm_fn <- match.arg(norm_fn)
+  search_fn <- switch(
+    search_on,
+    "precursor" = search_precursor,
+    "all" = search_all
+  )
+  out <- search_fn(con, search_ms, norm_fn, cor_method)
+  return(out)
+}
+
+

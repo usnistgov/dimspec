@@ -1,12 +1,15 @@
 # Set up environment -----------------------------------------------------------
 if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
 if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
+if (!"plumber" %in% installed.packages()) install.packages("plumber")
+if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("rdkit", "env_py.R"))
 if (!exists("verify_args")) source(here::here("R", "app_functions.R"))
 if (!exists("manage_connection")) source(here::here("R", "db_comm.R"))
 if (!exists("build_db_action")) source(here::here("R", "api_generator.R"))
 if (!exists("api_start")) source(here::here("plumber", "api_control.R"))
 if (!exists("tidy_spectra")) source(here::here("R", "tidy_spectra.R"))
-packs <- c(DEPENDS_ON, "plumber", "httr")
+if (!exists("rdkit_active")) source(here::here("rdkit", "py_setup.R"))
+packs <- c(DEPENDS_ON, "plumber", "reticulate", "httr")
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 require(logger)
 
@@ -80,4 +83,5 @@ rm(ns, packs)
 
 # Initialize connection --------------------------------------------------------
 manage_connection(db = DB_NAME, conn_name = "con", log_ns = "api")
+rdkit_active(make_if_not = TRUE, log_ns = "api")
 RENV_ESTABLISHED_API <- TRUE
