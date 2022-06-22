@@ -352,8 +352,10 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
 #'   extensions provided here will be ignored.
 #' @param rdkit_name CHR scalar indication the name of the R object bound to
 #'   RDkit OR the name of the R object directly (i.e. without quotes)
-#' @param show LGL scalar of whether to open the file after creation (default:
-#'   FALSE)
+#' @param open_file LGL scalar of whether to open the file after creation
+#'   (default: FALSE)
+#' @param show LGL scalar of whether to return the image itself as an object
+#'   (default: FALSE)
 #'
 #' @return None, or displays the resulting picture if `show == TRUE`
 #' @export
@@ -361,7 +363,13 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
 #' @examples
 #' caffeine <- "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12"
 #' molecule_picture(caffeine, show = TRUE)
-molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_name = "rdk", show = FALSE, log_ns = NULL) {
+molecule_picture <- function(mol,
+                             mol_type = "smiles",
+                             file_name = NULL,
+                             rdkit_name = "rdk",
+                             open_file = FALSE,
+                             show = FALSE,
+                             log_ns = NULL) {
   if (exists("log_it")) {
     logging <- TRUE
     log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
@@ -375,25 +383,34 @@ molecule_picture <- function(mol, mol_type = "smiles", file_name = NULL, rdkit_n
     stop("Did not recognize '", from_func, "' as a valid RDkit.Chem module.")
   } else {
     molecule <- rdk$Chem[[from_func]](mol)
-    if (!dir.exists("images")) dir.create("images")
-    if (!dir.exists(file.path("images", "molecules"))) dir.create(file.path("images", "molecules"))
-    filepath <- file.path(
+    if (!dir.exists(here::here("images"))) dir.create("images")
+    if (!dir.exists(here::here("images", "molecules"))) dir.create(here::here("images", "molecules"))
+    filepath <- here::here(
       "images",
       "molecules",
       sprintf(
         "%s.png",
         ifelse(
           is.null(file_name),
-          paste0(sample(c(letters, 0:9), 10, replace = TRUE), collapse = ""),
+          mol,
           tools::file_path_sans_ext(file_name)
         )
       )
     )
-    picture <- try(rdk$Chem$Draw$MolToFile(molecule, filepath))
-    successful <- !"try-error" %in% class(picture)
+    file_exists <- file.exists(filepath)
+    if (file_exists) {
+      picture <- imager::load.image(filepath)
+    } else {
+      picture <- try(rdk$Chem$Draw$MolToFile(molecule, filepath))
+    }
+    successful <- !inherits(picture, "try-error")
     if (successful) {
-      if (logging) log_it("success", sprintf('File created at "%s"', filepath), log_ns)
-      if (show) file.show(filepath)
+      if (logging) log_it("success", sprintf('File %s at "%s"', ifelse(file_exists, "located", "created"), filepath), log_ns)
+      if (open_file) {
+        file.show(filepath)
+      } else if (show) {
+        return(picture)
+      }
     } else {
       if (logging) log_it("error", "There was a problem drawing this molecule.", log_ns)
       filepath <- NA

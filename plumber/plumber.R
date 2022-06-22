@@ -1,30 +1,32 @@
 #* @apiTitle API Guide: NIST HRMS Database
 #* @apiDescription This plumber API requires a current copy of the NIST high-resolution accurate-mass spectrometry database.
+#* @apiVersion 0.1
+#* @apiLicense NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software. NIST-developed software is expressly provided "AS IS." NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE. You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States. This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties. Pursuant to title 17 Section 105 of the United States Code this software is not subject to copyright protection and is in the public domain. It is an experimental system. NIST assumes no responsibility whatsoever for its use by other parties, and makes no guarantees, expressed or implied, about its quality, reliability, or any other characteristic. We would appreciate acknowledgement if the software is used. This software can be redistributed and/or modified freely provided that any derivative works bear some notice that they are derived from it, and any modified versions bear some notice that they have been modified.
 
 #* Return data from tables or views as JSON expressions.
-#* @param table_name The name of a single table to which this query applies.
-#* @param column_names A comma-separated list of column names to include (leave blank to include all columns)
-#* @param match_criteria An R LIST expression of matching criteria to be passed to {clause_where} with names matching columns against which to apply. In the simplest case, a direct value is given to the name (e.g. `list(last_name = "Smith")`) for single matches. All match criteria must be their own list item. Values can also be provided as a nested list for more complicated WHERE clauses with names `values`, `exclude`, and `like` that will be recognized. `values` should be the actual search criteria, and if a vector of length greater than one is specified, the WHERE clause becomes an IN clause. `exclude` (LGL scalar) determines whether to apply the NOT operator. `like` (LGL scalar) determines whether this is an equality, list, or similarity. To reverse the example above by issuing a NOT statement, use `list(last_name = list(values = "Smith", exclude = TRUE))`, or to look for all records LIKE (or NOT LIKE) "Smith", set this as `list(last_name = list(values = "Smith", exclude = FALSE, like = TRUE))` (default: "" goes to NULL)
-#* @param match_crit_json A single logical value indicating whether `match_criteria` are provided in JSON format.
-#* @param case_sensitive A single logical value indicating whether to match on a case sensitive basis (the default TRUE searches for values as-provided) or whether to search for value matches by upper, lower, sentence, and title case matches; passed directly to [clause_where] (default: TRUE)
-#* @param and_or One of "AND" or "OR" to be applied to the match criteria (default "OR")
-#* @param limit A single integer value of the maximum number of rows to return  (default 15)
-#* @param distinct A single logical value indicating whether or not to apply the DISTINCT clause to all match criteria (default FALSE)
-#* @param get_all_columns A single logical value indicating whether to force return all columns rather than those identified in column_names; will be set to TRUE automatically if no column names are provided (default FALSE)
-#* @param execute A single logical value indicating whether or not to immediately execute the build query statement (default TRUE, FALSE will instead return the SQL statement to be executed)
-#* @param single_column_as_vector A single logical value indicating whether to collapse results to a vector if they consist of only a single column (default TRUE)
+#* @param table_name:character The name of a single table to which this query applies.
+#* @param column_names:character A comma-separated list of column names to include (leave blank to include all columns)
+#* @param match_criteria:character An R LIST expression of matching criteria to be passed to {clause_where} with names matching columns against which to apply. In the simplest case, a direct value is given to the name (e.g. `list(last_name = "Smith")`) for single matches. All match criteria must be their own list item. Values can also be provided as a nested list for more complicated WHERE clauses with names `values`, `exclude`, and `like` that will be recognized. `values` should be the actual search criteria, and if a vector of length greater than one is specified, the WHERE clause becomes an IN clause. `exclude` (LGL scalar) determines whether to apply the NOT operator. `like` (LGL scalar) determines whether this is an equality, list, or similarity. To reverse the example above by issuing a NOT statement, use `list(last_name = list(values = "Smith", exclude = TRUE))`, or to look for all records LIKE (or NOT LIKE) "Smith", set this as `list(last_name = list(values = "Smith", exclude = FALSE, like = TRUE))` (default: "" goes to NULL)
+#* @param match_crit_json:logical A single logical value indicating whether `match_criteria` are provided in JSON format.
+#* @param case_sensitive:logical A single logical value indicating whether to match on a case sensitive basis (the default TRUE searches for values as-provided) or whether to search for value matches by upper, lower, sentence, and title case matches; passed directly to [clause_where] (default: TRUE)
+#* @param and_or:character One of "AND" or "OR" to be applied to the match criteria (default "OR")
+#* @param limit:int A single integer value of the maximum number of rows to return  (default 15)
+#* @param distinct:logical A single logical value indicating whether or not to apply the DISTINCT clause to all match criteria (default FALSE)
+#* @param get_all_columns:logical A single logical value indicating whether to force return all columns rather than those identified in column_names; will be set to TRUE automatically if no column names are provided (default FALSE)
+#* @param execute:logical A single logical value indicating whether or not to immediately execute the build query statement (default TRUE, FALSE will instead return the SQL statement to be executed)
+#* @param single_column_as_vector:logical A single logical value indicating whether to collapse results to a vector if they consist of only a single column (default TRUE)
 #* @get /table_search
-function(table_name      = as.character("contributors"),
-         column_names    = as.character(""),
-         match_criteria  = as.character(""),
+function(table_name      = "contributors",
+         column_names    = "",
+         match_criteria  = "",
          match_crit_json = FALSE,
-         case_sensitive  = as.logical("true"),
-         and_or          = as.character("AND"),
-         distinct        = as.logical("false"),
-         limit           = as.integer(15),
-         get_all_columns = as.logical("false"),
-         execute         = as.logical("true"),
-         single_column_as_vector = as.logical("true")) {
+         case_sensitive  = TRUE,
+         and_or          = "AND",
+         distinct        = FALSE,
+         limit           = 15L,
+         get_all_columns = FALSE,
+         execute         = TRUE,
+         single_column_as_vector = TRUE) {
   action <- "select"
   params <- as.list(environment())
   params$match_crit_json <- NULL
@@ -75,9 +77,12 @@ function(table_name      = as.character("contributors"),
 }
 
 #* Return mass spectral data for a peak by its internal ID number.
-#* @param peak_id A single integer value of the peak ID for which to retrieve mass spectral data.
+#* @param peak_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
+#* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
 #* @get /peak_data
-function(peak_id = integer(), tidy_spectra = as.logical("true")) {
+function(peak_id = 1L,
+         tidy_spectra = TRUE) {
+  tidy_spectra <- as.logical(tidy_spectra)
   ms_data <- dbGetQuery(
     con,
     DBI::sqlInterpolate(con,
@@ -106,8 +111,47 @@ function() {
   return(out)
 }
 
+#* Plumber ping, a health check endpoint to give outside observers an indication of whether or not this API is running.
+#* @get /_ping
+function(req, res) {
+  res$setHeader("Content-Type", "application/json")
+  res$status <- 200L
+  res$body <- ""
+  return(res)
+}
+
+#* Plumber version, a health check endpoint showing which version of the API is currently running.
+#* @get /version
+function() {
+  if (exists("PLUMBER_VERSION")) {
+    return(PLUMBER_VERSION)
+  } else {
+    "No version recorded."
+  }
+}
+
+#* Project support information, a health check endpoint. This has less information than running support_info() directly in R but should suffice for most troubleshooting and checking.
+#* @get /support_info
+function() {
+  out <- support_info()
+  to_replace <- c("otherPkgs", "loadedOnly")
+  replacements <- lapply(to_replace,
+                         function(x) {
+                           out[["system"]][[x]] <- lapply(out[["system"]][[x]],
+                                                          function(y) {
+                                                            sprintf("%s_%s", y[["Package"]], y[["Version"]])
+                                                          }) %>%
+                             unlist() %>%
+                             unname()
+                         }) %>%
+    setNames(to_replace)
+  out$system[to_replace] <- replacements
+  class(out$system) <- NULL
+  return(out)
+}
+
 #* Is the connection valid
-#* @get /active
+#* @get /db_active
 function() return(dbIsValid(con))
 
 #* Is RDKit available?
@@ -136,4 +180,88 @@ function(search_on = c("precursor", "all"),
   return(out)
 }
 
+#* Molecular ball-and-stick plot of a compound or fragment by its id. Requires RDKit integration. If notation is provided, it must 
+#* @param type The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
+#* @param molecular_notation Character string of the machine readable notation to visualize.
+#* @param compound_id An integer value indicating the compound id.
+#* @param fragment_id An integer value indicating the fragment id.
+#* @param notation_type The type of notation ID to use to generate the visualization. One of "smiles", or "InChI"
+#* @get /molecular_model
+function(type = "notation",
+         molecular_notation = "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12",
+         compound_id = 1L,
+         fragment_id = 1L,
+         notation_type = "smiles",
+         res) {
+  notation_type <- tolower(notation_type)
+  type <- match.arg(arg = tolower(type), choices = c("notation", "compound", "fragment"))
+  notation_type <- match.arg(arg = notation_type, choices = c("smiles", "inchi"))
+  molecular_notation <- switch(
+    type,
+    "notation" = molecular_notation,
+    "compound" = dbGetQuery(con, glue::glue("select distinct alias from view_compound_aliases where compound_id = {compound_id} and alias_type = '{toupper(notation_type)}'"))$alias,
+    "fragment" = dbGetQuery(con, glue::glue("select distinct alias from view_fragment_aliases where fragment_id = {compound_id} and alias_type = '{toupper(notation_type)}'"))$alias
+  )
+  if (notation_type == "inchi" && !str_detect(molecular_notation, "^InChI=")) {
+    molecular_notation <- paste0("InChI=", molcular_notation, collapse = "")
+    if (!str_detect(molecular_notation, "^InChI=1S/")) {
+      molcular_notation <- str_replace(molecular_notation, "^InChI=", "InChI=1S/")
+    }
+  }
+  out <- try(molecule_picture(mol = molecular_notation,
+                              mol_type = tolower(notation_type),
+                              rdkit_name = "rdk",
+                              file_name = NULL,
+                              open_file = FALSE,
+                              show = FALSE)
+  )
+  if (inherits(out, 'try-error')) {
+    return(glue::glue("Could not process {notation} as {notation_type}."))
+  } else {
+    return(out$file)
+  }
+}
+
+#* Molecular ball-and-stick plot of a compound or fragment by its id. Requires RDKit integration. If notation is provided, it must 
+#* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
+#* @param molecular_notation:character Character string of the machine readable notation to visualize.
+#* @param compound_id:int An integer value indicating the compound id.
+#* @param fragment_id:int An integer value indicating the fragment id.
+#* @param notation_type:character The type of notation ID to use to generate the visualization. One of "smiles", or "InChI"
+#* @serializer png
+#* @get /molecular_model/png
+function(type = "notation",
+         molecular_notation = "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12",
+         compound_id = 1L,
+         fragment_id = 1L,
+         notation_type = "smiles",
+         res) {
+  notation_type <- tolower(notation_type)
+  type <- match.arg(arg = tolower(type), choices = c("notation", "compound", "fragment"))
+  notation_type <- match.arg(arg = notation_type, choices = c("smiles", "inchi"))
+  molecular_notation <- switch(
+    type,
+    "notation" = molecular_notation,
+    "compound" = dbGetQuery(con, glue::glue("select distinct alias from view_compound_aliases where compound_id = {compound_id} and alias_type = '{toupper(notation_type)}'"))$alias,
+    "fragment" = dbGetQuery(con, glue::glue("select distinct alias from view_fragment_aliases where fragment_id = {compound_id} and alias_type = '{toupper(notation_type)}'"))$alias
+  )
+  if (notation_type == "inchi" && !str_detect(molecular_notation, "^InChI=")) {
+    molecular_notation <- paste0("InChI=", molcular_notation, collapse = "")
+    if (!str_detect(molecular_notation, "^InChI=1S/")) {
+      molcular_notation <- str_replace(molecular_notation, "^InChI=", "InChI=1S/")
+    }
+  }
+  out <- try(molecule_picture(mol = molecular_notation,
+                              mol_type = tolower(notation_type),
+                              rdkit_name = "rdk",
+                              file_name = NULL,
+                              open_file = FALSE,
+                              show = TRUE)
+  )
+  if (inherits(out, 'try-error')) {
+    return(glue::glue("Could not process {notation} as {notation_type}."))
+  } else {
+    return(grid::grid.raster(out))
+  }
+}
 
