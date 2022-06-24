@@ -3,7 +3,7 @@
 .flex-container {
   display: flex;
   width: 100%;
-  padding: 10px 0px;
+  padding: 0px;
 }
 
 .flex-container > button {
@@ -34,4 +34,17 @@
 div.one-line > p {
   display: inline;
   padding-top: 2px;
+}
+
+.control-label {
+  font-weight: normal;
+}
+
+.nist_shinyalert {
+  
+}
+
+.form-grouping {
+  border-left: 1px solid #ddd;
+  padding-left: 5px;
 }
