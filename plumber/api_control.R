@@ -337,15 +337,16 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #'   Repository treats fragments
 #' @note This only support [httr::GET] requests.
 #'
-#' @param server_addr CHR scalar uniforme resource locator (URL) address of an
-#'   API server (e.g. "https://myapi.com:8080") (defaults to the current
-#'   environment variable "PLUMBER_URL")
+#' @param path CHR scalar of the endpoint path.
 #' @param ... Additional named parameters added to the endpoint, most typically
 #'   the query portion. If only one is provided, it can remain unnamed and a
 #'   query is assumed. If more than one is provided, all must be named. Named
 #'   elements must be components of the return from [httr::parse_url] (see
 #'   https://tools.ietf.org/html/rfc3986) for details of the parsing algorithm;
 #'   unrecognized elements will be ignored.
+#' @param server_addr CHR scalar uniform resource locator (URL) address of an
+#'   API server (e.g. "https://myapi.com:8080") (defaults to the current
+#'   environment variable "PLUMBER_URL")
 #' @param check_valid LGL scalar on whether or not to first check that an
 #'   endpoint returns a valid status code (200-299) (default: TRUE).
 #' @param execute LGL scalar of whether or not to execute the constructed
@@ -365,8 +366,9 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #' @examples
 #' api_endpoint("https://www.google.com/search", list(q = "something"), open_in_browser = TRUE)
 #' api_endpoint("https://www.google.com/search", query = list(q = "NIST Public Data Repository"))
-api_endpoint <- function(server_addr     = PLUMBER_URL,
+api_endpoint <- function(path,
                          ...,
+                         server_addr     = PLUMBER_URL,
                          check_valid     = TRUE,
                          execute         = TRUE,
                          open_in_browser = FALSE,
@@ -374,12 +376,13 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
                          return_format   = c("vector", "data.frame", "list")) {
   require(httr)
   url <- parse_url(server_addr)
+  url$path <- path
   kwargs <- list(...)
   query <- list()
   if (length(kwargs) == 1 && is.null(names(kwargs))) {
     message("Single arguments provided to the ellipsis will be assumed to be query text.")
     query <- kwargs[[1]]
-  } else {
+  } else if (!length(kwargs) == 0) {
     if (!is.null(names(kwargs))) {
       if (any(names(kwargs) == "")) warning("All arguments should be named if any are.")
       for (kwarg in names(kwargs)[!names(kwargs) == ""]) {
