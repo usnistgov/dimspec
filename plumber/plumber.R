@@ -103,15 +103,13 @@ function(table_name      = "contributors",
 #* @param test:logical
 #* @get /compound_data
 function(compound_id = 1L,
-         tidy_spectra = TRUE,
-         test = TRUE) {
-  if (test) return(TRUE)
+         tidy_spectra = TRUE) {
   tidy_spectra <- as.logical(tidy_spectra)
   compound_id <- as.integer(compound_id)
   ms_data <- dbGetQuery(
     con,
     DBI::sqlInterpolate(con,
-                        "select distinct cf.compound_id, cf.peak_id, pd.precursor_mz, pd.base_int, pd.scantime, pd.ms_n, pd.mz, pd.intensity from compound_fragments cf left join peak_data pd on cf.peak_id = pd.peak_id where cf.compound_id = ?compound_id and not cf.peak_id is null",
+                        "select * from compound_data where compound_id = ?compound_id",
                         compound_id = compound_id)
   )
   if (tidy_spectra && nrow(ms_data) > 0) {
