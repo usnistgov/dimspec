@@ -24,10 +24,9 @@ shinyServer(function(input, output, session) {
       confidence = character(0)
     )
   )
-  selected_compound <- reactiveVal(1)
   search_compounds_results_selected <- reactive(
     search_compounds_results() %>%
-      slice(selected_compound())
+      slice(input$search_compounds_dt_rows_selected)
   )
   search_fragments_results <- reactiveVal(
     tibble(
@@ -42,7 +41,7 @@ shinyServer(function(input, output, session) {
   selected_fragment <- reactiveVal(1)
   search_fragments_results_selected <- reactive(
     search_compounds_results() %>%
-      slice(selected_fragment())
+      slice(input$search_fragments_dt_rows_selected)
   )
   mod_search_params <- c(
     "mod_search_parameter_precursor",
@@ -63,21 +62,24 @@ shinyServer(function(input, output, session) {
   
   # Element Display ----
   observe({
-    toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-    toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-    toggleElement("data_input_import", condition = !is.null(user_data()) && nrow(data_input_search_parameters()) > 0)
-    toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-    # toggleElement("search_compounds_results_span", condition = nrow(search_compounds_results()) > 0)
-    # toggleElement("search_fragments_results_span", condition = nrow(search_fragments_results()) > 0)
-    # toggleElement("search_compounds_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
-    # toggleElement("uncertainty_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
-    # toggleElement("search_fragments_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
+    toggleElement("data_input_additional", condition = advanced_use)
+    if (!dev) {
+      toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_process", condition = !is.null(user_data()) && nrow(data_input_search_parameters()) > 0)
+      toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
+      toggleElement("search_compounds_results_span", condition = nrow(search_compounds_results()) > 0)
+      toggleElement("search_fragments_results_span", condition = nrow(search_fragments_results()) > 0)
+      # toggleElement("search_compounds_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
+      # toggleElement("uncertainty_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
+      # toggleElement("search_fragments_overlay", condition = is.null(user_data()) || nrow(data_input_search_parameters()) > 0)
+    }
   })
   
   # Navigation ----
   observeEvent(input$sidebar_menu, {
     if (!dev) {
-      if (!input$sidebar_menu == "data_input" && any(is.null(user_data()), nrow(data_input_search_parameters()) == 0)) {
+      if (!input$sidebar_menu %in% c("data_input", "index", "about") && any(is.null(user_data()), nrow(data_input_search_parameters()) == 0)) {
         shinyalert(title = "Insufficient data",
                    type = "info",
                    showCancelButton = FALSE,
@@ -86,12 +88,13 @@ shinyServer(function(input, output, session) {
                    closeOnClickOutside = TRUE,
                    immediate = TRUE,
                    text = "Please load a data file and select search parameters first.")
-        updateTabsetPanel(inputId = "sidebar_menu",
+        updateTabsetPanel(session = session,
+                          inputId = "sidebar_menu",
                           selected = "data_input")
       }
     }
   })
-  
+
   # DATA INPUT PAGE ----
   # _Reactives ----
   output$data_input_dt_peak_list <- renderDT(
@@ -116,7 +119,6 @@ shinyServer(function(input, output, session) {
   )
   # _Observers ----
   observeEvent(data_input_search_parameters(), {
-    req(nrow(data_input_search_parameters()) > 0)
     n_orig <- nrow(data_input_search_parameters())
     n_uniq <- nrow(distinct(data_input_search_parameters()))
     if (!n_orig == n_uniq) {
@@ -135,40 +137,59 @@ shinyServer(function(input, output, session) {
       distinct() %>%
       arrange(rt) %>%
       data_input_search_parameters()
-    updateSelectizeInput(
-      inputId = "search_compounds_mzrt",
-      choices = data_input_search_parameters() %>%
-        mutate(label = glue::glue("{precursor} m/z @ {rt} ({rt_start} - {rt_end})")) %>%
-        pull(label) %>%
-        setNames(object = 1:length(.),
-                 nm = .)
-    )
-    updateSelectizeInput(
-      inputId = "search_fragments_mzrt",
-      choices = data_input_search_parameters() %>%
-        mutate(label = glue::glue("{precursor} m/z @ {rt} ({rt_start} - {rt_end})")) %>%
-        pull(label) %>%
-        setNames(object = 1:length(.),
-                 nm = .)
-    )
+    if (nrow(data_input_search_parameters()) == 0) {
+      reset("search_compounds_mzrt")
+      reset("search_fragments_mzrt")
+    } else {
+      updateSelectizeInput(
+        session = session,
+        inputId = "search_compounds_mzrt",
+        choices = data_input_search_parameters() %>%
+          mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
+          pull(label) %>%
+          setNames(object = 1:length(.),
+                   nm = .)
+      )
+      updateSelectizeInput(
+        session = session,
+        inputId = "search_fragments_mzrt",
+        choices = data_input_search_parameters() %>%
+          mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
+          pull(label) %>%
+          setNames(object = 1:length(.),
+                   nm = .)
+      )
+    }
+  })
+  observeEvent({
+    input$data_input_isolation_width
+    input$data_input_experiment_type
+    }, {
+    if (input$data_input_isolation_width > app_settings$data_input_isolation_width_warn_threshold) {
+      types <- app_settings$experiment_types
+      experiment_type <- names(types[types == input$data_input_experiment_type])
+      if (!str_detect(experiment_type, "SWATH")) {
+        nist_shinyalert(
+          title = "Abnormal value suspected",
+          type = "info",
+          text = glue::glue("Typically, the value of Isolation Width should be less than 4 Da unless the experiment type is SWATH.")
+        )
+      }
+    }
   })
   # __Data file upload ----
   observeEvent(input$data_input_filename, {
     req(input$data_input_filename)
     fn <- input$data_input_filename
-    if (!valid_file_format(fn$name, c("raw", "mzML"))) {
+    if (!valid_file_format(fn$name, app_settings$data_input_import_file_types)) {
       reset("data_input_filename")
-    } else {
-      # TODO parse uploaded file as either an mzML or a raw file
-      # parse_data(fn$datapath) %>%
-      #   user_data()
     }
   })
   # __Import parameters ----
   observeEvent(input$data_input_import_search, {
     req(input$data_input_import_search)
     fn <- input$data_input_import_search
-    if (!valid_file_format(fn$name, c("csv", "xls", "xlsx"))) {
+    if (!valid_file_format(fn$name, app_settings$data_input_import_search_settings_types)) {
       reset("data_input_import_search")
     } else {
       upload <- switch(
@@ -191,14 +212,9 @@ shinyServer(function(input, output, session) {
       input$mod_upload_parameter_rt_end
     )
     if (any(table(select_cols) > 1)) {
-      shinyalert(
+      nist_shinyalert(
         title = "Duplicate columns detected",
         type = "error",
-        showCancelButton = FALSE,
-        showConfirmButton = TRUE,
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        immediate = TRUE,
         text = "Please select unique columns."
       )
     } else {
@@ -222,16 +238,10 @@ shinyServer(function(input, output, session) {
                                         glue::glue("RT Start <p style='font-weight: bold; color: red;>{rt_start}</p> was after RT End <p style='font-weight: bold;'>{rt_end}</p>.")),
                  message = glue::glue("{msg_prefix} {msg_rt} {msg_rtstart}</p></div>")
           )
-        shinyalert(
+        nist_shinyalert(
           title = "Unreasonable retention times",
           size = "m",
           type = "error",
-          showCancelButton = FALSE,
-          showConfirmButton = TRUE,
-          closeOnEsc = TRUE,
-          closeOnClickOutside = TRUE,
-          immediate = TRUE,
-          html = TRUE,
           text = glue::glue(
             "<p style='font-weight: bold;'>Please address the following issues in the source file '{input$data_input_import_search$name}' and try again.</p><br>{paste0(bad_entries$message, collapse = '')}"
           )
@@ -239,14 +249,9 @@ shinyServer(function(input, output, session) {
       } else {
         which_complete <- complete.cases(upload_parameters)
         if (any(!which_complete)) {
-          shinyalert(
+          nist_shinyalert(
             title = "Incomplete data",
             type = "warning",
-            showCancelButton = FALSE,
-            showConfirmButton = TRUE,
-            closeOnEsc = TRUE,
-            closeOnClickOutside = TRUE,
-            immediate = TRUE,
             text = glue::glue("Some rows (n = {sum(!which_complete)}) in the file \"{input$data_input_import_search$name}\" do not contain values for all parameters. Those rows have been removed. Please adjust your file to contain complete values for all features of interest. Once fixed, you may upload this file again and any duplicates will be automatically removed.")
           )
           upload_parameters <- upload_parameters[which_complete, ]
@@ -302,39 +307,21 @@ shinyServer(function(input, output, session) {
     }
     valid <- TRUE
     if (!input$mod_search_parameter_rt >= input$mod_search_parameter_rt_start) {
-      shinyalert(title = "Data Entry Validation",
-                 size = "s",
-                 showCancelButton = FALSE,
-                 showConfirmButton = TRUE,
-                 closeOnEsc = TRUE,
-                 closeOnClickOutside = TRUE,
-                 immediate = TRUE,
-                 type = "warning",
-                 text = "Retention Time (Centroid) should be after Retention Time (Start).")
+      nist_shinyalert(title = "Data Entry Validation",
+                      type = "warning",
+                      text = "Retention Time (Centroid) should be after Retention Time (Start).")
       valid <- FALSE
     }
     if (!input$mod_search_parameter_rt <= input$mod_search_parameter_rt_end) {
-      shinyalert(title = "Data Entry Validation",
-                 size = "s",
-                 showCancelButton = FALSE,
-                 showConfirmButton = TRUE,
-                 closeOnEsc = TRUE,
-                 closeOnClickOutside = TRUE,
-                 immediate = TRUE,
-                 type = "warning",
-                 text = "Retention Time (Centroid) should be before Retention Time (End).")
+      nist_shinyalert(title = "Data Entry Validation",
+                      type = "warning",
+                      text = "Retention Time (Centroid) should be before Retention Time (End).")
       valid <- FALSE
     }
     if (!input$mod_search_parameter_rt_start <= input$mod_search_parameter_rt_end) {
-      shinyalert(title = "Data Entry Validation",
-                 size = "s",
-                 showCancelButton = FALSE,
-                 showConfirmButton = TRUE,
-                 closeOnEsc = TRUE,
-                 closeOnClickOutside = TRUE,
-                 immediate = TRUE,
-                 type = "warning",
-                 text = "Retention Time (Start) should be before Retention Time (End).")
+      nist_shinyalert(title = "Data Entry Validation",
+                      type = "warning",
+                      text = "Retention Time (Start) should be before Retention Time (End).")
       valid <- FALSE
     }
     if (valid) {
@@ -343,6 +330,36 @@ shinyServer(function(input, output, session) {
         data_input_search_parameters()
       removeModal()
     }
+  })
+  # __Process Data ----
+  observeEvent(input$data_input_process, {
+    required <- grep("data_input", names(input), value = TRUE)
+    required <- required[-grep("dt_peak_list|import_search|filename|_process", required)]
+    req(input$data_input_filename,
+        data_input_search_parameters())
+    sapply(required,
+           function(x) {
+             req(input[[x]])
+           })
+    create_search_df(filename = input$data_input_filename$name,
+                     precursor = data_input_search_parameters$precursor,
+                     masserror = input$data_input_relative_error,
+                     minerror = input$data_input_minimum_error,
+                     rt = data_input_search_parameters$rt,
+                     rt_start = data_input_search_parameters$rt_start,
+                     rt_end = data_input_search_parameters$rt_end,
+                     ms2exp = input$data_input_experiment_type,
+                     isowidth = input$data_input_isolation_width
+    ) %>%
+      getmzML() %>%
+      get_search_object(zoom = input$data_input_search_zoom) %>%
+      create_search_ms(correl = input$data_input_correlation,
+                       ph = input$data_input_ph,
+                       freq = input$data_input_frequency,
+                       normfn = input$data_input_norm_function,
+                       cormethod = input$data_input_correlation_method
+      ) %>%
+      user_data()
   })
   
   # COMPOUND SEARCH PAGE ----
@@ -376,6 +393,7 @@ shinyServer(function(input, output, session) {
   # )
   # _Observers ----
   observeEvent(input$compounds_search_btn, {
+    req(user_data())
     type <- req(input$search_compounds_search_type)
     mzrt <- req(input$search_compounds_mzrt)
     search <- switch(
@@ -383,13 +401,18 @@ shinyServer(function(input, output, session) {
       "1" = search_precursor,
       "2" = search_all
     )
-    # out <- search(data)
-    # search_compounds_results(out)
-  })
-  observeEvent(input$search_compounds_dt_rows_selected, {
-    if (!is.null(input$search_compounds_dt_rows_selected)) {
-      selected_compound(input$search_compounds_dt_rows_selected)
-    }
+    mzrt <- data_input_search_parameters()[mzrt, ]
+    api_endpoint(path            = "search_compounds",
+                 type            = type,
+                 search_ms       = jsonlite::tojson(user_data()),
+                 correlation_max = input$data_input_max_correl,
+                 correlation_bin = input$data_input_correl_bin,
+                 peak_height_max = input$data_input_ph,
+                 peak_height_bin = input$data_input_ph_bin,
+                 frequency_max   = input$data_input_max_freq,
+                 frequency_bin   = input$data_input_freq_bin,
+                 min_n_peaks     = input$data_input_min_n_peaks) %>%
+      search_compounds_results()
   })
   observeEvent(input$search_compounds_uncertainty_btn, {
     # search_compounds_results_selected() %>%
@@ -397,7 +420,7 @@ shinyServer(function(input, output, session) {
     updateTabsetPanel(inputId = "sidebar_menu",
                       selected = "uncertainty")
   })
-  
+
   # UNCERTAINTY PAGE ----
   # _Reactives ----
   # output$uncertainty_butterfly_plot <- renderPlotly(
@@ -414,7 +437,7 @@ shinyServer(function(input, output, session) {
   #   search_compounds_results_selected() %>%
   #     bootstrap_compare_ms()
   # )
-  
+
   # FRAGMENT SEARCH PAGE ----
   # _Reactives ----
   output$search_fragments_dt <- renderDT(
@@ -452,15 +475,10 @@ shinyServer(function(input, output, session) {
     mzrt <- req(input$search_fragments_mzrt)
     search <- switch(
       type,
-      "1" = search_precursor,
-      "2" = search_all
+      "precursor" = search_precursor,
+      "all" = search_all
     )
     # out <- search(data)
     # search_compounds_results(out)
-  })
-  observeEvent(input$search_fragments_dt_rows_selected, {
-    if (!is.null(input$search_fragments_dt_rows_selected)) {
-      selected_fragment(input$search_fragments_dt_rows_selected)
-    }
   })
 })

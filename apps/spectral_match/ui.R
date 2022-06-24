@@ -17,9 +17,12 @@ dashboardPage(
         } else {
             NULL
         },
-        h3(APP_TITLE, style = "padding: 5px; margin: 0px;"),
         sidebarMenu(
             id = "sidebar_menu",
+            menuItem("Home",
+                     tabName = "index",
+                     icon = icon("house", verify_fa = FALSE)
+            ),
             menuItem("Data Input",
                      tabName = "data_input",
                      icon = icon("file")
@@ -47,54 +50,212 @@ dashboardPage(
         tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
         tags$script(type = "text/javascript", jscode),
         tabItems(
+            # Home Page ----
+            tabItem("index",
+                    h3(APP_TITLE, style = "margin: 0px;"),
+                    includeHTML("index.html")
+            ),
             # Data Input ----
             tabItem("data_input",
                     fluidRow(
-                        box(title = "Load Data",
-                            width = 4,
-                            solidHeader = TRUE,
-                            status = "primary",
-                            class = "left",
-                            fileInput(inputId = "data_input_filename",
-                                      label = "Choose a data file (.mzML or .raw)",
-                                      multiple = FALSE,
-                                      accept = c(".mzML", ".raw"),
-                                      buttonLabel = "Load",
-                                      placeholder = "Select a file to begin"
-                            ),
-                            tags$label("Set instrument parameters"),
-                            numericInput(inputId = "data_input_relative_error",
-                                         label = "Relative Error (ppm)",
-                                         value = 5,
-                                         min = 0.1,
-                                         max = 50,
-                                         step = 0.1
-                            ),
-                            numericInput(inputId = "data_input_minimum_error",
-                                         label = "Minimum Error (Da)",
-                                         value = 0.002,
-                                         min = 0.0001,
-                                         max = 0.5,
-                                         step = 0.0001
-                            ),
-                            selectizeInput(inputId = "data_input_experiment_type",
-                                           label = "MS Experiment Type",
-                                           choices = app_settings$experiment_types
-                            ),
-                            numericInput(inputId = "data_input_isolate_width",
-                                         label = "Isolation Width (Da)",
-                                         value = 0.7,
-                                         min = 0.1,
-                                         max = 100,
-                                         step = 0.1
-                            )
+                        column(4,
+                               style = "padding: 0; margin: 0",
+                               box(title = tagList(icon("file-contract", verify_fa = FALSE),
+                                                   "Load Data"),
+                                   width = 12,
+                                   solidHeader = FALSE,
+                                   status = "primary",
+                                   class = "left",
+                                   with(app_settings,
+                                        tagList(
+                                            tags$label(glue::glue("Choose a data file ({format_list_of_names(data_input_import_file_types)})")),
+                                            div(class = "form-grouping",
+                                                fileInput(inputId = "data_input_filename",
+                                                          label = NULL,
+                                                          width = "100%",
+                                                          multiple = FALSE,
+                                                          accept = data_input_import_file_types,
+                                                          buttonLabel = "Load",
+                                                          placeholder = "Select a file to begin"
+                                                )
+                                            ),
+                                            tags$label("Set Instrument Parameters"),
+                                            div(class = "form-grouping",
+                                                numericInput(inputId = "data_input_relative_error",
+                                                             label = "Relative Error (ppm)",
+                                                             width = "100%",
+                                                             value = data_input_relative_error$value,
+                                                             min = data_input_relative_error$min,
+                                                             max = data_input_relative_error$max,
+                                                             step = data_input_relative_error$step
+                                                ),
+                                                numericInput(inputId = "data_input_minimum_error",
+                                                             label = "Minimum Error (Da)",
+                                                             width = "100%",
+                                                             value = data_input_minimum_error$value,
+                                                             min = data_input_minimum_error$min,
+                                                             max = data_input_minimum_error$max,
+                                                             step = data_input_minimum_error$step
+                                                ),
+                                                selectizeInput(inputId = "data_input_experiment_type",
+                                                               label = "MS Experiment Type",
+                                                               choices = experiment_types,
+                                                               width = "100%",
+                                                ),
+                                                numericInput(inputId = "data_input_isolation_width",
+                                                             label = "Isolation Width (Da)",
+                                                             width = "100%",
+                                                             value = data_input_isolation_width$value,
+                                                             min = data_input_isolation_width$min,
+                                                             max = data_input_isolation_width$max,
+                                                             step = data_input_isolation_width$step
+                                                )
+                                            )
+                                        )
+                                   )
+                               ),
+                               span(id = "data_input_additional",
+                                    box(title = tagList(icon("screwdriver-wrench", verify_fa = FALSE),
+                                                        "Advanced search parameters"),
+                                        width = 12,
+                                        solidHeader = FALSE,
+                                        status = "primary",
+                                        class = "left",
+                                        collapsible = TRUE,
+                                        collapsed = TRUE,
+                                        with(app_settings,
+                                             tagList(
+                                                 h4(style = "color: #3571a5;", "Fine tuning of search parameters should only be done under expert advice."),
+                                                 tags$label("Search object settings"),
+                                                 div(class = "form-grouping",
+                                                     sliderInput(inputId = "data_input_search_zoom",
+                                                                 label = "Search zoom window",
+                                                                 width = "100%",
+                                                                 ticks = data_input_search_zoom$ticks,
+                                                                 value = data_input_search_zoom$value,
+                                                                 min = data_input_search_zoom$min,
+                                                                 max = data_input_search_zoom$max,
+                                                                 step = data_input_search_zoom$step
+                                                     )
+                                                 ),
+                                                 tags$label("Search mass spectra settings"),
+                                                 div(class = "form-grouping",
+                                                     sliderInput(inputId = "data_input_correlation",
+                                                                 label = "Search correlation",
+                                                                 width = "100%",
+                                                                 ticks = data_input_correlation$ticks,
+                                                                 value = data_input_correlation$value,
+                                                                 min = data_input_correlation$min,
+                                                                 max = data_input_correlation$max,
+                                                                 step = data_input_correlation$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_ph",
+                                                                 label = "Search peak height",
+                                                                 width = "100%",
+                                                                 ticks = data_input_ph$ticks,
+                                                                 value = data_input_ph$value,
+                                                                 min = data_input_ph$min,
+                                                                 max = data_input_ph$max,
+                                                                 step = data_input_ph$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_freq",
+                                                                 label = "Search frequency",
+                                                                 width = "100%",
+                                                                 ticks = data_input_freq$ticks,
+                                                                 value = data_input_freq$value,
+                                                                 min = data_input_freq$min,
+                                                                 max = data_input_freq$max,
+                                                                 step = data_input_freq$step
+                                                     ),
+                                                     selectizeInput(inputId = "data_input_norm_function",
+                                                                    label = "Search normalization function",
+                                                                    choices = data_input_normfn,
+                                                                    width = "100%",
+                                                     ),
+                                                     selectizeInput(inputId = "data_input_correlation_method",
+                                                                    label = "Search correlation method",
+                                                                    choices = data_input_cormethod,
+                                                                    width = "100%",
+                                                     )
+                                                 ),
+                                                 tags$label("Search match refinement settings"),
+                                                 div(class = "form-grouping",
+                                                     sliderInput(inputId = "data_input_max_correl",
+                                                                 label = "Maximum correlation",
+                                                                 width = "100%",
+                                                                 ticks = data_input_max_correl$ticks,
+                                                                 value = data_input_max_correl$value,
+                                                                 min = data_input_max_correl$min,
+                                                                 max = data_input_max_correl$max,
+                                                                 step = data_input_max_correl$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_correl_bin",
+                                                                 label = "Correlation bin size",
+                                                                 width = "100%",
+                                                                 ticks = data_input_correl_bin$ticks,
+                                                                 value = data_input_correl_bin$value,
+                                                                 min = data_input_correl_bin$min,
+                                                                 max = data_input_correl_bin$max,
+                                                                 step = data_input_correl_bin$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_max_ph",
+                                                                 label = "Maximum peak height",
+                                                                 width = "100%",
+                                                                 ticks = data_input_max_ph$ticks,
+                                                                 value = data_input_max_ph$value,
+                                                                 min = data_input_max_ph$min,
+                                                                 max = data_input_max_ph$max,
+                                                                 step = data_input_max_ph$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_ph_bin",
+                                                                 label = "Peak height bin size",
+                                                                 width = "100%",
+                                                                 ticks = data_input_ph_bin$ticks,
+                                                                 value = data_input_ph_bin$value,
+                                                                 min = data_input_ph_bin$min,
+                                                                 max = data_input_ph_bin$max,
+                                                                 step = data_input_ph_bin$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_max_freq",
+                                                                 label = "Maximum frequency",
+                                                                 width = "100%",
+                                                                 ticks = data_input_max_freq$ticks,
+                                                                 value = data_input_max_freq$value,
+                                                                 min = data_input_max_freq$min,
+                                                                 max = data_input_max_freq$max,
+                                                                 step = data_input_max_freq$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_freq_bin",
+                                                                 label = "Frequency bin size",
+                                                                 width = "100%",
+                                                                 ticks = data_input_freq_bin$ticks,
+                                                                 value = data_input_freq_bin$value,
+                                                                 min = data_input_freq_bin$min,
+                                                                 max = data_input_freq_bin$max,
+                                                                 step = data_input_freq_bin$step
+                                                     ),
+                                                     sliderInput(inputId = "data_input_min_n_peaks",
+                                                                 label = "Minimum number of spectra",
+                                                                 width = "100%",
+                                                                 ticks = data_input_min_n_peaks$ticks,
+                                                                 value = data_input_min_n_peaks$value,
+                                                                 min = data_input_min_n_peaks$min,
+                                                                 max = data_input_min_n_peaks$max,
+                                                                 step = data_input_min_n_peaks$step
+                                                     )
+                                                 )
+                                             )
+                                        )
+                                    )
+                               )
                         ),
-                        box(title = "Select Data Extraction Parameters",
+                        box(title = tagList(icon("magnifying-glass-location", verify_fa = FALSE),
+                                            "Feature Identification"),
                             width = 8,
-                            solidHeader = TRUE,
+                            solidHeader = FALSE,
                             status = "primary",
                             class = "right",
-                            tags$label("Select parameters identifying peakss to examine."),
+                            tags$label("Select parameters identifying peaks to examine."),
                             div(class = "flex-container",
                                 actionButton(inputId = "data_input_dt_peak_list_add_row",
                                              label = "Add",
@@ -114,7 +275,7 @@ dashboardPage(
                                       label = NULL,
                                       buttonLabel = "Import",
                                       multiple = FALSE,
-                                      accept = c(".csv", ".xls", ".xlsx"),
+                                      accept = app_settings$data_input_import_search_settings_types,
                                       width = "100%",
                                       placeholder = "Select a file to import parameters"
                             )
@@ -122,8 +283,8 @@ dashboardPage(
                     ),
                     fluidRow(
                         column(12,
-                               actionButton(inputId = "data_input_import",
-                                            label = "Import Data",
+                               actionButton(inputId = "data_input_process",
+                                            label = "Process Data",
                                             width = "100%")
                         )
                     )
@@ -136,7 +297,7 @@ dashboardPage(
                     fluidRow(
                         box(title = "Spectral Comparison",
                             width = 12,
-                            solidHeader = TRUE,
+                            solidHeader = FALSE,
                             status = "primary",
                             h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
@@ -145,7 +306,7 @@ dashboardPage(
                                            column(3,
                                                   selectizeInput(inputId = "search_compounds_search_type",
                                                                  label = "Search Type",
-                                                                 choices = c("Precursor Search" = 1, "All" = 2),
+                                                                 choices = c("Precursor Search" = "precursor", "All" = "all"),
                                                                  selected = 1,
                                                                  multiple = FALSE,
                                                                  width = "100%")
@@ -207,7 +368,7 @@ dashboardPage(
                     fluidRow(
                         box(title = "Uncertainty Analysis",
                             width = 12,
-                            solidHeader = TRUE,
+                            solidHeader = FALSE,
                             status = "primary",
                             h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
@@ -235,7 +396,7 @@ dashboardPage(
                     fluidRow(
                         box(title = "Fragment Analysis",
                             width = 12,
-                            solidHeader = TRUE,
+                            solidHeader = FALSE,
                             status = "primary",
                             h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
@@ -273,11 +434,11 @@ dashboardPage(
                                      )
                                  ),
                                  fluidRow(
-                                     column(ifelse(rdkit_active(), 6, 12),
+                                     column(ifelse(rdkit_available, 6, 12),
                                             plotlyOutput(outputId = "search_fragments_spectral_plot",
                                                          width = "100%")
                                      ),
-                                     column(ifelse(rdkit_active(), 6, 0),
+                                     column(ifelse(rdkit_available, 6, 0),
                                             imageOutput(outputId = "search_fragment_ballstick")
                                      )
                                  )
@@ -290,7 +451,7 @@ dashboardPage(
                     fluidRow(
                         box(title = "About this tool",
                             width = 12,
-                            solidHeader = TRUE,
+                            solidHeader = FALSE,
                             status = "primary",
                             height = "calc(100vh - 100px)",
                             includeHTML("about.html")

@@ -10,6 +10,10 @@
   flex: auto;
 }
 
+.logo, .navbar {
+  background-color: #222d32 !important;
+}
+
 .logo > * > img {
   width: 76px;
   height: 20px;
