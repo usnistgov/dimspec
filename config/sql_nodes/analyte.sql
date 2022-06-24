@@ -308,6 +308,30 @@
 	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS compound_data AS
+  	/* View raw data from all peaks associated with compounds. */
+  	SELECT DISTINCT
+  		cf.compound_id,
+  			/* internal compound id */
+  		cf.peak_id,
+  			/* internal peak id */
+  		pd.ms_n,
+  			/* mass spectral layer, e.g. MS1, MS2, ... MSn */
+  		pd.precursor_mz,
+  			/* peak precursor ion */
+  		pd.base_int,
+  			/* measured mass of precursor_mz */
+  		pd.scantime,
+  			/* ms scantime for this spectrum */
+  		pd.mz,
+  			/* mass to charge ratios */
+  		pd.intensity
+  			/* measured signal intensities */
+  	FROM compound_fragments cf
+  	LEFT JOIN peak_data pd
+  	ON cf.peak_id = pd.peak_id
+  	WHERE NOT cf.peak_id IS NULL;
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
 		SELECT
@@ -457,18 +481,19 @@
 	CREATE VIEW IF NOT EXISTS view_masserror AS 
     /* Get the mass error information for all peaks */
     SELECT 
-      peaks.id AS peak_id, 
+      p.id AS peak_id, 
       /* Foreign key to peaks.id */
-      samples.id AS sample_id, 
+      s.id AS sample_id, 
       /* Foreign key to samples.id */
-      peaks.precursor_mz AS precursor_mz, 
+      p.precursor_mz AS precursor_mz, 
       /* Precursor mass of the peak */
-      value FROM qc_data
+      qcd.value
       /* msaccuracy value from qc_data */
-    INNER JOIN samples ON qc_data.sample_id = samples.id
-    INNER JOIN peaks ON samples.id = peaks.sample_id
-    WHERE qc_data.name = "msaccuracy"
-    GROUP BY peaks.id;
+    FROM qc_data qcd
+    INNER JOIN samples s ON qcd.sample_id = s.id
+    INNER JOIN peaks p ON s.id = p.sample_id
+    WHERE qcd.name = "msaccuracy"
+    GROUP BY p.id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
