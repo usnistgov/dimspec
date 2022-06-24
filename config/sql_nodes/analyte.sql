@@ -191,14 +191,14 @@
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
-		fragment_id
+		annotated_fragment_id
 			INTEGER,
 			/* foreign key to annotated_fragments */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE SET NULL,
-		FOREIGN KEY (fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (annotated_fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS annotated_fragments
@@ -321,11 +321,12 @@
 				/* annotated fragments mz field */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments_stats AS 
+	  /* Summarization view of statistics associated with compound fragments, including the number of times they have recorded, their measured masses, and ppm error as compared with nominal exact masses. */
 		SELECT
 			c.id as compound_id,
 				/* compounds.id field */
@@ -359,7 +360,7 @@
 			  /* Sample standard deviation of the part per million error values at which the fragment has been measured */ 
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.id 
 		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = vfms.fragment_id 
@@ -377,7 +378,7 @@
 				/* distinct number of fragments associated with this compound as the count of associated fragments.formula */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
@@ -403,7 +404,7 @@
       annotated_fragments af 
       INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
   /*magicsplit*/
-  CREATE VIEW view_fragment_mz_stats AS 
+  CREATE VIEW IF NOT EXISTS view_fragment_mz_stats AS 
     /* Mean measures of measured_mz values - a supplementary calculation table. */
     SELECT
       af.fragment_id,

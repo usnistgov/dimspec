@@ -445,7 +445,7 @@ full_import <- function(import_object                  = NULL,
     )
     # _Peak/fragment/compound connection ----
     resolve_compound_fragments(peak_id = peaks,
-                               fragment_id = fragments,
+                               annotated_fragment_id = fragments,
                                compound_id = compounds)
     if (is.null(names(import_object))) {
       log_it("info", "Finished single object import.", log_ns)
@@ -941,36 +941,50 @@ resolve_compound_aliases <- function(obj,
 
 #' Link together peaks, fragments, and compounds
 #'
-#'
+#' This function links together the peaks, annotated_fragments, and compounds
+#' table. This serves as the main connection table conceptually tying together
+#' peaks, the fragments annotated within those peaks, and the compound
+#' identification associated with the peaks. The database supports flexible
+#' assignment wherein compounds may be related to either peaks or annotated
+#' fragments, or both, and vice versa. At least two IDs are required for
+#' linkage; i.e. compounds may not have an acciated peak in the database, but
+#' are known to produce fragments at a particular m/z value. Ideally, all three
+#' are provided to provide traceback from compounds, a complete list of their
+#' annotated fragments, and association with a peak object with data containing
+#' unannotated fragments, which can be traced back to the sample from which it
+#' was drawn and the associated metrological method information.
 #'
 #' @inheritParams add_or_get_id
 #'
-#' @param values LIST item containing items for `peak_id`, `fragment_id`, and
-#'   `compound_id` (default: NULL); used preferentially if provided
+#' @param values LIST item containing items for `peak_id`,
+#'   `annotated_fragment_id`, and `compound_id` (default: NULL); used
+#'   preferentially if provided
 #' @param peak_id INT vector (ideally of length 1) of the peak ID(s) to link;
 #'   ignored if `values` is provided (default: NA)
-#' @param fragment_id INT vector of fragment ID(s) to link; ignored if `values`
-#'   is provided (default: NA)
+#' @param annotated_fragment_id INT vector of fragment ID(s) to link; ignored if
+#'   `values` is provided (default: NA)
 #' @param compound_id INT vector of compound ID(s) to link; ignored if `values`
 #'   is provided (default: NA)
 #' @param linkage_table CHR scalar name of the database table containing
 #'   linkages between peaks, fragments, and compounds (default:
 #'   "compound_fragments")
-#' @param peaks_table CHR scalar name of the database table containing peaks for look up
-#'   (default: "peaks")
-#' @param fragments_table
-#' @param compounds_table
+#' @param peaks_table CHR scalar name of the database table containing peaks for
+#'   look up (default: "peaks")
+#' @param fragments_table CHR scalar name of the table holding annotated
+#'   fragment information
+#' @param compounds_table CHR scalar name of the table holding compound
+#'   information
 #'
-#' @return
+#' @return None, value checks entries and executes database actions
 #' @export
 #' 
 resolve_compound_fragments <- function(values = NULL,
                                        peak_id = NA,
-                                       fragment_id = NA,
+                                       annotated_fragment_id = NA,
                                        compound_id = NA,
                                        linkage_table = "compound_fragments",
                                        peaks_table = "peaks",
-                                       fragments_table = "annotated_fragments",
+                                       annotated_fragments_table = "annotated_fragments",
                                        compounds_table = "compounds",
                                        db_conn = con,
                                        log_ns = "db") {
@@ -992,7 +1006,7 @@ resolve_compound_fragments <- function(values = NULL,
   stopifnot(active_connection(db_conn))
   if (is.null(values)) {
     # Pre check coercion to integer
-    for (check_arg in c("peak_id", "fragment_id", "compound_id")) {
+    for (check_arg in c("peak_id", "annotated_fragment_id", "compound_id")) {
       arg <- environment()[[check_arg]]
       not_na <- which(!is.na(arg))
       if (length(not_na) > 0) {
@@ -1019,7 +1033,7 @@ resolve_compound_fragments <- function(values = NULL,
     }
   }
   # Check presence of IDs
-  for (check_arg in c("peak_id", "fragment_id", "compound_id")) {
+  for (check_arg in c("peak_id", "annotated_fragment_id", "compound_id")) {
     ids <- environment()[[check_arg]]
     ids <- ids[!is.na(ids)]
     if (length(ids) > 0) {
@@ -1063,12 +1077,12 @@ resolve_compound_fragments <- function(values = NULL,
     }
   }
   values <- list(peak_id = as.integer(peak_id),
-                 fragment_id = as.integer(fragment_id),
+                 annotated_fragment_id = as.integer(annotated_fragment_id),
                  compound_id = as.integer(compound_id))
   values <- try(bind_cols(values))
   if (inherits(values, 'try-error')) {
     log_it("error",
-           glue::glue("Lengths of 'compound_id' ({length(compound_id)}), 'peak_id' (length = {length(peak_id)}), and 'fragment_id' (length = {length(fragment_id)}) must be compatible for combination into a data frame."),
+           glue::glue("Lengths of 'compound_id' ({length(compound_id)}), 'peak_id' (length = {length(peak_id)}), and 'annotated_fragment_id' (length = {length(annotated_fragment_id)}) must be compatible for combination into a data frame."),
            log_ns)
     return(NULL)
   }
@@ -1079,7 +1093,7 @@ resolve_compound_fragments <- function(values = NULL,
   if (any(!at_least_two)) {
     n_affected <- length(at_least_two[!at_least_two])
     log_it("warning",
-           glue::glue("At least two of peak_id, compound_id, or fragment_id must evaluate to integer values present in the database for every record being added. This affected {n_affected} record{ifelse(n_affected > 1, 's', '')}."),
+           glue::glue("At least two of peak_id, compound_id, or annotated_fragment_id must evaluate to integer values present in the database for every record being added. This affected {n_affected} record{ifelse(n_affected > 1, 's', '')}."),
            log_ns
     )
     values <- values[at_least_two, ]
@@ -1177,7 +1191,7 @@ resolve_fragments_NTAMRT <- function(obj,
                                      generation_type = NULL,
                                      fragments_in = "annotation",
                                      fragments_table = "annotated_fragments",
-                                     fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
+                                     fragments_norm_table = ref_table_from_map(fragments_table, "annotated_fragment_id"),
                                      fragments_sources_table = "fragment_sources",
                                      citation_info_in = "fragment_citation",
                                      inspection_info_in = "fragment_inspections",

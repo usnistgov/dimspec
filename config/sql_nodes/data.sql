@@ -301,31 +301,31 @@
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
-		CREATE TABLE IF NOT EXISTS opt_ums_params
+	CREATE TABLE IF NOT EXISTS opt_ums_params
 	  /* table of optimal parameters for uncertainty mass spectra */
 	(
-	peak_id
-	  INTEGER NOT NULL,
-	/* foreign key to peaks(id) */
-	mslevel
-	  INTEGER NOT NULL,
-	/* mslevel for the optimal parameters */
-	correl
-	  REAL,
-	/* optimal correlation limit setting */
-	ph
-	  REAL,
-	/* optimal peak height setting */
-	freq
-	  REAL,
-	/* optimal observational frequency setting */
-	n
-	  INTEGER,
-	/**number of scans using optimal settings */
-	/* Check constraints */
-	 UNIQUE (peak_id, mslevel),
-	/* Foreign key relationships */
-	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
+  	peak_id
+  	  INTEGER NOT NULL,
+  	  /* foreign key to peaks(id) */
+  	mslevel
+  	  INTEGER NOT NULL,
+  	  /* mslevel for the optimal parameters */
+  	correl
+  	  REAL,
+  	  /* optimal correlation limit setting */
+  	ph
+  	  REAL,
+  	  /* optimal peak height setting */
+  	freq
+  	  REAL,
+  	  /* optimal observational frequency setting */
+  	n
+  	  INTEGER,
+  	  /* number of scans using optimal settings */
+  	/* Check constraints */
+  	 UNIQUE (peak_id, mslevel),
+  	/* Foreign key relationships */
+  	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 /* Views */
@@ -369,8 +369,10 @@
 		SELECT
 			p.id AS peak_id,
 				/* internal peak id */
-			msd.id AS id,
+			msd.id AS ms_data_id,
 				/* internal id of ms_data */
+			"MS" || msd.ms_n as ms_n,
+			  /* mass spectral layer, e.g. MS1, MS2, ... MSn */
 			p.precursor_mz,
 				/* peak precursor ion */
 			msd.base_int,
@@ -387,18 +389,18 @@
 	CREATE VIEW IF NOT EXISTS peak_spectra AS
 		/* View archived and verified peak spectra for a specific peak */
 		SELECT
-			ps.peak_id,
+			pd.peak_id,
 				/* internal peak id */
-			ps.precursor_mz,
+			pd.precursor_mz,
 				/* peak precursor ion */
-			ps.scantime,
+			pd.scantime,
 				/* ms scantime for this spectrum */
 			mss.mz,
 				/* mass to charge ratio */
 			mss.intensity
 				/* measured signal intensity */
-		FROM peak_data ps
-		INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
+		FROM peak_data pd
+		INNER JOIN ms_spectra mss ON pd.ms_data_id = mss.ms_data_id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
