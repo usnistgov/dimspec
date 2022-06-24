@@ -1,4 +1,5 @@
 dev <- TRUE
+advanced_use <- TRUE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
@@ -27,22 +28,8 @@ if (exists("LOGGING") && LOGGING_ON) {
 
 # Session variables
 if (exists("PLUMBER_URL")) {
-  try <- 1
-  alive <- try(api_endpoint(PLUMBER_URL, path = "active"))
-  if (inherits(alive, "try-error")) {
-    # This may execute faster than the plumber service is able to spin up, so pause for a bit and try it again.
-    # TODO The /correct/ way to treat this would be to poll the service object (no reference here) and wait until it reports that it is alive.
+  if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
     stop("API service does not appear to be available. Please run `api_reload()` and try again.")
-    # Sys.sleep(1)
-    # try <- try + 1
-    # alive <- try(api_endpoint(PLUMBER_URL, path = "active"))
-    # if (try == 5) {
-    #   warning("API endpoint was not active after 5 tries. Restarting API service.")
-    #   api_reload()
-    # }
-    # if (try == 10) {
-    #   stop("API endpoint not active after 10 tries. Aborting app spin up.")
-    # }
   }
 } else {
   stop("This app requires an active API connection.")
@@ -56,11 +43,32 @@ app_settings <- list(
       if (x$name == "none") {
         NULL 
       } else {
-        setNames(x$id, HTML(glue::glue("{x$acronym} ({x$name})")))
+        setNames(x$acronym, HTML(glue::glue("{x$acronym} ({x$name})")))
       }
     }) %>%
-    purrr::flatten()
+    purrr::flatten(),
+  data_input_import_file_types = c(".mzML"),
+  data_input_import_search_settings_types = c(".csv", ".xls", ".xlsx"),
+  data_input_relative_error = list(value = 5, min = 0.1, max = 50, step = 0.1),
+  data_input_minimum_error = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
+  data_input_isolation_width = list(value = 0.7, min = 0.1, max = 100, step = 0.1),
+  data_input_isolation_width_warn_threshold = 4,
+  data_input_search_zoom = list(value = c(1, 4), min = 0, max = 10, step = 0.1, ticks = FALSE),
+  data_input_correlation = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  data_input_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
+  data_input_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
+  data_input_normfn = c("sum", "mean"),
+  data_input_cormethod = c("pearson"),
+  data_input_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  data_input_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  data_input_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
+  data_input_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
+  data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
+  data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
+  data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE)
 )
+
+rdkit_available <- api_endpoint(path = "rdkit_active")
 
 lapply(list.files(here::here("apps", app_dir, "modals"), pattern = ".R", full.names = TRUE),
        source)
