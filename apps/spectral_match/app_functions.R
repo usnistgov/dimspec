@@ -32,3 +32,24 @@ complete_form_entry <- function(input, values, from_shiny = TRUE) {
   }
   return(valid)
 }
+
+#' Call [shinyalert::shinyalert] with specific styling
+#'
+#' This pass through function serves only to call [shinyalert::shinyalert] with
+#' parameters defined by this function, and can be used for additional styling
+#' that may be necessary. It is used solely for consistency sake.
+#'
+#' @inheritParams shinyalert::shinyalert
+#' @seealso shinyalert::shinyalert
+#'
+#' @param ... Additional named parameters to be passed to shinyalert.
+#'   Unrecognized ones will be ignored.
+#'
+#' @return None, fires a shinyalert modal
+#' 
+nist_shinyalert <- function(title, type, text, className = "nist_shinyalert", html = TRUE, closeOnClickOutside = TRUE, immediate = TRUE, ...) {
+  kwargs <- as.list(environment())
+  kwargs <- kwargs[names(kwargs) %in% names(formals(shinyalert::shinyalert))]
+  text <- div(class = "nist_shinyalert_text", text)
+  do.call(shinyalert, args = kwargs)
+}
