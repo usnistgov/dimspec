@@ -335,6 +335,7 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
 #'
 #' @note Special support is provided for the way in which the NIST Public Data
 #'   Repository treats fragments
+#' @note This only support [httr::GET] requests.
 #'
 #' @param server_addr CHR scalar uniforme resource locator (URL) address of an
 #'   API server (e.g. "https://myapi.com:8080") (defaults to the current
@@ -369,6 +370,7 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
                          check_valid     = TRUE,
                          execute         = TRUE,
                          open_in_browser = FALSE,
+                         raw_result      = FALSE,
                          return_format   = c("vector", "data.frame", "list")) {
   require(httr)
   url <- parse_url(server_addr)
@@ -396,9 +398,9 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
     url$path <- paste0(url$path, "#", url$fragment, collapse = "/")
     url$fragment <- NULL
   }
-  url <- build_url(url)
+  url <- build_url(url = url)
   if (check_valid) {
-    res <- httr::GET(url)
+    res <- httr::GET(url = url)
     if (dplyr::between(res$status_code, 200, 299)) {
       message(sprintf("Endpoint %s is valid.", url))
     } else {
@@ -407,12 +409,15 @@ api_endpoint <- function(server_addr     = PLUMBER_URL,
       open_in_browser <- FALSE
     }
   }
+  if (raw_result) {
+    return(httr::GET(url = url))
+  }
   if (execute || open_in_browser) {
     if (open_in_browser) {
-      utils::browseURL(url)
+      utils::browseURL(url = url)
     } else {
       return_format <- match.arg(return_format)
-      out <- httr::content(res)
+      out <- httr::content(x = res)
       out <- switch(return_format,
                     "vector" = unlist(out),
                     "data.frame" = out %>% bind_rows(),
