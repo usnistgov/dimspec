@@ -52,3 +52,12 @@ div.one-line > p {
   border-left: 1px solid #ddd;
   padding-left: 5px;
 }
+
+.centered-image {
+  text-align: center;
+}
+
+a > i {
+  padding-left: 2px;
+  padding-right: 4px;
+}

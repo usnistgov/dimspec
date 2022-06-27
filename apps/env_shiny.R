@@ -11,6 +11,7 @@ if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) sour
 packs <- c("shiny",
            "shinyalert",
            "shinydashboard",
+           "shinycssloaders",
            "shinyjs",
            "shinydisconnect",
            "shinythemes",

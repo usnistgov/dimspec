@@ -333,13 +333,15 @@ dashboardPage(
                                        fluidRow(
                                            column(12,
                                                   DTOutput(outputId = "search_compounds_dt",
-                                                           width = "100%")
+                                                           width = "100%") %>%
+                                                      withSpinner()
                                            )
                                        ),
                                        fluidRow(
                                            column(8,
                                                   plotlyOutput(outputId = "search_compounds_butterfly_plot",
-                                                               width = "100%"),
+                                                               width = "100%") %>%
+                                                      withSpinner(),
                                                   textOutput(outputId = "search_compounds_method_description")       
                                            ),
                                            column(4,
@@ -375,14 +377,16 @@ dashboardPage(
                                 column(6,
                                        textOutput(outputId = "uncertainty_method_description"),  
                                        plotlyOutput(outputId = "uncertainty_butterfly_plot",
-                                                    width = "100%"),
+                                                    width = "100%") %>%
+                                           withSpinner(),
                                        # If ALL match criteria, then provide a DT object here instead
                                        # Download can go off DT object if using DT ot present
                                        verbatimTextOutput(outputId = "uncertainty_summary")
                                 ),
                                 column(6,
                                        plotlyOutput(outputId = "uncertainty_boxplot",
-                                                    width = "100%")
+                                                    width = "100%") %>%
+                                           withSpinner()
                                 )
                             )
                         )
@@ -428,18 +432,25 @@ dashboardPage(
                             ),
                             span(id = "search_fragments_results_span",
                                  fluidRow(
-                                     column(12,
-                                            DTOutput(outputId = "search_fragments_dt",
-                                                     width = "100%")
-                                     )
-                                 ),
-                                 fluidRow(
-                                     column(ifelse(rdkit_available, 6, 12),
+                                     column(4,
                                             plotlyOutput(outputId = "search_fragments_spectral_plot",
-                                                         width = "100%")
+                                                         width = "100%") %>%
+                                                withSpinner(),
+                                            if (rdkit_available) {
+                                                tagList(
+                                                    textOutput(outputId = "search_fragment_ballstick_caption"),
+                                                    span(class = "centered-image",
+                                                         imageOutput(outputId = "search_fragment_ballstick",
+                                                                     height = "300px") %>%
+                                                             withSpinner()
+                                                    )
+                                                )
+                                            }
                                      ),
-                                     column(ifelse(rdkit_available, 6, 0),
-                                            imageOutput(outputId = "search_fragment_ballstick")
+                                     column(8,
+                                            DTOutput(outputId = "search_fragments_dt",
+                                                     width = "100%") %>%
+                                                withSpinner()
                                      )
                                  )
                             )

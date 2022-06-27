@@ -1,9 +1,32 @@
 shinyServer(function(input, output, session) {
   # Live Inspect ----
   observeEvent(input$browser, browser())
+  if (!dev) {
+    if (!active_connection()) {
+      manage_connection(conn_name = "con")
+    }
+  }
   
   # Session Data ----
-  user_data <- reactive(NULL)
+  user_data <- reactiveVal(
+    if (!dev) {
+      NULL
+    } else {
+      bind_rows(
+        tbl(con,
+            "peak_data") %>%
+          filter(ms_n == "MS1") %>%
+          slice_sample(n = 5) %>%
+          collect(),
+        tbl(con,
+            "peak_data") %>%
+          filter(ms_n == "MS2") %>%
+          slice_sample(n = 5) %>%
+          collect()
+      ) %>%
+        tidy_spectra()
+    }
+  )
   data_input_search_upload <- reactiveVal(NULL)
   data_input_search_parameters <- reactiveVal(
     tibble(
@@ -14,34 +37,58 @@ shinyServer(function(input, output, session) {
     )
   )
   search_compounds_results <- reactiveVal(
-    tibble(
-      compound_id = character(0),
-      compound_name = character(0),
-      ms1_dot_product = numeric(0),
-      ms2_dot_product = numeric(0),
-      num_fragments = numeric(0),
-      source = character(0),
-      confidence = character(0)
-    )
+    if (!dev) {
+      tibble(
+        compound_id = character(0),
+        compound_name = character(0),
+        ms1_dot_product = numeric(0),
+        ms2_dot_product = numeric(0),
+        num_fragments = numeric(0),
+        source = character(0),
+        confidence = character(0)
+      )
+    } else {
+      tibble(
+        compound_id = 1:25,
+        compound_name = sapply(1:25, function(x) paste0(sample(letters, 10), collapse = "")),
+        ms1_dot_product = rnorm(25),
+        ms2_dot_product = rnorm(25),
+        num_fragments = sample(1:10, 25, TRUE),
+        source = rep(paste0(sample(letters, 10), collapse = ""), 25),
+        confidence = sample(1:5, 25, TRUE)
+      )
+    }
   )
   search_compounds_results_selected <- reactive(
     search_compounds_results() %>%
-      slice(input$search_compounds_dt_rows_selected)
+      slice(req(input$search_compounds_dt_rows_selected))
   )
   search_fragments_results <- reactiveVal(
-    tibble(
-      fragment_id = integer(0),
-      formula = character(0),
-      fragment_mz = numeric(0),
-      exactmass = numeric(0),
-      mass_error = numeric(0),
-      compounds = character(0)
-    )
+    if (!dev) {
+      tibble(
+        fragment_id = integer(0),
+        formula = character(0),
+        smiles = character(0),
+        fragment_mz = numeric(0),
+        exactmass = numeric(0),
+        mass_error = numeric(0),
+        compounds = character(0)
+      )
+    } else {
+      tbl(con, "view_annotated_fragments") %>%
+        select(id, formula, smiles, mz, fixedmass, ppm_error) %>%
+        mutate(compounds = "") %>%
+        collect() %>%
+        slice(1:25) %>% 
+        setNames(
+          c("fragment_id", "formula", "smiles", "fragment_mz", "exactmass", "mass_error", "compounds")
+        )
+    }
   )
-  selected_fragment <- reactiveVal(1)
+  # selected_fragment <- reactiveVal(1)
   search_fragments_results_selected <- reactive(
-    search_compounds_results() %>%
-      slice(input$search_fragments_dt_rows_selected)
+    search_fragments_results() %>%
+      slice(req(input$search_fragments_dt_rows_selected))
   )
   mod_search_params <- c(
     "mod_search_parameter_precursor",
@@ -103,7 +150,9 @@ shinyServer(function(input, output, session) {
       data_input_search_parameters() %>%
         select(precursor:rt_end),
       rownames = FALSE,
-      selection = "single",
+      selection = list(mode = "single",
+                       target = "row",
+                       selected = 1),
       editable = TRUE,
       autoHideNavigation = TRUE,
       colnames = c("Precursor m/z", "RT", "RT Start", "RT End"),
@@ -369,7 +418,9 @@ shinyServer(function(input, output, session) {
     expr = DT::datatable(
       search_compounds_results(),
       rownames = FALSE,
-      selection = "single",
+      selection = list(mode = "single",
+                       target = "row",
+                       selected = 1),
       autoHideNavigation = TRUE,
       colnames = c("Compound Name/ID", "MS1 Score", "MS2 Score", "# Annotated Fragments", "Source", "Source Confidence"),
       caption = "Select a row to view the match or send it to uncertainty estimation.",
@@ -445,30 +496,54 @@ shinyServer(function(input, output, session) {
     expr = DT::datatable(
       search_fragments_results(),
       rownames = FALSE,
-      selection = "single",
+      selection = list(mode = "single",
+                       target = "row",
+                       selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Elemental Formula", "Fragment m/z", "Exact Mass", "Mass Error (ppm)", "Compounds"),
+      colnames = c("Elemental Formula", "Fragment m/z", "SMILES", "Exact Mass", "Mass Error (ppm)", "Compounds"),
       caption = "Select a row to view the matching fragment.",
       options = list(
+        dom = "tp",
         pageLength = 15,
         extensions = c("Responsive", "Buttons"),
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
-          list(visible = FALSE, targets = 0),
-          list(className = "dt-center", targets = c(2, 3, 4)),
-          list(className = "dt-left", targets = c(1, 5))
+          list(visible = FALSE, targets = c(0, 2)),
+          list(className = "dt-center", targets = c(3, 4, 5)),
+          list(className = "dt-left", targets = c(1, 6))
         )
       )
     )
   )
-  # output$search_fragments_spectral_plot <- renderPlotly(
-  #   search_fragments_results_selected() %>%
-  #     plot_ms()
-  # )
-  # output$search_fragment_ballstick <- renderImage(
-  #   search_fragments_results_selected() %>%
-  #     select()
-  # )
+  output$search_fragments_spectral_plot <- renderPlotly({
+    validate(
+      need(nrow(search_fragments_results()) > 0,
+           message = "Please select a fragment in the table.")
+    )
+  }
+  # A better plot here might be a linked data plot with the fragment highlighted, and the ability to click back and forth between the two.
+    # search_fragments_results_selected() %>%
+    #   plot_ms()
+  )
+  output$search_fragment_ballstick <- renderImage({
+    validate(
+      need(search_fragments_results_selected(),
+           message = "Please select a fragment in the table.")
+    )
+    fragment_id <- search_fragments_results_selected()
+    list(
+      src =  api_endpoint(path = "molecular_model/file",
+                          type = "fragment",
+                          fragment_id = fragment_id$fragment_id),
+      alt = glue::glue("Ball and stick model for a fragment with ID {fragment_id$fragment_id} with SMILES notation {fragment_id$smiles}.")
+    )
+  },
+    deleteFile = FALSE
+  )
+  output$search_fragment_ballstick_caption <- renderText({
+    selected_fragment <- req(search_fragments_results_selected())
+    glue::glue("The fragment measured at m/z {round(selected_fragment$fragment_mz, 4)} has been previously annotated as fragment ID {selected_fragment$fragment_id} with structure {selected_fragment$smiles} and has been previously associated with {selected_fragment$compounds}. The measurement error compared with the expected exact mass is {round(selected_fragment$mass_error, 3)} ppm.")
+  })
   # _Observers ----
   observeEvent(input$fragments_search_btn, {
     type <- req(input$search_fragments_search_type)
