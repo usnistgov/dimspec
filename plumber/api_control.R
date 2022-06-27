@@ -379,6 +379,11 @@ api_endpoint <- function(path,
   url$path <- path
   kwargs <- list(...)
   query <- list()
+  if ("match_criteria" %in% names(kwargs)) {
+    if (!is.character(kwargs$match_criteria)) {
+      kwargs$match_criteria <- deparse(substitute(kwargs$match_criteria))
+    }
+  }
   if (length(kwargs) == 1 && is.null(names(kwargs))) {
     message("Single arguments provided to the ellipsis will be assumed to be query text.")
     query <- kwargs[[1]]
