@@ -1,5 +1,5 @@
 dev <- TRUE
-advanced_use <- TRUE
+advanced_use <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
@@ -65,7 +65,8 @@ app_settings <- list(
   data_input_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
   data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
   data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
-  data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE)
+  data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
+  search_compounds_bootstrap_iterations = list(value = 1e4, min = 1e2, max = 1e5, step = 1e2)
 )
 
 rdkit_available <- api_endpoint(path = "rdkit_active")
@@ -77,3 +78,7 @@ jscode <- HTML("
 $('body').on('shown.bs.modal', (x) =>
   $(x.target).find('input[type=\"number\"]:first').focus())
                ")
+
+# Increase the file upload size to 20 MB
+file_mbs <- 250
+options(shiny.maxRequestSize = file_mbs*1024^2)

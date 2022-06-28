@@ -12,6 +12,7 @@ if (!exists("rdkit_active")) source(here::here("rdkit", "py_setup.R"))
 packs <- c(DEPENDS_ON, "plumber", "reticulate", "httr")
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 require(logger)
+require(plumber)
 
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings

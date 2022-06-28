@@ -3,7 +3,7 @@ dashboardPage(
     title = DB_TITLE,
     header = dashboardHeader(
         title = a(
-            img(src = "NIST_logo.png"),
+            img(src = "NIST-Logo-Brand-White.svg"),
             href = "https://www.nist.gov/programs-projects/measurement-science-and-polyfluoroalkyl-substances-pfas#:~:text=Overview%20of%20the%20NIST%20program%20on%20per-%20and,for%20a%20variety%20of%20commercial%20and%20industrial%20applications."
         )
     ),
@@ -17,6 +17,7 @@ dashboardPage(
         } else {
             NULL
         },
+        h4(style = "padding-left: 15px;", "HRAMS Database for PFAS"),
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("Home",
@@ -52,11 +53,22 @@ dashboardPage(
         tabItems(
             # Home Page ----
             tabItem("index",
-                    h3(APP_TITLE, style = "margin: 0px;"),
+                    h2(APP_TITLE, style = "margin: 0px;"),
+                    hr(),
+                    actionButton(inputId = "index_go_data_input",
+                                 label = "Click Here to Get Started",
+                                 width = "100%",
+                                 icon = icon("circle-play", verify_fa = FALSE)
+                    ),
+                    hr(),
                     includeHTML("index.html")
             ),
             # Data Input ----
             tabItem("data_input",
+                    div(class = "overlay",
+                        id = "data_input_overlay",
+                        img(src = "processing.gif")
+                    ),
                     fluidRow(
                         column(4,
                                style = "padding: 0; margin: 0",
@@ -283,23 +295,48 @@ dashboardPage(
                     ),
                     fluidRow(
                         column(12,
-                               actionButton(inputId = "data_input_process",
+                               actionButton(inputId = "data_input_process_btn",
                                             label = "Process Data",
+                                            icon = icon("circle-play", verify_fa = FALSE),
                                             width = "100%")
+                        ),
+                        column(12,
+                               id = "data_input_next_actions",
+                               h4("Data processed. Choose next action from here or from the navigation menu on the left."),
+                               div(class = "flex-container",
+                                   
+                                   actionButton(inputId = "data_input_go_compound",
+                                                label = "Match Compounds",
+                                                icon = icon("magnifying-glass", verify_fa = FALSE)
+                                   ),
+                                   actionButton(inputId = "data_input_go_uncertainty",
+                                                label = "Evaluate Uncertainty",
+                                                icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
+                                   ),
+                                   actionButton(inputId = "data_input_go_fragment",
+                                                label = "Match Fragments",
+                                                icon = icon("puzzle-piece", verify_fa = FALSE)
+                                   )
+                               )
                         )
                     )
             ),
             # Search Compounds ----
             tabItem("search_compounds",
-                    # div(id = "search_compounds_overlay",
-                    #     class = "overlay",
-                    #     h3("Please load data first")),
+                    div(class = "overlay",
+                        id = "search_compounds_overlay",
+                        img(src = "processing.gif")
+                    ),
                     fluidRow(
-                        box(title = "Spectral Comparison",
+                        box(title = "Compound Matching",
                             width = 12,
                             solidHeader = FALSE,
                             status = "primary",
-                            h4("[USE INSTRUCTIONS HERE]."),
+                            tags$label(
+                                "Select a search type and feature of interest to get started. Features of interest are determined by the list in the",
+                                actionLink(inputId = "search_compounds_go_data_input", "data input"),
+                                "page."
+                            ),
                             fluidRow(
                                 column(12,
                                        fluidRow(
@@ -317,7 +354,8 @@ dashboardPage(
                                                                  choices = NULL,
                                                                  selected = NULL,
                                                                  multiple = FALSE,
-                                                                 width = "100%")
+                                                                 width = "100%",
+                                                                 options = list(placeholder = "Please add search parameters on the Data Input page."))
                                            )
                                        ),
                                        actionButton(inputId = "search_compounds_search_btn",
@@ -331,30 +369,26 @@ dashboardPage(
                                 column(12,
                                        id = "search_compounds_results_span",
                                        fluidRow(
-                                           column(12,
-                                                  DTOutput(outputId = "search_compounds_dt",
-                                                           width = "100%") %>%
-                                                      withSpinner()
-                                           )
-                                       ),
-                                       fluidRow(
-                                           column(8,
+                                           column(4,
                                                   plotlyOutput(outputId = "search_compounds_butterfly_plot",
                                                                width = "100%") %>%
                                                       withSpinner(),
-                                                  textOutput(outputId = "search_compounds_method_description")       
-                                           ),
-                                           column(4,
+                                                  textOutput(outputId = "search_compounds_method_description"),
+                                                  actionButton(inputId = "search_compounds_uncertainty_btn",
+                                                               label = "Estimate Spectral Uncertainty",
+                                                               width = "100%",
+                                                               icon = icon("arrows-left-right-to-line", verify_fa = FALSE)),    
                                                   numericInput(inputId = "search_compounds_uncertainty_iterations",
                                                                label = "Bootstrap Iterations",
-                                                               value = 1e4,
-                                                               min = 1e2,
-                                                               max = 1e5,
-                                                               step = 1e2),
-                                                  actionButton(inputId = "search_compounds_uncertainty_btn",
-                                                               label = "Send to Uncertainty Estimate",
-                                                               width = "100%",
-                                                               icon = icon("arrows-left-right-to-line", verify_fa = FALSE))
+                                                               value = app_settings$search_compounds_bootstrap_iterations$value,
+                                                               min = app_settings$search_compounds_bootstrap_iterations$min,
+                                                               max = app_settings$search_compounds_bootstrap_iterations$max,
+                                                               step = app_settings$search_compounds_bootstrap_iterations$step)
+                                           ),
+                                           column(8,
+                                                  DTOutput(outputId = "search_compounds_dt",
+                                                           width = "100%") %>%
+                                                      withSpinner()
                                            )
                                        )
                                 )
@@ -364,9 +398,10 @@ dashboardPage(
             ),
             # Uncertainty ----
             tabItem("uncertainty",
-                    # div(id = "uncertainty_overlay",
-                    #     class = "overlay",
-                    #     h3("Please load data first")),
+                    div(class = "overlay",
+                        id = "uncertainty_overlay",
+                        img(src = "processing.gif")
+                    ),
                     fluidRow(
                         box(title = "Uncertainty Analysis",
                             width = 12,
@@ -394,9 +429,10 @@ dashboardPage(
             ),
             # Search Fragments ----
             tabItem("search_fragments",
-                    # div(id = "search_fragments_overlay",
-                    #     class = "overlay",
-                    #     h3("Please load data first")),
+                    div(class = "overlay",
+                        id = "search_fragments_overlay",
+                        img(src = "processing.gif")
+                    ),
                     fluidRow(
                         box(title = "Fragment Analysis",
                             width = 12,
@@ -409,7 +445,7 @@ dashboardPage(
                                            column(3,
                                                   selectizeInput(inputId = "search_fragments_search_type",
                                                                  label = "Search Type",
-                                                                 choices = c("Fragment Search" = 1, "All" = 2),
+                                                                 choices = c("Fragment Search" = "fragments", "All" = "all"),
                                                                  selected = 1,
                                                                  multiple = FALSE,
                                                                  width = "100%")
@@ -420,7 +456,8 @@ dashboardPage(
                                                                  choices = NULL,
                                                                  selected = NULL,
                                                                  multiple = FALSE,
-                                                                 width = "100%")
+                                                                 width = "100%",
+                                                                 options = list(placeholder = "Please add search parameters on the Data Input page."))
                                            )
                                        ),
                                        actionButton(inputId = "search_fragments_search_btn",

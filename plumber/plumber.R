@@ -159,7 +159,7 @@ function() {
 function(req, res) {
   res$setHeader("Content-Type", "application/json")
   res$status <- 200L
-  res$body <- "API is live"
+  res$body <- ""
   return(res)
 }
 

@@ -15,8 +15,7 @@
 }
 
 .logo > * > img {
-  width: 76px;
-  height: 20px;
+  width: 210px;
 }
 
 .logo > a {
@@ -27,12 +26,21 @@
   white-space: normal;
 }
 
-.box-left {
-  padding-right: 7px;
+.btn > i, .box-title > i {
+  padding-right: 5px;
+  text-align: center;
 }
 
-.box-right {
-  padding-left: 8px;
+@media (min-width: 768px) {
+  .box-left {
+    padding-right: 7px;
+  }
+}
+
+@media (min-width: 768px) {
+  .box-right {
+    padding-left: 8px;
+  }
 }
 
 div.one-line > p {
@@ -60,4 +68,41 @@ div.one-line > p {
 a > i {
   padding-left: 2px;
   padding-right: 4px;
+  text-align: center !important;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 3;
+  opacity: 0.85;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  color: black;
+}
+.overlay > img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  margin-top: -100px;
+  margin-left: -50px;
+  opacity: 1;
+}
+.overlay > h3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  margin-top: 100px;
+  margin-left: -50px;
+  color: black;
+  opacity: 1;
+  text-align: center;
 }
