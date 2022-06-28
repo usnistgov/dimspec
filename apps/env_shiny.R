@@ -1,15 +1,18 @@
 # Set up environment -----------------------------------------------------------
-if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
-USE_API      <- TRUE
-USE_SHINY    <- TRUE
-INFORMATICS  <- FALSE
-VERIFY_ARGUMENTS <- FALSE
-USE_RDKIT    <- TRUE
-LOGGING_ON   <- TRUE
-DIRECT_CONNECTION <- FALSE
-DB_CONN_NAME <- "con"
-if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
-if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) source(here::here("R", "compliance.R"))
+if (!exists("DB_TITLE")) {
+  stop("Please source the configuration file for this project first at ./R/compliance.R")
+}
+# if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
+# USE_API      <- TRUE
+# USE_SHINY    <- TRUE
+# INFORMATICS  <- FALSE
+# VERIFY_ARGUMENTS <- FALSE
+# USE_RDKIT    <- TRUE
+# LOGGING_ON   <- TRUE
+# DIRECT_CONNECTION <- FALSE
+# DB_CONN_NAME <- "con"
+# if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
+# if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) source(here::here("R", "compliance.R"))
 packs <- c("shiny",
            "shinyalert",
            "shinydashboard",
