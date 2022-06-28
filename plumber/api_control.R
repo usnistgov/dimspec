@@ -407,9 +407,28 @@ api_endpoint <- function(path,
     url$fragment <- NULL
   }
   url <- build_url(url = url)
+  if (path == "_ping") {
+    pinging <- TRUE
+    ping_i <- 1
+    while(pinging) {
+      if (ping_i > 5) {
+        pinging <- FALSE
+        message("API timeout.\n")
+      } else {
+        message(glue::glue("Ping {ping_i} of 5...\n"))
+        if (httr::GET(url = url)$status_code == 200) {
+          message("API is ready.\n")
+          pinging <- FALSE
+        } else {
+          Sys.sleep(1)
+          ping_i<- ping_i + 1
+        }
+      }
+    }
+  }
   if (check_valid) {
     res <- httr::GET(url = url)
-    if (dplyr::between(res$status_code, 200, 299)) {
+    if (res$status_code >= 200 && res$status_code <= 299) {
       message(sprintf("Endpoint %s is valid.", url))
     } else {
       warning(httr::http_status(res)$message)
