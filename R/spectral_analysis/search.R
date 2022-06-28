@@ -147,7 +147,7 @@ get_search_object <- function(searchmzml, zoom = c(1,4)) {
     mslevel = msdata$ms_n[x]))
   pt_ms1 <- create_peak_table_ms1(pl, mass = searchmzml$search_df$precursormz, masserror = searchmzml$search_df$masserror, minerror = searchmzml$search_df$minerror)
   pt_ms2 <- create_peak_table_ms2(pl, mass = searchmzml$search_df$precursormz, masserror = searchmzml$search_df$masserror, minerror = searchmzml$search_df$minerror)
-  list(pt_ms1 = pt_ms1, pt_ms2 = pt_ms2, search_df = search_df)
+  list(pt_ms1 = pt_ms1, pt_ms2 = pt_ms2, search_df = searchmzml$search_df)
 }
 
 
