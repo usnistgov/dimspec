@@ -41,4 +41,47 @@ PYENV_CHANNELS <- "conda-forge"
 CONDA_PATH <- "auto"
 # CONDA_PATH <- "~/miniforge3/bin/conda" # Example
 
+# _[ENSURE R] ------------------------------------------------------------------
+if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) {
+  source(here::here("config", "env_R.R"))
+}
+
+# _[LOGGER] --------------------------------------------------------------------
+# Set this as the name of the "LOGGING" element referring to the API settings
+# from env_logger.R e.g. "API" to refer to LOGGING$API (the default)
+if (exists("LOGGING_ON") && LOGGING_ON) {
+  if (!exists("RENV_ESTABLISHED_LOGGER") || !RENV_ESTABLISHED_LOGGER) source(here::here("config", "env_logger.R"))
+  log_ns <- "RDK"
+  LOG_DIRECTORY <- ifelse(exists("LOG_DIRECTORY"), LOG_DIRECTORY, here::here("logs"))
+  logger_settings <- setNames(
+    list(
+      list(
+        log = TRUE,
+        ns = tolower(log_ns),
+        to = "file",
+        file = file.path(LOG_DIRECTORY, glue::glue("log_{tolower(log_ns)}.txt")),
+        threshold = "info"
+      )
+    ),
+    log_ns
+  )
+  if (!exists("LOGGING")) {
+    LOGGING <- logger_settings
+  } else if (!log_ns %in% names(LOGGING)) {
+    LOGGING <- append(
+      LOGGING,
+      logger_setings
+    )
+  }
+  rm(logger_settings)
+  update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
+}
+# _[FINALIZE] ------------------------------------------------------------------
+require(reticulate)
+source(here::here("rdkit", "py_setup.R"))
+if (!exists("rectify_null_from_env")) {
+  require(magrittr)
+  source(here::here("R", "app_functions.R"))
+}
+rdkit_active(make_if_not = TRUE, log_ns = ifelse(exists("log_ns"), tolower(log_ns), NA_character_))
 RENV_ESTABLISHED_RDKIT <- TRUE
