@@ -82,10 +82,7 @@ api_start <- function(plumber_file = NULL,
   if (exists("log_it")) log_it("trace", "Request received to start plumber API.", "api")
   attempt <- try(
     plumber::pr_run(
-      pr = plumber::pr(plumber_file) %>%
-        pr_hook("exit", function() {
-          if (exists("log_it")) log_it("info", glue::glue("Plumber API shut down at {Sys.time()}."), "api")
-        }),
+      pr = plumber::pr(plumber_file),
       host = on_host,
       port = on_port
     )
@@ -185,9 +182,6 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
   }
   if (exists("log_it")) log_it("debug", "Killing plumber service.", "api")
   pr$kill()
-  if (remove_service_obj) {
-    rm(list = deparse(substitute(pr)), envir = .GlobalEnv)
-  }
   if (!exists(db_conn)) flush <- FALSE
   if (flush) {
     if (exists("log_it")) log_it("debug", "Flushing database connections and reconnecting.", "api")
@@ -195,26 +189,25 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
       manage_connection(conn_name = db_conn, reconnect = F)
     manage_connection(conn_name = db_conn)
   }
+  if (remove_service_obj) {
+    rm(list = deparse(substitute(pr)), envir = .GlobalEnv)
+  }
   if (exists("log_it")) log_fn("end")
 }
 
 #' Reloads the plumber API
+#' 
+#' @inheritParams api_start
+#' @inheritParams api_stop
 #'
-#' @param pr Rterm process object of class "r_process", "process", and "R6"
-#'   created from [plumber::pr_run] if NULL it will be assumed that no plumber
-#'   instance is currently running
 #' @param background LGL scalar of whether to load the plumber server as a
 #'   background service (default: TRUE); set to FALSE for testing
-#' @param on_host CHR scalar of the URL directing to the plumber service;
-#'   default (NULL) obtains its value from that set as PLUMBER_HOST in config/env_R.R
-#' @param on_port CHR scalar of the remote port for the plumber service;
-#'   default (NULL) obtains its value from that set as PLUMBER_PORT in config/env_R.R
 #' @param log_ns CHR scalar namespace to use for logging (default: "api")
 #'
 #' @return None, launches the plumber API service on your local machine
 #' @export
-#'
-api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = NULL, log_ns = "api") {
+#' 
+api_reload <- function(pr = NULL, background = TRUE, plumber_file = NULL, on_host = NULL, on_port = NULL, log_ns = "api") {
   if (exists("log_it")) {
     log_fn("start")
     log_it("debug", "Run api_reload().", log_ns)
@@ -257,8 +250,7 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
     stopifnot(length(plumber_file) == 1)
     stopifnot(file.exists(plumber_file))
   }
-  if (!is.null(pr) && pr$is_alive()) api_stop(pr)
-  pr_name <- obj_name_check(pr, "plumber_service")
+  if (!is.null(pr) && pr$is_alive()) api_stop(pr = pr)
   url <- sprintf("http://%s:%s", on_host, on_port)
   if (exists("log_it")) {
     if (!url == PLUMBER_URL) {
@@ -271,11 +263,12 @@ api_reload <- function(pr = NULL, background = TRUE, on_host = NULL, on_port = N
     log_it("debug", "Calling api_start() from api_reload()", log_ns)
   }
   if (background) {
+    pr_name <- obj_name_check(pr, "plumber_service")
     assign(
       x = pr_name,
       value = callr::r_bg(
-        function() {
-          source(file.path("plumber", "env_plumb.R"))
+        func = function() {
+          source(here::here("plumber", "env_plumb.R"))
           api_start(
             on_host = PLUMBER_HOST,
             on_port = PLUMBER_PORT,
@@ -410,17 +403,20 @@ api_endpoint <- function(path,
   if (path == "_ping") {
     pinging <- TRUE
     ping_i <- 1
+    ping_limit <- 10
     while(pinging) {
-      if (ping_i > 5) {
+      if (ping_i > ping_limit) {
         pinging <- FALSE
-        message("API timeout.\n")
+        stop("API timeout. Check that `plumber_service$is_alive()` or try `api_open_doc` to force a check. You may need to reload with `api_reload()` if the service isn't running.\n")
       } else {
-        message(glue::glue("Ping {ping_i} of 5...\n"))
-        if (httr::GET(url = url)$status_code == 200) {
-          message("API is ready.\n")
+        message(glue::glue("Ping {ping_i} of {ping_limit}...\n"))
+        res <- try(httr::GET(url = url))
+        if (!inherits(res, "try-error")) {
+          message("API is listening.\n")
           pinging <- FALSE
         } else {
-          Sys.sleep(1)
+          message("API server may still be spinning up...\n")
+          Sys.sleep(2)
           ping_i<- ping_i + 1
         }
       }
