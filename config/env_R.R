@@ -129,7 +129,8 @@ if (USE_API) {
 # Whether to spin up Shiny apps. [SET IN env_glob.txt]
 USE_SHINY <- ifelse(exists("USE_SHINY"), USE_SHINY, TRUE)
 if (USE_SHINY) {
-  SHINY_APPS   <- list.dirs(here::here("apps"))
+  SHINY_APPS   <- list.dirs(here::here("apps"), recursive = FALSE)
+  SHINY_APPS   <- SHINY_APPS[!grepl("www", SHINY_APPS)]
   SHINY_APPS   <- setNames(SHINY_APPS, stringr::str_remove_all(basename(SHINY_APPS), "apps"))
   SHINY_HOST   <- getOption("shiny.host", "127.0.0.1")
 }
