@@ -3,7 +3,7 @@ require(logger)
 require(glue)
 # Universal settings -----------------------------------------------------------
 # Set the desired directory to store logs.
-LOG_DIRECTORY  <- here::here("logs")
+LOG_DIRECTORY  <- ifelse(exists("LOG_DIRECTORY"), LOG_DIRECTORY, here::here("logs"))
 
 # Set custom layouts here as needed here for each level or destination.
 layout_console <- layout_glue_generator(
@@ -224,16 +224,24 @@ read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
 #'
 #' This applies the internal routing and formatting for logger functions to the
 #' current value of the LOGGING object. If LOGGING is changed (i.e. a logging
-#' namespace is added) this function should be run to update routing and
-#' formatting to be in line with the current settings.
-#' 
+#' namespace is added or changed) this function should be run to update routing
+#' and formatting to be in line with the current settings.
+#'
+#' Note the calling stack for auto logging of warnings and errors does not work
+#' with background processes. These settings call [logger::log_warnings] and
+#' [logger::log_errors].
+#'
 #' @note This function is used only for its side effects.
+#'
+#' @param log_all_warnings LGL scalar indicating whether or not to log all
+#'   warnings (default: TRUE)
+#' @param log_all_errors LGL scalar indicating whether or not to log all errors
+#'   (default: TRUE)
 #'
 #' @return None
 #' @export
-#'
-#' @examples
-update_logger_settings <- function() {
+#' 
+update_logger_settings <- function(log_all_warnings = TRUE, log_all_errors = TRUE) {
   if (!exists("LOGGING")) stop("Object LOGGING containing logger settings is not available.")
   if (!exists("LOG_DIRECTORY")) LOG_DIRECTORY <- here::here("logs")
   lapply(LOGGING,
@@ -267,7 +275,7 @@ update_logger_settings <- function() {
            }
          }
   )
-  if (exists("LOGGING_WARNS") && LOGGING_WARNS) {
+  if (exists("LOGGING_WARNS") && LOGGING_WARNS && log_all_warnings) {
     if ("warning" %in% names(globalCallingHandlers())) {
       if (!stringr::str_detect(paste0(deparse(globalCallingHandlers()$warning), collapse = ""), "logger::log"))
         log_warnings()
@@ -275,7 +283,7 @@ update_logger_settings <- function() {
       log_warnings()
     }
   }
-  if (exists("LOGGING_ERRORS") && LOGGING_ERRORS) {
+  if (exists("LOGGING_ERRORS") && LOGGING_ERRORS && log_all_errors) {
     if ("error" %in% names(globalCallingHandlers())) {
       if (!stringr::str_detect(paste0(deparse(globalCallingHandlers()$error), collapse = ""), "logger::log"))
         log_errors()
