@@ -313,7 +313,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   } else if (!any(is.character(args), !is.list(args))) {
     stop("Parameter 'args' must be either an environment or a list of values.")
   }
-  if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue('Verifying arguments for "{from_fn}".'))
+  if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue::glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN", "not_empty", "file_exists")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -331,10 +331,10 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   for (i in 1:length(args)) {
     arg   <- args[i]
     if (is.null(names(arg))) {
-      names(arg) <- glue("argument_{i}")
+      names(arg) <- glue::glue("argument_{i}")
     }
     needs <- conditions[[i]]
-    if (exists("log_it")) log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
+    if (exists("log_it")) log_it("trace", glue::glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -345,16 +345,16 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       check <- unlist(x[-1])
       if (missing(val)) {
         rslt <- FALSE
-        msg  <- glue('Parameter "{names(arg)}" is required.')
+        msg  <- glue::glue('Parameter "{names(arg)}" is required.')
       } else {
         switch(type,
                "class"   = {
                  rslt <- all(check %in% class(val))
                  class_real <- class(val)
                  class_need <- check[!check %in% class_real]
-                 class_real <- glue('{ifelse(length(class_real) == 1, "", "es")} {format_list_of_names(class_real, add_quotes = TRUE)}')
-                 class_need <- glue('{ifelse(length(class_need) == 1, "", "es")} {format_list_of_names(class_need, add_quotes = TRUE)}')
-                 msg  <- glue('Parameter "{names(arg)}" of class{class_real} was missing required class{class_need}.')
+                 class_real <- glue::glue('{ifelse(length(class_real) == 1, "", "es")} {format_list_of_names(class_real, add_quotes = TRUE)}')
+                 class_need <- glue::glue('{ifelse(length(class_need) == 1, "", "es")} {format_list_of_names(class_need, add_quotes = TRUE)}')
+                 msg  <- glue::glue('Parameter "{names(arg)}" of class{class_real} was missing required class{class_need}.')
                },
                "mode"    = {
                  mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
@@ -365,79 +365,79 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                  }
                  if (length(mode_check) == 1) {
                    rslt <- do.call(mode_check, list(val))
-                   msg  <- glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
+                   msg  <- glue::glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
+                   msg  <- glue::glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
                  }
                },
                "length"  = {
                  rslt <- length(val) == as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
                },
                "no_na"   = {
                  rslt <- !any(is.na(val))
-                 msg  <- glue("Argument '{names(arg)}' includes NA values.")
+                 msg  <- glue::glue("Argument '{names(arg)}' includes NA values.")
                },
                "n>"      = {
                  rslt <- length(val) > as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
                },
                "n<"      = {
                  rslt <- length(val) < as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
                },
                "n>="     = {
                  rslt <- length(val) >= as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
                },
                "n<="     = {
                  rslt <- length(val) <= as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
                },
                ">"       = {
                  if (length(check) == 1) {
                    rslt <- all(val > check)
-                   msg  <- glue("Argument '{names(arg)}' must be greater than {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be greater than {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                "<"       = {
                  if (length(check) == 1) {
                    rslt <- all(val < check)
-                   msg  <- glue("Argument '{names(arg)}' must be lesser than {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be lesser than {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                ">="       = {
                  if (length(check) == 1) {
                    rslt <- all(val >= check)
-                   msg  <- glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                "<="       = {
                  if (length(check) == 1) {
                    rslt <- all(val <= check)
-                   msg  <- glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
                  }
                },
                "between" = {
                  if (length(check) == 2) {
                    rslt <- all(val >= check[1] && val <= check[2])
                    if (is.numeric(val)) {
-                     msg  <- glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
+                     msg  <- glue::glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
                    } else {
-                     msg  <- glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
+                     msg  <- glue::glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
                    }
                  } else {
                    if (length(check) < 2) {
@@ -446,12 +446,12 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                      len_check <- "more than"
                    }
                    rslt <- FALSE
-                   msg  <- glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
+                   msg  <- glue::glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
                  }
                },
                "choices" = {
                  rslt <- all(val %in% check)
-                 msg  <- glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
+                 msg  <- glue::glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
                },
                "call"    = {
                  rslt <- tryCatch(do.call(check, list(val)),
@@ -459,46 +459,46 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                                   warning = function(w) w)
                  val  <- paste0('"', val, '"', collapse = ", ")
                  if ("simpleError" %in% class(rslt)) {
-                   msg  <- glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   msg  <- glue::glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
                    rslt <- FALSE
                  } else if ("simpleWarning" %in% class(rslt)) {
-                   msg  <- glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   msg  <- glue::glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
                    rslt <- FALSE
                  } else {
                    rslt <- TRUE
                  }
                },
                "not_empty" = {
-                 msg  <- glue("Object contained nothing but NAs, NULLs, or empty character strings.")
+                 msg  <- glue::glue("Object contained nothing but NAs, NULLs, or empty character strings.")
                  rslt <- !has_missing_elements(val)
                },
                "file_exists" = {
-                 msg  <- glue("Could not locate file '{val}'.")
+                 msg  <- glue::glue("Could not locate file '{val}'.")
                  rslt <- file.exists(val)
                },
                {
                  rslt <- FALSE
-                 msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
+                 msg  <- glue::glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
                }
         )
       }
-      log_msg <- glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
+      log_msg <- glue::glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
       out$results[[i]][j]   <- rslt
       if (!rslt) {
         out$valid           <- FALSE
         n_msg               <- length(out$messages) + 1
         out$messages[n_msg] <- msg
-        log_it("trace", glue('{log_msg} - FAIL'))
-        if (!silent) log_it("error", glue("    {msg}"))
+        log_it("trace", glue::glue('{log_msg} - FAIL'))
+        if (!silent) log_it("error", glue::glue("    {msg}"))
       } else {
-        if (exists("log_it")) log_it("trace", glue('{log_msg} - PASS'))
+        if (exists("log_it")) log_it("trace", glue::glue('{log_msg} - PASS'))
       }
     }
   }
   if (out$valid) {
-    if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue("Arguments verified for '{from_fn}'"))
+    if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue::glue("Arguments verified for '{from_fn}'"))
   } else {
-    if (exists("log_it")) log_it("error", glue("Arguments could not be verified",
+    if (exists("log_it")) log_it("error", glue::glue("Arguments could not be verified",
                                                ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
                                                " See return for details."))
   }
@@ -527,7 +527,6 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
 format_list_of_names <- function(namelist, add_quotes = FALSE) {
-  stopifnot(require(glue))
   log_fn("start")
   if (length(namelist) == 0) {
     return("")
@@ -1106,7 +1105,7 @@ obj_name_check <- function(obj, default_name = NULL) {
     # pr <- eval(sym(obj_name))
   } else {
     if (exists("log_it")) {
-      log_it("warn", glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
+      log_it("warn", glue::glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
     }
     if (is.null(default_name)) {
       if (exists("log_it")) log_it("warn", "No default name provided. Name given back as-is.")
