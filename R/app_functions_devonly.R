@@ -121,14 +121,15 @@ open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
 #' @return None, opens a file for editing
 #' @export
 #' 
-open_env <- function(name = c("R", "global", "logging", "rdkit", "shiny")) {
+open_env <- function(name = c("R", "global", "logging", "rdkit", "shiny", "plumber")) {
   name <- switch(
     match.arg(name),
     "R" = "env_R.R",
     "global" = "env_glob.txt",
     "logging" = "env_logger.R",
     "rdkit" = "env_py.R",
-    "shiny" = "env_shiny.R"
+    "shiny" = "env_shiny.R",
+    "plumber" = "env_plumb.R"
   )
   open_proj_file(name)
 }
