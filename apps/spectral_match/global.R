@@ -59,13 +59,13 @@ app_settings <- list(
   data_input_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
   data_input_normfn = c("sum", "mean"),
   data_input_cormethod = c("pearson"),
-  data_input_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  data_input_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  data_input_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
-  data_input_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
-  data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
-  data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
-  data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
+  # data_input_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  # data_input_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  # data_input_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
+  # data_input_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
+  # data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
+  # data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
+  # data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
   search_compounds_bootstrap_iterations = list(value = 1e4, min = 1e2, max = 1e5, step = 1e2)
 )
 

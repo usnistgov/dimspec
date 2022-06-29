@@ -28,35 +28,24 @@ shinyServer(function(input, output, session) {
       readRDS("toy_parameters.RDS")
     }
   )
-  search_compounds_results <- reactiveVal(
-    # if (!dev) {
-      tibble(
-        compound_id = character(0),
-        compound_name = character(0),
-        ms1_dot_product = numeric(0),
-        ms2_dot_product = numeric(0),
-        num_fragments = numeric(0),
-        source = character(0),
-        confidence = character(0)
-      )
-    # } else {
-    #   tibble(
-    #     compound_id = 1:25,
-    #     compound_name = sapply(1:25, function(x) paste0(sample(letters, 10), collapse = "")),
-    #     ms1_dot_product = rnorm(25),
-    #     ms2_dot_product = rnorm(25),
-    #     num_fragments = sample(1:10, 25, TRUE),
-    #     source = rep(paste0(sample(letters, 10), collapse = ""), 25),
-    #     confidence = sample(1:5, 25, TRUE)
-    #   )
-    # }
-  )
+  search_compounds_results <- reactiveVal(NULL)
   search_compounds_results_selected <- reactive(
-    search_compounds_results() %>%
+    req(search_compounds_results()$result) %>%
+      bind_rows() %>%
       slice(req(input$search_compounds_dt_rows_selected))
   )
+  method_narrative <- reactive({
+    req(search_compounds_results_selected())
+    paste0("This reference spectrum was m",
+           api_endpoint(
+             path = "method_narrative",
+             type = "peak",
+             table_pk = search_compounds_results_selected()$peak_ids[1]
+           ) %>%
+             stringr::str_sub(2)
+    )
+  })
   search_fragments_results <- reactiveVal(
-    # if (!dev) {
       tibble(
         fragment_id = integer(0),
         formula = character(0),
@@ -66,20 +55,9 @@ shinyServer(function(input, output, session) {
         mass_error = numeric(0),
         compounds = character(0)
       )
-    # } else {
-    #   tbl(con, "view_annotated_fragments") %>%
-    #     select(id, formula, smiles, mz, fixedmass, ppm_error) %>%
-    #     mutate(compounds = "") %>%
-    #     collect() %>%
-    #     slice(1:25) %>% 
-    #     setNames(
-    #       c("fragment_id", "formula", "smiles", "fragment_mz", "exactmass", "mass_error", "compounds")
-    #     )
-    # }
   )
-  # selected_fragment <- reactiveVal(1)
   search_fragments_results_selected <- reactive(
-    search_fragments_results() %>%
+    req(search_fragments_results()) %>%
       slice(req(input$search_fragments_dt_rows_selected))
   )
   mod_search_params <- c(
@@ -99,6 +77,7 @@ shinyServer(function(input, output, session) {
   runjs("$('.box-body.left').parent().parent().addClass('box-left');")
   runjs("$('.box-body.right').parent().parent().addClass('box-right');")
   hideElement(selector = "#data_input_overlay")
+  hideElement(selector = "#data_input_next_actions")
   hideElement(selector = "#search_compounds_overlay")
   hideElement(selector = "#uncertainty_overlay")
   hideElement(selector = "#search_fragments_overlay")
@@ -109,10 +88,10 @@ shinyServer(function(input, output, session) {
     if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_process_btn", condition = (!is.null(user_data()) && nrow(data_input_search_parameters()) > 0))
+      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
       toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-      toggleElement("search_compounds_results_span", condition = nrow(search_compounds_results()) > 0)
-      toggleElement("search_fragments_results_span", condition = nrow(search_fragments_results()) > 0)
+      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()) > 0)
+      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()) > 0)
     }
   })
   
@@ -120,17 +99,20 @@ shinyServer(function(input, output, session) {
   observeEvent(input$sidebar_menu, {
     if (!dev) {
       if (!input$sidebar_menu %in% c("data_input", "index", "about") && any(is.null(user_data()), nrow(data_input_search_parameters()) == 0)) {
-        shinyalert(title = "Insufficient data",
-                   type = "info",
-                   showElementCancelButton = FALSE,
-                   showElementConfirmButton = TRUE,
-                   closeOnEsc = TRUE,
-                   closeOnClickOutside = TRUE,
-                   immediate = TRUE,
-                   text = "Please load a data file and select search parameters first.")
+        nist_shinyalert(title = "Insufficient data",
+                        type = "info",
+                        text = "Please load a data file and select search parameters first.")
         updateTabsetPanel(session = session,
                           inputId = "sidebar_menu",
                           selected = "data_input")
+      }
+      if (input$sidebar_menu == "uncertainty" && is.null(search_compounds_results())) {
+        nist_shinyalert(title = "No match selected",
+                        type = "info",
+                        text = "Please run a compound match search first.")
+        updateTabsetPanel(session = session,
+                          inputId = "sidebar_menu",
+                          selected = "search_compounds")       
       }
     }
   })
@@ -172,14 +154,9 @@ shinyServer(function(input, output, session) {
     n_orig <- nrow(data_input_search_parameters())
     n_uniq <- nrow(distinct(data_input_search_parameters()))
     if (!n_orig == n_uniq) {
-      shinyalert(
+      nist_shinyalert(
         title = "Duplicate values detected",
         type = "info",
-        showElementCancelButton = FALSE,
-        showElementConfirmButton = TRUE,
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        immediate = FALSE,
         text = glue::glue("Search parameters must represent unique combinations. Duplicated settings (n = {n_orig - n_uniq}) have been removed.")
       )
     }
@@ -246,7 +223,6 @@ shinyServer(function(input, output, session) {
     if (!valid) {
       reset("data_input_filename")
     }
-    showElement("data_input_process_btn")
     hideElement("data_input_next_actions")
   })
   # __Import parameters ----
@@ -449,36 +425,110 @@ shinyServer(function(input, output, session) {
   
   # COMPOUND SEARCH PAGE ----
   # _Reactives ----
+  # __Match statuses ----
+  output$search_compounds_status <- renderUI({
+    req(search_compounds_results())
+    matches <- search_compounds_results()$result %>%
+      slice(1)
+    match_out <- h3("Most likely match is",
+                    p(style = "font-weight: bold; display: inline;", matches$name),
+                    "from",
+                    ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+                           "an",
+                           "a"),
+                    matches$sample_class)
+    match_score1 <- p("MS1 Score: ",
+                      p(style = "font-weight: bold;", matches$ms1_dp),
+                      "( rev score ", matches$ms1_rdp, ")")
+    if (!is.na(matches$ms2_dp)) {
+      match_score2 <- p("| MS2 Score: ",
+                        p(style = "font-weight: bold;;", matches$ms2_dp),
+                        "( rev score ", matches$ms2_rdp, ")")
+    } else {
+      match_score2 <- NULL
+    }
+    tagList(match_out, match_score1, match_score2)
+  })
+  output$search_compounds_status2 <- renderUI({
+    req(
+      search_compounds_results(),
+      input$search_compounds_dt_rows_selected
+    )
+    if (input$search_compounds_dt_rows_selected == 1) {
+      NULL
+    } else {
+      matches <- search_compounds_results()$result %>%
+        slice(input$search_compounds_dt_rows_selected)
+      match_out <- h4(
+          "Currently selected match is",
+          p(style = "font-weight: bold; display: inline;", matches$name),
+          "from",
+          ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+                 "an",
+                 "a"),
+          matches$sample_class
+        )
+      match_score1 <- p(
+          "MS1 Score: ",
+          p(style = "font-weight: bold;", matches$ms1_dp),
+          "(rev score ", matches$ms1_rdp, ")"
+        )
+      if (!is.na(matches$ms2_dp)) {
+        match_score2 <- p(
+          " |  MS2 Score: ",
+          p(style = "font-weight: bold;;", matches$ms2_dp),
+          "( rev score ", matches$ms2_rdp, ")"
+        )
+      } else {
+        match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
+      }
+      tagList(match_out, match_score1, match_score2)
+    }
+  })
+  # __Data Table ----
   output$search_compounds_dt <- renderDT(
     server = FALSE,
     expr = DT::datatable(
-      req(search_compounds_results()),
+      data = req(search_compounds_results()$result) %>%
+        select(compound_id, name, ms1_dp, ms1_rdp, ms2_dp, ms2_rdp,total_ann_fragments, total_ann_structures, total_ann_citations, sample_class, peak_ids),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Compound Name/ID", "MS1 Score", "MS2 Score", "# Annotated Fragments", "Source", "Source Confidence"),
+      colnames = c("Compound ID", "Compound ID", "MS1 Score", "MS1 Score (Rev)", "MS2 Score", "MS2 Score (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
       caption = "Select a row to view the match or send it to uncertainty estimation.",
       options = list(
         dom = "tp",
-        pageLength = 15,
+        pageLength = 10,
         extensions = c("Responsive", "Buttons"),
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
-          list(visible = FALSE, targets = 0),
-          list(className = "dt-center", targets = 1:3),
-          list(className = "dt-left", targets = c(0, 4, 5))
+          list(visible = FALSE, targets = c(0, 10)),
+          list(className = "dt-center", targets = 2:9),
+          list(className = "dt-left", targets = 1)
         )
       )
     )
   )
-  # output$search_compounds_butterfly_plot <- renderPlotly(
-  #   req(search_compounds_results_selected()) %>%
-  #     slice(search_row) %>%
-  #     plot_compare_ms() %>%
-  #     ggplotly()
-  # )
+  # __Butterfly plot ----
+  output$search_compounds_butterfly_plot <- renderPlotly({
+    req(search_compounds_results(), input$search_compounds_dt_rows_selected)
+    plot_compare_ms(
+      ums1 = search_compounds_results()$search_object$ums1,
+      ums2 = search_compounds_results()$ums1_compare[[input$search_compounds_dt_rows_selected]],
+      ylim.exp = 0.1,
+      main = element_blank()
+    ) %>%
+      ggplotly()
+  })
+  # __Method narrative ----
+  output$search_compounds_method_narrative <- renderUI(
+    tags$caption(
+      style = "display: inline;",
+      req(method_narrative())
+    )
+  )
   # _Observers ----
   # __Navigation
   observeEvent(input$search_compounds_go_data_input, {
@@ -490,6 +540,8 @@ shinyServer(function(input, output, session) {
   })
   # __Execute search ----
   observeEvent(input$search_compounds_search_btn, {
+    runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
+    showElement("search_compounds_overlay")
     if (input$search_compounds_mzrt == "") {
       nist_shinyalert(
         title = "More information needed",
@@ -504,6 +556,7 @@ shinyServer(function(input, output, session) {
         text = "Please choose a Search Type"
       )
     }
+    runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
     req(
       user_data(),
       data_input_search_parameters(),
@@ -514,14 +567,15 @@ shinyServer(function(input, output, session) {
       input$data_input_experiment_type,
       input$data_input_isolation_width,
       input$data_input_search_zoom,
-      input$data_input_correl_bin,
-      input$data_input_ph,
-      input$data_input_ph_bin,
-      input$data_input_max_freq,
-      input$data_input_freq_bin,
-      input$data_input_min_n_peaks
+      # input$data_input_max_correl,
+      # input$data_input_correl_bin,
+      input$data_input_ph
+      # input$data_input_max_ph,
+      # input$data_input_ph_bin,
+      # input$data_input_max_freq,
+      # input$data_input_freq_bin,
+      # input$data_input_min_n_peaks
     )
-    type <- isolate(input$search_compounds_search_type)
     mzrt <- isolate(data_input_search_parameters()[input$search_compounds_mzrt, ])
     tmp <- isolate(user_data())
     tmp$search_df <- tibble(
@@ -535,23 +589,36 @@ shinyServer(function(input, output, session) {
       ms2exp = isolate(input$data_input_experiment_type),
       isowidth = isolate(input$data_input_isolation_width)
     )
-    browser()
+    runjs("$('#search_compounds_overlay_text').text('Creating search object...');")
     search_object <- get_search_object(
       searchmzml = tmp,
       zoom = isolate(input$data_input_search_zoom)
+    ) %>%
+      create_search_ms(
+        searchobj = .,
+        correl = isolate(input$data_input_correlation),
+        ph = isolate(input$data_input_ph),
+        freq = isolate(input$data_input_freq),
+        normfn = isolate(input$data_input_norm_function),
+        cormethod = isolate(input$data_input_correlation_method))
+    runjs("$('#search_compounds_overlay_text').text('Scoring database matches...');")
+    search_result <- api_endpoint(
+      path               = "search_compound",
+      type               = isolate(input$search_compounds_search_type),
+      search_ms          = jsonlite::toJSON(search_object),
+      norm_function      = isolate(input$data_input_norm_function),
+      correlation_method = isolate(input$data_input_correlation_method),
+      return_format      = "list"
     )
-    api_endpoint(path            = "search_compounds",
-                 type            = type,
-                 search_ms       = jsonlite::tojson(user_data()),
-                 correlation_max = isolate(input$data_input_max_correl),
-                 correlation_bin = isolate(input$data_input_correl_bin),
-                 peak_height_max = isolate(input$data_input_ph),
-                 peak_height_bin = isolate(input$data_input_ph_bin),
-                 frequency_max   = isolate(input$data_input_max_freq),
-                 frequency_bin   = isolate(input$data_input_freq_bin),
-                 min_n_peaks     = isolate(input$data_input_min_n_peaks),
-                 return_format   = "data.frame") %>%
-      search_compounds_results()
+    search_compounds_results(
+      list(
+        search_object = search_object,
+        result = bind_rows(search_result$result),
+        ums1_compare = lapply(search_result$ums1_compare, bind_rows),
+        ums2_compare = lapply(search_result$ums2_compare, bind_rows)
+      )
+    )
+    hideElement("search_compounds_overlay")
   })
   observeEvent(input$search_compounds_uncertainty_btn, ignoreNULL = TRUE, ignoreInit = TRUE, {
     # search_compounds_results_selected() %>%
@@ -563,11 +630,58 @@ shinyServer(function(input, output, session) {
 
   # UNCERTAINTY PAGE ----
   # _Reactives ----
-  # output$uncertainty_butterfly_plot <- renderPlotly(
-  #   search_compounds_results_selected() %>%
-  #     plot_compare_ms() %>%
-  #     ggplotly()
-  # )
+  # __Feedback ----
+  # __Method narrative ----
+  output$uncertainty_method_narrative <- renderUI({
+    req(method_narrative())
+    tags$caption(
+      style = "display: inline;",
+      method_narrative()
+    )
+  })
+  output$uncertainty_status <- renderUI({
+    req(
+      search_compounds_results(),
+      input$search_compounds_dt_rows_selected
+    )
+      matches <- search_compounds_results()$result %>%
+        slice(input$search_compounds_dt_rows_selected)
+      match_out <- h4(
+        "Uncertainty evaluation for the selected match of",
+        p(style = "font-weight: bold; display: inline;", matches$name),
+        "from",
+        ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+               "an",
+               "a"),
+        matches$sample_class
+      )
+      match_score1 <- p(
+        "MS1 Score: ",
+        p(style = "font-weight: bold;", matches$ms1_dp),
+        "(rev score ", matches$ms1_rdp, ")"
+      )
+      if (!is.na(matches$ms2_dp)) {
+        match_score2 <- p(
+          " |  MS2 Score: ",
+          p(style = "font-weight: bold;;", matches$ms2_dp),
+          "( rev score ", matches$ms2_rdp, ")"
+        )
+      } else {
+        match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
+      }
+      tagList(match_out, match_score1, match_score2)
+  })
+  # __Butterfly plot ----
+  output$uncertainty_butterfly_plot <- renderPlotly({
+    req(search_compounds_results(), input$search_compounds_dt_rows_selected)
+    plot_compare_ms(
+      ums1 = search_compounds_results()$search_object$ums1,
+      ums2 = search_compounds_results()$ums1_compare[[input$search_compounds_dt_rows_selected]],
+      ylim.exp = 0.1,
+      main = element_blank()
+    ) %>%
+      ggplotly()
+  })
   # output$uncertainty_boxplot <- renderPlotly(
   #   search_compounds_results_selected() %>%
   #     boxplot_quant() %>%

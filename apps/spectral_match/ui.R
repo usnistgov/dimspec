@@ -11,7 +11,7 @@ dashboardPage(
         if (dev) {
             div(
                 h4("Plumber instance is live at ", PLUMBER_URL),
-                p("View the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), "here")),
+                p("View the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
                 actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
             )
         } else {
@@ -67,7 +67,8 @@ dashboardPage(
             tabItem("data_input",
                     div(class = "overlay",
                         id = "data_input_overlay",
-                        img(src = "processing.gif")
+                        img(src = "processing.gif"),
+                        h3(id = "data_input_overlay_text")
                     ),
                     fluidRow(
                         column(4,
@@ -189,72 +190,72 @@ dashboardPage(
                                                                     choices = data_input_cormethod,
                                                                     width = "100%",
                                                      )
-                                                 ),
-                                                 tags$label("Search match refinement settings"),
-                                                 div(class = "form-grouping",
-                                                     sliderInput(inputId = "data_input_max_correl",
-                                                                 label = "Maximum correlation",
-                                                                 width = "100%",
-                                                                 ticks = data_input_max_correl$ticks,
-                                                                 value = data_input_max_correl$value,
-                                                                 min = data_input_max_correl$min,
-                                                                 max = data_input_max_correl$max,
-                                                                 step = data_input_max_correl$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_correl_bin",
-                                                                 label = "Correlation bin size",
-                                                                 width = "100%",
-                                                                 ticks = data_input_correl_bin$ticks,
-                                                                 value = data_input_correl_bin$value,
-                                                                 min = data_input_correl_bin$min,
-                                                                 max = data_input_correl_bin$max,
-                                                                 step = data_input_correl_bin$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_max_ph",
-                                                                 label = "Maximum peak height",
-                                                                 width = "100%",
-                                                                 ticks = data_input_max_ph$ticks,
-                                                                 value = data_input_max_ph$value,
-                                                                 min = data_input_max_ph$min,
-                                                                 max = data_input_max_ph$max,
-                                                                 step = data_input_max_ph$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_ph_bin",
-                                                                 label = "Peak height bin size",
-                                                                 width = "100%",
-                                                                 ticks = data_input_ph_bin$ticks,
-                                                                 value = data_input_ph_bin$value,
-                                                                 min = data_input_ph_bin$min,
-                                                                 max = data_input_ph_bin$max,
-                                                                 step = data_input_ph_bin$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_max_freq",
-                                                                 label = "Maximum frequency",
-                                                                 width = "100%",
-                                                                 ticks = data_input_max_freq$ticks,
-                                                                 value = data_input_max_freq$value,
-                                                                 min = data_input_max_freq$min,
-                                                                 max = data_input_max_freq$max,
-                                                                 step = data_input_max_freq$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_freq_bin",
-                                                                 label = "Frequency bin size",
-                                                                 width = "100%",
-                                                                 ticks = data_input_freq_bin$ticks,
-                                                                 value = data_input_freq_bin$value,
-                                                                 min = data_input_freq_bin$min,
-                                                                 max = data_input_freq_bin$max,
-                                                                 step = data_input_freq_bin$step
-                                                     ),
-                                                     sliderInput(inputId = "data_input_min_n_peaks",
-                                                                 label = "Minimum number of spectra",
-                                                                 width = "100%",
-                                                                 ticks = data_input_min_n_peaks$ticks,
-                                                                 value = data_input_min_n_peaks$value,
-                                                                 min = data_input_min_n_peaks$min,
-                                                                 max = data_input_min_n_peaks$max,
-                                                                 step = data_input_min_n_peaks$step
-                                                     )
+                                                 # ),
+                                                 # tags$label("Search match refinement settings"),
+                                                 # div(class = "form-grouping",
+                                                 #     sliderInput(inputId = "data_input_max_correl",
+                                                 #                 label = "Maximum correlation",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_max_correl$ticks,
+                                                 #                 value = data_input_max_correl$value,
+                                                 #                 min = data_input_max_correl$min,
+                                                 #                 max = data_input_max_correl$max,
+                                                 #                 step = data_input_max_correl$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_correl_bin",
+                                                 #                 label = "Correlation bin size",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_correl_bin$ticks,
+                                                 #                 value = data_input_correl_bin$value,
+                                                 #                 min = data_input_correl_bin$min,
+                                                 #                 max = data_input_correl_bin$max,
+                                                 #                 step = data_input_correl_bin$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_max_ph",
+                                                 #                 label = "Maximum peak height",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_max_ph$ticks,
+                                                 #                 value = data_input_max_ph$value,
+                                                 #                 min = data_input_max_ph$min,
+                                                 #                 max = data_input_max_ph$max,
+                                                 #                 step = data_input_max_ph$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_ph_bin",
+                                                 #                 label = "Peak height bin size",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_ph_bin$ticks,
+                                                 #                 value = data_input_ph_bin$value,
+                                                 #                 min = data_input_ph_bin$min,
+                                                 #                 max = data_input_ph_bin$max,
+                                                 #                 step = data_input_ph_bin$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_max_freq",
+                                                 #                 label = "Maximum frequency",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_max_freq$ticks,
+                                                 #                 value = data_input_max_freq$value,
+                                                 #                 min = data_input_max_freq$min,
+                                                 #                 max = data_input_max_freq$max,
+                                                 #                 step = data_input_max_freq$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_freq_bin",
+                                                 #                 label = "Frequency bin size",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_freq_bin$ticks,
+                                                 #                 value = data_input_freq_bin$value,
+                                                 #                 min = data_input_freq_bin$min,
+                                                 #                 max = data_input_freq_bin$max,
+                                                 #                 step = data_input_freq_bin$step
+                                                 #     ),
+                                                 #     sliderInput(inputId = "data_input_min_n_peaks",
+                                                 #                 label = "Minimum number of spectra",
+                                                 #                 width = "100%",
+                                                 #                 ticks = data_input_min_n_peaks$ticks,
+                                                 #                 value = data_input_min_n_peaks$value,
+                                                 #                 min = data_input_min_n_peaks$min,
+                                                 #                 max = data_input_min_n_peaks$max,
+                                                 #                 step = data_input_min_n_peaks$step
+                                                 #     )
                                                  )
                                              )
                                         )
@@ -325,7 +326,8 @@ dashboardPage(
             tabItem("search_compounds",
                     div(class = "overlay",
                         id = "search_compounds_overlay",
-                        img(src = "processing.gif")
+                        img(src = "processing.gif"),
+                        h3(id = "search_compounds_overlay_text")
                     ),
                     fluidRow(
                         box(title = "Compound Matching",
@@ -361,8 +363,7 @@ dashboardPage(
                                        actionButton(inputId = "search_compounds_search_btn",
                                                     label = "Search",
                                                     icon = icon("magnifying-glass", verify_fa = FALSE),
-                                                    width = "100%"),
-                                       textOutput(outputId = "search_compounds_status")
+                                                    width = "100%")
                                 )
                             ),
                             fluidRow(
@@ -370,10 +371,16 @@ dashboardPage(
                                        id = "search_compounds_results_span",
                                        fluidRow(
                                            column(4,
+                                                  htmlOutput(outputId = "search_compounds_status",
+                                                             width = "100%"),
+                                                  htmlOutput(outputId = "search_compounds_status2",
+                                                             width = "100%"),
+                                                  h3("Comparison Mass Spectrum"),
                                                   plotlyOutput(outputId = "search_compounds_butterfly_plot",
                                                                width = "100%") %>%
                                                       withSpinner(),
-                                                  textOutput(outputId = "search_compounds_method_description"),
+                                                  htmlOutput(outputId = "search_compounds_method_narrative",
+                                                             width = "100%"),
                                                   actionButton(inputId = "search_compounds_uncertainty_btn",
                                                                label = "Estimate Spectral Uncertainty",
                                                                width = "100%",
@@ -410,7 +417,10 @@ dashboardPage(
                             h4("[USE INSTRUCTIONS HERE]."),
                             fluidRow(
                                 column(6,
-                                       textOutput(outputId = "uncertainty_method_description"),  
+                                       h3("Uncertainty Mass Spectrum"),
+                                       htmlOutput(outputId = "uncertainty_status",
+                                                  width = "100%"),
+                                       htmlOutput(outputId = "uncertainty_method_narrative"),  
                                        plotlyOutput(outputId = "uncertainty_butterfly_plot",
                                                     width = "100%") %>%
                                            withSpinner(),
@@ -431,7 +441,8 @@ dashboardPage(
             tabItem("search_fragments",
                     div(class = "overlay",
                         id = "search_fragments_overlay",
-                        img(src = "processing.gif")
+                        img(src = "processing.gif"),
+                        h3("Extracting data...")
                     ),
                     fluidRow(
                         box(title = "Fragment Analysis",
@@ -457,7 +468,9 @@ dashboardPage(
                                                                  selected = NULL,
                                                                  multiple = FALSE,
                                                                  width = "100%",
-                                                                 options = list(placeholder = "Please add search parameters on the Data Input page."))
+                                                                 options = list(placeholder = "Please add search parameters on the Data Input page.")),
+                                                  htmlOutput(outputId = "search_fragments_has_mzrt_has_ions",
+                                                             width = "100%")
                                            )
                                        ),
                                        actionButton(inputId = "search_fragments_search_btn",
