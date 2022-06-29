@@ -118,6 +118,7 @@ if (INIT_CONNECT) {
 
 # _Plumber set up --------------------------------------------------------------
 if (USE_API) {
+  require(plumber)
   log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
   source(here::here("plumber", "api_control.R"))
