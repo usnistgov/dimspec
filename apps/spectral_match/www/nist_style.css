@@ -107,8 +107,13 @@ a > i {
   text-align: center;
 }
 
-#search_compounds_status > p, #search_compounds_status2 > p, #uncertainty_status > p {
+#search_compounds_status > p, #search_compounds_status > h3 > p,
+#search_compounds_status2 > p, #uncertainty_status > p {
   display: inline;
+}
+
+#search_compounds_dt {
+  margin-top: 12px;
 }
 
 #search_compounds_method_narrative {

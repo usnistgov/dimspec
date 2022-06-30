@@ -1,4 +1,4 @@
-dev <- TRUE
+dev <- FALSE
 advanced_use <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
@@ -66,7 +66,7 @@ app_settings <- list(
   # data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
   # data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
   # data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
-  search_compounds_bootstrap_iterations = list(value = 1e4, min = 1e2, max = 1e5, step = 1e2)
+  search_compounds_bootstrap_iterations = list(value = 100, min = 10, max = 10000, step = 1e2)
 )
 
 rdkit_available <- api_endpoint(path = "rdkit_active")

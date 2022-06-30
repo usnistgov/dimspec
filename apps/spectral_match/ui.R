@@ -375,7 +375,31 @@ dashboardPage(
                                                              width = "100%"),
                                                   htmlOutput(outputId = "search_compounds_status2",
                                                              width = "100%"),
-                                                  h3("Comparison Mass Spectrum"),
+                                                  h3(id = "search_compounds_butterfly_plot_title",
+                                                     "Comparison Mass Spectrum"
+                                                  ),
+                                                  p(
+                                                      HTML(
+                                                          paste0(
+                                                              "Your measurement is in&nbsp;",
+                                                              strong(style = "color: black", "black"),
+                                                              ". Comparison spectrum is in&nbsp;",
+                                                              strong(style = "color: red", "red"),
+                                                              "."
+                                                          )
+                                                      )
+                                                  ),
+                                                  shinyWidgets::radioGroupButtons(
+                                                      inputId = "search_compounds_ms1_ms2",
+                                                      label = NULL,
+                                                      choices = c("MS1", "MS2"),
+                                                      size = "xs",
+                                                      selected = "MS2",
+                                                      justified = TRUE,
+                                                      checkIcon = list(
+                                                          yes = icon("ok", 
+                                                                     lib = "glyphicon"))
+                                                  ),
                                                   plotlyOutput(outputId = "search_compounds_butterfly_plot",
                                                                width = "100%") %>%
                                                       withSpinner(),
@@ -420,10 +444,21 @@ dashboardPage(
                                        h3("Uncertainty Mass Spectrum"),
                                        htmlOutput(outputId = "uncertainty_status",
                                                   width = "100%"),
-                                       htmlOutput(outputId = "uncertainty_method_narrative"),  
+                                       p(
+                                           HTML(
+                                               paste0(
+                                                   "Your measurement is in&nbsp;",
+                                                   strong(style = "color: black", "black"),
+                                                   ". Comparison spectrum is in&nbsp;",
+                                                   strong(style = "color: red", "red"),
+                                                   "."
+                                               )
+                                           )
+                                       ),
                                        plotlyOutput(outputId = "uncertainty_butterfly_plot",
                                                     width = "100%") %>%
                                            withSpinner(),
+                                       htmlOutput(outputId = "uncertainty_method_narrative"),  
                                        # If ALL match criteria, then provide a DT object here instead
                                        # Download can go off DT object if using DT ot present
                                        verbatimTextOutput(outputId = "uncertainty_summary")

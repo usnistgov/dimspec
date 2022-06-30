@@ -126,6 +126,7 @@ shinyServer(function(input, output, session) {
 
   # DATA INPUT PAGE ----
   # _Reactives ----
+  # __Data Table
   output$data_input_dt_peak_list <- renderDT(
     server = FALSE,
     expr = DT::datatable(
@@ -210,7 +211,7 @@ shinyServer(function(input, output, session) {
         nist_shinyalert(
           title = "Abnormal value suspected",
           type = "info",
-          text = glue::glue("Typically, the value of Isolation Width should be less than 4 Da unless the experiment type is SWATH.")
+          text = glue::glue("Typically, the value of Isolation Width should be less than 4 Da unless the experiment type is SWATH or HRM.")
         )
       }
     }
@@ -430,8 +431,8 @@ shinyServer(function(input, output, session) {
     req(search_compounds_results())
     matches <- search_compounds_results()$result %>%
       slice(1)
-    match_out <- h3("Most likely match is",
-                    p(style = "font-weight: bold; display: inline;", matches$name),
+    match_out <- h3("Top match is",
+                    p(style = "font-weight: bold;", matches$name),
                     "from",
                     ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
                            "an",
@@ -460,7 +461,7 @@ shinyServer(function(input, output, session) {
       matches <- search_compounds_results()$result %>%
         slice(input$search_compounds_dt_rows_selected)
       match_out <- h4(
-          "Currently selected match is",
+          "Selected comparison is is",
           p(style = "font-weight: bold; display: inline;", matches$name),
           "from",
           ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
@@ -498,10 +499,10 @@ shinyServer(function(input, output, session) {
       autoHideNavigation = TRUE,
       colnames = c("Compound ID", "Compound ID", "MS1 Score", "MS1 Score (Rev)", "MS2 Score", "MS2 Score (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
       caption = "Select a row to view the match or send it to uncertainty estimation.",
+      extensions = c("Responsive", "Buttons"),
       options = list(
         dom = "tp",
         pageLength = 10,
-        extensions = c("Responsive", "Buttons"),
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
           list(visible = FALSE, targets = c(0, 10)),
@@ -513,10 +514,20 @@ shinyServer(function(input, output, session) {
   )
   # __Butterfly plot ----
   output$search_compounds_butterfly_plot <- renderPlotly({
-    req(search_compounds_results(), input$search_compounds_dt_rows_selected)
+    req(
+      search_compounds_results(),
+      input$search_compounds_dt_rows_selected
+    )
+    if (input$search_compounds_ms1_ms2 == "MS2") {
+      compare_actual <- search_compounds_results()$search_object$ums2
+      compare_with <- search_compounds_results()$ums2_compare
+    } else {
+      compare_actual <- search_compounds_results()$search_object$ums1
+      compare_with <- search_compounds_results()$ums1_compare
+    }
     plot_compare_ms(
-      ums1 = search_compounds_results()$search_object$ums1,
-      ums2 = search_compounds_results()$ums1_compare[[input$search_compounds_dt_rows_selected]],
+      ums1 = compare_actual,
+      ums2 = compare_with[[input$search_compounds_dt_rows_selected]],
       ylim.exp = 0.1,
       main = element_blank()
     ) %>%
@@ -530,7 +541,7 @@ shinyServer(function(input, output, session) {
     )
   )
   # _Observers ----
-  # __Navigation
+  # __Navigation ----
   observeEvent(input$search_compounds_go_data_input, {
     updateTabsetPanel(
       session = session,
@@ -538,10 +549,19 @@ shinyServer(function(input, output, session) {
       selected = "data_input"
     )
   })
+  # __Update to MS1 if no MS2 ----
+  observe({
+    if (is.na(search_compounds_results_selected()$ms2_dp) &&
+        input$search_compounds_ms1_ms2 == "MS2") {
+      shinyWidgets::updateRadioGroupButtons(
+        session = session,
+        inputId = "search_compounds_ms1_ms2",
+        selected = "MS1"
+      )
+    }
+  })
   # __Execute search ----
   observeEvent(input$search_compounds_search_btn, {
-    runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
-    showElement("search_compounds_overlay")
     if (input$search_compounds_mzrt == "") {
       nist_shinyalert(
         title = "More information needed",
@@ -556,7 +576,13 @@ shinyServer(function(input, output, session) {
         text = "Please choose a Search Type"
       )
     }
-    runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
+    if (input$search_compounds_search_type == "all") {
+      nist_shinyalert(
+        title = "Long action",
+        type = "info",
+        text = "This will search your measured spectrum against all records in the database regardless and may take quite a while to execute."
+      )
+    }
     req(
       user_data(),
       data_input_search_parameters(),
@@ -576,6 +602,9 @@ shinyServer(function(input, output, session) {
       # input$data_input_freq_bin,
       # input$data_input_min_n_peaks
     )
+    runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
+    showElement("search_compounds_overlay")
+    runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
     mzrt <- isolate(data_input_search_parameters()[input$search_compounds_mzrt, ])
     tmp <- isolate(user_data())
     tmp$search_df <- tibble(
@@ -620,9 +649,11 @@ shinyServer(function(input, output, session) {
     )
     hideElement("search_compounds_overlay")
   })
+  # __Evaluate uncertainty ----
   observeEvent(input$search_compounds_uncertainty_btn, ignoreNULL = TRUE, ignoreInit = TRUE, {
     # search_compounds_results_selected() %>%
     #   bootstrap_compare_ms()
+    browser()
     updateTabsetPanel(session = session,
                       inputId = "sidebar_menu",
                       selected = "uncertainty")
