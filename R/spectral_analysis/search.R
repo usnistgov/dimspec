@@ -232,6 +232,26 @@ get_msdata_compound <- function(con, compoundid) {
   )
 }
 
+#' Get all mass spectral data for a specific peak id
+#'
+#' @param con  SQLite database connection
+#' @param peakid integer vector of peak ids
+#'
+#' @return data.frame of mass spectral data
+#' @export
+#'
+#' @examples
+
+get_msdata_peakid <- function(con, peakid) {
+  DBI::dbGetQuery(
+    conn = con,
+    paste0(
+      "SELECT * FROM ms_data
+      WHERE ms_data.peak_id IN (", paste(peakid, collapse = ","), ")"
+    )
+  )
+}
+
 #' Get all annotated fragments have matching masses
 #'
 #' @param con SQLite database connection
@@ -476,8 +496,8 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
   if (optimized_params == FALSE) {
     opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
   }
-  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
-  l.ums2 <- lapply(1:length(ptms2), function(x) {
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
+  l.ums2 <- lapply(1:length(ptms2), function(x) { ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
     get_ums(
       peaktable = ptms2[[x]],
       correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
