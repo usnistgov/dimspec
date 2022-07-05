@@ -112,7 +112,7 @@ get_search_object <- function(searchmzml, zoom = c(1,4)) {
   if (searchmzml$search_df$ms2exp == "data-independent acquisition (DIA/AIF)" | searchmzml$search_df$ms2exp == "DIA") {
     ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
   }
-  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA") {
+  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA" | searchmzml$search_df$ms2exp == "DDA (data-dependent acquisition)") {
     ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - as.numeric(searchmzml$search_df$isowidth) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + as.numeric(searchmzml$search_df$isowidth))]
   }
   if (searchmzml$search_df$ms2exp == "SWATH") {
@@ -464,13 +464,18 @@ get_errorinfo <- function(con, peakid) {
 #'
 #' @examples
 
-search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
+search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata_precursors(con, searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
   peak_ids <- unique(msdata$peak_id)
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
+  if (optimized_params == TRUE) {
   opt_params <- get_opt_params(con, peak_ids)
   opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  }
+  if (optimized_params == FALSE) {
+    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+  }
   ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
   l.ums2 <- lapply(1:length(ptms2), function(x) {
     get_ums(
@@ -513,10 +518,10 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
   
   #scoring report
   result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
-  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
-  list(result = result,
-       ums2_compare = l.ums2,
-       ums1_compare = l.ums1)
+  reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
+  list(result = result[reorder,],
+       ums2_compare = l.ums2[reorder],
+       ums1_compare = l.ums1[reorder])
 }
 
 #' Search all mass spectra within database against unknown mass spectrum
@@ -529,13 +534,18 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
 #'
 #' @examples
 
-search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
+search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
-  opt_params <- get_opt_params(con, peak_ids)
-  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  if (optimized_params == TRUE) {
+    opt_params <- get_opt_params(con, peak_ids)
+    opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  }
+  if (optimized_params == FALSE) {
+    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+  }
   ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
   l.ums2 <- lapply(1:length(ptms2), function(x) {
     get_ums(peaktable = ptms2[[x]],
@@ -577,9 +587,9 @@ search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
   compounds <- get_compoundid(con, peak_ids)
   
   #scoring report, still doesn't work due to db issues 06152022 BJP
-  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
-  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
-  list(result = result,
-       ums2_compare = l.ums2,
-       ums1_compare = l.ums1)
+  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds, row.names = NUL)
+  reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
+  list(result = result[reorder,],
+       ums2_compare = l.ums2[reorder],
+       ums1_compare = l.ums1[reorder])
 }
