@@ -1,5 +1,6 @@
-dev <- FALSE
+dev <- TRUE
 advanced_use <- FALSE
+toy_data <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
@@ -38,15 +39,11 @@ if (exists("PLUMBER_URL")) {
 app_settings <- list(
   experiment_types = api_endpoint(path = "table_search",
                                   query = list(table_name = "norm_ms_n_types"),
-                                  return_format = "list") %>%
-    lapply(function(x) {
-      if (x$name == "none") {
-        NULL 
-      } else {
-        setNames(x$acronym, HTML(glue::glue("{x$acronym} ({x$name})")))
-      }
-    }) %>%
-    purrr::flatten(),
+                                  return_format = "data.frame") %>%
+    filter(!name == "none", !is.na(name), !name == "") %>%
+    mutate(display = glue::glue("{acronym} ({name})")) %>%
+    with(.,
+         setNames(acronym, display)),
   data_input_import_file_types = c(".mzML"),
   data_input_import_search_settings_types = c(".csv", ".xls", ".xlsx"),
   data_input_relative_error = list(value = 5, min = 0.1, max = 50, step = 0.1),

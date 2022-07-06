@@ -196,7 +196,15 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 }
 
 #' Reloads the plumber API
-#' 
+#'
+#' Depending on system architecture, the plumber service may take some time to
+#' spin up and spin down. If `background` is TRUE, this may mean the calling R
+#' thread runs ahead of the background process resulting in unexpected behavior
+#' (e.g. newly defined endpoints not being available), effectively binding it to
+#' the prior iteration. If the API does not appear to be reloading properly, it
+#' may be necessary to manually kill the process controlling it through your OS
+#' and to call this function again.
+#'
 #' @inheritParams api_start
 #' @inheritParams api_stop
 #'
@@ -207,7 +215,12 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 #' @return None, launches the plumber API service on your local machine
 #' @export
 #' 
-api_reload <- function(pr = NULL, background = TRUE, plumber_file = NULL, on_host = NULL, on_port = NULL, log_ns = "api") {
+api_reload <- function(pr = "plumber_service",
+                       background = TRUE,
+                       plumber_file = NULL,
+                       on_host = NULL,
+                       on_port = NULL,
+                       log_ns = "api") {
   if (exists("log_it")) {
     log_fn("start")
     log_it("debug", "Run api_reload().", log_ns)
@@ -218,16 +231,20 @@ api_reload <- function(pr = NULL, background = TRUE, plumber_file = NULL, on_hos
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
   if (is.character(pr)) {
     pr_name <- pr
-    pr <- NULL
+    if (exists(pr)) {
+      pr <- eval(rlang::sym(pr))
+    } else {
+      pr <- NULL
+    }
   }
   # Argument validation relies on verify_args
   check_args <- list(pr, background, on_host, on_port)
   check_args <- check_args[!unlist(lapply(check_args, is.null))]
   check_conds <- list(
-    if (is.null(pr)) {
+    pr = if (is.null(pr)) {
       NULL
     } else {
-      pr       = list(c("class", "r_process", "process", "R6"))
+      list(c("class", "r_process", "process", "R6"))
     },
     background = list(c("mode", "logical"), c("length", 1)),
     on_host    = list(c("mode", "character"), c("length", 1)),
@@ -366,6 +383,7 @@ api_endpoint <- function(path,
                          execute         = TRUE,
                          open_in_browser = FALSE,
                          raw_result      = FALSE,
+                         return_type     = c("text", "raw", "parsed"),
                          return_format   = c("vector", "data.frame", "list")) {
   require(httr)
   url <- parse_url(server_addr)
@@ -440,10 +458,14 @@ api_endpoint <- function(path,
       utils::browseURL(url = url)
     } else {
       return_format <- match.arg(return_format)
-      out <- httr::content(x = res)
+      return_type   <- match.arg(return_type)
+      out <- httr::content(x = res, as = return_type)
+      if (return_type == "text") {
+        out <- jsonlite::fromJSON(out)
+      }
       out <- switch(return_format,
                     "vector" = unlist(out),
-                    "data.frame" = out %>% bind_rows(),
+                    "data.frame" = bind_rows(out),
                     "list" = out)
       return(out)
     }
