@@ -360,10 +360,18 @@ dashboardPage(
                                                                  options = list(placeholder = "Please add search parameters on the Data Input page."))
                                            )
                                        ),
-                                       actionButton(inputId = "search_compounds_search_btn",
-                                                    label = "Search",
-                                                    icon = icon("magnifying-glass", verify_fa = FALSE),
-                                                    width = "100%")
+                                       div(class = "flex-container",
+                                           actionButton(inputId = "search_compounds_search_btn",
+                                                        label = "Search",
+                                                        icon = icon("magnifying-glass", verify_fa = FALSE)
+                                           ),
+                                           div(id = "search_compounds_use_optimized_parameters_div",
+                                               checkboxInput(inputId = "search_compounds_use_optimized_parameters",
+                                                             label = "Use Optimized Search Parameters",
+                                                             value = TRUE
+                                               )
+                                           )
+                                       )
                                 )
                             ),
                             fluidRow(
@@ -390,7 +398,7 @@ dashboardPage(
                                                       )
                                                   ),
                                                   shinyWidgets::radioGroupButtons(
-                                                      inputId = "search_compounds_ms1_ms2",
+                                                      inputId = "search_compounds_msn",
                                                       label = NULL,
                                                       choices = c("MS1", "MS2"),
                                                       size = "xs",

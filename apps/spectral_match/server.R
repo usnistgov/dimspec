@@ -9,7 +9,7 @@ shinyServer(function(input, output, session) {
   
   # Session Data ----
   user_data <- reactiveVal(
-    if (!dev) {
+    if (!toy_data) {
       NULL
     } else {
       readRDS("toy_data.RDS")
@@ -17,7 +17,7 @@ shinyServer(function(input, output, session) {
   )
   data_input_search_upload <- reactiveVal(NULL)
   data_input_search_parameters <- reactiveVal(
-    if (!dev) {
+    if (!toy_data) {
     tibble(
       precursor = numeric(0),
       rt = numeric(0),
@@ -29,11 +29,13 @@ shinyServer(function(input, output, session) {
     }
   )
   search_compounds_results <- reactiveVal(NULL)
-  search_compounds_results_selected <- reactive(
-    req(search_compounds_results()$result) %>%
+  search_compounds_results_selected <- reactive({
+    req(search_compounds_results()$result,
+        input$search_compounds_dt_rows_selected)
+    search_compounds_results()$result %>%
       bind_rows() %>%
-      slice(req(input$search_compounds_dt_rows_selected))
-  )
+      slice(input$search_compounds_dt_rows_selected)
+  })
   method_narrative <- reactive({
     req(search_compounds_results_selected())
     paste0("This reference spectrum was m",
@@ -501,7 +503,7 @@ shinyServer(function(input, output, session) {
       caption = "Select a row to view the match or send it to uncertainty estimation.",
       extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = "tp",
+        dom = "Btp",
         pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
@@ -516,18 +518,22 @@ shinyServer(function(input, output, session) {
   output$search_compounds_butterfly_plot <- renderPlotly({
     req(
       search_compounds_results(),
-      input$search_compounds_dt_rows_selected
+      !all(is.null(input$search_compounds_dt_rows_selected),
+           is.null(input$search_compounds_dt_row_last_clicked))
     )
-    if (input$search_compounds_ms1_ms2 == "MS2") {
+    if (input$search_compounds_msn == "MS2") {
       compare_actual <- search_compounds_results()$search_object$ums2
       compare_with <- search_compounds_results()$ums2_compare
     } else {
       compare_actual <- search_compounds_results()$search_object$ums1
       compare_with <- search_compounds_results()$ums1_compare
     }
+    this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
+                       input$search_compounds_dt_row_last_clicked,
+                       input$search_compounds_dt_rows_selected)
     plot_compare_ms(
       ums1 = compare_actual,
-      ums2 = compare_with[[input$search_compounds_dt_rows_selected]],
+      ums2 = compare_with[[this_row]],
       ylim.exp = 0.1,
       main = element_blank()
     ) %>%
@@ -552,10 +558,10 @@ shinyServer(function(input, output, session) {
   # __Update to MS1 if no MS2 ----
   observe({
     if (is.na(search_compounds_results_selected()$ms2_dp) &&
-        input$search_compounds_ms1_ms2 == "MS2") {
+        input$search_compounds_msn == "MS2") {
       shinyWidgets::updateRadioGroupButtons(
         session = session,
-        inputId = "search_compounds_ms1_ms2",
+        inputId = "search_compounds_msn",
         selected = "MS1"
       )
     }
@@ -606,17 +612,19 @@ shinyServer(function(input, output, session) {
     showElement("search_compounds_overlay")
     runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
     mzrt <- isolate(data_input_search_parameters()[input$search_compounds_mzrt, ])
-    tmp <- isolate(user_data())
-    tmp$search_df <- tibble(
-      filename = tmp$search_df$filename,
-      precursormz = mzrt$precursor,
-      masserror = isolate(input$data_input_relative_error),
-      minerror = isolate(input$data_input_minimum_error),
-      rt = mzrt$rt,
-      rt_start = mzrt$rt_start,
-      rt_end = mzrt$rt_end,
-      ms2exp = isolate(input$data_input_experiment_type),
-      isowidth = isolate(input$data_input_isolation_width)
+    tmp <- list(
+      mzML = isolate(user_data()$mzML),
+      search_df = tibble(
+        filename = user_data()$search_df$filename,
+        precursormz = mzrt$precursor,
+        masserror = isolate(input$data_input_relative_error),
+        minerror = isolate(input$data_input_minimum_error),
+        rt = mzrt$rt,
+        rt_start = mzrt$rt_start,
+        rt_end = mzrt$rt_end,
+        ms2exp = isolate(input$data_input_experiment_type),
+        isowidth = isolate(input$data_input_isolation_width)
+      )
     )
     runjs("$('#search_compounds_overlay_text').text('Creating search object...');")
     search_object <- get_search_object(
@@ -629,7 +637,8 @@ shinyServer(function(input, output, session) {
         ph = isolate(input$data_input_ph),
         freq = isolate(input$data_input_freq),
         normfn = isolate(input$data_input_norm_function),
-        cormethod = isolate(input$data_input_correlation_method))
+        cormethod = isolate(input$data_input_correlation_method)
+      )
     runjs("$('#search_compounds_overlay_text').text('Scoring database matches...');")
     search_result <- api_endpoint(
       path               = "search_compound",
@@ -637,6 +646,7 @@ shinyServer(function(input, output, session) {
       search_ms          = jsonlite::toJSON(search_object),
       norm_function      = isolate(input$data_input_norm_function),
       correlation_method = isolate(input$data_input_correlation_method),
+      optimized_params   = isolate(input$search_compounds_use_optimized_parameters),
       return_format      = "list"
     )
     search_compounds_results(
@@ -704,10 +714,24 @@ shinyServer(function(input, output, session) {
   })
   # __Butterfly plot ----
   output$uncertainty_butterfly_plot <- renderPlotly({
-    req(search_compounds_results(), input$search_compounds_dt_rows_selected)
+    req(
+      search_compounds_results(),
+      !all(is.null(input$search_compounds_dt_rows_selected),
+           is.null(input$search_compounds_dt_row_last_clicked))
+    )
+    if (input$search_compounds_msn == "MS2") {
+      compare_actual <- search_compounds_results()$search_object$ums2
+      compare_with <- search_compounds_results()$ums2_compare
+    } else {
+      compare_actual <- search_compounds_results()$search_object$ums1
+      compare_with <- search_compounds_results()$ums1_compare
+    }
+    this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
+                       input$search_compounds_dt_row_last_clicked,
+                       input$search_compounds_dt_rows_selected)
     plot_compare_ms(
-      ums1 = search_compounds_results()$search_object$ums1,
-      ums2 = search_compounds_results()$ums1_compare[[input$search_compounds_dt_rows_selected]],
+      ums1 = compare_actual,
+      ums2 = compare_with[[this_row]],
       ylim.exp = 0.1,
       main = element_blank()
     ) %>%
@@ -737,7 +761,7 @@ shinyServer(function(input, output, session) {
       colnames = c("Elemental Formula", "Fragment m/z", "SMILES", "Exact Mass", "Mass Error (ppm)", "Compounds"),
       caption = "Select a row to view the matching fragment.",
       options = list(
-        dom = "tp",
+        dom = "Btp",
         pageLength = 15,
         extensions = c("Responsive", "Buttons"),
         buttons = c("copy", "csv", "excel"),

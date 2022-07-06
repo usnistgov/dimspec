@@ -119,3 +119,17 @@ a > i {
 #search_compounds_method_narrative {
   padding: 10px 0;
 }
+
+#search_compounds_use_optimized_parameters_div {
+  margin: 0;
+}
+
+#search_compounds_use_optimized_parameters_div > div {
+  text-align: right;
+  padding-left: 10px;
+  margin: 0;
+}
+
+#search_compounds_use_optimized_parameters_div > div > .checkbox {
+  margin: 0;
+}
