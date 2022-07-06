@@ -3,6 +3,7 @@
 #* @apiVersion 0.1
 #* @apiLicense NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software. NIST-developed software is expressly provided "AS IS." NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE. You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States. This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties. Pursuant to title 17 Section 105 of the United States Code this software is not subject to copyright protection and is in the public domain. It is an experimental system. NIST assumes no responsibility whatsoever for its use by other parties, and makes no guarantees, expressed or implied, about its quality, reliability, or any other characteristic. We would appreciate acknowledgement if the software is used. This software can be redistributed and/or modified freely provided that any derivative works bear some notice that they are derived from it, and any modified versions bear some notice that they have been modified.
 
+# Filters ----
 #* Log information about each request
 #* @filter logger
 function(req) {
@@ -24,6 +25,8 @@ function(req, res) {
   plumber::forward()
 }
 
+# Endpoints ----
+# _table_search ----
 #* Return data from tables or views as JSON expressions.
 #* @param table_name:character The name of a single table to which this query applies.
 #* @param column_names:character A comma-separated list of column names to include (leave blank to include all columns)
@@ -97,6 +100,7 @@ function(table_name      = "contributors",
   return(res)
 }
 
+# _compound_data ----
 #* Return mass spectral data for a compound by its internal ID number.
 #* @param compound_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
@@ -118,6 +122,7 @@ function(compound_id = 1L,
   return(ms_data)
 }
 
+# _peak_data ----
 #* Return mass spectral data for a peak by its internal ID number.
 #* @param peak_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
@@ -138,6 +143,7 @@ function(peak_id = 1L,
   return(ms_data)
 }
 
+# _list_tables ----
 #* Get the list of tables in the database.
 #* @get /list_tables
 function() {
@@ -146,6 +152,7 @@ function() {
   return(out)
 }
 
+# _list_views  ----
 #* Get the list of stored views in the database.
 #* @get /list_views
 function() {
@@ -154,6 +161,7 @@ function() {
   return(out)
 }
 
+# _ _ping ----
 #* Plumber ping, a health check endpoint to give outside observers an indication of whether or not this API is running.
 #* @get /_ping
 #* @serializer unboxedJSON
@@ -161,6 +169,7 @@ function(req, res) {
   list(status = "OK")
 }
 
+# _version ----
 #* Plumber version, a health check endpoint showing which version of the API is currently running.
 #* @get /version
 #* @serializer unboxedJSON
@@ -172,6 +181,7 @@ function() {
   }
 }
 
+# _support_info ----
 #* Project support information, a health check endpoint. This has less information than running support_info() directly in R but should suffice for most troubleshooting and checking.
 #* @get /support_info
 function() {
@@ -192,34 +202,17 @@ function() {
   return(out)
 }
 
+# _db_active ----
 #* Is the connection valid
 #* @get /db_active
 function() return(dbIsValid(con))
 
+# _rdkit_active ----
 #* Is RDKit available?
 #* @get /rdkit_active
 function() return(exists("rdkit_active") && rdkit_active())
 
-#* Returns a file path to a molecular ball-and-stick plot of a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
-#* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
-#* @param molecular_notation:character Character string of the machine readable notation to visualize.
-#* @param compound_id:int An integer value indicating the compound id (required if type is "compound").
-#* @param fragment_id:int An integer value indicating the fragment id (required if type is "fragment").
-#* @param notation_type:character The type of notation to use to generate the visualization. One of "smiles" or "InChI"
-#* @param as_graphic:logical Whether to return a graphic (default) or a file path reference.
-#* @get /molecular_model
-function(type = "notation",
-         molecular_notation = "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12",
-         compound_id = 1L,
-         fragment_id = 1L,
-         notation_type = "smiles",
-         as_graphic = TRUE) {
-  if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT || !rdkit_active()) {
-    return("RDKit is not available.")
-  }
-  stopifnot(rdkit_active())
-}
-
+# _molecular_model/file ----
 #* Returns a file path to a molecular ball-and-stick plot of a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
 #* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
 #* @param molecular_notation:character Character string of the machine readable notation to visualize.
@@ -299,6 +292,7 @@ function(type = "notation",
   }
 }
 
+# _molecular_model/png ----
 #* Returns a molecular ball-and-stick graphic for a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
 #* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
 #* @param molecular_notation:character Character string of the machine readable notation to visualize.
@@ -376,18 +370,38 @@ function(type = "notation",
   }
 }
 
-#* @get /search_available
-function() {
-  return(exists("search_precursor"))
+# _exists ----
+#* Run R function "exists" on an arbitrary function or variable name. (A plumber health endpoint.)
+#* @param env_name:character THe name of an R object that should be present in the plumber environment.
+#* @get /exists/<env_name>
+function(env_name) {
+  return(exists(env_name))
 }
 
+# _formals ----
+#* Run R function "formals" on an arbitrary function to check its formally declared arguments. (A plumber health endpoint.) Accessing this by using `api_endpoint` may give unexpected results as formals without defaults are truncated in vectors.
+#* @param fn_name:character The name of an R object that should be present in the plumber environment.
+#* @get /formals/<fn_name>
+function(fn_name) {
+  out <- lapply(
+    formals(fn_name),
+    function(x) {
+      ifelse(inherits(x, "name"),
+             NA_character_,
+             x)
+    }
+  )
+}
+
+# _search_compound ----
 #* Search for compounds matching a processed mass spectrum object in JSON notation. This does no preprocessing of the `search_ms` item and only executes the defined search on the database. The serialized version of the object created from `create_search_ms` is much smaller than that of serializing the entire mzML object.  
 #* @param type:character The type of search to perform, one of either "precursor" to search depending on the defined precursor ion, or "all" to search all possible matches regardless of precursor ion.
 #* @param search_ms:character Search object generated by other calls, primarily those created by the R function `create_search_ms` which relies on other paths and should be processed outside this server.
 #* @param norm_function:character Normalization function to use during the search, one of "sum" or "mean"
 #* @param correlation_method:character Correlation function to use during the search, must be one of "pearson", "kendall", or "spearman"
+#* @param optimized_params:logical Whether or not to use the optimized search parameters present in `search_ms` (default TRUE) or to use an unconstrained search space (FALSE) which may improve matches under certain conditions.
 #* @get /search_compound
-function(type, search_ms, norm_function = "sum", correlation_method = "pearson") {
+function(type, search_ms, norm_function = "sum", correlation_method = "pearson", optimized_params = TRUE) {
   type <- match.arg(type, c("precursor", "all"))
   norm_function <- match.arg(norm_function, choices = c("sum", "mean"))
   correlation_method <- match.arg(correlation_method, eval(formals(cor)$method))
@@ -400,11 +414,13 @@ function(type, search_ms, norm_function = "sum", correlation_method = "pearson")
     con = con,
     searchms = search_ms,
     normfn = norm_function,
-    cormethod = correlation_method
+    cormethod = correlation_method,
+    optimized_params = optimized_params
   )
   return(out)
 }
 
+# _method_narrative ----
 #* Get the mass spectroscopic method narrative for a peak, sample, or method by database ID.
 #* @param type:character The type of `id` to search, must be one of "peak", "sample", or "method"
 #* @param table_pk:integer An integer primary key, which must exist
@@ -445,6 +461,7 @@ function(type = "peak", table_pk) {
   return(out)
 }
 
+# _annotated_fragments ----
 #* Get matching fragments from the database for a list of fragment mass-to-charge ratios
 #* @param type:character Type of search to perform, one of "annotated" or "all"
 #* @param fragment_ions:character JSON list of mass-to-charge ratios observed for fragments
