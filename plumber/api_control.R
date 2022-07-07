@@ -142,9 +142,14 @@ api_open_doc <- function(url = PLUMBER_URL) {
 #' @note This will also kill and restart the connection object if `flush` is
 #'   TRUE to release connections with certain configurations such as SQLite in
 #'   write ahead log mode.
+#' @note This function assumes the object referenced by name `pr` exists in the
+#'   global environment, and `remove_service_object` will only remove it from
+#'   .GlobalEnv.
 #'
-#' @param pr Rterm process object of class "r_process", "process", and "R6"
-#'   created from [plumber::pr_run]
+#' @param pr CHR scalar name of the plumber service object, typically only
+#'   created as a background observer from [callr::r_bg] as a result of calling
+#'   [api_reload] (default: NULL gets the environment setting for
+#'   PLUMBER_OBJ_NAME)
 #' @param flush LGL scalar of whether to disconnect and reconnect to a database
 #'   connection named as `db_conn` (default: TRUE)
 #' @param db_conn CHR scalar of the connection object name (default: "con")
@@ -153,17 +158,18 @@ api_open_doc <- function(url = PLUMBER_URL) {
 #'
 #' @return None, stops the plumber server
 #' @export
-api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove_service_obj = TRUE) {
+api_stop <- function(pr = NULL, flush = TRUE, db_conn = "con", remove_service_obj = TRUE) {
   if (exists("log_it")) {
     log_fn("start")
     log_it("trace", "Run api_stop().", "api")
   }
+  if (is.null(pr)) pr <- rectify_null_from_env(pr, PLUMBER_OBJ_NAME, "plumber_service", "api")
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
-        pr                 = list(c("class", "r_process", "process", "R6")),
+        pr                 = list(c("mode", "character"), c("length", 1)),
         flush              = list(c("mode", "logical"), c("length", 1)),
         db_conn            = list(c("mode", "character"), c("length", 1)),
         remove_service_obj = list(c("mode", "logical"), c("length", 1))
@@ -180,8 +186,12 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
     stopifnot(is.logical(remove_service_obj))
     stopifnot(length(remove_service_obj) == 1)
   }
+  if (!exists(pr)) {
+    log_it("info", glue::glue("No object named {pr} exists to stop. Is the name correct?"), "api")
+    return(invisible(NULL))
+  }
   if (exists("log_it")) log_it("debug", "Killing plumber service.", "api")
-  pr$kill()
+  if (eval(sym(pr))$is_alive()) eval(sym(pr))$kill()
   if (!exists(db_conn)) flush <- FALSE
   if (flush) {
     if (exists("log_it")) log_it("debug", "Flushing database connections and reconnecting.", "api")
@@ -190,7 +200,7 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
     manage_connection(conn_name = db_conn)
   }
   if (remove_service_obj) {
-    rm(list = deparse(substitute(pr)), envir = .GlobalEnv)
+    rm(list = pr, envir = .GlobalEnv)
   }
   if (exists("log_it")) log_fn("end")
 }
@@ -215,7 +225,7 @@ api_stop <- function(pr = plumber_service, flush = TRUE, db_conn = "con", remove
 #' @return None, launches the plumber API service on your local machine
 #' @export
 #' 
-api_reload <- function(pr = "plumber_service",
+api_reload <- function(pr = NULL,
                        background = TRUE,
                        plumber_file = NULL,
                        on_host = NULL,
@@ -225,27 +235,21 @@ api_reload <- function(pr = "plumber_service",
     log_fn("start")
     log_it("debug", "Run api_reload().", log_ns)
   }
-  if (is.null(on_host)) on_host <- PLUMBER_HOST
-  if (is.null(on_port)) on_port <- PLUMBER_PORT
-  if (!exists("PLUMBER_URL")) PLUMBER_URL <- sprintf("%s:%s", on_host, on_port)
+  pr      <- rectify_null_from_env(pr, PLUMBER_OBJ_NAME, "plumber_service")
+  pr_name <- pr
+  on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
+  on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
-  if (is.character(pr)) {
-    pr_name <- pr
-    if (exists(pr)) {
-      pr <- eval(rlang::sym(pr))
-    } else {
-      pr <- NULL
-    }
+  PLUMBER_URL <- sprintf("%s:%s", on_host, on_port)
+  service_exists <- suppressWarnings(exists(pr))
+  if (!service_exists) {
+    pr <- NULL
   }
   # Argument validation relies on verify_args
   check_args <- list(pr, background, on_host, on_port)
   check_args <- check_args[!unlist(lapply(check_args, is.null))]
   check_conds <- list(
-    pr = if (is.null(pr)) {
-      NULL
-    } else {
-      list(c("class", "r_process", "process", "R6"))
-    },
+    pr         = if (is.null(pr)) NULL else list(c("mode", "character"), c("length", 1)),
     background = list(c("mode", "logical"), c("length", 1)),
     on_host    = list(c("mode", "character"), c("length", 1)),
     on_port    = list(c("mode", "numeric"), "no_na", c("length", 1))
@@ -267,8 +271,10 @@ api_reload <- function(pr = "plumber_service",
     stopifnot(length(plumber_file) == 1)
     stopifnot(file.exists(plumber_file))
   }
-  if (!is.null(pr) && pr$is_alive()) api_stop(pr = pr)
-  url <- sprintf("http://%s:%s", on_host, on_port)
+  if (!is.null(pr) && eval(sym(pr))$is_alive()) {
+    api_stop(pr = pr)
+  }
+  url <- sprintf("%s:%s", on_host, on_port)
   if (exists("log_it")) {
     if (!url == PLUMBER_URL) {
       log_it("warn",
@@ -280,7 +286,6 @@ api_reload <- function(pr = "plumber_service",
     log_it("debug", "Calling api_start() from api_reload()", log_ns)
   }
   if (background) {
-    pr_name <- obj_name_check(pr, "plumber_service")
     assign(
       x = pr_name,
       value = callr::r_bg(
@@ -301,9 +306,8 @@ api_reload <- function(pr = "plumber_service",
       on_port = on_port
     )
   }
-  this_pr <- eval(sym(pr_name))
   if (exists("log_it")) log_it("trace", "Evaluating service...", log_ns)
-  if (this_pr$is_alive()) {
+  if (exists(pr_name) && eval(sym(pr_name))$is_alive()) {
     if (exists("log_it")) {
       log_it("info",
              sprintf(

@@ -24,6 +24,7 @@ if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
 }
 
 lapply(c(DEPENDS_ON, "plumber", "reticulate", "httr"), library, character.only = TRUE, quietly = TRUE)
+PLUMBER_OBJ_NAME <- "plumber_service"
 
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings
