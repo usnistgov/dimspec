@@ -1,4 +1,4 @@
-dev <- TRUE
+dev <- FALSE
 advanced_use <- FALSE
 toy_data <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
