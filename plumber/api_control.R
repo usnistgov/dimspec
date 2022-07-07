@@ -289,12 +289,17 @@ api_reload <- function(pr = NULL,
     assign(
       x = pr_name,
       value = callr::r_bg(
-        func = function() {
+        args = list(
+          on_host = on_host,
+          on_port = on_port,
+          plumber_file = PLUMBER_FILE
+        ),
+        func = function(on_host, on_port, plumber_file) {
           source(here::here("plumber", "env_plumb.R"))
           api_start(
-            on_host = PLUMBER_HOST,
-            on_port = PLUMBER_PORT,
-            plumber_file = PLUMBER_FILE
+            on_host = on_host,
+            on_port = on_port,
+            plumber_file = plumber_file
           )
         }
       ),
@@ -429,7 +434,7 @@ api_endpoint <- function(path,
     while(pinging) {
       if (ping_i > ping_limit) {
         pinging <- FALSE
-        stop("API timeout. Check that `plumber_service$is_alive()` or try `api_open_doc` to force a check. You may need to reload with `api_reload()` if the service isn't running.\n")
+        stop("API timeout. Check the `$is_alive()` property of the plumber service or try `api_open_doc` to force a check. You may need to reload with `api_reload()` if the service isn't running.\n")
       } else {
         message(glue::glue("Ping {ping_i} of {ping_limit}...\n"))
         res <- try(httr::GET(url = url))
