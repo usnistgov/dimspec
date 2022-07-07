@@ -1541,16 +1541,19 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   }
   # Argument validation relies on verify_args
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = list(back_up_connected_tbls),
-      conditions = list(
-        back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
-      ),
-      from_fn = "close_up_shop"
-    )
-    stopifnot(arg_check$valid)
-  }
+  stopifnot(
+    is.logical(back_up_connected_tbls),
+    length(back_up_connected_tbls) == 1
+  )
+  # if (exists("verify_args")) {
+  #   arg_check <- verify_args(
+  #     args       = list(back_up_connected_tbls),
+  #     conditions = list(
+  #       back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
+  #     )
+  #   )
+  #   stopifnot(arg_check$valid)
+  # }
   
   tmp <- lapply(as.list(.GlobalEnv), class)
   # Kill plumber instances
@@ -1564,8 +1567,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
   ]
   for (api in api_services) {
     if (.GlobalEnv[[api]]$is_alive()) {
-      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = FALSE)
-      rm(list = api, envir = .GlobalEnv)
+      api_stop(pr = api, remove_service_obj = TRUE)
+      # rm(list = api, envir = .GlobalEnv)
     }
   }
   # Kill db connected objects
