@@ -87,14 +87,15 @@ shinyServer(function(input, output, session) {
   # Element Display ----
   observe({
     toggleElement("data_input_additional", condition = advanced_use)
-    if (!dev) {
+    # if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
       toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()) > 0)
-      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()) > 0)
-    }
+      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
+      toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
+      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
+    # }
   })
   
   # Navigation ----
@@ -463,7 +464,7 @@ shinyServer(function(input, output, session) {
       matches <- search_compounds_results()$result %>%
         slice(input$search_compounds_dt_rows_selected)
       match_out <- h4(
-          "Selected comparison is is",
+          "Selected comparison is",
           p(style = "font-weight: bold; display: inline;", matches$name),
           "from",
           ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
@@ -500,10 +501,10 @@ shinyServer(function(input, output, session) {
                        selected = 1),
       autoHideNavigation = TRUE,
       colnames = c("Compound ID", "Compound ID", "MS1 Score", "MS1 Score (Rev)", "MS2 Score", "MS2 Score (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
-      caption = "Select a row to view the match or send it to uncertainty estimation.",
+      caption = "Select a row to view the match or send it to uncertainty estimation, or click a button at the bottom to save this table.",
       extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = "Btp",
+        dom = "tBp",
         pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
@@ -799,6 +800,10 @@ shinyServer(function(input, output, session) {
     deleteFile = FALSE
   )
   output$search_fragment_ballstick_caption <- renderText({
+    validate(
+      need(search_fragments_results_selected(),
+           message = "Please select a fragment in the table.")
+    )
     selected_fragment <- req(search_fragments_results_selected())
     glue::glue("The fragment measured at m/z {round(selected_fragment$fragment_mz, 4)} has been previously annotated as fragment ID {selected_fragment$fragment_id} with structure {selected_fragment$smiles} and has been previously associated with {selected_fragment$compounds}. The measurement error compared with the expected exact mass is {round(selected_fragment$mass_error, 3)} ppm.")
   })

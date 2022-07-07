@@ -8,16 +8,16 @@ dashboardPage(
         )
     ),
     sidebar = dashboardSidebar(
-        if (dev) {
-            div(
-                h4("Plumber instance is live at ", PLUMBER_URL),
-                p("View the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
-                actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
-            )
-        } else {
-            NULL
-        },
         h4(style = "padding-left: 15px;", "HRAMS Database for PFAS"),
+        if (dev) {
+          div(style = "padding-left: 15px;",
+              h4(style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE"),
+              p("Plumber instance is live at ", PLUMBER_URL, "; view the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
+              actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
+          )
+        } else {
+          NULL
+        },
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("Home",
@@ -310,10 +310,10 @@ dashboardPage(
                                                 label = "Match Compounds",
                                                 icon = icon("magnifying-glass", verify_fa = FALSE)
                                    ),
-                                   actionButton(inputId = "data_input_go_uncertainty",
-                                                label = "Evaluate Uncertainty",
-                                                icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
-                                   ),
+                                   # actionButton(inputId = "data_input_go_uncertainty",
+                                   #              label = "Evaluate Uncertainty",
+                                   #              icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
+                                   # ),
                                    actionButton(inputId = "data_input_go_fragment",
                                                 label = "Match Fragments",
                                                 icon = icon("puzzle-piece", verify_fa = FALSE)
@@ -430,6 +430,11 @@ dashboardPage(
                                                       withSpinner()
                                            )
                                        )
+                                ),
+                                column(12,
+                                       id = "search_compounds_no_results",
+                                       h4(style = "text-align: center;",
+                                          "No match was found this feature.")
                                 )
                             )
                         )
