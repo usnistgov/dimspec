@@ -2,7 +2,7 @@ mod_data_input_parameters_manual <- function() {
   modalDialog(
     title = "Peak search parameters",
     size = "s",
-    easyClose = TRUE,
+    easyClose = FALSE,
     numericInput(inputId = "mod_search_parameter_precursor",
                  label = "Precursor m/z",
                  value = NULL,
@@ -39,7 +39,7 @@ mod_data_input_parameters_upload <- function(data) {
   modalDialog(
     title = "Import peak search parameters",
     size = "s",
-    easyClose = TRUE,
+    easyClose = FALSE,
     tags$caption("Select one column from your file corresponding to each of the following parameters."),
     hr(),
     selectizeInput(inputId = "mod_upload_parameter_precursor",
