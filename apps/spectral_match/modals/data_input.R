@@ -27,10 +27,14 @@ mod_data_input_parameters_manual <- function() {
                  min = 0,
                  max = 1e5,
                  width = "100%"),
-    actionButton(inputId = "mod_data_input_search_parameter_save",
-                 label = "Save Parameters",
-                 icon = icon("save"),
-                 width = "100%"),
+    div(class = "flex-container",
+        actionButton(inputId = "mod_data_input_search_parameter_save",
+                     label = "Save Parameters",
+                     icon = icon("save")),
+        actionButton(inputId = "mod_search_parameter_cancel",
+                     label = "Cancel",
+                     icon = icon("close", verify_fa = FALSE))
+    ),
     footer = NULL
   )
 }
@@ -69,10 +73,14 @@ mod_data_input_parameters_upload <- function(data) {
     checkboxInput(inputId = "mod_upload_parameter_append",
                   label = "Append to the current parameter list",
                   value = TRUE),
-    actionButton(inputId = "mod_data_input_upload_parameter_save",
-                 label = "Load Parameters",
-                 icon = icon("save"),
-                 width = "100%"),
+    div(class = "flex-container",
+        actionButton(inputId = "mod_data_input_upload_parameter_save",
+                     label = "Load Parameters",
+                     icon = icon("save")),
+        actionButton(inputId = "mod_upload_parameter_cancel",
+                     label = "Cancel",
+                     icon = icon("close", verify_fa = FALSE))
+    ),
     footer = NULL
   )
 }

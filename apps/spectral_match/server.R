@@ -246,6 +246,10 @@ shinyServer(function(input, output, session) {
       showModal(mod_data_input_parameters_upload(data = upload))
     }
   })
+  observeEvent(input$mod_upload_parameter_cancel, {
+    reset("data_input_import_search")
+    removeModal()
+  })
   observeEvent(input$mod_data_input_upload_parameter_save, {
     valid <- complete_form_entry(input, mod_upload_params)
     req(valid)
@@ -334,6 +338,9 @@ shinyServer(function(input, output, session) {
     req(input$data_input_dt_peak_list_rows_selected)
     data_input_search_parameters()[-input$data_input_dt_peak_list_rows_selected, ] %>%
       data_input_search_parameters()
+  })
+  observeEvent(input$mod_search_parameter_cancel, {
+    removeModal()
   })
   observeEvent(input$mod_data_input_search_parameter_save, {
     valid <- complete_form_entry(input, mod_search_params)
