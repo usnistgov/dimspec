@@ -1,5 +1,14 @@
 @import url("https://use.fontawesome.com/releases/v6.1.1/css/all.css") all;
 
+body {
+  overflow: hidden !important;
+}
+
+.content {
+  overflow: auto;
+  height: calc(100vh - 50px);
+}
+
 .flex-container {
   display: flex;
   width: 100%;
