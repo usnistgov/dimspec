@@ -8,6 +8,7 @@ shinyServer(function(input, output, session) {
   }
   
   # Session Data ----
+  advanced_use <- reactiveVal(advanced_use)
   user_data <- reactiveVal(
     if (!toy_data) {
       NULL
@@ -29,12 +30,24 @@ shinyServer(function(input, output, session) {
     }
   )
   search_compounds_results <- reactiveVal(NULL)
+  search_compounds_row_selected <- reactiveVal(NULL)
+  observeEvent(input$search_compounds_dt_rows_selected, {
+    old_val <- isolate(search_compounds_row_selected())
+    if (is.null(input$search_compounds_dt_rows_selected)) {
+      if (is.null(input$search_compounds_dt_row_las_clicked)) {
+        new_val <- 1
+      } else {
+        new_val <- input$search_compounds_dt_row_last_clicked
+      }
+    } else {
+      new_val <- input$search_compounds_dt_rows_selected
+    }
+    if (is.null(old_val) || new_val != old_val) search_compounds_row_selected(new_val)
+  })
   search_compounds_results_selected <- reactive({
-    req(search_compounds_results()$result,
-        input$search_compounds_dt_rows_selected)
+    req(search_compounds_row_selected())
     search_compounds_results()$result %>%
-      bind_rows() %>%
-      slice(input$search_compounds_dt_rows_selected)
+      slice(search_compounds_row_selected())
   })
   method_narrative <- reactive({
     req(search_compounds_results_selected())
@@ -47,21 +60,26 @@ shinyServer(function(input, output, session) {
              stringr::str_sub(2)
     )
   })
+  uncertainty_results <- reactiveVal(NULL)
   search_fragments_results <- reactiveVal(
-      tibble(
-        fragment_id = integer(0),
-        formula = character(0),
-        smiles = character(0),
-        fragment_mz = numeric(0),
-        exactmass = numeric(0),
-        mass_error = numeric(0),
-        compounds = character(0)
-      )
+    NULL
+      # tibble(
+      #   fragment_id = integer(0),
+      #   formula = character(0),
+      #   smiles = character(0),
+      #   fragment_mz = numeric(0),
+      #   exactmass = numeric(0),
+      #   mass_error = numeric(0),
+      #   compounds = character(0)
+      # )
   )
-  search_fragments_results_selected <- reactive(
-    req(search_fragments_results()) %>%
+  search_fragments_results_selected <- reactive({
+    req(search_fragments_results(),
+        input$search_fragments_dt_rows_selected)
+    search_fragments_results()$result %>%
+      bind_rows() %>%
       slice(req(input$search_fragments_dt_rows_selected))
-  )
+  })
   mod_search_params <- c(
     "mod_search_parameter_precursor",
     "mod_search_parameter_rt",
@@ -81,12 +99,13 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#data_input_overlay")
   hideElement(selector = "#data_input_next_actions")
   hideElement(selector = "#search_compounds_overlay")
-  hideElement(selector = "#uncertainty_overlay")
+  # hideElement(selector = "#uncertainty_overlay")
   hideElement(selector = "#search_fragments_overlay")
   
   # Element Display ----
   observe({
-    toggleElement("data_input_additional", condition = advanced_use)
+    toggleElement("data_input_additional", condition = advanced_use())
+    toggleElement("mod_uncertainty_additional", condition = advanced_use())
     # if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
@@ -95,6 +114,7 @@ shinyServer(function(input, output, session) {
       toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
       toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
       toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
+      toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
     # }
   })
   
@@ -340,7 +360,7 @@ shinyServer(function(input, output, session) {
       data_input_search_parameters()
   })
   observeEvent(input$mod_search_parameter_cancel, {
-    removeModal()
+    
   })
   observeEvent(input$mod_data_input_search_parameter_save, {
     valid <- complete_form_entry(input, mod_search_params)
@@ -463,13 +483,12 @@ shinyServer(function(input, output, session) {
   output$search_compounds_status2 <- renderUI({
     req(
       search_compounds_results(),
-      input$search_compounds_dt_rows_selected
+      search_compounds_results_selected()
     )
-    if (input$search_compounds_dt_rows_selected == 1) {
+    if (search_compounds_row_selected() == 1) {
       NULL
     } else {
-      matches <- search_compounds_results()$result %>%
-        slice(input$search_compounds_dt_rows_selected)
+      matches <- search_compounds_results_selected()
       match_out <- h4(
           "Selected comparison is",
           p(style = "font-weight: bold; display: inline;", matches$name),
@@ -507,7 +526,7 @@ shinyServer(function(input, output, session) {
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Compound ID", "Compound ID", "MS1 Score", "MS1 Score (Rev)", "MS2 Score", "MS2 Score (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
+      colnames = c("Compound ID", "Compound", "MS1 Score", "MS1 Score (Rev)", "MS2 Score", "MS2 Score (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
       caption = "Select a row to view the match or send it to uncertainty estimation, or click a button at the bottom to save this table.",
       extensions = c("Responsive", "Buttons"),
       options = list(
@@ -526,22 +545,11 @@ shinyServer(function(input, output, session) {
   output$search_compounds_butterfly_plot <- renderPlotly({
     req(
       search_compounds_results(),
-      !all(is.null(input$search_compounds_dt_rows_selected),
-           is.null(input$search_compounds_dt_row_last_clicked))
+      search_compounds_row_selected()
     )
-    if (input$search_compounds_msn == "MS2") {
-      compare_actual <- search_compounds_results()$search_object$ums2
-      compare_with <- search_compounds_results()$ums2_compare
-    } else {
-      compare_actual <- search_compounds_results()$search_object$ums1
-      compare_with <- search_compounds_results()$ums1_compare
-    }
-    this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
-                       input$search_compounds_dt_row_last_clicked,
-                       input$search_compounds_dt_rows_selected)
     plot_compare_ms(
-      ums1 = compare_actual,
-      ums2 = compare_with[[this_row]],
+      ums1 = search_compounds_results()$search_object[[sprintf("u%s", tolower(input$search_compounds_msn))]],
+      ums2 = search_compounds_results()[[sprintf("u%s_compare", tolower(input$search_compounds_msn))]][[search_compounds_row_selected()]],
       ylim.exp = 0.1,
       main = element_blank()
     ) %>%
@@ -572,6 +580,13 @@ shinyServer(function(input, output, session) {
         inputId = "search_compounds_msn",
         selected = "MS1"
       )
+      if (!is.null(uncertainty_results())) {
+        shinyWidgets::updateRadioGroupButtons(
+          session = session,
+          inputId = "mod_uncertainty_msn",
+          selected = "MS1"
+        )
+      }
     }
   })
   # __Execute search ----
@@ -667,93 +682,191 @@ shinyServer(function(input, output, session) {
     )
     hideElement("search_compounds_overlay")
   })
-  # __Evaluate uncertainty ----
+  # __Evaluate uncertainty (modal) ----
   observeEvent(input$search_compounds_uncertainty_btn, ignoreNULL = TRUE, ignoreInit = TRUE, {
-    # search_compounds_results_selected() %>%
-    #   bootstrap_compare_ms()
-    browser()
-    updateTabsetPanel(session = session,
-                      inputId = "sidebar_menu",
-                      selected = "uncertainty")
+    uncertainty_results(NULL)
+    showModal(mod_uncertainty_evaluation(input$search_compounds_msn))
+  })
+  observeEvent(input$mod_uncertainty_calculate, ignoreNULL = TRUE, ignoreInit = TRUE, {
+    tmp <- req(search_compounds_results())
+    runjs(sprintf("$('#search_compounds_overlay_text').text('Running %s bootstrap iterations...');",
+                  input$mod_uncertainty_iterations))
+    showElement("search_compounds_overlay")
+    n_runs <- as.numeric(gsub(",", "", input$mod_uncertainty_iterations))
+    compare_actual <- sprintf("u%s", tolower(input$search_compounds_msn))
+    compare_with <- sprintf("u%s_compare", tolower(input$search_compounds_msn))
+    bootstrap_compare_ms(
+      ms1 = tmp$search_object[[compare_actual]],
+      ms2 = tmp[[compare_with]][[search_compounds_row_selected()]],
+      runs = n_runs
+    ) %>%
+      uncertainty_results()
+    hideElement("search_compounds_overlay")
+  })
+  observeEvent(input$mod_uncertainty_msn, {
+    updateRadioGroupButtons(
+      session = session,
+      inputId = "search_compounds_msn",
+      selected = input$mod_uncertainty_msn
+    )
+  })
+  output$mod_uncertainty_match_dt <- renderDT(
+    server = FALSE,
+    expr = DT::datatable(
+      data = req(search_compounds_results_selected()) %>%
+        select(compound_id, name, ms1_dp, ms1_rdp, ms2_dp, ms2_rdp,total_ann_fragments, total_ann_structures, total_ann_citations, sample_class, peak_ids),
+      rownames = FALSE,
+      selection = list(mode = "none"),
+      autoHideNavigation = TRUE,
+      colnames = c("Compound ID", "Compound", "MS1", "MS1 (Rev)", "MS2", "MS2 (Rev)", "# Annotated Fragments", "# Annotated Structures", "# Annotated Citations", "Sample Class", "Peak ID"),
+      extensions = "Responsive",
+      options = list(
+        dom = "t",
+        pageLength = 10,
+        buttons = c("copy", "csv", "excel"),
+        columnDefs = list(
+          list(visible = FALSE, targets = c(0, 10)),
+          list(className = "dt-center", targets = 2:9),
+          list(className = "dt-left", targets = 1),
+          list(responsivePriority = 1, targets = 1:5),
+          list(responsivePriority = 10000, targets = c(0, 6:10)),
+          list("min-width" = "200px", targets = 1)
+        )
+      )
+    ))
+  output$mod_uncertainty_narrative <- renderUI({
+    req(uncertainty_results())
+    scores <- uncertainty_results()$result
+    tagList(
+      hr(),
+      p(glue::glue("Forward match scores ranged {paste0(round(range(scores$dp), 4), collapse = ' - ')} with an IQR of {round(IQR(scores$dp), 4)} and median of {round(median(scores$dp), 4)}.")),
+      p(glue::glue("Reverse match scores ranged {paste0(round(range(scores$rdp), 4), collapse = ' - ')} with an IQR of {round(IQR(scores$rdp), 4)} and median of {round(median(scores$rdp), 4)}.")),
+      hr()
+    )
+  })
+  output$mod_uncertainty_boxplot <- renderPlot({
+    res <- req(uncertainty_results()$results)
+    iter <- req(isolate(input$mod_uncertainty_iterations))
+    msn <- req(isolate(input$search_compounds_msn))
+    real_match <- req(isolate(search_compounds_results_selected())) %>%
+      select(starts_with(tolower(msn))) %>%
+      pivot_longer(everything()) %>%
+      mutate(name = case_when(
+        grepl("_rdp", name) ~ "Reverse",
+        grepl("_dp", name) ~ "Forward")
+      )
+    out <- tibble(
+      name = factor(
+        c(
+          rep("Forward", nrow(res)),
+          rep("Reverse", nrow(res))
+        ),
+        levels = c("Forward", "Reverse")
+      ),
+      value = c(res$dp, res$rdp
+      )
+    ) %>%
+      ggplot(
+        aes(x = name,
+            y = value,
+            fill = name)
+      ) +
+      geom_boxplot(show.legend = FALSE) +
+      geom_point(
+        data = real_match,
+        shape = 23,
+        size = 4,
+        fill = "green",
+        show.legend = FALSE
+      ) +
+      theme_bw() +
+      labs(
+        title = glue::glue("Range of Match Scores ({iter} Iterations)"),
+        subtitle = glue::glue("{msn} match for {search_compounds_results_selected()$name}"),
+        caption = "Original match scores are shown as green diamonds.",
+        x = "Direction",
+        y = "Score"
+      )
+    out
   })
 
-  # UNCERTAINTY PAGE ----
-  # _Reactives ----
-  # __Feedback ----
-  # __Method narrative ----
-  output$uncertainty_method_narrative <- renderUI({
-    req(method_narrative())
-    tags$caption(
-      style = "display: inline;",
-      method_narrative()
-    )
-  })
-  output$uncertainty_status <- renderUI({
-    req(
-      search_compounds_results(),
-      input$search_compounds_dt_rows_selected
-    )
-      matches <- search_compounds_results()$result %>%
-        slice(input$search_compounds_dt_rows_selected)
-      match_out <- h4(
-        "Uncertainty evaluation for the selected match of",
-        p(style = "font-weight: bold; display: inline;", matches$name),
-        "from",
-        ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
-               "an",
-               "a"),
-        matches$sample_class
-      )
-      match_score1 <- p(
-        "MS1 Score: ",
-        p(style = "font-weight: bold;", matches$ms1_dp),
-        "(rev score ", matches$ms1_rdp, ")"
-      )
-      if (!is.na(matches$ms2_dp)) {
-        match_score2 <- p(
-          " |  MS2 Score: ",
-          p(style = "font-weight: bold;;", matches$ms2_dp),
-          "( rev score ", matches$ms2_rdp, ")"
-        )
-      } else {
-        match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
-      }
-      tagList(match_out, match_score1, match_score2)
-  })
-  # __Butterfly plot ----
-  output$uncertainty_butterfly_plot <- renderPlotly({
-    req(
-      search_compounds_results(),
-      !all(is.null(input$search_compounds_dt_rows_selected),
-           is.null(input$search_compounds_dt_row_last_clicked))
-    )
-    if (input$search_compounds_msn == "MS2") {
-      compare_actual <- search_compounds_results()$search_object$ums2
-      compare_with <- search_compounds_results()$ums2_compare
-    } else {
-      compare_actual <- search_compounds_results()$search_object$ums1
-      compare_with <- search_compounds_results()$ums1_compare
-    }
-    this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
-                       input$search_compounds_dt_row_last_clicked,
-                       input$search_compounds_dt_rows_selected)
-    plot_compare_ms(
-      ums1 = compare_actual,
-      ums2 = compare_with[[this_row]],
-      ylim.exp = 0.1,
-      main = element_blank()
-    ) %>%
-      ggplotly()
-  })
-  # output$uncertainty_boxplot <- renderPlotly(
-  #   search_compounds_results_selected() %>%
-  #     boxplot_quant() %>%
+  # # UNCERTAINTY PAGE ----
+  # # _Reactives ----
+  # # __Feedback ----
+  # # __Method narrative ----
+  # output$uncertainty_method_narrative <- renderUI({
+  #   req(method_narrative())
+  #   tags$caption(
+  #     style = "display: inline;",
+  #     method_narrative()
+  #   )
+  # })
+  # output$uncertainty_status <- renderUI({
+  #   req(
+  #     search_compounds_results(),
+  #     input$search_compounds_dt_rows_selected
+  #   )
+  #     matches <- search_compounds_results()$result %>%
+  #       slice(input$search_compounds_dt_rows_selected)
+  #     match_out <- h4(
+  #       "Uncertainty evaluation for the selected match of",
+  #       p(style = "font-weight: bold; display: inline;", matches$name),
+  #       "from",
+  #       ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+  #              "an",
+  #              "a"),
+  #       matches$sample_class
+  #     )
+  #     match_score1 <- p(
+  #       "MS1 Score: ",
+  #       p(style = "font-weight: bold;", matches$ms1_dp),
+  #       "(rev score ", matches$ms1_rdp, ")"
+  #     )
+  #     if (!is.na(matches$ms2_dp)) {
+  #       match_score2 <- p(
+  #         " |  MS2 Score: ",
+  #         p(style = "font-weight: bold;;", matches$ms2_dp),
+  #         "( rev score ", matches$ms2_rdp, ")"
+  #       )
+  #     } else {
+  #       match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
+  #     }
+  #     tagList(match_out, match_score1, match_score2)
+  # })
+  # # __Butterfly plot ----
+  # output$uncertainty_butterfly_plot <- renderPlotly({
+  #   req(
+  #     search_compounds_results(),
+  #     !all(is.null(input$search_compounds_dt_rows_selected),
+  #          is.null(input$search_compounds_dt_row_last_clicked))
+  #   )
+  #   if (input$search_compounds_msn == "MS2") {
+  #     compare_actual <- search_compounds_results()$search_object$ums2
+  #     compare_with <- search_compounds_results()$ums2_compare
+  #   } else {
+  #     compare_actual <- search_compounds_results()$search_object$ums1
+  #     compare_with <- search_compounds_results()$ums1_compare
+  #   }
+  #   this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
+  #                      input$search_compounds_dt_row_last_clicked,
+  #                      input$search_compounds_dt_rows_selected)
+  #   plot_compare_ms(
+  #     ums1 = compare_actual,
+  #     ums2 = compare_with[[this_row]],
+  #     ylim.exp = 0.1,
+  #     main = element_blank()
+  #   ) %>%
   #     ggplotly()
-  # )
-  # output$uncertainty_summary <- renderText(
-  #   search_compounds_results_selected() %>%
-  #     bootstrap_compare_ms()
-  # )
+  # })
+  # # output$uncertainty_boxplot <- renderPlotly(
+  # #   search_compounds_results_selected() %>%
+  # #     boxplot_quant() %>%
+  # #     ggplotly()
+  # # )
+  # # output$uncertainty_summary <- renderText(
+  # #   search_compounds_results_selected() %>%
+  # #     bootstrap_compare_ms()
+  # # )
 
   # FRAGMENT SEARCH PAGE ----
   # _Reactives ----

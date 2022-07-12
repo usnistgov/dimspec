@@ -63,7 +63,13 @@ app_settings <- list(
   # data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
   # data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
   # data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
-  search_compounds_bootstrap_iterations = list(value = 100, min = 10, max = 10000, step = 1e2)
+  uncertainty_mass_error_compare_actual = list(value = 5, min = 0.1, max = 50, step = 0.1),
+  uncertainty_mass_error_compare_with = list(value = 5, min = 0.1, max = 50, step = 0.1),
+  uncertainty_min_error_compare_actual = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
+  uncertainty_min_error_compare_with = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
+  uncertainty_weighting_mass = list(value = 1, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
+  uncertainty_weighting_intensity = list(value = 0.5, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
+  uncertainty_bootstrap_iterations = list(choices = c(10, 50, 100, 500, 1000, 5000, 10000), selected = 100)
 )
 
 rdkit_available <- api_endpoint(path = "rdkit_active")
