@@ -86,12 +86,10 @@ a > i {
 
 .overlay {
   position: absolute;
-  z-index: 3;
+  z-index: 9999;
   opacity: 0.85;
   top: 0;
-  bottom: 0;
   left: 0;
-  right: 0;
   width: 100%;
   height: 100%;
   background-color: white;
@@ -104,20 +102,17 @@ a > i {
   width: 200px;
   height: 200px;
   margin-top: -100px;
-  margin-left: -50px;
+  margin-left: -100px;
   opacity: 1;
 }
 .overlay > h3 {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200px;
-  height: 200px;
-  margin-top: 100px;
-  margin-left: -50px;
+  width: auto;
+  max-width: 400px;
   color: black;
   opacity: 1;
   text-align: center;
+  margin: auto;
+  padding-top: calc(50vh + 100px);
 }
 
 #search_compounds_status > p, #search_compounds_status > h3 > p,
