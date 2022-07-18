@@ -50,6 +50,7 @@ dashboardPage(
     useShinyjs(),
     tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
     tags$script(type = "text/javascript", jscode),
+    div(class = "title-banner", "DEVELOPMENT VERSION"),
     tabItems(
       # Home Page ----
       tabItem("index",

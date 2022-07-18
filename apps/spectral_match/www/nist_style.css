@@ -4,6 +4,19 @@ body {
   overflow: hidden !important;
 }
 
+.title-banner {
+  position: absolute;
+  top: 0;
+  right: 100vw;
+  left: 0px;
+  width: 100%;
+  color: red;
+  text-align: right;
+  font-size: xx-large;
+  z-index: 9000;
+  padding-right: 7px;
+}
+
 .content {
   overflow: auto;
   height: calc(100vh - 50px);
