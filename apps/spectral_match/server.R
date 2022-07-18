@@ -19,22 +19,23 @@ shinyServer(function(input, output, session) {
   data_input_search_upload <- reactiveVal(NULL)
   data_input_search_parameters <- reactiveVal(
     if (!toy_data) {
-    tibble(
-      precursor = numeric(0),
-      rt = numeric(0),
-      rt_start = numeric(0),
-      rt_end = numeric(0)
-    )
+      tibble(
+        precursor = numeric(0),
+        rt = numeric(0),
+        rt_start = numeric(0),
+        rt_end = numeric(0)
+      )
     } else {
       readRDS("toy_parameters.RDS")
     }
   )
   search_compounds_results <- reactiveVal(NULL)
+  search_compounds_mzrt <- reactiveVal("-1")
   search_compounds_row_selected <- reactiveVal(NULL)
   observeEvent(input$search_compounds_dt_rows_selected, {
     old_val <- isolate(search_compounds_row_selected())
     if (is.null(input$search_compounds_dt_rows_selected)) {
-      if (is.null(input$search_compounds_dt_row_las_clicked)) {
+      if (is.null(input$search_compounds_dt_row_last_clicked)) {
         new_val <- 1
       } else {
         new_val <- input$search_compounds_dt_row_last_clicked
@@ -61,24 +62,26 @@ shinyServer(function(input, output, session) {
     )
   })
   uncertainty_results <- reactiveVal(NULL)
-  search_fragments_results <- reactiveVal(
-    NULL
-      # tibble(
-      #   fragment_id = integer(0),
-      #   formula = character(0),
-      #   smiles = character(0),
-      #   fragment_mz = numeric(0),
-      #   exactmass = numeric(0),
-      #   mass_error = numeric(0),
-      #   compounds = character(0)
-      # )
-  )
+  search_fragments_results <- reactiveVal(NULL)
+  search_fragments_row_selected <- reactiveVal(NULL)
+  observeEvent(input$search_fragments_dt_rows_selected, {
+    old_val <- isolate(search_fragments_row_selected())
+    if (is.null(input$search_fragments_dt_rows_selected)) {
+      if (is.null(input$search_fragments_dt_row_last_clicked)) {
+        new_val <- 1
+      } else {
+        new_val <- input$search_fragments_dt_row_last_clicked
+      }
+    } else {
+      new_val <- input$search_fragments_dt_rows_selected
+    }
+    if (is.null(old_val) || new_val != old_val) search_fragments_row_selected(new_val)
+  })
   search_fragments_results_selected <- reactive({
     req(search_fragments_results(),
-        input$search_fragments_dt_rows_selected)
+        search_fragments_row_selected())
     search_fragments_results()$result %>%
-      bind_rows() %>%
-      slice(req(input$search_fragments_dt_rows_selected))
+      slice(search_fragments_row_selected())
   })
   mod_search_params <- c(
     "mod_search_parameter_precursor",
@@ -107,14 +110,16 @@ shinyServer(function(input, output, session) {
     toggleElement("data_input_additional", condition = advanced_use())
     toggleElement("mod_uncertainty_additional", condition = advanced_use())
     # if (!dev) {
-      toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
-      toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
-      toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
-      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
-      toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
+    toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+    toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+    toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
+    toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
+    toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
+    toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
+    toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
+    toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
+    toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
+    toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
     # }
   })
   
@@ -145,8 +150,8 @@ shinyServer(function(input, output, session) {
     updateTabsetPanel(session = session,
                       inputId = "sidebar_menu",
                       selected = "data_input")
-    })
-
+  })
+  
   # DATA INPUT PAGE ----
   # _Reactives ----
   # __Data Table
@@ -226,7 +231,7 @@ shinyServer(function(input, output, session) {
   observeEvent({
     input$data_input_isolation_width
     input$data_input_experiment_type
-    }, {
+  }, {
     if (input$data_input_isolation_width > app_settings$data_input_isolation_width_warn_threshold) {
       types <- app_settings$experiment_types
       experiment_type <- names(types[types == input$data_input_experiment_type])
@@ -299,11 +304,11 @@ shinyServer(function(input, output, session) {
                  across(everything(), ~ !is.na(.x))) %>%
           mutate(msg_prefix = glue::glue("<div style='text-align: left; padding-top: 2px;' class='one-line'><p>For m/z value <p style='font-weight: bold;'>{precursor}</p>, "),
                  msg_rt = ifelse(reasonable_rt,
-                                        "",
-                                        glue::glue("RT <p style='font-weight: bold; color: red;'>{rt}</p> does not fall between <p style='font-weight: bold;'>{rt_start}</p> and <p style='font-weight: bold;'>{rt_end}</p>.")),
+                                 "",
+                                 glue::glue("RT <p style='font-weight: bold; color: red;'>{rt}</p> does not fall between <p style='font-weight: bold;'>{rt_start}</p> and <p style='font-weight: bold;'>{rt_end}</p>.")),
                  msg_rtstart = ifelse(reasonable_rtstart,
-                                        "",
-                                        glue::glue("RT Start <p style='font-weight: bold; color: red;>{rt_start}</p> was after RT End <p style='font-weight: bold;'>{rt_end}</p>.")),
+                                      "",
+                                      glue::glue("RT Start <p style='font-weight: bold; color: red;>{rt_start}</p> was after RT End <p style='font-weight: bold;'>{rt_end}</p>.")),
                  message = glue::glue("{msg_prefix} {msg_rt} {msg_rtstart}</p></div>")
           )
         nist_shinyalert(
@@ -490,19 +495,19 @@ shinyServer(function(input, output, session) {
     } else {
       matches <- search_compounds_results_selected()
       match_out <- h4(
-          "Selected comparison is",
-          p(style = "font-weight: bold; display: inline;", matches$name),
-          "from",
-          ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
-                 "an",
-                 "a"),
-          matches$sample_class
-        )
+        "Selected comparison is",
+        p(style = "font-weight: bold; display: inline;", matches$name),
+        "from",
+        ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+               "an",
+               "a"),
+        matches$sample_class
+      )
       match_score1 <- p(
-          "MS1 Score: ",
-          p(style = "font-weight: bold;", matches$ms1_dp),
-          "(rev score ", matches$ms1_rdp, ")"
-        )
+        "MS1 Score: ",
+        p(style = "font-weight: bold;", matches$ms1_dp),
+        "(rev score ", matches$ms1_rdp, ")"
+      )
       if (!is.na(matches$ms2_dp)) {
         match_score2 <- p(
           " |  MS2 Score: ",
@@ -680,6 +685,7 @@ shinyServer(function(input, output, session) {
         ums2_compare = lapply(search_result$ums2_compare, bind_rows)
       )
     )
+    search_compounds_mzrt(input$search_compounds_mzrt)
     hideElement("search_compounds_overlay")
   })
   # __Evaluate uncertainty (modal) ----
@@ -789,154 +795,191 @@ shinyServer(function(input, output, session) {
       )
     out
   })
-
-  # # UNCERTAINTY PAGE ----
-  # # _Reactives ----
-  # # __Feedback ----
-  # # __Method narrative ----
-  # output$uncertainty_method_narrative <- renderUI({
-  #   req(method_narrative())
-  #   tags$caption(
-  #     style = "display: inline;",
-  #     method_narrative()
-  #   )
-  # })
-  # output$uncertainty_status <- renderUI({
-  #   req(
-  #     search_compounds_results(),
-  #     input$search_compounds_dt_rows_selected
-  #   )
-  #     matches <- search_compounds_results()$result %>%
-  #       slice(input$search_compounds_dt_rows_selected)
-  #     match_out <- h4(
-  #       "Uncertainty evaluation for the selected match of",
-  #       p(style = "font-weight: bold; display: inline;", matches$name),
-  #       "from",
-  #       ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
-  #              "an",
-  #              "a"),
-  #       matches$sample_class
-  #     )
-  #     match_score1 <- p(
-  #       "MS1 Score: ",
-  #       p(style = "font-weight: bold;", matches$ms1_dp),
-  #       "(rev score ", matches$ms1_rdp, ")"
-  #     )
-  #     if (!is.na(matches$ms2_dp)) {
-  #       match_score2 <- p(
-  #         " |  MS2 Score: ",
-  #         p(style = "font-weight: bold;;", matches$ms2_dp),
-  #         "( rev score ", matches$ms2_rdp, ")"
-  #       )
-  #     } else {
-  #       match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
-  #     }
-  #     tagList(match_out, match_score1, match_score2)
-  # })
-  # # __Butterfly plot ----
-  # output$uncertainty_butterfly_plot <- renderPlotly({
-  #   req(
-  #     search_compounds_results(),
-  #     !all(is.null(input$search_compounds_dt_rows_selected),
-  #          is.null(input$search_compounds_dt_row_last_clicked))
-  #   )
-  #   if (input$search_compounds_msn == "MS2") {
-  #     compare_actual <- search_compounds_results()$search_object$ums2
-  #     compare_with <- search_compounds_results()$ums2_compare
-  #   } else {
-  #     compare_actual <- search_compounds_results()$search_object$ums1
-  #     compare_with <- search_compounds_results()$ums1_compare
-  #   }
-  #   this_row <- ifelse(is.null(input$search_compounds_dt_rows_selected),
-  #                      input$search_compounds_dt_row_last_clicked,
-  #                      input$search_compounds_dt_rows_selected)
-  #   plot_compare_ms(
-  #     ums1 = compare_actual,
-  #     ums2 = compare_with[[this_row]],
-  #     ylim.exp = 0.1,
-  #     main = element_blank()
-  #   ) %>%
-  #     ggplotly()
-  # })
-  # # output$uncertainty_boxplot <- renderPlotly(
-  # #   search_compounds_results_selected() %>%
-  # #     boxplot_quant() %>%
-  # #     ggplotly()
-  # # )
-  # # output$uncertainty_summary <- renderText(
-  # #   search_compounds_results_selected() %>%
-  # #     bootstrap_compare_ms()
-  # # )
-
+  
   # FRAGMENT SEARCH PAGE ----
   # _Reactives ----
+  # __Data Table ----
   output$search_fragments_dt <- renderDT(
     server = FALSE,
-    expr = DT::datatable(
-      req(search_fragments_results()),
+    DT::datatable(
+      data = req(search_fragments_results()$result) %>%
+        select(annotated_fragment_id, formula, smiles, measured_mz, fixedmass, mass_error, n_compounds, n_peaks),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Elemental Formula", "Fragment m/z", "SMILES", "Exact Mass", "Mass Error (ppm)", "Compounds"),
+      colnames = c("Annotated Fragment ID", "Fragment", "SMILES", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "Found in n Compounds", "Found in n Peaks"),
       caption = "Select a row to view the matching fragment.",
+      extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = "Btp",
-        pageLength = 15,
-        extensions = c("Responsive", "Buttons"),
+        dom = "tBp",
+        pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
-          list(visible = FALSE, targets = c(0, 2)),
-          list(className = "dt-center", targets = c(3, 4, 5)),
-          list(className = "dt-left", targets = c(1, 6))
+          list(visible = FALSE, targets = c("annotated_fragment_id")),
+          list(className = "dt-center", targets = c("measured_mz", "fixedmass", "mass_error", "n_compounds", "n_peaks")),
+          list(className = "dt-left", targets = c("formula", "smiles"))
         )
       )
-    )
+    ) %>%
+      formatRound(columns = c("measured_mz", "fixedmass", "mass_error"), digits = 4, interval = 3)
   )
+  # __Spectrum plot ----
   output$search_fragments_spectral_plot <- renderPlotly({
     validate(
-      need(nrow(search_fragments_results()) > 0,
-           message = "Please select a fragment in the table.")
+      need(nrow(search_fragments_results()$spectra) > 0,
+           message = "No spectra available to plot.")
     )
-  }
-  # A better plot here might be a linked data plot with the fragment highlighted, and the ability to click back and forth between the two.
+    ggplot(
+      data = search_fragments_results()$spectra,
+      aes(x = mz, y = int)
+    )
+    # A better plot here might be a linked data plot with the fragment highlighted, and the ability to click back and forth between the two.
     # search_fragments_results_selected() %>%
     #   plot_ms()
-  )
-  output$search_fragment_ballstick <- renderImage({
+  })
+  # __Molecular model ----
+  output$search_fragments_ballstick <- renderImage({
     validate(
-      need(search_fragments_results_selected(),
-           message = "Please select a fragment in the table.")
+      need(search_fragments_results_selected()$has_smiles,
+           message = "This fragment has not had a structure assigned.")
     )
-    fragment_id <- search_fragments_results_selected()
+    fragment_id <- req(search_fragments_results_selected())
+    alt_text <- glue::glue("Ball and stick molecular model for fragment {fragment_id$formula} (ID {fragment_id$annotated_fragment_id}) with SMILES notation {fragment_id$smiles}.")
     list(
       src =  api_endpoint(path = "molecular_model/file",
                           type = "fragment",
-                          fragment_id = fragment_id$fragment_id),
-      alt = glue::glue("Ball and stick model for a fragment with ID {fragment_id$fragment_id} with SMILES notation {fragment_id$smiles}.")
+                          fragment_id = fragment_id$annotated_fragment_id),
+      alt = alt_text
     )
   },
-    deleteFile = FALSE
+  deleteFile = FALSE
   )
-  output$search_fragment_ballstick_caption <- renderText({
+  # __Molecular model caption
+  output$search_fragments_ballstick_caption <- renderText({
     validate(
       need(search_fragments_results_selected(),
-           message = "Please select a fragment in the table.")
+           message = "Please select a row from the fragments table.")
     )
     selected_fragment <- req(search_fragments_results_selected())
-    glue::glue("The fragment measured at m/z {round(selected_fragment$fragment_mz, 4)} has been previously annotated as fragment ID {selected_fragment$fragment_id} with structure {selected_fragment$smiles} and has been previously associated with {selected_fragment$compounds}. The measurement error compared with the expected exact mass is {round(selected_fragment$mass_error, 3)} ppm.")
+    structure_text <- ifelse(
+      selected_fragment$has_smiles,
+      glue::glue("with structure {selected_fragment$smiles}"),
+      "but has not had a structure defined"
+    )
+    glue::glue("The fragment measured at m/z {round(selected_fragment$measured_mz, 4)} has been previously annotated as fragment ID {selected_fragment$annotated_fragment_id} {structure_text}. It has been previously associated with {selected_fragment$n_compounds} compounds. The measurement error compared with the expected exact mass is {round(selected_fragment$mass_error, 4)} ppm.")
   })
   # _Observers ----
-  observeEvent(input$fragments_search_btn, {
-    type <- req(input$search_fragments_search_type)
-    mzrt <- req(input$search_fragments_mzrt)
-    search <- switch(
-      type,
-      "precursor" = search_precursor,
-      "all" = search_all
+  # __Execute search ----
+  observeEvent(input$search_fragments_search_btn, {
+    if (input$search_fragments_mzrt == "") {
+      nist_shinyalert(
+        title = "More information needed",
+        type = "info",
+        text = "Please choose a Feature of Interest"
+      )
+    }
+    req(
+      input$search_compounds_mzrt,
+      user_data(),
+      input$data_input_relative_error,
+      input$data_input_minimum_error
     )
-    # out <- search(data)
-    # search_compounds_results(out)
+    mass_error <- input$data_input_relative_error
+    min_error <- input$data_input_minimum_error
+    if (!is.null(search_compounds_results()) && search_compounds_mzrt() == input$search_fragments_mzrt) {
+      fragments <- search_compounds_results()$search_object$ums2
+    } else {
+      req(
+        user_data(),
+        data_input_search_parameters(),
+        input$search_compounds_mzrt,
+        input$search_compounds_search_type,
+        input$data_input_relative_error,
+        input$data_input_minimum_error,
+        input$data_input_experiment_type,
+        input$data_input_isolation_width,
+        input$data_input_search_zoom,
+        # input$data_input_max_correl,
+        # input$data_input_correl_bin,
+        input$data_input_ph
+        # input$data_input_max_ph,
+        # input$data_input_ph_bin,
+        # input$data_input_max_freq,
+        # input$data_input_freq_bin,
+        # input$data_input_min_n_peaks
+      )
+      runjs("$('#search_fragments_overlay_text').text('Executing fragment search...');")
+      showElement("search_fragments_overlay")
+      runjs("$('#search_fragments_overlay_text').text('Validating inputs...');")
+      mzrt <- isolate(data_input_search_parameters()[input$search_fragments_mzrt, ])
+      tmp <- list(
+        mzML = isolate(user_data()$mzML),
+        search_df = tibble(
+          filename = user_data()$search_df$filename,
+          precursormz = mzrt$precursor,
+          masserror = isolate(input$data_input_relative_error),
+          minerror = isolate(input$data_input_minimum_error),
+          rt = mzrt$rt,
+          rt_start = mzrt$rt_start,
+          rt_end = mzrt$rt_end,
+          ms2exp = isolate(input$data_input_experiment_type),
+          isowidth = isolate(input$data_input_isolation_width)
+        )
+      )
+      runjs("$('#search_fragments_overlay_text').text('Identifying fragment ions...');")
+      search_object <- get_search_object(
+        searchmzml = tmp,
+        zoom = isolate(input$data_input_search_zoom)
+      ) %>%
+        create_search_ms(
+          searchobj = .,
+          correl = isolate(input$data_input_correlation),
+          ph = isolate(input$data_input_ph),
+          freq = isolate(input$data_input_freq),
+          normfn = isolate(input$data_input_norm_function),
+          cormethod = isolate(input$data_input_correlation_method)
+        )
+      fragments <- search_object$ums2
+    }
+    runjs("$('#search_fragments_overlay_text').text('Matching with annotated fragments...');")
+    fragment_matches <- api_endpoint(
+      path = "search_fragments",
+      fragment_ions = toJSON(fragments$mz),
+      mass_error = input$data_input_relative_error,
+      min_error = input$data_input_minimum_error,
+      return_format = "data.frame"
+    ) %>%
+      arrange(smiles, fixedmass)
+    fragment_links <- lapply(
+      fragments$mz,
+      function(x) {
+        delta <- abs(x - fragment_matches$fixedmass)
+        candidates <- fragment_matches %>%
+          filter(delta < max(input$data_input_relative_error * 1e-6, input$data_input_minimum_error)) %>%
+          mutate(mz = x) %>%
+          select(mz, annotated_fragment_id)
+      }
+    ) %>%
+      bind_rows()
+    list(
+      result = fragment_matches %>%
+        select(annotated_fragment_id, formula:smiles) %>%
+        left_join(fragment_links) %>%
+        mutate(mass_error = (mz - fixedmass) / fixedmass * 1e6) %>%
+        rename("measured_mz" = "mz"),
+      spectra = fragments %>%
+        left_join(fragment_links) %>%
+        left_join(fragment_matches %>%
+                    select(annotated_fragment_id, formula, has_smiles) %>%
+                    group_by(formula) %>%
+                    nest(candidates = c(formula, has_smiles))
+        )
+    )%>%
+      search_fragments_results()
+    hideElement("search_fragments_overlay")
+    # TODO start testing here
   })
 })
+  

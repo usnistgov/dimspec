@@ -563,7 +563,7 @@ dashboardPage(
               div(class = "overlay",
                   id = "search_fragments_overlay",
                   img(src = "processing.gif"),
-                  h3("Extracting data...")
+                  h3(id = "search_fragments_overlay_text")
               ),
               fluidRow(
                 box(title = "Fragment Analysis",
@@ -573,16 +573,16 @@ dashboardPage(
                     h4("[USE INSTRUCTIONS HERE]."),
                     fluidRow(
                       column(12,
-                             fluidRow(
-                               column(3,
-                                      selectizeInput(inputId = "search_fragments_search_type",
-                                                     label = "Search Type",
-                                                     choices = c("Fragment Search" = "fragments", "All" = "all"),
-                                                     selected = 1,
-                                                     multiple = FALSE,
-                                                     width = "100%")
-                               ),
-                               column(9,
+                             # fluidRow(
+                             #   column(3,
+                             #          selectizeInput(inputId = "search_fragments_search_type",
+                             #                         label = "Search Type",
+                             #                         choices = c("Fragment Search" = "fragments", "All" = "all"),
+                             #                         selected = 1,
+                             #                         multiple = FALSE,
+                             #                         width = "100%")
+                             #   ),
+                             #   column(9,
                                       selectizeInput(inputId = "search_fragments_mzrt",
                                                      label = "Feature of Interest",
                                                      choices = NULL,
@@ -591,9 +591,9 @@ dashboardPage(
                                                      width = "100%",
                                                      options = list(placeholder = "Please add search parameters on the Data Input page.")),
                                       htmlOutput(outputId = "search_fragments_has_mzrt_has_ions",
-                                                 width = "100%")
-                               )
-                             ),
+                                                 width = "100%"),
+                               # )
+                             # ),
                              actionButton(inputId = "search_fragments_search_btn",
                                           label = "Search",
                                           icon = icon("magnifying-glass", verify_fa = FALSE),
@@ -602,26 +602,29 @@ dashboardPage(
                       )
                     ),
                     span(id = "search_fragments_results_span",
+                         column(12,
+                                DTOutput(outputId = "search_fragments_dt",
+                                         width = "100%") %>%
+                                  withSpinner()
+                         ),
                          fluidRow(
-                           column(4,
+                           column(ifelse(rdkit_available, 6, 12),
                                   plotlyOutput(outputId = "search_fragments_spectral_plot",
                                                width = "100%") %>%
-                                    withSpinner(),
+                                    withSpinner()
+                           ),
+                           column(ifelse(rdkit_available, 6, 0),
                                   if (rdkit_available) {
                                     tagList(
-                                      textOutput(outputId = "search_fragment_ballstick_caption"),
                                       span(class = "centered-image",
-                                           imageOutput(outputId = "search_fragment_ballstick",
-                                                       height = "300px") %>%
-                                             withSpinner()
-                                      )
+                                           imageOutput(outputId = "search_fragments_ballstick",
+                                                       height = "300px")
+                                      ),
+                                      textOutput(outputId = "search_fragments_ballstick_caption")
                                     )
+                                  } else {
+                                    NULL
                                   }
-                           ),
-                           column(8,
-                                  DTOutput(outputId = "search_fragments_dt",
-                                           width = "100%") %>%
-                                    withSpinner()
                            )
                          )
                     )
