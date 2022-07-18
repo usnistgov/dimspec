@@ -461,53 +461,43 @@ function(type = "peak", table_pk) {
   return(out)
 }
 
-# _annotated_fragments ----
+# _search_fragments ----
 #* Get matching fragments from the database for a list of fragment mass-to-charge ratios
-#* @param type:character Type of search to perform, one of "annotated" or "all"
-#* @param fragment_ions:character JSON list of mass-to-charge ratios observed for fragments
+#* @param fragment_ions:character JSON list of mass-to-charge ratios observed for fragments, usually a member of the /search_compound at "[[search_object]][[ums2]][[mz]]"
 #* @param mass_error:numeric Scalar observed mass error from the instrument run
 #* @param min_error:numeric Scalar minimum error allowed
-#* @get /annotated_fragments
-function(type, fragment_ions, mass_error = 5, min_error = 0.002) {
-  type <- match.arg(type, choices = c("annotated", "all"))
+#* @get /search_fragments
+function(fragment_ions, mass_error = 5, min_error = 0.002) {
   mass_error <- as.numeric(mass_error)
   min_error <- as.numeric(min_error)
-  search_fn <- switch(
-    type,
-    "annotated" = get_annotated_fragments,
-    "all" = get_compound_fragments
-  )
   fragment_ions <- jsonlite::fromJSON(utils::URLdecode(fragment_ions)) %>%
     as.numeric()
-  out <- search_fn(
+  # TODO offload the join logic to get_compound_fragments so the console result is the same as the API result
+  out <- get_compound_fragments(
     con = con,
     fragmentions = fragment_ions,
     masserror = mass_error,
     minerror = min_error
-  )
-  if (type == "annotated") {
-    compound_ids <- DBI::dbGetQuery(
-      conn = con,
-      statement = glue::glue("select compound_id, annotated_fragment_id from compound_fragments where annotated_fragment_id in ({paste0(unique(out$id), collapse = ',')})")
-    )
-    out <- out %>%
-      rename("annotated_fragment_id" = "id") %>%
-      left_join(compound_ids,
-                by = c("annotated_fragment_id" = "annotated_fragment_id"))
-  } 
-  compounds <- DBI::dbGetQuery(
-    conn = con,
-    statement = glue::glue("select id, name from compounds where id in ({paste0(unique(out$compound_id), collapse = ',')})")
   ) %>%
-    rename("compound_name" = "name")
-  out <- out %>%
-    left_join(compounds, by = c("compound_id" = "id"))
-  if (!"peak_id" %in% names(out)) out$peak_id <- NA_integer_
-  out <- out %>%
+    left_join(
+      DBI::dbGetQuery(
+        conn = con,
+        statement = glue::glue("select id, name from compounds where id in ({paste0(unique(.$compound_id), collapse = ',')})")
+      ) %>%
+        rename("compound_name" = "name",
+               "compound_id" = "id"),
+      by = c("compound_id" = "compound_id")
+    ) %>%
     group_by(annotated_fragment_id) %>%
-    nest(compound_id = c(compound_id),
-         compound_name = c(compound_name),
+    mutate(peak_id = if ("peak_id" %in% names(.)) peak_id else NA_integer_) %>%
+    nest(compounds = starts_with("compound"),
          peak_id = c(peak_id)) %>%
-    mutate(has_smiles = !is.na(smiles))
+    mutate(compounds = lapply(compounds, distinct),
+           n_compounds = sapply(compounds, nrow, simplify = TRUE),
+           peak_id = lapply(peak_id, function(x) pull(unique(x))),
+           n_peaks = sapply(peak_id, length)
+    ) %>%
+    mutate(has_smiles = !is.na(smiles)) %>%
+    select(annotated_fragment_id, compounds, peak_id, formula, fixedmass, netcharge, radical, has_smiles, smiles, n_compounds, n_peaks)
   return(out)
 }
