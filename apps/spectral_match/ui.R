@@ -605,12 +605,15 @@ dashboardPage(
                          column(12,
                                 DTOutput(outputId = "search_fragments_dt",
                                          width = "100%") %>%
-                                  withSpinner()
+                                  withSpinner(),
+                                hr()
                          ),
                          fluidRow(
                            column(ifelse(rdkit_available, 6, 12),
-                                  plotlyOutput(outputId = "search_fragments_spectral_plot",
+                                  plotOutput(outputId = "search_fragments_spectral_plot",
                                                width = "100%") %>%
+                                  # plotlyOutput(outputId = "search_fragments_spectral_plot",
+                                  #              width = "100%") %>%
                                     withSpinner()
                            ),
                            column(ifelse(rdkit_available, 6, 0),

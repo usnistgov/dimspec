@@ -826,18 +826,64 @@ shinyServer(function(input, output, session) {
       formatRound(columns = c("measured_mz", "fixedmass", "mass_error"), digits = 4, interval = 3)
   )
   # __Spectrum plot ----
-  output$search_fragments_spectral_plot <- renderPlotly({
+  # output$search_fragments_spectral_plot <- renderPlotly({
+  output$search_fragments_spectral_plot <- renderPlot({
     validate(
       need(nrow(search_fragments_results()$spectra) > 0,
            message = "No spectra available to plot.")
     )
-    ggplot(
-      data = search_fragments_results()$spectra,
-      aes(x = mz, y = int)
-    )
-    # A better plot here might be a linked data plot with the fragment highlighted, and the ability to click back and forth between the two.
-    # search_fragments_results_selected() %>%
-    #   plot_ms()
+    dat <- search_fragments_results()$spectra
+    conf <- dat$match
+    cap1 <- if ("unknown" %in% conf) glue::glue('{sum(conf == "unknown")} unknown fragment{ifelse(sum(conf == "unknown") == 1, "", "s")}') else NULL
+    cap2 <- if ("formula" %in% conf) glue::glue('{sum(conf == "formula")} fragment{ifelse(sum(conf == "formula") == 1, "", "s")} with an annotated formula') else NULL
+    cap3 <- if ("structure" %in% conf) glue::glue('{sum(conf == "structure")} fragment{ifelse(sum(conf == "structure") == 1, "", "s")} with an annotated structure') else NULL
+    this_caption <- paste0(format_list_of_names(c(cap1, cap2, cap3)), ".")
+    chosen_mzrt <- data_input_search_parameters() %>%
+      mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
+      slice(as.numeric(input$search_compounds_mzrt)) %>%
+      pull(label)
+    dat %>%
+      ggplot(aes(x = mz, y = int, ymin = 0, ymax = int, color = match)) +
+      geom_linerange(size = 1) + 
+      geom_pointrange(shape = 20, size = 0.5,
+                      show.legend = FALSE) +
+      geom_errorbar(aes(ymin = int - int.u, ymax = int + int.u),
+                    width = 0.01, 
+                    color = "red",
+                    na.rm = TRUE,
+                    linetype = 5) +
+      geom_errorbarh(aes(xmin = mz - mz.u, xmax = mz + mz.u),
+                     height = 0.01,
+                     color = "red", 
+                     na.rm = TRUE,
+                     linetype = 5) +
+      ggrepel::geom_text_repel(aes(label = formula),
+                               color = "black",
+                               show.legend = FALSE,
+                               hjust = 0,
+                               vjust = 0) +
+      # geom_text(aes(label = formula),
+      #           color = "black",
+      #           show.legend = FALSE,
+      #           hjust = 0,
+      #           vjust = 0) +
+      # ggrepel::geom_text_repel(aes(label = round(mz, 4)), color = "black", show.legend = FALSE) +
+      # geom_text(aes(label = round(mz, 4)), color = "black", show.legend = FALSE) +
+      labs(title = glue::glue("Annotated Fragments for {chosen_mzrt}"),
+           subtitle = this_caption,
+           alt = glue::glue("Annotated Fragments for {chosen_mzrt} plotted as an uncertainty mass spectrum with mass-to-charge on the x-axis and intensity on the y-axis. Line colors are black for unknowns, blue for fragments with known formula, and green for fragments with an annotated structure. Red error bars around each measurement point represent the uncertainty in both axes."),
+           x = "m/z",
+           colour = "Annotation",
+           y = "Relative Intensity") +
+      scale_color_manual(values = c("unknown" = "black",
+                                    "formula" = "dodgerblue2",
+                                    "structure" = "green4"),
+                         aesthetics = c("colour")) +
+      scale_y_continuous(expand = c(0, 0.01)) +
+      theme_bw() +
+      theme(legend.position = "bottom",
+            plot.title.position = "plot", 
+            title = element_text(size = 15))
   })
   # __Molecular model ----
   output$search_fragments_ballstick <- renderImage({
@@ -964,19 +1010,33 @@ shinyServer(function(input, output, session) {
     ) %>%
       bind_rows()
     list(
+      linked_data = fragment_matches %>%
+        select(annotated_fragment_id, compounds, peak_id),
       result = fragment_matches %>%
-        select(annotated_fragment_id, formula:smiles) %>%
+        select(-compounds, -peak_id) %>%
         left_join(fragment_links) %>%
         mutate(mass_error = (mz - fixedmass) / fixedmass * 1e6) %>%
         rename("measured_mz" = "mz"),
       spectra = fragments %>%
         left_join(fragment_links) %>%
         left_join(fragment_matches %>%
-                    select(annotated_fragment_id, formula, has_smiles) %>%
-                    group_by(formula) %>%
-                    nest(candidates = c(formula, has_smiles))
+                    select(annotated_fragment_id, formula, has_smiles)
+        ) %>%
+        left_join(eval(.) %>%
+                    group_by(mz) %>%
+                    summarise(filter_check = any(has_smiles)),
+                  copy = TRUE) %>%
+        filter(filter_check == has_smiles | is.na(annotated_fragment_id)) %>%
+        select(-filter_check) %>%
+        mutate(
+          match = case_when(
+            !is.na(annotated_fragment_id) & has_smiles ~ "structure",
+            !is.na(annotated_fragment_id) & !has_smiles ~ "formula",
+            TRUE ~ "unknown"
+          ),
+          match = factor(match, levels = c("unknown", "formula", "structure"))
         )
-    )%>%
+    ) %>%
       search_fragments_results()
     hideElement("search_fragments_overlay")
     # TODO start testing here
