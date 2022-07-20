@@ -976,7 +976,7 @@ manage_connection <- function(db          = DB_NAME,
     global_env       <- as.list(.environ)
     global_env_names <- names(global_env)
     if (conn_name %in% global_env_names) {
-      if (connected) dbDisconnect(sym(conn_name))
+      if (connected) dbDisconnect(rlang::sym(conn_name))
       rm(list = conn_name, pos = ".GlobalEnv")
     }
     args <- list(db, ...)
@@ -988,13 +988,13 @@ manage_connection <- function(db          = DB_NAME,
         res <- do.call(dbExecute, args = list(conn = .GlobalEnv[[conn_name]], statement = "pragma foreign_keys = on"))
       )
     }
-    if (class(eval(sym(conn_name))) == "try-error") {
+    if (class(eval(rlang::sym(conn_name))) == "try-error") {
       stop(sprintf('Unable to connect to "%s".\nCall attempted was "assign(x = %s, value = try(do.call("dbConnect", args = c(drv = do.call(%s, list()), %s)))',
                    db,
                    drv,
                    paste0(args, collapse = ", ")))
     } else {
-      if (dbIsValid(eval(sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'), log_ns)
+      if (dbIsValid(eval(rlang::sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'), log_ns)
     }
   }
   if (logger) log_fn("end")
@@ -1586,7 +1586,7 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
       if (back_up_connected_tbls) {
         assign(
           x     = db_conn,
-          value = collect(eval(sym(db_conn))),
+          value = collect(eval(rlang::sym(db_conn))),
           envir = .GlobalEnv
         )
       } else {

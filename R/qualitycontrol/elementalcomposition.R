@@ -67,7 +67,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
   if (is.null(exactmasses)) {
     if (is.character(db_conn)) {
       if (exists(db_conn)) {
-        db_conn <- eval(sym(db_conn))
+        db_conn <- eval(rlang::sym(db_conn))
       }
     }
     use_db <- try(DBI::dbIsValid(db_conn))
@@ -76,7 +76,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
     }
     if (use_db) {
         exactmasses <- tbl(db_conn, "view_exact_masses") %>%
-          select(symbol, exact_mass) %>%
+          select(rlang::symbol, exact_mass) %>%
           collect()
     } else {
       exactmasses <- setNames(

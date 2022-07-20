@@ -1283,7 +1283,7 @@ resolve_fragments_NTAMRT <- function(obj,
                  rdkit_name = rdkit_name,
                  log_ns = log_ns)
   if (using_rdkit) {
-    rdk <- eval(sym(rdkit_ref))
+    rdk <- eval(rlang::sym(rdkit_ref))
   }
   if (!"smiles" %in% names(fragment_identifiers)) fragment_identifiers$smiles <- NA
   fragment_identifiers <- fragment_identifiers %>%
@@ -3705,7 +3705,7 @@ verify_import_requirements <- function(obj,
     stopifnot(arg_check$valid)
   }
   if (exists(requirements_obj)) {
-    reqs <- eval(sym(requirements_obj))
+    reqs <- eval(rlang::sym(requirements_obj))
   } else {
     f_name <- list.files(pattern = file_name, recursive = TRUE, full.names = TRUE)
     if (length(f_name) == 1) {

@@ -79,7 +79,7 @@ support_info <- function(app_info = TRUE) {
           lapply(get_settings,
                function(x) {
                  if (exists(x)) {
-                   eval(sym(x))
+                   eval(rlang::sym(x))
                  } else {
                    "Not set"
                  }
@@ -94,7 +94,7 @@ support_info <- function(app_info = TRUE) {
           lapply(get_settings,
                  function(x) {
                    if (exists(x)) {
-                     tmp <- eval(sym(x))
+                     tmp <- eval(rlang::sym(x))
                      if (x == "PLUMBER_FILE") {
                        fpath <- list.files(path = here::here(),
                                            pattern = basename(tmp),
@@ -937,16 +937,29 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #' @return
 #' @export
 #'
-#' @examples
-rectify_null_from_env <- function(parameter, env_parameter, default, log_ns = NA_character_) {
+#' @usage
+rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_ns = NA_character_) {
   logger <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   if (logger) log_fn("start", log_ns)
-  if (!is.null(parameter)) {
-    par_name <- deparse(substitute(parameter))
+  par_name <- deparse(substitute(parameter))
+  orig_length <- nchar(par_name)
+  par_name <- gsub('\\"', '', par_name)
+  new_length <- nchar(par_name)
+  param_chr <-  orig_length != new_length
+  if (!par_name %in% c("", "NULL", "NA")) {
     par_ref  <- ""
     suffix   <- "as provided"
-    out <- parameter
-  } else {
+    if (exists(par_name)) {
+      if (param_chr) {
+        out <- eval(rlang::sym(par_name))
+      } else {
+        out <- parameter
+      }
+    } else {
+      out <- NULL
+    }
+  }
+  if (is.null(out)) {
     env_par_name <- deparse(substitute(env_parameter))
     par_name <- env_par_name
     suffix   <- ""
@@ -1102,7 +1115,7 @@ obj_name_check <- function(obj, default_name = NULL) {
     # Placeholder to do maybe do something like preservation/backup of current
     # object or suggest a new name
     
-    # pr <- eval(sym(obj_name))
+    # pr <- eval(rlang::sym(obj_name))
   } else {
     if (exists("log_it")) {
       log_it("warn", glue::glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
