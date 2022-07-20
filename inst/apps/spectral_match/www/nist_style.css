@@ -154,3 +154,12 @@ a > i {
 #search_compounds_use_optimized_parameters_div > div > .checkbox {
   margin: 0;
 }
+
+#search_fragments_ballstick > img {
+  width: 200px;
+  height: 200px;
+}
+
+#search_fragments_compound_list > div > table > tbody > tr > td {
+  padding: 0;
+}

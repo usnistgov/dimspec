@@ -798,33 +798,6 @@ shinyServer(function(input, output, session) {
   
   # FRAGMENT SEARCH PAGE ----
   # _Reactives ----
-  # __Data Table ----
-  output$search_fragments_dt <- renderDT(
-    server = FALSE,
-    DT::datatable(
-      data = req(search_fragments_results()$result) %>%
-        select(annotated_fragment_id, formula, smiles, measured_mz, fixedmass, mass_error, n_compounds, n_peaks),
-      rownames = FALSE,
-      selection = list(mode = "single",
-                       target = "row",
-                       selected = 1),
-      autoHideNavigation = TRUE,
-      colnames = c("Annotated Fragment ID", "Fragment", "SMILES", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "Found in n Compounds", "Found in n Peaks"),
-      caption = "Select a row to view the matching fragment.",
-      extensions = c("Responsive", "Buttons"),
-      options = list(
-        dom = "tBp",
-        pageLength = 10,
-        buttons = c("copy", "csv", "excel"),
-        columnDefs = list(
-          list(visible = FALSE, targets = c("annotated_fragment_id")),
-          list(className = "dt-center", targets = c("measured_mz", "fixedmass", "mass_error", "n_compounds", "n_peaks")),
-          list(className = "dt-left", targets = c("formula", "smiles"))
-        )
-      )
-    ) %>%
-      formatRound(columns = c("measured_mz", "fixedmass", "mass_error"), digits = 4, interval = 3)
-  )
   # __Spectrum plot ----
   # output$search_fragments_spectral_plot <- renderPlotly({
   output$search_fragments_spectral_plot <- renderPlot({
@@ -873,7 +846,7 @@ shinyServer(function(input, output, session) {
            subtitle = this_caption,
            alt = glue::glue("Annotated Fragments for {chosen_mzrt} plotted as an uncertainty mass spectrum with mass-to-charge on the x-axis and intensity on the y-axis. Line colors are black for unknowns, blue for fragments with known formula, and green for fragments with an annotated structure. Red error bars around each measurement point represent the uncertainty in both axes."),
            x = "m/z",
-           colour = "Annotation",
+           colour = "Annotation Level",
            y = "Relative Intensity") +
       scale_color_manual(values = c("unknown" = "black",
                                     "formula" = "dodgerblue2",
@@ -885,7 +858,64 @@ shinyServer(function(input, output, session) {
             plot.title.position = "plot", 
             title = element_text(size = 15))
   })
+  # __Data Table ----
+  output$search_fragments_dt <- renderDT(
+    server = FALSE,
+    DT::datatable(
+      data = req(search_fragments_results()$result) %>%
+        select(annotated_fragment_id, formula, smiles, measured_mz, fixedmass, mass_error, n_compounds, n_peaks),
+      rownames = FALSE,
+      selection = list(mode = "single",
+                       target = "row",
+                       selected = 1),
+      autoHideNavigation = TRUE,
+      colnames = c("Annotated Fragment ID", "Fragment", "SMILES", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "Found in n Compounds", "Found in n Peaks"),
+      caption = NULL,
+      extensions = c("Responsive", "Buttons"),
+      options = list(
+        dom = ifelse(nrow(search_fragments_results()$result) <= 10, "tB", "tBp"),
+        pageLength = 10,
+        buttons = c("copy", "csv", "excel"),
+        columnDefs = list(
+          list(visible = FALSE, targets = c("annotated_fragment_id")),
+          list(className = "dt-center", targets = c("measured_mz", "fixedmass", "mass_error", "n_compounds", "n_peaks")),
+          list(className = "dt-left", targets = c("formula", "smiles"))
+        )
+      )
+    ) %>%
+      formatRound(columns = c("measured_mz", "fixedmass", "mass_error"), digits = 4, interval = 3)
+  )
+  # __Compound list ----
+  output$search_fragments_compound_list <- renderDT({
+    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    DT::datatable(
+      data = search_fragments_results()$linked_data %>%
+        filter(annotated_fragment_id == ann_frag_id) %>%
+        pull(compounds) %>%
+        .[[1]],
+      rownames = FALSE,
+      selection = list(mode = "single",
+                       target = "row",
+                       selected = 1),
+      autoHideNavigation = TRUE,
+      colnames = c("Previously Annotated in Compound"),
+      caption = NULL,
+      options = list(
+        dom = ifelse(nrow(search_fragments_results()$result) <= 10, "t", "tp"),
+        pageLength = 10,
+        columnDefs = list(
+          list(visible = FALSE, targets = c("compound_id")),
+          list(className = "dt-left", targets = c("compound_name"))
+        )
+      )
+    )
+  })
   # __Molecular model ----
+  # __Molecular model candidate formula
+  output$search_fragments_selected_formula <- renderText(
+    paste0(tags$label(req(search_fragments_results_selected()$formula)))
+  )
+  # __Molecular model graphic
   output$search_fragments_ballstick <- renderImage({
     validate(
       need(search_fragments_results_selected()$has_smiles,
@@ -908,13 +938,23 @@ shinyServer(function(input, output, session) {
       need(search_fragments_results_selected(),
            message = "Please select a row from the fragments table.")
     )
-    selected_fragment <- req(search_fragments_results_selected())
-    structure_text <- ifelse(
-      selected_fragment$has_smiles,
-      glue::glue("with structure {selected_fragment$smiles}"),
-      "but has not had a structure defined"
-    )
-    glue::glue("The fragment measured at m/z {round(selected_fragment$measured_mz, 4)} has been previously annotated as fragment ID {selected_fragment$annotated_fragment_id} {structure_text}. It has been previously associated with {selected_fragment$n_compounds} compounds. The measurement error compared with the expected exact mass is {round(selected_fragment$mass_error, 4)} ppm.")
+    with(req(search_fragments_results_selected()), {
+      structure_text <- ifelse(
+        has_smiles,
+        glue::glue("with structure {smiles}"),
+        "but has not had a structure defined"
+      )
+      p("The fragment measured at m/z ",
+        em(sprintf("%.4f", measured_mz)),
+        "has been previously annotated as ",
+        strong(formula),
+        glue::glue("(fragment ID {annotated_fragment_id}) {structure_text}."),
+        glue::glue("It has been previously associated with {n_compounds} compounds."), 
+        "The measurement error compared with the expected exact mass is ",
+        em(sprintf("%.4f ppm", mass_error))
+      ) %>%
+        paste0()
+    })
   })
   # _Observers ----
   # __Execute search ----

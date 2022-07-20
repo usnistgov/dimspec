@@ -602,33 +602,42 @@ dashboardPage(
                       )
                     ),
                     span(id = "search_fragments_results_span",
-                         column(12,
-                                DTOutput(outputId = "search_fragments_dt",
-                                         width = "100%") %>%
-                                  withSpinner(),
-                                hr()
-                         ),
-                         fluidRow(
-                           column(ifelse(rdkit_available, 6, 12),
-                                  plotOutput(outputId = "search_fragments_spectral_plot",
-                                               width = "100%") %>%
+                         hr(),
+                         column(width = 12,
+                                plotOutput(outputId = "search_fragments_spectral_plot",
+                                           width = "100%") %>%
                                   # plotlyOutput(outputId = "search_fragments_spectral_plot",
                                   #              width = "100%") %>%
-                                    withSpinner()
-                           ),
-                           column(ifelse(rdkit_available, 6, 0),
-                                  if (rdkit_available) {
-                                    tagList(
-                                      span(class = "centered-image",
-                                           imageOutput(outputId = "search_fragments_ballstick",
-                                                       height = "300px")
-                                      ),
-                                      textOutput(outputId = "search_fragments_ballstick_caption")
-                                    )
-                                  } else {
-                                    NULL
-                                  }
-                           )
+                                  withSpinner()
+                         ),
+                         column(12,
+                                h4("Select a row in the table to view additional information for that annotated fragment."),
+                                fluidRow(
+                                  column(width = ifelse(rdkit_available, 4, 6),
+                                         DTOutput(outputId = "search_fragments_dt",
+                                                  width = "100%") %>%
+                                           withSpinner()
+                                  ),
+                                  column(width = ifelse(rdkit_available, 4, 0),
+                                         if (rdkit_available) {
+                                           tagList(
+                                             htmlOutput(outputId = "search_fragments_ballstick_caption"),
+                                             span(class = "centered-image",
+                                                  imageOutput(outputId = "search_fragments_ballstick",
+                                                              height = "200px")
+                                             )
+                                           )
+                                         } else {
+                                           NULL
+                                         }
+                                  ),
+                                  column(width = ifelse(rdkit_available, 4, 6),
+                                         (DTOutput(outputId = "search_fragments_compound_list",
+                                                  width = "100%") %>%
+                                           withSpinner()),
+                                         tags$caption(style = "font-size: small;", "Double click on a row in this table to view more information about that compound (TBD).")
+                                  )
+                                )
                          )
                     )
                 )
