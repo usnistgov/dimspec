@@ -1,27 +1,32 @@
-# Start with clean environment -------------------------------------------------
-# _Remove environment variables ------------------------------------------------
-rm(list = ls())
-# _Unload non-core packages ----------------------------------------------------
-#     Note this does not reliably remove namespaces.
-unload_packs <- unique(c(
-  if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
-  names(sessionInfo()$loadedOnly),
-  names(sessionInfo()$otherPkgs)
-))
-invisible(
-  lapply(unload_packs,
-         function(x) {
-           this_pack <- paste('package', x, sep = ":")
-           if (this_pack %in% search()) {
-             detach(
-               name = this_pack,
-               character.only = TRUE,
-               unload = TRUE,
-               force = TRUE
-             )
-           }
-         })
-)
+# # Start with clean environment -------------------------------------------------
+# # _Remove environment variables ------------------------------------------------
+# rm(list = ls())
+# # _Unload non-core packages ----------------------------------------------------
+# #     Note this does not reliably remove namespaces.
+# unload_packs <- unique(c(
+#   if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
+#   names(sessionInfo()$loadedOnly),
+#   names(sessionInfo()$otherPkgs)
+# ))
+# invisible(
+#   lapply(unload_packs,
+#          function(x) {
+#            this_pack <- paste('package', x, sep = ":")
+#            if (this_pack %in% search()) {
+#              detach(
+#                name = this_pack,
+#                character.only = TRUE,
+#                unload = TRUE,
+#                force = TRUE
+#              )
+#            }
+#          })
+# )
+
+# _Set operational env variables -----------------------------------------------
+installed_packages <- installed.packages()
+if (!"here" %in% installed_packages) install.packages("here")
+if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
 
 # Ensure compliant environment -------------------------------------------------
 # _Verify required directory presence ------------------------------------------
@@ -32,14 +37,11 @@ if (!dir.exists(here::here("output", "aggregate"))) {dir.create(here::here("outp
 if (!dir.exists(here::here("output", "extract"))) {dir.create(here::here("output", "extract"))}
 if (!dir.exists(here::here("output", "example"))) {dir.create(here::here("output", "example"))}
 
-# _Set operational env variables -----------------------------------------------
-if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
-
 # _Load required packages ------------------------------------------------------
 # - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the
 # set value of USE_RDKIT
 packs       <- DEPENDS_ON
-packs_TRUE  <- which(packs %in% installed.packages())
+packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
   install.packages(pkgs         = packs_FALSE,
@@ -163,5 +165,5 @@ if (INFORMATICS) {
 }
 
 # _Clean up --------------------------------------------------------------------
-rm(sources, exclusions)
+rm(sources, exclusions, installed_packages)
 RENV_ESTABLISHED_COMPLIANCE <- TRUE

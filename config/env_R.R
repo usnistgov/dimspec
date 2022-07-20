@@ -3,8 +3,8 @@
 # A collection of these items is available using `support_info()` as a
 # troubleshooting convenience once `source("compliance.R")` is complete.
 
-available_packages <- installed.packages()
-if (!"here" %in% available_packages) install.packages("here")
+if (!exists("installed_packages")) installed_packages <- installed.packages()
+if (!"here" %in% installed_packages) install.packages("here")
 
 # Several settings reference project variables defined in env_glob.txt
 if (!exists("DB_NAME")) source(here::here("config", "env_glob.txt"))
@@ -67,7 +67,7 @@ if (ifelse(exists("INFORMATICS"), INFORMATICS, FALSE)) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
     }
-    if (!requireNamespace("ChemmineR", quiety = TRUE)) {
+    if (!requireNamespace("ChemmineR", quietly = TRUE)) {
       BiocManager::install("ChemmineR")
     }
     library("ChemmineR")
@@ -85,14 +85,8 @@ EXCLUSIONS       <- c(".RDS",
                       "compliance")
 
 # Import map to use ------------------------------------------------------------
-if (!"readr" %in% available_packages) install.packages("readr")
+if (!"readr" %in% installed_packages) install.packages("readr")
 IMPORT_MAP       <- readr::read_csv(here::here("config", "map_NTA_MRT.csv"))
-# if (!file.exists(IMPORT_MAP)) IMPORT_MAP <- file.path("..", "..", IMPORT_MAP)
-# if (file.exists(IMPORT_MAP)) {
-#   IMPORT_MAP <- readr::read_csv(IMPORT_MAP)
-# } else {
-#   IMPORT_MAP <- NULL
-# }
 
 # Runtime quality assurance/control --------------------------------------------
 # Whether to use application logging to print or record log messages during use.
@@ -105,7 +99,7 @@ LOGGING_ON       <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
 VERIFY_ARGUMENTS <- TRUE
 
 # Set speed and performance boost. Setting this to true will turn off function
-# argument verification, logging,
+# argument verification and logging.
 MINIMIZE         <- FALSE
 if (MINIMIZE) {
   VERIFY_ARGUMENTS <- FALSE
