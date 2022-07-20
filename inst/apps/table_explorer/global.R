@@ -2,7 +2,7 @@ dev <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Explorer"
-if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("apps", "env_shiny.R"))
+if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 if (exists("LOGGING") && LOGGING_ON) {
   log_ns <- "APP_TABLE_VIEWER"
   if (!log_ns %in% names(LOGGING)) {

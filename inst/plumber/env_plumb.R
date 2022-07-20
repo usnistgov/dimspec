@@ -1,4 +1,5 @@
 # Set up environment -----------------------------------------------------------
+PLUMBER_OBJ_NAME <- "plumber_service"
 if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
 if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) {
   source(here::here("config", "env_R.R"))
@@ -20,11 +21,10 @@ if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) {
 }
 if (!"plumber" %in% installed.packages()) install.packages("plumber")
 if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
-  source(here::here("plumber", "api_control.R"))
+  source(here::here("inst", "plumber", "api_control.R"))
 }
 
 lapply(c(DEPENDS_ON, "plumber", "reticulate", "httr"), library, character.only = TRUE, quietly = TRUE)
-PLUMBER_OBJ_NAME <- "plumber_service"
 
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings
@@ -57,7 +57,7 @@ update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
 
 # Enable RDKit -----------------------------------------------------------------
 # Comment out to NOT use RDKIT, but it is required for certain endpoints.
-if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("rdkit", "env_py.R"))
+if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("inst", "rdkit", "env_py.R"))
 rdkit_active(make_if_not = TRUE, log_ns = "api")
 
 # Initialize connection --------------------------------------------------------

@@ -24,7 +24,7 @@ INSTALL_FROM <- "local"
 #          "windows" = "environment_windows.yml",
 #          "unix"    = "environment_ubuntu.yml")
 # )
-INSTALL_FROM_FILE <- file.path("rdkit", "environment.yml")
+INSTALL_FROM_FILE <- file.path("inst", "rdkit", "environment.yml")
 
 # [OPTIONAL] -------------------------------------------------------------------
 # [ADVANCED] Set required conda libraries to install, depending on it to define
@@ -78,7 +78,7 @@ if (exists("LOGGING_ON") && LOGGING_ON) {
 }
 # _[FINALIZE] ------------------------------------------------------------------
 require(reticulate)
-source(here::here("rdkit", "py_setup.R"))
+source(here::here("inst", "rdkit", "py_setup.R"))
 if (!exists("rectify_null_from_env")) {
   require(magrittr)
   source(here::here("R", "app_functions.R"))

@@ -123,7 +123,7 @@ if (USE_API) {
   require(plumber)
   log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
-  source(here::here("plumber", "api_control.R"))
+  source(here::here("inst", "plumber", "api_control.R"))
   api_reload(
     pr = "plumber_service",
     background = TRUE,
@@ -146,8 +146,8 @@ if (INFORMATICS) {
     log_it("info", "Using RDKit for this session. Setting up...", "rdk")
     if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
     require(reticulate)
-    source(here::here("rdkit", "env_py.R"))
-    source(here::here("rdkit", "py_setup.R"))
+    source(here::here("inst", "rdkit", "env_py.R"))
+    source(here::here("inst", "rdkit", "py_setup.R"))
     if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
     if (!exists("PYENV_LIBRARIES")) PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
     if (!exists("PYENV_REF")) PYENV_REF <- "rdk"

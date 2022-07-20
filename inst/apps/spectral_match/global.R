@@ -1,11 +1,11 @@
-dev <- FALSE
+dev <- TRUE
 advanced_use <- FALSE
-toy_data <- FALSE
+toy_data <- TRUE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
 app_dir <- "spectral_match"
-if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("apps", "env_shiny.R"))
+if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 source("app_functions.R")
 if (exists("LOGGING") && LOGGING_ON) {
   log_ns <- "APP_SPECTRAL_MATCH"
@@ -74,7 +74,7 @@ app_settings <- list(
 
 rdkit_available <- api_endpoint(path = "rdkit_active")
 
-lapply(list.files(here::here("apps", app_dir, "modals"), pattern = ".R", full.names = TRUE),
+lapply(list.files("modals", pattern = ".R", full.names = TRUE),
        source)
 
 jscode <- HTML("
@@ -82,6 +82,6 @@ $('body').on('shown.bs.modal', (x) =>
   $(x.target).find('input[type=\"number\"]:first').focus())
                ")
 
-# Increase the file upload size to 20 MB
-file_mbs <- 250
-options(shiny.maxRequestSize = file_mbs*1024^2)
+# Increase the file upload size to 250 MB
+file_MB_limit <- 250
+options(shiny.maxRequestSize = file_MB_limit*1024^2)

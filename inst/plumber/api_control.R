@@ -191,11 +191,11 @@ api_stop <- function(pr = NULL, flush = TRUE, db_conn = "con", remove_service_ob
     return(invisible(NULL))
   }
   if (exists("log_it")) log_it("debug", "Killing plumber service.", "api")
-  if (eval(sym(pr))$is_alive()) eval(sym(pr))$kill()
+  if (eval(rlang::sym(pr))$is_alive()) eval(rlang::sym(pr))$kill()
   if (!exists(db_conn)) flush <- FALSE
   if (flush) {
     if (exists("log_it")) log_it("debug", "Flushing database connections and reconnecting.", "api")
-    if (active_connection(eval(sym(db_conn))))
+    if (active_connection(eval(rlang::sym(db_conn))))
       manage_connection(conn_name = db_conn, reconnect = F)
     manage_connection(conn_name = db_conn)
   }
@@ -239,6 +239,7 @@ api_reload <- function(pr = NULL,
   pr_name <- pr
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
+  plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, here::here("inst", "plumber", "plumber.R"))
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
   PLUMBER_URL <- sprintf("%s:%s", on_host, on_port)
   service_exists <- suppressWarnings(exists(pr))
@@ -271,7 +272,7 @@ api_reload <- function(pr = NULL,
     stopifnot(length(plumber_file) == 1)
     stopifnot(file.exists(plumber_file))
   }
-  if (!is.null(pr) && eval(sym(pr))$is_alive()) {
+  if (!is.null(pr) && eval(rlang::sym(pr))$is_alive()) {
     api_stop(pr = pr)
   }
   url <- sprintf("%s:%s", on_host, on_port)
@@ -292,10 +293,11 @@ api_reload <- function(pr = NULL,
         args = list(
           on_host = on_host,
           on_port = on_port,
-          plumber_file = PLUMBER_FILE
+          plumber_file = plumber_file
         ),
         func = function(on_host, on_port, plumber_file) {
-          source(here::here("plumber", "env_plumb.R"))
+          if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+          source(here::here("inst", "plumber", "env_plumb.R"))
           api_start(
             on_host = on_host,
             on_port = on_port,
@@ -312,7 +314,7 @@ api_reload <- function(pr = NULL,
     )
   }
   if (exists("log_it")) log_it("trace", "Evaluating service...", log_ns)
-  if (exists(pr_name) && eval(sym(pr_name))$is_alive()) {
+  if (exists(pr_name) && eval(rlang::sym(pr_name))$is_alive()) {
     if (exists("log_it")) {
       log_it("info",
              sprintf(

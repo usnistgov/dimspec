@@ -59,7 +59,7 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
   if (logger) log_it("info", "Checking for python installations...this may take a moment...", log_ns)
   py_discover_config(required_module = required_modules, use_environment = env_name)
   
-  virt_env  <- virtualenv_exists(env_name)
+  virt_env  <- env_name %in% virtualenv_list()
   conda_env <- env_name %in% conda_list(conda = conda_path)$name
   if (virt_env) {
     use_virtualenv(virtualenv = env_name, required = TRUE)
@@ -652,7 +652,7 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "M
     if (any(aliases %in% tolower(type))) {
       aliases <- aliases[!aliases %in% tolower(type)]
     }
-    rdk <- eval(sym(rdkit_ref))
+    rdk <- eval(rlang::sym(rdkit_ref))
     to_mol <- grep(paste0("^", mol_from_prefix, type, "$"),
                    names(rdk$Chem),
                    ignore.case = TRUE,
