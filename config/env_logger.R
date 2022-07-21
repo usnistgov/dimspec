@@ -59,9 +59,9 @@ LOGGING <- list(
                 to = "both",
                 file = here::here(LOG_DIRECTORY, sprintf("log_%s.txt", ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"))),
                 threshold = "info"),
-  SHINY  = list(log = FALSE,
+  SHINY  = list(log = TRUE,
                 ns = "shiny",
-                to = "both",
+                to = "file",
                 file = here::here(LOG_DIRECTORY, "log_shiny.txt"),
                 threshold = "info")
 )
