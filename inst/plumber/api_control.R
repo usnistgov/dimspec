@@ -26,37 +26,39 @@ api_start <- function(plumber_file = NULL,
     if (exists("PLUMBER_FILE")) {
       plumber_file <- PLUMBER_FILE
     } else {
-      msg <- 'Provide a file path to a plumber file for "plumber_file" or set variable "PLUMBER_FILE" in the "config/env_R.R" file.'
+      msg <- 'Provide a file path to a plumber file for "plumber_file" or set variable "PLUMBER_FILE" (if set in the "config/env_R.R" file it will be maintained in the future).'
       if (exists("log_it")) {
         log_it("error", msg, "api")
       }
       stop(msg)
     }
   }
-  if (is.null(on_host)) {
-    if (exists("PLUMBER_HOST")) {
-      on_host <- PLUMBER_HOST
-    } else {
-      if (exists("log_it")) {
-        log_it("error",
-               'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "config/env_R.R" file.',
-               "api")
-        on_host <- getOption("plumber.host", "127.0.0.1")
-      }
-    }
-  }
-  if (is.null(on_port)) {
-    if (exists("PLUMBER_PORT")) {
-      on_port <- PLUMBER_PORT
-    } else {
-      if (exists("log_it")) {
-        log_it("error",
-               'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "config/env_R.R" file.',
-               "api")
-        on_port <- getOption("plumber.port", 8080)
-      }
-    }
-  }
+  on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
+  on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
+  # if (is.null(on_host)) {
+  #   if (exists("PLUMBER_HOST")) {
+  #     on_host <- PLUMBER_HOST
+  #   } else {
+  #     if (exists("log_it")) {
+  #       log_it("error",
+  #              'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "config/env_R.R" file.',
+  #              "api")
+  #       on_host <- getOption("plumber.host", "127.0.0.1")
+  #     }
+  #   }
+  # }
+  # if (is.null(on_port)) {
+  #   if (exists("PLUMBER_PORT")) {
+  #     on_port <- PLUMBER_PORT
+  #   } else {
+  #     if (exists("log_it")) {
+  #       log_it("error",
+  #              'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "config/env_R.R" file.',
+  #              "api")
+  #       on_port <- getOption("plumber.port", 8080)
+  #     }
+  #   }
+  # }
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
   
   # Argument validation relies on verify_args

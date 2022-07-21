@@ -1141,7 +1141,7 @@ obj_name_check <- function(obj, default_name = NULL) {
 #'   conflicts between the two.
 #'
 #' @param src_dir CHR scalar file path to settings and functions enabling rdkit
-#'   (default: file.path(getwd(), "rdkit"))
+#'   (default: here::here("inst", "rdkit"))
 #' @param log_ns CHR scalar name of the logging namespace to use for this
 #'   function (default: "rdkit")
 #'
@@ -1149,7 +1149,8 @@ obj_name_check <- function(obj, default_name = NULL) {
 #'   successful
 #' @export
 #'
-start_rdkit <- function(src_dir = file.path(getwd(), "rdkit"), log_ns = "rdkit") {
+start_rdkit <- function(src_dir = here::here("inst", "rdkit"), log_ns = "rdkit") {
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "rdkit"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
   if (any(c("BiocManager", "rcdk", "ChemmineR") %in% loadedNamespaces())) {
     stop("RDKit cannot be loaded if Bioconductor is already running.")
   }
@@ -1169,4 +1170,36 @@ start_rdkit <- function(src_dir = file.path(getwd(), "rdkit"), log_ns = "rdkit")
          source,
          keep.source = FALSE)
   rdkit_active(make_if_not = TRUE)
+}
+
+#' Start the plumber interface from a clean environment
+#'
+#' This convenience function launches the plumber instance if it was not set to
+#' laumch during the session setup.
+#'
+#' @param background LGL scalar of whether to launch the API in a background
+#'   process (default: TRUE)
+#' @param src_dir  CHR scalar file path to settings and functions enabling the
+#'   plumber API (default: here::here("inst", "plumber"))
+#' @param log_ns CHR scalar name of the logging namespace to use for this
+#'   function (default: "API")
+#'
+#' @return None, launches the plumber instance
+#' @export
+#'
+#' @usage
+start_api <- function(plumber_file = NULL, background = TRUE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
+  if (!exists("api_reload")) {
+    source(file.path(src_dir, "api_control.R"))
+    reminder <- TRUE
+  } else {
+    reminder <- FALSE
+  }
+  plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, file.path(src_dir, "plumber.R"))
+  api_reload(plumber_file = plumber_file, background = background)
+  if (reminder) {
+    if (!exists("LOGGING_ON") || !LOGGING_ON) message("Logging will be turned on in the background instance.")
+    message("Remember to kill the plumber instance (e.g. plumber_service$kill()) when you are finished with it.")
+  }
 }
