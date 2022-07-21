@@ -603,12 +603,21 @@ dashboardPage(
                     ),
                     span(id = "search_fragments_results_span",
                          hr(),
-                         column(width = 12,
-                                plotOutput(outputId = "search_fragments_spectral_plot",
-                                           width = "100%") %>%
-                                  # plotlyOutput(outputId = "search_fragments_spectral_plot",
-                                  #              width = "100%") %>%
-                                  withSpinner()
+                         column(12,
+                                fluidRow(
+                                  column(8,
+                                         plotOutput(outputId = "search_fragments_spectral_plot",
+                                                    width = "100%") %>%
+                                           # plotlyOutput(outputId = "search_fragments_spectral_plot",
+                                           #              width = "100%") %>%
+                                           withSpinner()
+                                  ),
+                                  column(4,
+                                         DTOutput(outputId = "search_fragments_spectral_data",
+                                                  width = "100%") %>%
+                                           withSpinner()
+                                  )
+                                )
                          ),
                          column(12,
                                 h4("Select a row in the table to view additional information for that annotated fragment."),
@@ -632,10 +641,21 @@ dashboardPage(
                                          }
                                   ),
                                   column(width = ifelse(rdkit_available, 4, 6),
-                                         (DTOutput(outputId = "search_fragments_compound_list",
-                                                  width = "100%") %>%
-                                           withSpinner()),
-                                         tags$caption(style = "font-size: small;", "Double click on a row in this table to view more information about that compound (TBD).")
+                                         h4("This fragment has been found in the following"),
+                                         # tabsetPanel(
+                                         #   type = "tabs",
+                                         #   tabPanel("Compounds",
+                                                    DTOutput(outputId = "search_fragments_compound_list",
+                                                             width = "100%") %>%
+                                                      withSpinner(),
+                                                    tags$caption(style = "font-size: small;", "Double click on a row in this table to view more information (TBD).")
+                                           # ),
+                                           # tabPanel("Peaks",
+                                           #          htmlOutput(outputId = "search_fragments_peak_list",
+                                           #                   width = "100%") %>%
+                                           #            withSpinner()
+                                           # )
+                                         )
                                   )
                                 )
                          )

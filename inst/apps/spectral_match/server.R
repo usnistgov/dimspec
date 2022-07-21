@@ -858,7 +858,31 @@ shinyServer(function(input, output, session) {
             plot.title.position = "plot", 
             title = element_text(size = 15))
   })
-  # __Data Table ----
+  # __Spectral Data ----
+  output$search_fragments_spectral_data <- renderDT(
+    server = FALSE,
+    DT::datatable(
+      data = req(search_fragments_results()$spectra) %>%
+        arrange(mz),
+      rownames = FALSE,
+      selection = list(mode = "none"),
+      autoHideNavigation = TRUE,
+      colnames = c("Measured m/z", "Uncertainty (m/z)", "Intensity", "Uncertainty (intensity)", "n", "Annotated Fragment ID", "Elemental Formula", "Has SMILES Notation", "Match Type"),
+      caption = "Spectral Data",
+      extensions = c("Responsive", "Buttons"),
+      options = list(
+        dom = ifelse(nrow(search_fragments_results()$spectra) <= 10, "tB", "tBp"),
+        pageLength = 15,
+        buttons = c("copy", "csv", "excel"),
+        columnDefs = list(
+          list(visible = FALSE, targets = c("mz.u", "int.u", "annotated_fragment_id", "formula", "has_smiles")),
+          list(className = "dt-center", targets = 0:8)
+        )
+      )
+    ) %>%
+      formatRound(columns = c("mz", "mz.u", "int", "int.u"), digits = 4, interval = 3)
+  )
+  # __Annotations Table ----
   output$search_fragments_dt <- renderDT(
     server = FALSE,
     DT::datatable(
@@ -888,20 +912,21 @@ shinyServer(function(input, output, session) {
   # __Compound list ----
   output$search_fragments_compound_list <- renderDT({
     ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    compounds <- search_fragments_results()$linked_data %>%
+      filter(annotated_fragment_id == ann_frag_id) %>%
+      pull(compounds) %>%
+      .[[1]]
     DT::datatable(
-      data = search_fragments_results()$linked_data %>%
-        filter(annotated_fragment_id == ann_frag_id) %>%
-        pull(compounds) %>%
-        .[[1]],
+      data = compounds,
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Previously Annotated in Compound"),
+      colnames = NULL,
       caption = NULL,
       options = list(
-        dom = ifelse(nrow(search_fragments_results()$result) <= 10, "t", "tp"),
+        dom = ifelse(nrow(compounds) <= 10, "t", "tp"),
         pageLength = 10,
         columnDefs = list(
           list(visible = FALSE, targets = c("compound_id")),
@@ -910,6 +935,26 @@ shinyServer(function(input, output, session) {
       )
     )
   })
+  # __Peak list ----
+  # output$search_fragments_peak_list <- renderText({
+  #   ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+  #   peaks <- search_fragments_results()$linked_data %>%
+  #     filter(annotated_fragment_id == ann_frag_id) %>%
+  #     pull(peak_id) %>%
+  #     .[[1]]
+  #   paste0('<span id = "peak_list" style = "display: inline;">',
+  #          lapply(peaks,
+  #                 function(x) {
+  #                   actionLink(
+  #                     inputId = sprintf("search_fragments_results_peak_ref_%s", x),
+  #                     label = sprintf("#%s", x)
+  #                   )
+  #                 }) %>%
+  #            tagList() %>%
+  #            paste0(),
+  #          "</span>"
+  #   )
+  # })
   # __Molecular model ----
   # __Molecular model candidate formula
   output$search_fragments_selected_formula <- renderText(
@@ -1037,7 +1082,7 @@ shinyServer(function(input, output, session) {
       min_error = input$data_input_minimum_error,
       return_format = "data.frame"
     ) %>%
-      arrange(smiles, fixedmass)
+      arrange(desc(has_smiles), fixedmass)
     fragment_links <- lapply(
       fragments$mz,
       function(x) {

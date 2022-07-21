@@ -6,35 +6,17 @@ vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
 app_dir <- "spectral_match"
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
-source("app_functions.R")
-if (exists("LOGGING") && LOGGING_ON) {
-  log_ns <- "APP_SPECTRAL_MATCH"
-  if (!log_ns %in% names(LOGGING)) {
-    LOG_DIRECTORY <- here::here(ifelse(exists("LOG_DIRECTORY"), LOG_DIRECTORY, "logs"))
-    logger_settings <- list(
-      list(
-        log = TRUE,
-        ns = tolower(log_ns),
-        to = "file",
-        file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", tolower(log_ns))),
-        threshold = "info")
-    ) %>%
-      setNames(log_ns)
-    LOGGING <- append(LOGGING, logger_settings)
-    update_logger_settings()
-  }
-  log_it("info", "Starting app: app_spectral_match", "shiny")
-  log_it("info", "Starting app", tolower(log_ns))
-}
-
-# Session variables
-if (exists("PLUMBER_URL")) {
-  if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
-    stop("API service does not appear to be available. Please run `api_reload()` and try again.")
-  }
-} else {
-  stop("This app requires an active API connection.")
-}
+DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "NIST HRAMS Database for PFAS")
+need_files <- c(
+  "app_functions.R",
+  list.files(path = here::here("R", c("spectral_analysis")),
+             pattern = "\\.R$",
+             full.names = TRUE)
+)
+sapply(need_files, source)
+log_ns <- "APP_SPECTRAL_MATCH"
+log_it("info", "Starting app: app_spectral_match", "shiny")
+log_it("info", "Starting app", tolower(log_ns), add_unknown_ns = TRUE, clone_settings_from = "SHINY")
 
 app_settings <- list(
   experiment_types = api_endpoint(path = "table_search",

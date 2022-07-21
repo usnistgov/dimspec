@@ -57,6 +57,15 @@ body {
   padding-top: 4.5px;
 }
 
+button.dt-button {
+  padding: 1px 6px 0px !important;
+  font-size: 0.75em !important;
+}
+
+.paginate_button {
+  padding: 0.1em 0.25em !important;
+}
+
 @media (min-width: 768px) {
   .box-left {
     padding-right: 7px;
@@ -160,6 +169,11 @@ a > i {
   height: 200px;
 }
 
-#search_fragments_compound_list > div > table > tbody > tr > td {
+#search_fragments_ballstick_caption {
+  padding-top: 8px;
+}
+
+#search_fragments_compound_list > div > table > tbody > tr > td,
+#search_fragments_spectral_data > div > table > tbody > tr > td {
   padding: 0;
 }
