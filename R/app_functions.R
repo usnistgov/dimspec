@@ -1188,7 +1188,7 @@ start_rdkit <- function(src_dir = here::here("inst", "rdkit"), log_ns = "rdkit")
 #' @export
 #'
 #' @usage
-start_api <- function(plumber_file = NULL, background = TRUE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
+start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = NULL, background = TRUE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
   # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
   if (!exists("api_reload")) {
     source(file.path(src_dir, "api_control.R"))
@@ -1197,9 +1197,62 @@ start_api <- function(plumber_file = NULL, background = TRUE, src_dir = here::he
     reminder <- FALSE
   }
   plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, file.path(src_dir, "plumber.R"))
-  api_reload(plumber_file = plumber_file, background = background)
+  plumber_host <- rectify_null_from_env(plumber_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
+  plumber_port <- rectify_null_from_env(plumber_port, PLUMBER_PORT, getOption("plumber.port", 8080))
+  running_on   <- api_reload(plumber_file = plumber_file, on_host = plumber_host, on_port = plumber_port, background = background)
   if (reminder) {
     if (!exists("LOGGING_ON") || !LOGGING_ON) message("Logging will be turned on in the background instance.")
-    message("Remember to kill the plumber instance (e.g. plumber_service$kill()) when you are finished with it.")
+    message("Remember to kill the plumber instance (e.g. plumber_service$kill() or api_stop()) when you are finished with it.")
+  }
+  PLUMBER_URL <<- running_on
+}
+
+#' WIP Launch an analysis shiny application
+#'
+#' Call this function to launch an app either directly or in a background
+#' process. The name must be present in the app directory
+#'
+#' @param app_name
+#' @param app_dir
+#' @param background
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+start_app <- function(app_name, app_dir = here::here("inst", "apps"), background = FALSE, ...) {
+  # TODO make these launchable in the background to keep the session free
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
+  if (exists("SHINY_APPS")) {
+    app_dir <- SHINY_APPS[[app_name]]
+  } else {
+    app_dir <- file.path(app_dir, app_name)
+  }
+  background <- FALSE
+  kwargs <- c(
+    list(...),
+    appDir = app_dir
+  )
+  if (!is.null(kwargs)) {
+    kwargs <- kwargs[which(names(kwargs) %in% names(formals(shiny::runApp)))]
+  }
+  if (!dir.exists(app_dir)) stop(sprintf("Could not locate an app named %s at %s", app_name, app_dir))
+  app_name <- sprintf("app_%s_service", basename(app_dir))
+  if (background) {
+    assign(
+      x = app_name,
+      value = callr::r_bg(
+        args = kwargs,
+        func = {
+          if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+          do.call(what = shiny::runApp, args = kwargs)
+        }
+      ),
+      envir = .GlobalEnv
+    )
+    message(sprintf("Don't forget to close the application process (e.g. %s$kill()) when you finish with it.", app_name))
+  } else {
+    do.call(what = shiny::runApp, args = kwargs)
   }
 }
