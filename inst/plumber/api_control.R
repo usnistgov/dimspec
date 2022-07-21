@@ -224,7 +224,8 @@ api_stop <- function(pr = NULL, flush = TRUE, db_conn = "con", remove_service_ob
 #'   background service (default: TRUE); set to FALSE for testing
 #' @param log_ns CHR scalar namespace to use for logging (default: "api")
 #'
-#' @return None, launches the plumber API service on your local machine
+#' @return Launches the plumber API service on your local machine and returns
+#'   the URL on which it can be accessed as a CHR scalar
 #' @export
 #' 
 api_reload <- function(pr = NULL,
@@ -243,7 +244,6 @@ api_reload <- function(pr = NULL,
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
   plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, here::here("inst", "plumber", "plumber.R"))
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
-  PLUMBER_URL <- sprintf("%s:%s", on_host, on_port)
   service_exists <- suppressWarnings(exists(pr))
   if (!service_exists) {
     pr <- NULL
@@ -277,9 +277,9 @@ api_reload <- function(pr = NULL,
   if (!is.null(pr) && eval(rlang::sym(pr))$is_alive()) {
     api_stop(pr = pr)
   }
-  url <- sprintf("%s:%s", on_host, on_port)
+  url <- sprintf("http://%s:%s", on_host, on_port)
   if (exists("log_it")) {
-    if (!url == PLUMBER_URL) {
+    if (exists("PLUMBER_URL") && !url == PLUMBER_URL) {
       log_it("warn",
              sprintf("Plumber was launched on a url (%s) other than that defined in the environment (%s).",
                      url, PLUMBER_URL),
@@ -345,6 +345,7 @@ api_reload <- function(pr = NULL,
     log_fn("end")
     log_it("debug", "Exiting api_reload().", log_ns)
   }
+  return(url)
 }
 
 
