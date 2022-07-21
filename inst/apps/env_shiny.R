@@ -1,19 +1,21 @@
 # Set up environment -----------------------------------------------------------
-if (!exists("DB_TITLE")) {
-  stop("Please source the configuration file for this project first at ./R/compliance.R")
+if (!exists("start_api")) {
+  source(here::here("R", "app_functions.R"))
+  start_api()
 }
-# if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
-# USE_API      <- TRUE
-# USE_SHINY    <- TRUE
-# INFORMATICS  <- FALSE
-# VERIFY_ARGUMENTS <- FALSE
-# USE_RDKIT    <- TRUE
-# LOGGING_ON   <- TRUE
-# DIRECT_CONNECTION <- FALSE
-# DB_CONN_NAME <- "con"
-# if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
-# if (!exists("RENV_ESTABLISHED_COMPLIANCE") || !RENV_ESTABLISHED_COMPLIANCE) source(here::here("R", "compliance.R"))
-packs <- c("shiny",
+
+# Check API
+if (exists("PLUMBER_URL")) {
+  if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
+    stop("API service does not appear to be available (PLUMBER_URL does not exist). Please run `api_reload()` and try again.")
+  }
+} else {
+  stop("This app requires an active API connection.")
+}
+
+# Package requirements
+packs <- c("dplyr",
+           "shiny",
            "shinyalert",
            "shinydashboard",
            "shinycssloaders",
@@ -35,18 +37,19 @@ if (length(packs_FALSE) > 0) {
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
 rm(packs)
-# 
-# # Set up logger ----------------------------------------------------------------
-# # Set this as the name of the "LOGGING" element referring to the API settings
-# # from env_logger.R e.g. "SHINY" to refer to LOGGING$SHINY (the default)
+#
+# Set up logger ----------------------------------------------------------------
+# Set this as the name of the "LOGGING" element referring to the API settings
+# from env_logger.R e.g. "SHINY" to refer to LOGGING$SHINY (the default)
+LOGGING_ON <- TRUE
+if (!exists("RENV_ESTABLISHED_LOGGER") || !RENV_ESTABLISHED_LOGGER) source(here::here("config", "env_logger.R"))
 log_ns <- "SHINY"
-LOG_DIRECTORY <- here::here(ifelse(exists("LOG_DIRECTORY"), LOG_DIRECTORY, "logs"))
 logger_settings <- list(
   list(
     log = TRUE,
     ns = tolower(log_ns),
     to = "file",
-    file = file.path(LOG_DIRECTORY, "log_shiny.txt"),
+    file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", tolower(log_ns))),
     threshold = "info")
 ) %>%
   setNames(log_ns)
@@ -57,11 +60,10 @@ if (!exists("LOGGING")) {
     LOGGING,
     logger_settings
   )
-} else if (!LOGGING[[log_ns]]$log) {
-  LOGGING[[log_ns]]$log <- TRUE
 }
 require(logger)
-update_logger_settings()
+update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
+rm(logger_settings)
 
 RENV_ESTABLISHED_SHINY <- TRUE
 log_it("info", "Shiny environment established.", "shiny")
