@@ -16,11 +16,19 @@ function(req) {
 }
 
 #* Ensure database is connected prior to issuing requests
+#* @param db_conn:character The name of the database connection object
 #* @filter active
-function(req, res) {
-  if (!DBI::dbIsValid(con)) {
-    res$status <- 401
-    return(list(error="Database connection is not currently available."))
+function(db_conn = "con", req, res) {
+  if (!exists("testing_api") || testing_api) {
+    if (!exists(db_conn)) {
+      res$status <- 401
+      return(list(error = sprintf("No database connection object named %s is currently available to this plumber instance.", db_conn)))
+    } else {
+      if (!DBI::dbIsValid(eval(sym(db_conn)))) {
+        res$status <- 401
+        return(list(error = sprintf("The database connection at %s is not active in this plumber instance.", db_conn)))
+      }
+    }
   }
   plumber::forward()
 }
@@ -204,8 +212,15 @@ function() {
 
 # _db_active ----
 #* Is the connection valid
+#* @param db_conn:character The name of the database connection object (default: "con")
 #* @get /db_active
-function() return(dbIsValid(con))
+function(db_conn = "con") {
+  if (exists("con")) {
+    return(dbIsValid(con))
+  } else {
+    return(sprintf("No connection object named %s is available.", db_conn))
+  }
+}
 
 # _rdkit_active ----
 #* Is RDKit available?
@@ -383,14 +398,23 @@ function(env_name) {
 #* @param fn_name:character The name of an R object that should be present in the plumber environment.
 #* @get /formals/<fn_name>
 function(fn_name) {
-  out <- lapply(
-    formals(fn_name),
-    function(x) {
-      ifelse(inherits(x, "name"),
-             NA_character_,
-             x)
-    }
-  )
+  if (!exists(fn_name)) {
+    return("No function by that name is available.")
+  } else {
+    out <- lapply(
+      formals(fn_name),
+      function(x) {
+        if (inherits(x, "name")) {
+          NA_character_
+        } else if (is.language(x)) {
+          eval(x)
+        } else {
+          x
+        }
+      }
+    )
+  }
+  return(out)
 }
 
 # _search_compound ----
