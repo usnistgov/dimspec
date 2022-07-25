@@ -63,6 +63,12 @@ function(table_name      = "contributors",
   params <- as.list(environment())
   params$match_crit_json <- NULL
   need_logical <- c("case_sensitive", "distinct", "get_all_columns", "execute", "single_column_as_vector")
+  if (!exists("build_db_action")) {
+    return(list(error = "Function build_db_action is not available."))
+  }
+  if (!table_name %in% dbListTables(con)) {
+    return(list(error = sprintf("Table %s is not present in this database. Check the spelling and try again.", table_name)))
+  }
   for (nl in need_logical) {
     params[[nl]] <- as.logical(params[[nl]])
   }
@@ -103,7 +109,8 @@ function(table_name      = "contributors",
   res <- try(do.call("build_db_action", params))
   if (inherits(res, "try-error")) {
     msg <- paste0(names(params), ' = ' , unlist(unname(params)), collapse = ',')
-    res <- glue::glue("Malformed call to build_db_action with params {msg}.")
+    res$status <- 500
+    return(list(error = glue::glue("Malformed call to build_db_action with params {msg}.")))
   }
   return(res)
 }

@@ -345,7 +345,7 @@ api_reload <- function(pr = NULL,
     log_fn("end")
     log_it("debug", "Exiting api_reload().", log_ns)
   }
-  return(url)
+  return(invisible(url))
 }
 
 
@@ -406,7 +406,7 @@ api_endpoint <- function(path,
   query <- list()
   if ("match_criteria" %in% names(kwargs)) {
     if (!is.character(kwargs$match_criteria)) {
-      kwargs$match_criteria <- deparse(kwargs$match_criteria)
+      kwargs$match_criteria <- deparse1(kwargs$match_criteria)
     }
   }
   if (length(kwargs) == 1 && is.null(names(kwargs))) {
@@ -460,8 +460,8 @@ api_endpoint <- function(path,
       }
     }
   }
+  res <- httr::GET(url = url)
   if (check_valid) {
-    res <- httr::GET(url = url)
     if (res$status_code >= 200 && res$status_code <= 299) {
       message(sprintf("Endpoint %s is valid.", url))
     } else {
@@ -471,7 +471,7 @@ api_endpoint <- function(path,
     }
   }
   if (raw_result) {
-    return(httr::GET(url = url))
+    return(res)
   }
   if (execute || open_in_browser) {
     if (open_in_browser) {
