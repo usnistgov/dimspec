@@ -114,7 +114,7 @@ dashboardPage(
                                       selectizeInput(inputId = "data_input_experiment_type",
                                                      label = "MS Experiment Type",
                                                      choices = experiment_types,
-                                                     width = "100%",
+                                                     width = "100%"
                                       ),
                                       numericInput(inputId = "data_input_isolation_width",
                                                    label = "Isolation Width (Da)",
@@ -184,12 +184,12 @@ dashboardPage(
                                            selectizeInput(inputId = "data_input_norm_function",
                                                           label = "Search normalization function",
                                                           choices = data_input_normfn,
-                                                          width = "100%",
+                                                          width = "100%"
                                            ),
                                            selectizeInput(inputId = "data_input_correlation_method",
                                                           label = "Search correlation method",
                                                           choices = data_input_cormethod,
-                                                          width = "100%",
+                                                          width = "100%"
                                            )
                                            # ),
                                            # tags$label("Search match refinement settings"),
@@ -299,8 +299,10 @@ dashboardPage(
                 column(12,
                        actionButton(inputId = "data_input_process_btn",
                                     label = "Process Data",
-                                    icon = icon("circle-play", verify_fa = FALSE),
-                                    width = "100%")
+                                    icon = icon("circle-play",
+                                                verify_fa = FALSE),
+                                    width = "100%"
+                       )
                 ),
                 column(12,
                        id = "data_input_next_actions",
@@ -309,7 +311,8 @@ dashboardPage(
                            
                            actionButton(inputId = "data_input_go_compound",
                                         label = "Match Compounds",
-                                        icon = icon("magnifying-glass", verify_fa = FALSE)
+                                        icon = icon("magnifying-glass",
+                                                    verify_fa = FALSE)
                            ),
                            # actionButton(inputId = "data_input_go_uncertainty",
                            #              label = "Evaluate Uncertainty",
@@ -317,7 +320,8 @@ dashboardPage(
                            # ),
                            actionButton(inputId = "data_input_go_fragment",
                                         label = "Match Fragments",
-                                        icon = icon("puzzle-piece", verify_fa = FALSE)
+                                        icon = icon("puzzle-piece",
+                                                    verify_fa = FALSE)
                            )
                        )
                 )
@@ -573,27 +577,15 @@ dashboardPage(
                     h4("[USE INSTRUCTIONS HERE]."),
                     fluidRow(
                       column(12,
-                             # fluidRow(
-                             #   column(3,
-                             #          selectizeInput(inputId = "search_fragments_search_type",
-                             #                         label = "Search Type",
-                             #                         choices = c("Fragment Search" = "fragments", "All" = "all"),
-                             #                         selected = 1,
-                             #                         multiple = FALSE,
-                             #                         width = "100%")
-                             #   ),
-                             #   column(9,
-                                      selectizeInput(inputId = "search_fragments_mzrt",
-                                                     label = "Feature of Interest",
-                                                     choices = NULL,
-                                                     selected = NULL,
-                                                     multiple = FALSE,
-                                                     width = "100%",
-                                                     options = list(placeholder = "Please add search parameters on the Data Input page.")),
-                                      htmlOutput(outputId = "search_fragments_has_mzrt_has_ions",
-                                                 width = "100%"),
-                               # )
-                             # ),
+                             selectizeInput(inputId = "search_fragments_mzrt",
+                                            label = "Feature of Interest",
+                                            choices = NULL,
+                                            selected = NULL,
+                                            multiple = FALSE,
+                                            width = "100%",
+                                            options = list(placeholder = "Please add search parameters on the Data Input page.")),
+                             htmlOutput(outputId = "search_fragments_has_mzrt_has_ions",
+                                        width = "100%"),
                              actionButton(inputId = "search_fragments_search_btn",
                                           label = "Search",
                                           icon = icon("magnifying-glass", verify_fa = FALSE),
@@ -655,7 +647,7 @@ dashboardPage(
                                            #                   width = "100%") %>%
                                            #            withSpinner()
                                            # )
-                                         )
+                                         # )
                                   )
                                 )
                          )
