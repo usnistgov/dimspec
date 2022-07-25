@@ -605,6 +605,7 @@ dashboardPage(
                                            withSpinner()
                                   ),
                                   column(4,
+                                         h4("Your spectral data included"),
                                          DTOutput(outputId = "search_fragments_spectral_data",
                                                   width = "100%") %>%
                                            withSpinner()
@@ -633,7 +634,7 @@ dashboardPage(
                                          }
                                   ),
                                   column(width = ifelse(rdkit_available, 4, 6),
-                                         h4("This fragment has been found in the following"),
+                                         h4("This fragment has been annotated in the following compounds"),
                                          # tabsetPanel(
                                          #   type = "tabs",
                                          #   tabPanel("Compounds",

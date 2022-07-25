@@ -801,7 +801,7 @@ shinyServer(function(input, output, session) {
   # __Spectrum plot ----
   # output$search_fragments_spectral_plot <- renderPlotly({
   output$search_fragments_spectral_plot <- renderPlot({
-    validate(
+    shiny::validate(
       need(nrow(search_fragments_results()$spectra) > 0,
            message = "No spectra available to plot.")
     )
@@ -868,7 +868,7 @@ shinyServer(function(input, output, session) {
       selection = list(mode = "none"),
       autoHideNavigation = TRUE,
       colnames = c("Measured m/z", "Uncertainty (m/z)", "Intensity", "Uncertainty (intensity)", "n", "Annotated Fragment ID", "Elemental Formula", "Has SMILES Notation", "Match Type"),
-      caption = "Spectral Data",
+      caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
         dom = ifelse(nrow(search_fragments_results()$spectra) <= 10, "tB", "tBp"),
@@ -962,12 +962,12 @@ shinyServer(function(input, output, session) {
   )
   # __Molecular model graphic
   output$search_fragments_ballstick <- renderImage({
-    validate(
+    shiny::validate(
       need(search_fragments_results_selected()$has_smiles,
            message = "This fragment has not had a structure assigned.")
     )
     fragment_id <- req(search_fragments_results_selected())
-    alt_text <- glue::glue("Ball and stick molecular model for fragment {fragment_id$formula} (ID {fragment_id$annotated_fragment_id}) with SMILES notation {fragment_id$smiles}.")
+    alt_text <- glue::glue("Molecular model for fragment {fragment_id$formula} (ID {fragment_id$annotated_fragment_id}) with SMILES notation {fragment_id$smiles}.")
     list(
       src =  api_endpoint(path = "molecular_model/file",
                           type = "fragment",
@@ -979,7 +979,7 @@ shinyServer(function(input, output, session) {
   )
   # __Molecular model caption
   output$search_fragments_ballstick_caption <- renderText({
-    validate(
+    shiny::validate(
       need(search_fragments_results_selected(),
            message = "Please select a row from the fragments table.")
     )
