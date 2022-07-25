@@ -358,7 +358,7 @@ api_reload <- function(pr = NULL,
 #' executed or opened for viewing.
 #'
 #' @note Special support is provided for the way in which the NIST Public Data
-#'   Repository treats fragments
+#'   Repository treats URL fragments
 #' @note This only support [httr::GET] requests.
 #'
 #' @param path CHR scalar of the endpoint path.
@@ -406,7 +406,7 @@ api_endpoint <- function(path,
   query <- list()
   if ("match_criteria" %in% names(kwargs)) {
     if (!is.character(kwargs$match_criteria)) {
-      kwargs$match_criteria <- deparse(substitute(kwargs$match_criteria))
+      kwargs$match_criteria <- deparse(kwargs$match_criteria)
     }
   }
   if (length(kwargs) == 1 && is.null(names(kwargs))) {
@@ -419,7 +419,13 @@ api_endpoint <- function(path,
         if (kwarg %in% names(url)) {
           url[[kwarg]] <- kwargs[[kwarg]]
         } else {
-          query <- append(query, setNames(kwargs[[kwarg]], kwarg))
+          query_i <- kwargs[kwarg]
+          for (i in 1:length(query_i)) {
+            if (length(query_i[[i]]) > 1) {
+              query_i[[i]] <- paste0(kwarg, "=", deparse(substitute(query_i)))
+            }
+          }
+          query <- append(query, query_i)
         }
       }
     } else {
