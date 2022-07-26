@@ -78,7 +78,7 @@ button.dt-button {
   }
 }
 
-div.one-line > p {
+.one-line > p, .one-line > a  {
   display: inline;
   padding-top: 2px;
 }
@@ -137,11 +137,6 @@ a > i {
   padding-top: calc(50vh + 100px);
 }
 
-#search_compounds_status > p, #search_compounds_status > h3 > p,
-#search_compounds_status2 > p, #uncertainty_status > p {
-  display: inline;
-}
-
 #search_compounds_dt {
   margin-top: 12px;
 }
@@ -173,7 +168,49 @@ a > i {
   padding-top: 8px;
 }
 
+
 #search_fragments_compound_list > div > table > tbody > tr > td,
-#search_fragments_spectral_data > div > table > tbody > tr > td {
+#search_fragments_spectral_data > div > table > tbody > tr > td,
+#search_fragments_peak_list > div > table > tbody > tr > td {
   padding: 0;
+}
+
+td.dtr-control {
+  padding-left: 30px !important;
+}
+
+#search_fragments_compounds_peaks > li > a {
+  padding: 0px 15px;
+}
+
+ul.dtr-details {
+  width: 100%;
+}
+
+ul.dtr-details > li {
+  padding: 0 !important;
+}
+ul.dtr-details > li > .dtr-data {
+  padding-left: 25px;
+  float: right;
+}
+
+.success {
+  color: #00a65a;
+}
+
+.warning {
+  color: #f39c12;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.primary {
+  color: #0073b7
+}
+
+.info {
+  color: #00c0ef;
 }

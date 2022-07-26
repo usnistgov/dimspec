@@ -384,10 +384,12 @@ dashboardPage(
                              id = "search_compounds_results_span",
                              fluidRow(
                                column(4,
-                                      htmlOutput(outputId = "search_compounds_status",
-                                                 width = "100%"),
-                                      htmlOutput(outputId = "search_compounds_status2",
-                                                 width = "100%"),
+                                      div(id = "search_compounds_status_div",
+                                          htmlOutput(outputId = "search_compounds_match_top",
+                                                     width = "100%"),
+                                          htmlOutput(outputId = "search_compounds_match_selected",
+                                                     width = "100%")
+                                      ),
                                       h3(id = "search_compounds_butterfly_plot_title",
                                          "Comparison Mass Spectrum"
                                       ),
@@ -626,7 +628,11 @@ dashboardPage(
                                              htmlOutput(outputId = "search_fragments_ballstick_caption"),
                                              span(class = "centered-image",
                                                   imageOutput(outputId = "search_fragments_ballstick",
-                                                              height = "200px")
+                                                              height = "200px"),
+                                                  actionLink(inputId = "search_fragments_fragment_info",
+                                                             label = "More Fragment Information",
+                                                             icon = icon("search", verify_fa = FALSE)
+                                                  )
                                              )
                                            )
                                          } else {
@@ -634,21 +640,28 @@ dashboardPage(
                                          }
                                   ),
                                   column(width = ifelse(rdkit_available, 4, 6),
-                                         h4("This fragment has been annotated in the following compounds"),
-                                         # tabsetPanel(
-                                         #   type = "tabs",
-                                         #   tabPanel("Compounds",
+                                         h4("This fragment has been annotated in the following"),
+                                         tabsetPanel(
+                                           type = "tabs",
+                                           id = "search_fragments_compounds_peaks",
+                                           tabPanel("Compounds",
                                                     DTOutput(outputId = "search_fragments_compound_list",
                                                              width = "100%") %>%
                                                       withSpinner(),
-                                                    tags$caption(style = "font-size: small;", "Double click on a row in this table to view more information (TBD).")
-                                           # ),
-                                           # tabPanel("Peaks",
-                                           #          htmlOutput(outputId = "search_fragments_peak_list",
-                                           #                   width = "100%") %>%
-                                           #            withSpinner()
-                                           # )
-                                         # )
+                                                    actionLink(inputId = "search_fragments_compound_info",
+                                                               label = "More Compound Information",
+                                                               icon = icon("search", verify_fa = FALSE))
+                                           ),
+                                           tabPanel("Peaks",
+                                                    DTOutput(outputId = "search_fragments_peak_list",
+                                                               width = "100%") %>%
+                                                      withSpinner(),
+                                                    actionLink(inputId = "search_fragments_peak_info",
+                                                               label = "More Peak Information",
+                                                               icon = icon("search", verify_fa = FALSE))
+                                           )
+                                         )
+                                         
                                   )
                                 )
                          )
