@@ -468,7 +468,9 @@
 				WHEN car.name == "SMILES"
 					THEN "https://www.google.com/search?q=canonical+SMILES+"||
 						REPLACE(ca.alias , "#", "%23")
-				WHEN c.obtained_from IS NOT NULL 
+				WHEN car.name == "NIST Suspect List"
+					THEN "https://data.nist.gov/od/id/mds2-2387"
+				WHEN c.obtained_from IS NOT NULL AND NOT c.obtained_from LIKE "https://comptox.epa.gov%"
 					THEN c.obtained_from
 				ELSE
 					"https://www.google.com/search?q="||ca.alias
