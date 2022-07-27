@@ -838,7 +838,10 @@ er_map <- function(db_conn = con) {
 #' This function seeks to abstract connection management objects to a degree. It
 #' seeks to streamline the process of connecting and disconnecting existing
 #' connections as defined by function parameters. This release has not been
-#' tested extensively drivers other than SQLite.
+#' tested extensively with drivers other than SQLite.
+#'
+#' @note If you want to disconnect everything but retain tibble pointers to your
+#'   data source as tibbles in this session, use [close_up_shop] instead.
 #'
 #' @param db CHR scalar name of the database to check, defaults to the name
 #'   supplied in config/env.R (default: session variable DB_NAME)
@@ -1406,6 +1409,15 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 
 #' Convenience function to rebuild all database related files
 #'
+#' This is a development and deployment function that should be used with
+#' caution. It is intended solely to assist with the development process of
+#' rebuilding a database schema from source files and producing the supporting
+#' data. It will create both the JSON expressin of the data dictionary and the
+#' fallback SQL file.
+#'
+#' !! To preserve data, do not call this with both `rebuild` = TRUE and
+#' `archive` = FALSE !!
+#'
 #' @note This does not recast the views and triggers files created through
 #'   [sqlite_autoview] and [sqlite_autotrigger] as the output of those may often
 #'   need additional customization. Existing auto-views and -triggers will be
@@ -1414,11 +1426,11 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
-#'   
+#'
 #' @inheritParams build_db
 #'
 #' @param rebuild LGL scalar indicating whether to first rebuild from
-#'   environment settings
+#'   environment settings (default: FALSE for safety)
 #' @param api_running LGL scalar of whether or not the API service is currently
 #'   running (default: TRUE)
 #' @param api_monitor process object pointing to the API service (default: NULL)
@@ -1429,17 +1441,16 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'   be created in the project directory and objects will be created in the
 #'   global environment for the database map (LIST "db_map") and current
 #'   dictionary (LIST "db_dict")
-#' @export
 #'
 #' @examples
-update_all <- function(rebuild       = TRUE,
+update_all <- function(rebuild       = FALSE,
                        api_running   = TRUE,
                        api_monitor   = NULL,
                        db            = DB_NAME,
                        build_from    = DB_BUILD_FILE,
                        populate      = TRUE,
                        populate_with = DB_DATA,
-                       archive       = FALSE,
+                       archive       = TRUE,
                        sqlite_cli    = SQLITE_CLI,
                        connect       = FALSE,
                        log_ns = "db") {
@@ -1459,7 +1470,7 @@ update_all <- function(rebuild       = TRUE,
     }
   }
   if (rebuild) {
-    manage_connection(reconnect = FALSE)
+    manage_connection(db = db, reconnect = FALSE)
     tmp <- try(
       build_db(
         db            = db,
@@ -1475,7 +1486,7 @@ update_all <- function(rebuild       = TRUE,
       if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
       return(tmp)
     }
-    manage_connection()
+    manage_connection(db = db)
   }
   save_data_dictionary()
   dict_file <- list.files(pattern = "data_dictionary.json",
@@ -1499,7 +1510,11 @@ update_all <- function(rebuild       = TRUE,
   }
   if (exists("log_it")) log_it("info", "Saving entity relationship map to this session as object 'db_map'.", log_ns)
   db_map <<- tmp
-  create_fallback_build()
+  create_fallback_build(
+    build_file = build_from,
+    populate = populate,
+    populate_with = populate_with
+  )
   if (api_running && exists("api_reload")) {
     if (plumber_service_existed) {
       api_reload(pr = pr_name, background = TRUE)
