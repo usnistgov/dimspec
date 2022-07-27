@@ -34,7 +34,7 @@ function(db_conn = "con", req, res) {
 }
 
 # Endpoints ----
-# _table_search ----
+# /table_search ----
 #* Return data from tables or views as JSON expressions.
 #* @param table_name:character The name of a single table to which this query applies.
 #* @param column_names:character A comma-separated list of column names to include (leave blank to include all columns)
@@ -42,7 +42,7 @@ function(db_conn = "con", req, res) {
 #* @param match_crit_json:logical A single logical value indicating whether `match_criteria` are provided in JSON format.
 #* @param case_sensitive:logical A single logical value indicating whether to match on a case sensitive basis (the default TRUE searches for values as-provided) or whether to search for value matches by upper, lower, sentence, and title case matches; passed directly to [clause_where] (default: TRUE)
 #* @param and_or:character One of "AND" or "OR" to be applied to the match criteria (default "OR")
-#* @param limit:int A single integer value of the maximum number of rows to return  (default 15)
+#* @param limit:int A single integer value of the maximum number of rows to return  (default NULL)
 #* @param distinct:logical A single logical value indicating whether or not to apply the DISTINCT clause to all match criteria (default FALSE)
 #* @param get_all_columns:logical A single logical value indicating whether to force return all columns rather than those identified in column_names; will be set to TRUE automatically if no column names are provided (default FALSE)
 #* @param execute:logical A single logical value indicating whether or not to immediately execute the build query statement (default TRUE, FALSE will instead return the SQL statement to be executed)
@@ -55,7 +55,7 @@ function(table_name      = "contributors",
          case_sensitive  = TRUE,
          and_or          = "AND",
          distinct        = FALSE,
-         limit           = 15L,
+         limit           = NULL,
          get_all_columns = FALSE,
          execute         = TRUE,
          single_column_as_vector = TRUE) {
@@ -115,7 +115,7 @@ function(table_name      = "contributors",
   return(res)
 }
 
-# _compound_data ----
+# /compound_data ----
 #* Return mass spectral data for a compound by its internal ID number.
 #* @param compound_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
@@ -137,7 +137,7 @@ function(compound_id = 1L,
   return(ms_data)
 }
 
-# _peak_data ----
+# /peak_data ----
 #* Return mass spectral data for a peak by its internal ID number.
 #* @param peak_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
@@ -158,7 +158,7 @@ function(peak_id = 1L,
   return(ms_data)
 }
 
-# _list_tables ----
+# /list_tables ----
 #* Get the list of tables in the database.
 #* @get /list_tables
 function() {
@@ -167,7 +167,7 @@ function() {
   return(out)
 }
 
-# _list_views  ----
+# /list_views  ----
 #* Get the list of stored views in the database.
 #* @get /list_views
 function() {
@@ -176,7 +176,7 @@ function() {
   return(out)
 }
 
-# _ _ping ----
+# /_ping ----
 #* Plumber ping, a health check endpoint to give outside observers an indication of whether or not this API is running.
 #* @get /_ping
 #* @serializer unboxedJSON
@@ -184,7 +184,7 @@ function(req, res) {
   list(status = "OK")
 }
 
-# _version ----
+# /version ----
 #* Plumber version, a health check endpoint showing which version of the API is currently running.
 #* @get /version
 #* @serializer unboxedJSON
@@ -196,7 +196,7 @@ function() {
   }
 }
 
-# _support_info ----
+# /support_info ----
 #* Project support information, a health check endpoint. This has less information than running support_info() directly in R but should suffice for most troubleshooting and checking.
 #* @get /support_info
 function() {
@@ -217,7 +217,7 @@ function() {
   return(out)
 }
 
-# _db_active ----
+# /db_active ----
 #* Is the connection valid
 #* @param db_conn:character The name of the database connection object (default: "con")
 #* @get /db_active
@@ -229,12 +229,12 @@ function(db_conn = "con") {
   }
 }
 
-# _rdkit_active ----
+# /rdkit_active ----
 #* Is RDKit available?
 #* @get /rdkit_active
 function() return(exists("rdkit_active") && rdkit_active())
 
-# _molecular_model/file ----
+# /molecular_model/file ----
 #* Returns a file path to a molecular ball-and-stick plot of a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
 #* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
 #* @param molecular_notation:character Character string of the machine readable notation to visualize.
@@ -314,7 +314,7 @@ function(type = "notation",
   }
 }
 
-# _molecular_model/png ----
+# /molecular_model/png ----
 #* Returns a molecular ball-and-stick graphic for a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
 #* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
 #* @param molecular_notation:character Character string of the machine readable notation to visualize.
@@ -392,7 +392,7 @@ function(type = "notation",
   }
 }
 
-# _exists ----
+# /exists ----
 #* Run R function "exists" on an arbitrary function or variable name. (A plumber health endpoint.)
 #* @param env_name:character THe name of an R object that should be present in the plumber environment.
 #* @get /exists/<env_name>
@@ -400,7 +400,7 @@ function(env_name) {
   return(exists(env_name))
 }
 
-# _formals ----
+# /formals ----
 #* Run R function "formals" on an arbitrary function to check its formally declared arguments. (A plumber health endpoint.) Accessing this by using `api_endpoint` may give unexpected results as formals without defaults are truncated in vectors.
 #* @param fn_name:character The name of an R object that should be present in the plumber environment.
 #* @get /formals/<fn_name>
@@ -424,7 +424,7 @@ function(fn_name) {
   return(out)
 }
 
-# _search_compound ----
+# /search_compound ----
 #* Search for compounds matching a processed mass spectrum object in JSON notation. This does no preprocessing of the `search_ms` item and only executes the defined search on the database. The serialized version of the object created from `create_search_ms` is much smaller than that of serializing the entire mzML object.  
 #* @param type:character The type of search to perform, one of either "precursor" to search depending on the defined precursor ion, or "all" to search all possible matches regardless of precursor ion.
 #* @param search_ms:character Search object generated by other calls, primarily those created by the R function `create_search_ms` which relies on other paths and should be processed outside this server.
@@ -451,7 +451,7 @@ function(type, search_ms, norm_function = "sum", correlation_method = "pearson",
   return(out)
 }
 
-# _method_narrative ----
+# /method_narrative ----
 #* Get the mass spectroscopic method narrative for a peak, sample, or method by database ID.
 #* @param type:character The type of `id` to search, must be one of "peak", "sample", or "method"
 #* @param table_pk:integer An integer primary key, which must exist
@@ -492,7 +492,29 @@ function(type = "peak", table_pk) {
   return(out)
 }
 
-# _search_fragments ----
+# /sample_narrative ----
+#* Get the plain text narrative for sample by database ID.
+#* @param sample_id:integer An integer primary key, which must exist
+#* @get /sample_narrative/<sample_id>
+function(sample_id) {
+  narrative_table <- "view_sample_narrative"
+  id_col <- "Sample ID"
+  sample_id <- as.integer(sample_id)
+  if (!sample_id %in% (tbl(con, narrative_table) %>% pull(id_col))) {
+    if (sample_id %in% (tbl(con, "samples") %>% pull(id_col))) {
+      out <- glue::glue("The ID {sample_id} is in the samples table but does not have a narrative.")
+    } else {
+      out <- glue::glue("The ID {sample_id} does not exist.")
+    }
+  } else {
+    out <- tbl(con, narrative_table) %>%
+      filter(.data[[id_col]] == sample_id) %>%
+      pull(Narrative)
+  }
+  return(out)
+}
+
+# /search_fragments ----
 #* Get matching fragments from the database for a list of fragment mass-to-charge ratios
 #* @param fragment_ions:character JSON list of mass-to-charge ratios observed for fragments, usually a member of the /search_compound at "[[search_object]][[ums2]][[mz]]"
 #* @param mass_error:numeric Scalar observed mass error from the instrument run
@@ -532,3 +554,14 @@ function(fragment_ions, mass_error = 5, min_error = 0.002) {
     select(annotated_fragment_id, compounds, peak_id, formula, fixedmass, netcharge, radical, has_smiles, smiles, n_compounds, n_peaks)
   return(out)
 }
+
+# # /peak_plot ----
+# #* @param peak_id:integer
+# #* @get peak_plot/<peak_id>
+# function(peak_id) {
+#   peak_id <- as.integer(peak_id)
+#   peak_data <- tbl(con, "ms_data") %>%
+#     filter(peak_id == peak_id) %>%
+#     tidy_spectra(is_format = "separated")
+#   
+# }
