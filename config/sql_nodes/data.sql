@@ -330,6 +330,78 @@
 	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_samples AS 
+  		/* View of "samples" normalized by "norm_sample_classes", "norm_generation_type", and "norm_carriers". */ 
+  	SELECT 	
+  		s.id AS id, 
+  			/* Direct use column 'id' from table 'samples'. */ 	
+  		s.mzml_name AS mzml_name, 
+  			/* Direct use column 'mzml_name' from table 'samples'. */ 	
+  		s.description AS description, 
+  			/* Direct use column 'description' from table 'samples'. */ 	
+  		nsc.name AS sample_class_id, 
+  			/* Normalized value column 'name' from table 'nsc'. */ 	
+  		s.source_citation AS source_citation, 
+  			/* Direct use column 'source_citation' from table 'samples'. */ 	
+  		s.sample_contributor AS sample_contributor, 
+  			/* Direct use column 'sample_contributor' from table 'samples'. */ 	
+  		ngt.name AS generation_type, 
+  			/* Normalized value column 'name' from table 'norm_generation_type'. */ 	
+  		s.generated_on AS generated_on, 
+  			/* Direct use column 'generated_on' from table 'samples'. */ 	
+  		s.ms_methods_id AS ms_methods_id, 
+  			/* Direct use column 'ms_methods_id' from table 'samples'. */ 	
+  		nc.name AS sample_solvent
+  			/* Normalized value column 'name' from table 'norm_carriers'. */ 
+  	FROM samples s
+  	LEFT JOIN norm_sample_classes nsc ON s.sample_class_id = nsc.id 
+  	LEFT JOIN norm_generation_type ngt ON s.generation_type = ngt.id 
+  	LEFT JOIN norm_carriers nc ON s.sample_solvent = nc.id;
+	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_sample_narrative AS 
+	  /* Collapses the contents of view_samples and view_contributors into a single narrative string by ID */
+  	SELECT 
+  		vs.id AS "Sample ID",
+  		 /* Sample PK ID */
+  		"These " ||
+  		vs.generation_type ||
+  		" data from " ||
+  		CASE
+  			WHEN substr(vs.sample_class_id, 1, 1) IN ('a','e','i','o','u')
+  				THEN "an "
+  			ELSE "a "
+  		END ||
+  		vs.sample_class_id ||
+  		" in " ||
+  		vs.sample_solvent ||
+  		" were provided by " ||
+  		vc.name ||
+  		" (" ||
+  		vc.contact ||
+  		" - " ||
+  		vc.orcid_url ||
+  		") of " ||
+  		vc.affiliation ||
+  		' and described as "' ||
+  		vs.description ||
+  		'" in file "' ||
+  		vs.mzml_name ||
+  		'"' ||
+  		CASE 
+  			WHEN source_citation IS NULL 
+  				THEN ""
+  			ELSE source_citation
+  		END ||
+  		". Data were generated on " ||
+  		vs.generated_on ||
+  		" using the mass spectrometry method ID " ||
+  		vs.ms_methods_id ||
+  		"."
+  			AS "Narrative"
+  		/* narrative string collapsed into readable form from view_samples and view_contributors */
+  	FROM view_samples vs
+  	LEFT JOIN view_contributors vc ON vs.sample_contributor = vc.id;
+	/*magicsplit*/
   CREATE VIEW IF NOT EXISTS view_peaks AS 
   		/* View of "peaks" with text values displayed from normalization tables. */ 
   	SELECT 	

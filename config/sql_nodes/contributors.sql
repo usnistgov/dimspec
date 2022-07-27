@@ -96,6 +96,8 @@
 	CREATE VIEW IF NOT EXISTS view_contributors AS
 		/* Readable version of the contributors table that can be expanded with counts of contributions from various places. */
 		SELECT 
+			c.id,
+				/* contributor primary key */
 			c.first_name || " " || c.last_name AS name,
 				/* concatenation of contributors.first_name and .last_name fields */
 			a.name AS affiliation,
