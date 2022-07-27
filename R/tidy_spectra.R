@@ -179,7 +179,7 @@ tidy_ms_spectra <- function(df) {
 #' @export
 #'
 #' @examples
-#' tidy_spectra('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}')
+#' tidy_spectra('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}', is_format = "zipped")
 #' tidy_spectra('{"measured_mz":"712.9501 713.1851","measured_intensity":"15094.41015625 34809.9765625"}')
 tidy_spectra <- function(target,
                          is_file     = FALSE,
