@@ -17,6 +17,7 @@ if (exists("PLUMBER_URL")) {
 packs <- c("dplyr",
            "tidyr",
            "jsonlite",
+           "ggrepel",
            "shiny",
            "shinyalert",
            "shinydashboard",

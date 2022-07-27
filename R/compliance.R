@@ -22,6 +22,7 @@
 #            }
 #          })
 # )
+# rm(unload_packs)
 
 # _Set operational env variables -----------------------------------------------
 installed_packages <- installed.packages()
@@ -49,7 +50,7 @@ if (length(packs_FALSE) > 0) {
                    dependencies = TRUE)
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
-rm(packs, unload_packs, packs_TRUE, packs_FALSE)
+rm(packs, packs_TRUE, packs_FALSE)
 
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
