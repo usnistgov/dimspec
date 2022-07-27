@@ -614,6 +614,7 @@ dashboardPage(
                                   )
                                 )
                          ),
+                         hr(),
                          column(12,
                                 h4("Select a row in the table to view additional information for that annotated fragment."),
                                 fluidRow(
