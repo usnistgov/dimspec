@@ -644,7 +644,7 @@ dashboardPage(
                                          h4("This fragment has been annotated in the following"),
                                          tabsetPanel(
                                            type = "tabs",
-                                           id = "search_fragments_compounds_peaks",
+                                           id = "search_fragments_compounds_peaks_tabset",
                                            tabPanel("Compounds",
                                                     DTOutput(outputId = "search_fragments_compound_list",
                                                              width = "100%") %>%

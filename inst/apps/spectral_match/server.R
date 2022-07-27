@@ -50,7 +50,7 @@ shinyServer(function(input, output, session) {
     search_compounds_results()$result %>%
       slice(search_compounds_row_selected())
   })
-  method_narrative <- reactive({
+  search_compounds_method_narrative <- reactive({
     req(search_compounds_results_selected())
     paste0("This reference spectrum was m",
            api_endpoint(
@@ -83,6 +83,53 @@ shinyServer(function(input, output, session) {
     search_fragments_results()$result %>%
       slice(search_fragments_row_selected())
   })
+  search_fragments_compounds_data <- reactive({
+    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    search_fragments_results()$linked_data %>%
+      filter(annotated_fragment_id == ann_frag_id) %>%
+      pull(compounds) %>%
+      .[[1]] %>%
+      pull(compound_id) %>%
+      api_endpoint(
+        path = "table_search",
+        table_name = "view_compounds",
+        match_criteria = list(id = .),
+        return_format = "data.frame"
+      ) %>%
+      select(id, name, category, formula, fixedmass, source_type, obtained_from, additional, local_positive, local_negative, netcharge) %>%
+      mutate(
+        mz_diff_precursor = abs(
+          fixedmass - (
+            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
+          )
+        )
+      ) %>%
+      arrange(mz_diff_precursor) %>%
+      select(-mz_diff_precursor)
+  })
+  search_fragments_peaks_data <- reactive({
+    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    search_fragments_results()$linked_data %>%
+      filter(annotated_fragment_id == ann_frag_id) %>%
+      pull(peak_id) %>%
+      .[[1]] %>%
+      api_endpoint(
+        path = "table_search",
+        table_name = "view_peaks",
+        match_criteria = list(id = .),
+        return_format = "data.frame"
+      ) %>%
+      select(confidence, num_points, precursor_mz, ion_state, rt_centroid, rt_start, rt_end, id, sample_id) %>%
+      mutate(
+        mz_diff_precursor = abs(
+          precursor_mz - (
+            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
+          )
+        )
+      ) %>%
+      arrange(mz_diff_precursor) %>%
+      select(-mz_diff_precursor)
+  })
   mod_search_params <- c(
     "mod_search_parameter_precursor",
     "mod_search_parameter_rt",
@@ -104,7 +151,7 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#search_compounds_overlay")
   # hideElement(selector = "#uncertainty_overlay")
   hideElement(selector = "#search_fragments_overlay")
-  hideElement(selector = "#search_fragments_compound_info")
+  # hideElement(selector = "#search_fragments_compound_info")
   # hideElement(selector = "#search_fragments_peak_info")
   hideElement(selector = "#search_fragments_fragment_info")
   
@@ -594,7 +641,7 @@ shinyServer(function(input, output, session) {
   output$search_compounds_method_narrative <- renderUI(
     tags$caption(
       style = "display: inline;",
-      req(method_narrative())
+      req(search_compounds_method_narrative())
     )
   )
   # _Observers ----
@@ -918,13 +965,13 @@ shinyServer(function(input, output, session) {
     server = FALSE,
     DT::datatable(
       data = req(search_fragments_results()$result) %>%
-        select(annotated_fragment_id, formula, smiles, measured_mz, fixedmass, mass_error, n_compounds, n_peaks),
+        select(annotated_fragment_id, formula, measured_mz, fixedmass, mass_error, smiles, n_compounds, n_peaks),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Annotated Fragment ID", "Fragment", "SMILES", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "Found in n Compounds", "Found in n Peaks"),
+      colnames = c("Annotated Fragment ID", "Fragment", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "SMILES", "Found in n Compounds", "Found in n Peaks"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
@@ -942,30 +989,8 @@ shinyServer(function(input, output, session) {
   )
   # __Compound list ----
   output$search_fragments_compound_list <- renderDT({
-    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
-    compounds <- search_fragments_results()$linked_data %>%
-      filter(annotated_fragment_id == ann_frag_id) %>%
-      pull(compounds) %>%
-      .[[1]] %>%
-      pull(compound_id) %>%
-      api_endpoint(
-        path = "table_search",
-        table_name = "view_compounds",
-        match_criteria = list(id = .),
-        return_format = "data.frame"
-      ) %>%
-      select(id, name, category, formula, fixedmass, source_type, obtained_from, additional, local_positive, local_negative, netcharge) %>%
-      mutate(
-        mz_diff_precursor = abs(
-          fixedmass - (
-            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
-          )
-        )
-      ) %>%
-      arrange(mz_diff_precursor) %>%
-      select(-mz_diff_precursor)
     DT::datatable(
-      data = compounds,
+      data = search_fragments_compounds_data(),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
@@ -975,7 +1000,7 @@ shinyServer(function(input, output, session) {
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = ifelse(nrow(compounds) <= 10, "tB", "tBp"),
+        dom = ifelse(nrow(search_fragments_compounds_data()) <= 10, "tB", "tBp"),
         pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
@@ -988,27 +1013,7 @@ shinyServer(function(input, output, session) {
   })
   # __Peak list ----
   output$search_fragments_peak_list <- renderDT({
-    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
-    peaks <- search_fragments_results()$linked_data %>%
-      filter(annotated_fragment_id == ann_frag_id) %>%
-      pull(peak_id) %>%
-      .[[1]] %>%
-      api_endpoint(
-        path = "table_search",
-        table_name = "view_peaks",
-        match_criteria = list(id = .),
-        return_format = "data.frame"
-      ) %>%
-      relocate(confidence, .after = "id") %>%
-      mutate(
-        mz_diff_precursor = abs(
-          precursor_mz - (
-            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
-          )
-        )
-      ) %>%
-      arrange(mz_diff_precursor) %>%
-      select(-mz_diff_precursor)
+    peaks <- req(search_fragments_peaks_data())
     DT::datatable(
       data = peaks,
       rownames = FALSE,
@@ -1016,7 +1021,7 @@ shinyServer(function(input, output, session) {
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Peak ID", "Identification Confidence", "Sample ID", "n Points", "Precursor m/z", "Ion State", "RT Start", "RT Centroid", "RT End"),
+      colnames = c("Identification Confidence", "n Points", "Precursor m/z", "Ion State", "RT Centroid", "RT Start", "RT End", "Peak ID", "Sample ID"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
@@ -1024,7 +1029,6 @@ shinyServer(function(input, output, session) {
         pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
-          list(visible = FALSE, targets = c("id", "sample_id")),
           list(className = "dt-center", targets = c("num_points", "precursor_mz", "ion_state", "rt_start", "rt_centroid", "rt_end")),
           list(className = "dt-left", targets = c("confidence"))
         )
@@ -1205,27 +1209,79 @@ shinyServer(function(input, output, session) {
   })
   # __More compound information ----
   observeEvent(input$search_fragments_compound_info, {
-    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
-    compound_id <- search_fragments_results()$linked_data %>%
-      filter(annotated_fragment_id == ann_frag_id) %>%
-      pull(compounds) %>%
-      .[[1]] %>%
-      pull(compound_id) %>%
-      .[[input$search_fragments_compound_list_rows_selected]]
-    aliases <- api_endpoint(
-      path = "table_search",
-      table_name = "compound_url",
-      match_criteria = list(id = compound_id),
-      return_format = "data.frame"
-    )
-    if (is.null(compound_id)) {
+    if (is.null(input$search_fragments_compound_list_rows_selected)) {
       nist_shinyalert(
         title = "More information needed",
         type = "info",
         text = "Please select a compound from the list."
       )
     } else {
-      shinyalert(compound_id)
+      compound_id <- req(search_fragments_compounds_data()$id[input$search_fragments_compound_list_rows_selected[1]])
+      aliases <- api_endpoint(
+        path = "table_search",
+        table_name = "compound_url",
+        match_criteria = list(id = compound_id),
+        return_format = "data.frame"
+      ) %>%
+        mutate(
+          ref_type = case_when(
+            ref_type == "ALIAS" ~ "Supplied Alias",
+            ref_type == "PREFERRED_NAME" ~ "Preferred Name",
+            ref_type == "INCHI" ~ "InChI",
+            ref_type == "INCHIKEY" ~ "InChIKey",
+            ref_type == "SMILES" ~ "Smiles Notation",
+            ref_type == "CASRN" ~ "CAS Registry Number",
+            ref_type == "DTXCID" ~ "EPA CompTox CID",
+            ref_type == "DTXSID" ~ "EPA CompTox SID",
+            ref_type == "ADDITIONAL" ~ "Additional Notations",
+            TRUE ~ ref_type
+          ),
+          link = lapply(link,
+                        function(x) {
+                          src_text <- str_split(string = x, pattern = "http[s]*://|/")
+                          paste0(
+                            a(href = x,
+                              target = "_blank",
+                              icon("link"),
+                              paste0("See more at ",
+                                     src_text[[1]][[2]])
+                            )
+                          ) %>%
+                            str_remove_all("\\\n") %>%
+                            str_replace_all("See more at www.google.com", "Search Google for this alias")
+                        }) %>%
+            unlist()
+        )
+      # showModal(endpoint_result(type = "compounds", pk_id = 1))
+      nist_shinyalert(
+        title = glue::glue("Additional Information for {unique(aliases$compound)}"),
+        type = "info",
+        size = "l",
+        text = tagList(
+          div(id = "additional_information",
+              width = "100%",
+              height = "auto",
+              DT::datatable(
+                data = aliases,
+                width = "100%",
+                selection = "single",
+                escape = FALSE,
+                rownames = FALSE,
+                colnames = c("Compound ID", "Name", "Reference", "Alias", "Link"),
+                caption = NULL,
+                extensions = c("Responsive"),
+                options = list(
+                  dom = ifelse(nrow(aliases) <= 10, "t", "tp"),
+                  pageLength = 10,
+                  buttons = c("copy", "csv", "excel"),
+                  columnDefs = list(
+                    list(visible = FALSE, targets = c("id", "compound"))
+                  )
+                )
+              )
+          )
+        )
+      )
     }
   })
   # __More fragment information ----
@@ -1244,26 +1300,43 @@ shinyServer(function(input, output, session) {
   })
   # __More peak information ----
   observeEvent(input$search_fragments_peak_info, {
-    ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
-    peak_id <- search_fragments_results()$linked_data %>%
-      filter(annotated_fragment_id == ann_frag_id) %>%
-      pull(peak_id) %>%
-      .[[1]] %>%
-      .[[input$search_fragments_peak_list_rows_selected]]
-    if (is.null(peak_id)) {
+    if (is.null(input$search_fragments_compound_list_rows_selected[1])) {
       nist_shinyalert(
         title = "More information needed",
         type = "info",
         text = "Please select a peak from the list."
       )
     } else {
+      peak_data <- req(search_fragments_peaks_data()[input$search_fragments_compound_list_rows_selected[1], ])
+      method_narrative <- api_endpoint(
+        path = "method_narrative",
+        type = "peak",
+        table_pk = peak_data$id
+      )
+      sample_narrative <- api_endpoint(path = sprintf("sample_narrative/%d", peak_data$sample_id))
+      links <- api_endpoint(
+        path = "table_search",
+        table_name = "compound_fragments",
+        match_criteria = list(peak_id = peak_data$id),
+        return_format = "data.frame"
+      )
+      peak_ms <- api_endpoint(
+        path = "table_search",
+        table_name = "ms_data",
+        match_criteria = list(peak_id = peak_data$id),
+        return_format = "data.frame"
+      ) %>%
+        tidy_spectra(is_file = FALSE)
       nist_shinyalert(
-        title = sprintf("Method Narrative for Peak ID %s", peak_id),
+        title = sprintf("Narrative for Peak ID %d in Sample %d", peak_data$id, peak_data$sample_id),
         type = "info",
-        text = api_endpoint(
-          path = "method_narrative",
-          type = "peak",
-          table_pk = peak_id
+        text = tagList(
+          # TODO Some plot here to expose peak data? Endpoint "/plot_peak"?
+          hr(),
+          p(style = "font-size: small;", method_narrative),
+          hr(),
+          p(style = "font-size: small;", sample_narrative),
+          hr()
         )
       )
     }

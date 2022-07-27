@@ -179,20 +179,29 @@ td.dtr-control {
   padding-left: 30px !important;
 }
 
-#search_fragments_compounds_peaks > li > a {
+#search_fragments_compounds_peaks_tabset > li > a {
   padding: 0px 15px;
 }
 
 ul.dtr-details {
   width: 100%;
+  padding-left: 25px;
 }
 
 ul.dtr-details > li {
   padding: 0 !important;
+  display: inline-block;
+  width: 100%;
 }
-ul.dtr-details > li > .dtr-data {
+
+ul.dtr-details > li > .dtr-title {
+  float: left !important;
+  text-align: left;
   padding-left: 25px;
-  float: right;
+}
+
+ul.dtr-details > li > .dtr-data {
+  float: right !important;
 }
 
 .success {

@@ -9,6 +9,7 @@ if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::h
 DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "NIST HRAMS Database for PFAS")
 need_files <- c(
   "app_functions.R",
+  here::here("R", "tidy_spectra.R"),
   list.files(path = here::here("R", c("spectral_analysis", "base", "gather")),
              pattern = "\\.R$",
              full.names = TRUE)
