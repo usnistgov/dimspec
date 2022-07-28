@@ -1,6 +1,8 @@
 dev <- TRUE
 advanced_use <- FALSE
-toy_data <- TRUE
+toy_data <- FALSE
+src_toy_data <- "toy_data.RDS"
+src_toy_parameters_src <- "toy_parameters.RDS"
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
@@ -15,9 +17,11 @@ need_files <- c(
              full.names = TRUE)
 )
 sapply(need_files, source)
-log_ns <- "APP_SPECTRAL_MATCH"
-log_it("info", "Starting app: app_spectral_match", "shiny")
-log_it("info", "Starting app", tolower(log_ns), add_unknown_ns = TRUE, clone_settings_from = "SHINY")
+if (LOGGING_ON) {
+  log_ns <- "APP_SPECTRAL_MATCH"
+  log_it("info", "Starting app: app_spectral_match", "shiny")
+  log_it("info", "Starting app", tolower(log_ns), add_unknown_ns = TRUE, clone_settings_from = "SHINY")
+}
 
 app_settings <- list(
   experiment_types = api_endpoint(path = "table_search",

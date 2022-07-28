@@ -1,11 +1,6 @@
 shinyServer(function(input, output, session) {
   # Live Inspect ----
   observeEvent(input$browser, browser())
-  if (!dev) {
-    if (!active_connection() && DIRECT_CONNECTION) {
-      manage_connection(conn_name = "con")
-    }
-  }
   
   # Session Data ----
   advanced_use <- reactiveVal(advanced_use)
@@ -13,7 +8,7 @@ shinyServer(function(input, output, session) {
     if (!toy_data) {
       NULL
     } else {
-      readRDS("toy_data.RDS")
+      readRDS(toy_data_src)
     }
   )
   data_input_search_upload <- reactiveVal(NULL)
@@ -26,9 +21,10 @@ shinyServer(function(input, output, session) {
         rt_end = numeric(0)
       )
     } else {
-      readRDS("toy_parameters.RDS")
+      readRDS(toy_parameters_src)
     }
   )
+  data_input_parameter_edit <- reactiveVal(FALSE)
   search_compounds_results <- reactiveVal(NULL)
   search_compounds_mzrt <- reactiveVal("-1")
   search_compounds_row_selected <- reactiveVal(NULL)
@@ -204,12 +200,11 @@ shinyServer(function(input, output, session) {
   
   # DATA INPUT PAGE ----
   # _Reactives ----
-  # __Data Table
+  # __Data Table ----
   output$data_input_dt_peak_list <- renderDT(
     server = FALSE,
     expr = DT::datatable(
-      data_input_search_parameters() %>%
-        select(precursor:rt_end),
+      data = data_input_search_parameters(),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
@@ -241,7 +236,7 @@ shinyServer(function(input, output, session) {
     }
     data_input_search_parameters() %>%
       distinct() %>%
-      arrange(rt) %>%
+      arrange(precursor, rt) %>%
       data_input_search_parameters()
     if (nrow(data_input_search_parameters()) == 0) {
       updateSelectizeInput(
@@ -380,10 +375,8 @@ shinyServer(function(input, output, session) {
           upload_parameters <- upload_parameters[which_complete, ]
         }
         if (input$mod_upload_parameter_append) {
-          upload_parameters <- bind_rows(
-            data_input_search_parameters(),
-            upload_parameters
-          )
+          upload_parameters <- data_input_search_parameters() %>%
+            bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
       }
@@ -407,6 +400,7 @@ shinyServer(function(input, output, session) {
              updateNumericInput(inputId = x, value = val)
            }
     )
+    data_input_parameter_edit(TRUE)
     showModal(mod_data_input_parameters_manual())
   })
   observeEvent(input$data_input_dt_peak_list_remove_row, {
@@ -415,12 +409,11 @@ shinyServer(function(input, output, session) {
       data_input_search_parameters()
   })
   observeEvent(input$mod_search_parameter_cancel, {
-    
+    removeModal()
   })
   observeEvent(input$mod_data_input_search_parameter_save, {
     valid <- complete_form_entry(input, mod_search_params)
     req(valid)
-    # req(complete_form_entry(input, mod_search_params))
     tmp <- data_input_search_parameters()
     values <- data.frame(
       input$mod_search_parameter_precursor,
@@ -429,7 +422,7 @@ shinyServer(function(input, output, session) {
       input$mod_search_parameter_rt_end
     ) %>%
       setNames(names(data_input_search_parameters()))
-    if (!is.null(input$data_input_dt_peak_list_rows_selected)) {
+    if (!is.null(input$data_input_dt_peak_list_rows_selected) && data_input_parameter_edit()) {
       tmp <- tmp[-input$data_input_dt_peak_list_rows_selected, ]
     }
     valid <- TRUE
@@ -456,6 +449,7 @@ shinyServer(function(input, output, session) {
         bind_rows(values) %>%
         data_input_search_parameters()
       removeModal()
+      data_input_parameter_edit(FALSE)
     }
   })
   # __Process Data ----
