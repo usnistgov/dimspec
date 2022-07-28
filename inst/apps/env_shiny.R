@@ -44,29 +44,31 @@ rm(packs)
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings
 # from env_logger.R e.g. "SHINY" to refer to LOGGING$SHINY (the default)
-LOGGING_ON <- TRUE
-if (!exists("RENV_ESTABLISHED_LOGGER") || !RENV_ESTABLISHED_LOGGER) source(here::here("config", "env_logger.R"))
-log_ns <- "SHINY"
-logger_settings <- list(
-  list(
-    log = TRUE,
-    ns = tolower(log_ns),
-    to = "file",
-    file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", tolower(log_ns))),
-    threshold = "info")
-) %>%
-  setNames(log_ns)
-if (!exists("LOGGING")) {
-  LOGGING <- logger_settings
-} else if (!log_ns %in% names(LOGGING)) {
-  LOGGING <- append(
-    LOGGING,
-    logger_settings
-  )
+LOGGING_ON <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
+if (LOGGING_ON) {
+  if (!exists("RENV_ESTABLISHED_LOGGER") || !RENV_ESTABLISHED_LOGGER) source(here::here("config", "env_logger.R"))
+  log_ns <- "SHINY"
+  logger_settings <- list(
+    list(
+      log = TRUE,
+      ns = tolower(log_ns),
+      to = "file",
+      file = file.path(LOG_DIRECTORY, sprintf("log_%s.txt", tolower(log_ns))),
+      threshold = "info")
+  ) %>%
+    setNames(log_ns)
+  if (!exists("LOGGING")) {
+    LOGGING <- logger_settings
+  } else if (!log_ns %in% names(LOGGING)) {
+    LOGGING <- append(
+      LOGGING,
+      logger_settings
+    )
+  }
+  require(logger)
+  update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
+  rm(logger_settings)
 }
-require(logger)
-update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
-rm(logger_settings)
 
 RENV_ESTABLISHED_SHINY <- TRUE
 log_it("info", "Shiny environment established.", "shiny")
