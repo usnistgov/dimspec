@@ -19,7 +19,14 @@ body {
 
 .content {
   overflow: auto;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 50px);
+  padding-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .content {
+    height: calc(100vh - 100px);
+  }
 }
 
 .flex-container {
@@ -70,9 +77,6 @@ button.dt-button {
   .box-left {
     padding-right: 7px;
   }
-}
-
-@media (min-width: 768px) {
   .box-right {
     padding-left: 8px;
   }
@@ -143,6 +147,7 @@ a > i {
 #data_input_go_compound, #data_input_go_fragment {
   padding: 20px 0;
   font-size: large;
+  margin-bottom: 20px;
 }
 
 #search_compounds_dt {
@@ -236,4 +241,34 @@ ul.dtr-details > li > .dtr-data {
 
 .info {
   color: #00c0ef;
+}
+
+.tooltip {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.tooltip-inner {
+  background-color: #606060;
+  color: #dcf3fb;
+}
+
+.tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #606060;
+}
+
+.tooltip.left .tooltip-arrow {
+  border-left-color: #606060;
+}
+
+.tooltip.right .tooltip-arrow {
+  border-right-color: #606060;
+}
+
+.tooltip.top .tooltip-arrow {
+  border-top-color: #606060;
+}
+
+.tooltip.in {
+  opacity: 0.95;
 }

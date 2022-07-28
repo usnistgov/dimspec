@@ -1,6 +1,7 @@
-dev <- FALSE
+dev <- TRUE
 advanced_use <- FALSE
-toy_data <- FALSE
+toy_data <- TRUE
+provide_more_help <- TRUE
 src_toy_data <- "toy_data.RDS"
 src_toy_parameters <- "toy_parameters.RDS"
 vowels <- c("a", "e", "i", "o", "u")
@@ -11,6 +12,7 @@ if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::h
 DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "NIST HRAMS Database for PFAS")
 need_files <- c(
   "app_functions.R",
+  "shiny_helpers.R",
   here::here("R", "tidy_spectra.R"),
   list.files(path = here::here("R", c("spectral_analysis", "base", "gather")),
              pattern = "\\.R$",
@@ -56,7 +58,7 @@ app_settings <- list(
   uncertainty_min_error_compare_with = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
   uncertainty_weighting_mass = list(value = 1, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
   uncertainty_weighting_intensity = list(value = 0.5, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
-  uncertainty_bootstrap_iterations = list(choices = c(10, 50, 100, 500, 1000, 5000, 10000), selected = 100)
+  uncertainty_bootstrap_iterations = list(choices = c(50, 100, 250, 500, 1000, 2500, 5000, 10000), selected = 100)
 )
 
 rdkit_available <- api_endpoint(path = "rdkit_active")

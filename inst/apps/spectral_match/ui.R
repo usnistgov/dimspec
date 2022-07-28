@@ -24,26 +24,38 @@ dashboardPage(
     },
     sidebarMenu(
       id = "sidebar_menu",
-      menuItem("Home",
+      menuItem(span(id = "nav_index", "Home"),
                tabName = "index",
                icon = icon("house", verify_fa = FALSE)
-      ),
-      menuItem("Data Input",
+      ) %>%
+        with_help(tooltip = "Contextural material for the application you are currently using, along with some information about the project itself.",
+                  placement = "right"),
+      menuItem(span(id = "nav_data_input", "Data Input"),
                tabName = "data_input",
                icon = icon("file")
-      ),
-      menuItem("Compound Match",
+      ) %>%
+        with_help(tooltip = "Start here with data entry where you will upload a data file and select features of interest by mass-to-charge ratio (m/z) and retention time.",
+                  placement = "right"),
+      menuItem(span(id = "nav_search_compounds", "Compound Match"),
                tabName = "search_compounds",
                icon = icon("magnifying-glass", verify_fa = FALSE)
-      ),
-      menuItem("Fragment Match",
+      ) %>%
+        with_help(tooltip = "Search the library for compounds matching the mass spectrometric fingerprints for features of interest.",
+                  placement = "right"),
+      menuItem(span(id = "nav_fragments", "Fragment Match"),
                tabName = "search_fragments",
                icon = icon("puzzle-piece", verify_fa = FALSE)
-      ),
-      menuItem("About",
+      ) %>%
+        with_help(tooltip = "Match fragments from your mass spectrometry experiment against those held in the library, including linked metrics for which compounds and peaks those fragments have been annotated within.",
+                  placement = "right"),
+      menuItem(span(id = "nav_about", "About"),
                tabName = "about",
+               badgeLabel = "WIP",
+               badgeColor = "orange",
                icon = icon("circle-info", verify_fa = FALSE)
-      )
+      ) %>%
+        with_help(tooltip = "Your reference guide to this application, including user guides and other information.",
+                  placement = "right")
     )
   ),
   body = dashboardBody(
@@ -60,7 +72,8 @@ dashboardPage(
                            label = "Click Here to Get Started",
                            width = "100%",
                            icon = icon("circle-play", verify_fa = FALSE)
-              ),
+              ) %>%
+                with_help("Click here to go to the data input page and get started."),
               hr(),
               includeHTML("index.html")
       ),
@@ -84,7 +97,9 @@ dashboardPage(
                            class = "left",
                            with(app_settings,
                                 tagList(
-                                  tags$label(glue::glue("Choose a data file ({format_list_of_names(data_input_import_file_types)})")),
+                                  tags$label(id = "data_input_filename_label",
+                                             glue::glue("Choose a data file ({format_list_of_names(data_input_import_file_types)})")) %>%
+                                    tipify("Start by dragging a data file here, or click to select one from your computer"),
                                   div(class = "form-grouping",
                                       fileInput(inputId = "data_input_filename",
                                                 label = NULL,
@@ -435,11 +450,6 @@ dashboardPage(
                                         withSpinner()
                                )
                              )
-                      ),
-                      column(12,
-                             id = "search_compounds_no_results",
-                             h4(style = "text-align: center;",
-                                "No match was found this feature.")
                       )
                     )
                 )
