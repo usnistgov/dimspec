@@ -78,6 +78,8 @@ dashboardPage(
                                            "Load Data"),
                            width = 12,
                            solidHeader = FALSE,
+                           collapsible = FALSE,
+                           collapsed = FALSE,
                            status = "primary",
                            class = "left",
                            with(app_settings,
@@ -267,6 +269,8 @@ dashboardPage(
                                     "Feature Identification"),
                     width = 8,
                     solidHeader = FALSE,
+                    collapsible = FALSE,
+                    collapsed = FALSE,
                     status = "primary",
                     class = "right",
                     tags$label("Select parameters identifying peaks to examine."),
@@ -310,7 +314,7 @@ dashboardPage(
                        div(class = "flex-container",
                            
                            actionButton(inputId = "data_input_go_compound",
-                                        label = "Match Compounds",
+                                        label = "Compound Match",
                                         icon = icon("magnifying-glass",
                                                     verify_fa = FALSE)
                            ),
@@ -319,7 +323,7 @@ dashboardPage(
                            #              icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
                            # ),
                            actionButton(inputId = "data_input_go_fragment",
-                                        label = "Match Fragments",
+                                        label = "Fragment Match",
                                         icon = icon("puzzle-piece",
                                                     verify_fa = FALSE)
                            )

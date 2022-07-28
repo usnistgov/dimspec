@@ -19,7 +19,7 @@ body {
 
 .content {
   overflow: auto;
-  height: calc(100vh - 50px);
+  height: calc(100vh - 100px);
 }
 
 .flex-container {
@@ -139,6 +139,12 @@ a > i {
   padding-top: calc(50vh + 100px);
 }
 
+#index_go_data_input, #data_input_process_btn, 
+#data_input_go_compound, #data_input_go_fragment {
+  padding: 20px 0;
+  font-size: large;
+}
+
 #search_compounds_dt {
   margin-top: 12px;
 }
@@ -203,6 +209,13 @@ ul.dtr-details > li > .dtr-title {
 
 ul.dtr-details > li > .dtr-data {
   float: right !important;
+}
+
+
+#search_fragments_compound_info, #search_fragments_peak_info {
+  width: 100%;
+  text-align: center;
+  z-index: 999;
 }
 
 .success {

@@ -8,7 +8,7 @@ shinyServer(function(input, output, session) {
     if (!toy_data) {
       NULL
     } else {
-      readRDS(toy_data_src)
+      readRDS(src_toy_data)
     }
   )
   data_input_search_upload <- reactiveVal(NULL)
@@ -21,12 +21,17 @@ shinyServer(function(input, output, session) {
         rt_end = numeric(0)
       )
     } else {
-      readRDS(toy_parameters_src)
+      readRDS(src_toy_parameters)
     }
   )
   data_input_parameter_edit <- reactiveVal(FALSE)
   search_compounds_results <- reactiveVal(NULL)
-  search_compounds_mzrt <- reactiveVal("-1")
+  search_compounds_mzrt <- reactive(input$search_compounds_mzrt)
+  search_compounds_mzrt_text <- reactive(
+    data_input_search_parameters() %>%
+      mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
+      pull(label)
+  )
   search_compounds_row_selected <- reactiveVal(NULL)
   observeEvent(input$search_compounds_dt_rows_selected, {
     old_val <- isolate(search_compounds_row_selected())
@@ -59,6 +64,12 @@ shinyServer(function(input, output, session) {
   })
   uncertainty_results <- reactiveVal(NULL)
   search_fragments_results <- reactiveVal(NULL)
+  search_fragments_mzrt <- reactive(input$search_fragments_mzrt)
+  search_fragments_mzrt_text <- reactive(
+    data_input_search_parameters() %>%
+      mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
+      pull(label)
+  )
   search_fragments_row_selected <- reactiveVal(NULL)
   observeEvent(input$search_fragments_dt_rows_selected, {
     old_val <- isolate(search_fragments_row_selected())
@@ -81,6 +92,7 @@ shinyServer(function(input, output, session) {
   })
   search_fragments_compounds_data <- reactive({
     ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    search_fragment_index <- isolate(search_fragments_mzrt())
     search_fragments_results()$linked_data %>%
       filter(annotated_fragment_id == ann_frag_id) %>%
       pull(compounds) %>%
@@ -96,7 +108,7 @@ shinyServer(function(input, output, session) {
       mutate(
         mz_diff_precursor = abs(
           fixedmass - (
-            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
+            data_input_search_parameters()[search_fragment_index, ]$precursor
           )
         )
       ) %>%
@@ -105,6 +117,7 @@ shinyServer(function(input, output, session) {
   })
   search_fragments_peaks_data <- reactive({
     ann_frag_id <- req(search_fragments_results_selected()$annotated_fragment_id)
+    search_fragment_index <- req(isolate(search_fragments_mzrt()))
     search_fragments_results()$linked_data %>%
       filter(annotated_fragment_id == ann_frag_id) %>%
       pull(peak_id) %>%
@@ -119,7 +132,7 @@ shinyServer(function(input, output, session) {
       mutate(
         mz_diff_precursor = abs(
           precursor_mz - (
-            data_input_search_parameters()[input$search_fragments_mzrt, ]$precursor
+            data_input_search_parameters()[search_fragment_index, ]$precursor
           )
         )
       ) %>%
@@ -169,10 +182,21 @@ shinyServer(function(input, output, session) {
   # Navigation ----
   observeEvent(input$sidebar_menu, {
     if (!dev) {
-      if (!input$sidebar_menu %in% c("data_input", "index", "about") && any(is.null(user_data()), nrow(data_input_search_parameters()) == 0)) {
+      if (!input$sidebar_menu %in% c("data_input", "index", "about") && is.null(user_data())) {
+        has_data_file <- !is.null(input$data_input_filename)
+        has_search_parameters <- nrow(data_input_search_parameters()) > 0
+        if (has_data_file && !has_search_parameters) {
+          msg <- "Please add search parameters first."
+        } else if (!has_data_file && has_search_parameters) {
+          msg <- "Please load a data file first."
+        } else if (has_data_file && has_search_parameters) {
+          msg <- 'Please click the "Process Data" button.'
+        } else {
+          msg <- "Please load a data file and add search parameters first."
+        }
         nist_shinyalert(title = "Insufficient data",
                         type = "info",
-                        text = "Please load a data file and select search parameters first.")
+                        text = msg)
         updateTabsetPanel(session = session,
                           inputId = "sidebar_menu",
                           selected = "data_input")
@@ -196,7 +220,7 @@ shinyServer(function(input, output, session) {
   })
   
   # DATA INPUT PAGE ----
-  # _Reactives ----
+  # _Outputs ----
   # __Data Table ----
   output$data_input_dt_peak_list <- renderDT(
     server = FALSE,
@@ -252,22 +276,19 @@ shinyServer(function(input, output, session) {
       updateSelectizeInput(
         session = session,
         inputId = "search_compounds_mzrt",
-        choices = data_input_search_parameters() %>%
-          mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
-          pull(label) %>%
+        choices = search_compounds_mzrt_text() %>%
           setNames(object = 1:length(.),
                    nm = .)
       )
       updateSelectizeInput(
         session = session,
         inputId = "search_fragments_mzrt",
-        choices = data_input_search_parameters() %>%
-          mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
-          pull(label) %>%
+        choices = search_fragments_mzrt_text() %>%
           setNames(object = 1:length(.),
                    nm = .)
       )
     }
+    hideElement(id = "data_input_next_actions")
   })
   # __Verify isolation width / experiment type ----
   observeEvent({
@@ -494,7 +515,7 @@ shinyServer(function(input, output, session) {
   })
   
   # COMPOUND SEARCH PAGE ----
-  # _Reactives ----
+  # _Outputs ----
   # __Match statuses ----
   output$search_compounds_match_top <- renderUI({
     req(search_compounds_results())
@@ -681,7 +702,6 @@ shinyServer(function(input, output, session) {
     req(
       user_data(),
       data_input_search_parameters(),
-      input$search_compounds_mzrt,
       input$search_compounds_search_type,
       input$data_input_relative_error,
       input$data_input_minimum_error,
@@ -697,10 +717,11 @@ shinyServer(function(input, output, session) {
       # input$data_input_freq_bin,
       # input$data_input_min_n_peaks
     )
+    search_compound_index <- req(search_compounds_mzrt())
     runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
     showElement("search_compounds_overlay")
     runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
-    mzrt <- isolate(data_input_search_parameters()[input$search_compounds_mzrt, ])
+    mzrt <- isolate(data_input_search_parameters()[search_compound_index, ])
     tmp <- list(
       mzML = isolate(user_data()$mzML),
       search_df = tibble(
@@ -716,10 +737,23 @@ shinyServer(function(input, output, session) {
       )
     )
     runjs("$('#search_compounds_overlay_text').text('Creating search object...');")
-    search_object <- get_search_object(
-      searchmzml = tmp,
-      zoom = isolate(input$data_input_search_zoom)
-    ) %>%
+    search_object <- try(
+      get_search_object(
+        searchmzml = tmp,
+        zoom = isolate(input$data_input_search_zoom)
+      )
+    )
+    if (inherits(search_object, "try-error")) {
+      nist_shinyalert(
+        title = NULL,
+        type = "warning",
+        text = sprintf("Could not find a feature in %s matching %s",
+                       input$data_input_filename$name,
+                       search_compound_index)
+      )
+      return(NULL)
+    }
+    search_object <- search_object %>%
       create_search_ms(
         searchobj = .,
         correl = isolate(input$data_input_correlation),
@@ -746,7 +780,6 @@ shinyServer(function(input, output, session) {
         ums2_compare = lapply(search_result$ums2_compare, bind_rows)
       )
     )
-    search_compounds_mzrt(input$search_compounds_mzrt)
     hideElement("search_compounds_overlay")
   })
   # __Evaluate uncertainty (modal) ----
@@ -754,7 +787,10 @@ shinyServer(function(input, output, session) {
     uncertainty_results(NULL)
     showModal(mod_uncertainty_evaluation(input$search_compounds_msn))
   })
-  observeEvent(input$mod_uncertainty_calculate, ignoreNULL = TRUE, ignoreInit = TRUE, {
+  observeEvent({
+    input$mod_uncertainty_calculate
+    input$search_compounds_msn
+    }, ignoreNULL = TRUE, ignoreInit = TRUE, {
     tmp <- req(search_compounds_results())
     runjs(sprintf("$('#search_compounds_overlay_text').text('Running %s bootstrap iterations...');",
                   input$mod_uncertainty_iterations))
@@ -858,7 +894,7 @@ shinyServer(function(input, output, session) {
   })
   
   # FRAGMENT SEARCH PAGE ----
-  # _Reactives ----
+  # _Outputs ----
   # __Spectrum plot ----
   # output$search_fragments_spectral_plot <- renderPlotly({
   output$search_fragments_spectral_plot <- renderPlot({
@@ -868,14 +904,11 @@ shinyServer(function(input, output, session) {
     )
     dat <- search_fragments_results()$spectra
     conf <- dat$match
-    cap1 <- if ("unknown" %in% conf) glue::glue('{sum(conf == "unknown")} unknown fragment{ifelse(sum(conf == "unknown") == 1, "", "s")}') else NULL
-    cap2 <- if ("formula" %in% conf) glue::glue('{sum(conf == "formula")} fragment{ifelse(sum(conf == "formula") == 1, "", "s")} with an annotated formula') else NULL
-    cap3 <- if ("structure" %in% conf) glue::glue('{sum(conf == "structure")} fragment{ifelse(sum(conf == "structure") == 1, "", "s")} with an annotated structure') else NULL
-    this_caption <- paste0(format_list_of_names(c(cap1, cap2, cap3)), ".")
-    chosen_mzrt <- data_input_search_parameters() %>%
-      mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
-      slice(as.numeric(input$search_compounds_mzrt)) %>%
-      pull(label)
+    cap1 <- if ("unknown" %in% conf) glue::glue('{sum(conf == "unknown")} unknown fragment{ifelse(sum(conf == "unknown") == 1, "", "s")}.') else NULL
+    cap2 <- if ("formula" %in% conf) glue::glue('{sum(conf == "formula")} fragment{ifelse(sum(conf == "formula") == 1, "", "s")} with an annotated formula.') else NULL
+    cap3 <- if ("structure" %in% conf) glue::glue('{sum(conf == "structure")} fragment{ifelse(sum(conf == "structure") == 1, "", "s")} with an annotated structure.') else NULL
+    chosen_mzrt <- isolate(search_fragments_mzrt_text()[as.numeric(search_fragments_mzrt())])
+    this_caption <- paste0(c(chosen_mzrt, cap1, cap2, cap3), collapse = "\n")
     dat %>%
       ggplot(aes(x = mz, y = int, ymin = 0, ymax = int, color = match)) +
       geom_linerange(size = 1) + 
@@ -903,7 +936,7 @@ shinyServer(function(input, output, session) {
       #           vjust = 0) +
       # ggrepel::geom_text_repel(aes(label = round(mz, 4)), color = "black", show.legend = FALSE) +
       # geom_text(aes(label = round(mz, 4)), color = "black", show.legend = FALSE) +
-      labs(title = glue::glue("Annotated Fragments for {chosen_mzrt}"),
+      labs(title = glue::glue("Annotated Fragments"),
            subtitle = this_caption,
            alt = glue::glue("Annotated Fragments for {chosen_mzrt} plotted as an uncertainty mass spectrum with mass-to-charge on the x-axis and intensity on the y-axis. Line colors are black for unknowns, blue for fragments with known formula, and green for fragments with an annotated structure. Red error bars around each measurement point represent the uncertainty in both axes."),
            x = "m/z",
@@ -929,11 +962,11 @@ shinyServer(function(input, output, session) {
       rownames = FALSE,
       selection = list(mode = "none"),
       autoHideNavigation = TRUE,
-      colnames = c("Match Type", "Mean m/z", "Mean Intensity", "n", "Elemental Formula", "Uncertainty (m/z)", "Uncertainty (intensity)", "Annotated Fragment ID", "Has SMILES Notation"),
+      colnames = c("Match Type", "Mean m/z", "Mean Intensity", "n", "Annotated Formula", "Uncertainty (m/z)", "Uncertainty (intensity)", "Annotated Fragment ID", "Has SMILES Notation"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = ifelse(nrow(search_fragments_results()$spectra) <= 10, "tB", "tBp"),
+        dom = ifelse(nrow(search_fragments_results()$spectra) <= 15, "tB", "tBp"),
         pageLength = 15,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
@@ -1077,14 +1110,15 @@ shinyServer(function(input, output, session) {
       )
     }
     req(
-      input$search_compounds_mzrt,
+      search_compounds_mzrt(),
+      search_fragments_mzrt(),
       user_data(),
       input$data_input_relative_error,
       input$data_input_minimum_error
     )
     mass_error <- input$data_input_relative_error
     min_error <- input$data_input_minimum_error
-    if (!is.null(search_compounds_results()) && search_compounds_mzrt() == input$search_fragments_mzrt) {
+    if (!is.null(search_compounds_results()) && search_compounds_mzrt() == search_fragments_mzrt()) {
       fragments <- search_compounds_results()$search_object$ums2
     } else {
       req(

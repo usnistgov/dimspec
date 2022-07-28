@@ -1,8 +1,8 @@
-dev <- TRUE
+dev <- FALSE
 advanced_use <- FALSE
 toy_data <- FALSE
 src_toy_data <- "toy_data.RDS"
-src_toy_parameters_src <- "toy_parameters.RDS"
+src_toy_parameters <- "toy_parameters.RDS"
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
