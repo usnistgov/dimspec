@@ -1284,14 +1284,14 @@ shinyServer(function(input, output, session) {
   })
   # __More peak information ----
   observeEvent(input$search_fragments_peak_info, {
-    if (is.null(input$search_fragments_compound_list_rows_selected[1])) {
+    if (is.null(input$search_fragments_peak_list_rows_selected[1])) {
       nist_shinyalert(
         title = "More information needed",
         type = "info",
         text = "Please select a peak from the list."
       )
     } else {
-      peak_data <- req(search_fragments_peaks_data()[input$search_fragments_compound_list_rows_selected[1], ])
+      peak_data <- req(search_fragments_peaks_data()[input$search_fragments_peak_list_rows_selected[1], ])
       method_narrative <- api_endpoint(
         path = "method_narrative",
         type = "peak",
@@ -1312,10 +1312,11 @@ shinyServer(function(input, output, session) {
       ) %>%
         tidy_spectra(is_file = FALSE)
       nist_shinyalert(
-        title = sprintf("Narrative for Peak ID %d in Sample %d", peak_data$id, peak_data$sample_id),
+        title = NULL,
         type = "info",
         text = tagList(
           # TODO Some plot here to expose peak data? Endpoint "/plot_peak"?
+          h4(sprintf("Narrative for Peak ID %d in Sample %d", peak_data$id, peak_data$sample_id)),
           hr(),
           p(style = "font-size: small;", method_narrative),
           hr(),
