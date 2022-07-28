@@ -11,7 +11,11 @@ dashboardPage(
     h4(style = "padding-left: 15px;", "HRAMS Database for PFAS"),
     if (dev) {
       div(style = "padding-left: 15px;",
-          h4(style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE"),
+          if (dev) {
+            h4(id = "dev_mode", style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE")
+          } else {
+            NULL
+          },
           p("Plumber instance is live at ", PLUMBER_URL, "; view the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
           actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
       )
@@ -32,10 +36,6 @@ dashboardPage(
                tabName = "search_compounds",
                icon = icon("magnifying-glass", verify_fa = FALSE)
       ),
-      # menuItem("Uncertainty",
-      #          tabName = "uncertainty",
-      #          icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
-      # ),
       menuItem("Fragment Match",
                tabName = "search_fragments",
                icon = icon("puzzle-piece", verify_fa = FALSE)
@@ -50,7 +50,7 @@ dashboardPage(
     useShinyjs(),
     tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
     tags$script(type = "text/javascript", jscode),
-    div(class = "title-banner", "DEVELOPMENT VERSION"),
+    if (dev) div(class = "title-banner", "DEVELOPMENT VERSION") else NULL,
     tabItems(
       # Home Page ----
       tabItem("index",
@@ -441,129 +441,6 @@ dashboardPage(
                 )
               )
       ),
-      # # Uncertainty 
-      # tabItem("uncertainty",
-      #         div(class = "overlay",
-      #             id = "uncertainty_overlay",
-      #             img(src = "processing.gif")
-      #         ),
-      #         fluidRow(
-      #           box(title = "Uncertainty Analysis",
-      #               width = 12,
-      #               solidHeader = FALSE,
-      #               status = "primary",
-      #               h4("[USE INSTRUCTIONS HERE]."),
-      #               span(id = "uncertainty_additional",
-      #                    box(title = tagList(icon("screwdriver-wrench", verify_fa = FALSE),
-      #                                        "Advanced parameters"),
-      #                        width = 12,
-      #                        solidHeader = FALSE,
-      #                        status = "primary",
-      #                        class = "left",
-      #                        collapsible = TRUE,
-      #                        collapsed = TRUE,
-      #                        with(app_settings,
-      #                             tagList(
-      #                               h4(style = "color: #3571a5;", "Fine tuning of search parameters should only be done under expert advice."),
-      #                               div(class = "form-grouping",
-      #                                   div(class = "flex-container",
-      #                                       numericInput(inputId = "uncertainty_mass_error_compare_actual",
-      #                                                    label = "Tolerable mass error (this spectrum)",
-      #                                                    width = "100%",
-      #                                                    # ticks = uncertainty_mass_error_compare_actual$ticks,
-      #                                                    value = uncertainty_mass_error_compare_actual$value,
-      #                                                    min = uncertainty_mass_error_compare_actual$min,
-      #                                                    max = uncertainty_mass_error_compare_actual$max,
-      #                                                    step = uncertainty_mass_error_compare_actual$step
-      #                                       ),
-      #                                       numericInput(inputId = "uncertainty_mass_error_compare_with",
-      #                                                    label = "Tolerable mass error (reference spectra)",
-      #                                                    width = "100%",
-      #                                                    # ticks = uncertainty_mass_error_compare_with$ticks,
-      #                                                    value = uncertainty_mass_error_compare_with$value,
-      #                                                    min = uncertainty_mass_error_compare_with$min,
-      #                                                    max = uncertainty_mass_error_compare_with$max,
-      #                                                    step = uncertainty_mass_error_compare_with$step
-      #                                       )
-      #                                   ),
-      #                                   div(class = "flex-container",
-      #                                       numericInput(inputId = "uncertainty_min_error_compare_actual",
-      #                                                    label = "Minimum mass error (this spectrum)",
-      #                                                    width = "100%",
-      #                                                    # ticks = uncertainty_min_error_compare_actual$ticks,
-      #                                                    value = uncertainty_min_error_compare_actual$value,
-      #                                                    min = uncertainty_min_error_compare_actual$min,
-      #                                                    max = uncertainty_min_error_compare_actual$max,
-      #                                                    step = uncertainty_min_error_compare_actual$step
-      #                                       ),
-      #                                       numericInput(inputId = "uncertainty_min_error_compare_with",
-      #                                                    label = "Minimum mass error (reference spectra)",
-      #                                                    width = "100%",
-      #                                                    # ticks = uncertainty_min_error_compare_with$ticks,
-      #                                                    value = uncertainty_min_error_compare_with$value,
-      #                                                    min = uncertainty_min_error_compare_with$min,
-      #                                                    max = uncertainty_min_error_compare_with$max,
-      #                                                    step = uncertainty_min_error_compare_with$step
-      #                                       )
-      #                                   ),
-      #                                   div(class = "flex-container",
-      #                                       sliderInput(inputId = "uncertainty_weighting_mass",
-      #                                                    label = "Minimum mass error (this spectrum)",
-      #                                                    width = "100%",
-      #                                                    ticks = uncertainty_weighting_mass$ticks,
-      #                                                    value = uncertainty_weighting_mass$value,
-      #                                                    min = uncertainty_weighting_mass$min,
-      #                                                    max = uncertainty_weighting_mass$max,
-      #                                                    step = uncertainty_weighting_mass$step
-      #                                       ),
-      #                                       sliderInput(inputId = "uncertainty_weighting_intensity",
-      #                                                    label = "Minimum mass error (reference spectra)",
-      #                                                    width = "100%",
-      #                                                    ticks = uncertainty_weighting_intensity$ticks,
-      #                                                    value = uncertainty_weighting_intensity$value,
-      #                                                    min = uncertainty_weighting_intensity$min,
-      #                                                    max = uncertainty_weighting_intensity$max,
-      #                                                    step = uncertainty_weighting_intensity$step
-      #                                       )
-      #                                   )
-      #                               )
-      #                             )
-      #                        )
-      #                    )
-      #               ),
-      #               fluidRow(
-      #                 column(6,
-      #                        h3("Uncertainty Mass Spectrum"),
-      #                        htmlOutput(outputId = "uncertainty_status",
-      #                                   width = "100%"),
-      #                        p(
-      #                          HTML(
-      #                            paste0(
-      #                              "Your measurement is in&nbsp;",
-      #                              strong(style = "color: black", "black"),
-      #                              ". Comparison spectrum is in&nbsp;",
-      #                              strong(style = "color: red", "red"),
-      #                              "."
-      #                            )
-      #                          )
-      #                        ),
-      #                        plotlyOutput(outputId = "uncertainty_butterfly_plot",
-      #                                     width = "100%") %>%
-      #                          withSpinner(),
-      #                        htmlOutput(outputId = "uncertainty_method_narrative"),  
-      #                        # If ALL match criteria, then provide a DT object here instead
-      #                        # Download can go off DT object if using DT if present
-      #                        verbatimTextOutput(outputId = "uncertainty_summary")
-      #                 ),
-      #                 column(6,
-      #                        plotlyOutput(outputId = "uncertainty_boxplot",
-      #                                     width = "100%") %>%
-      #                          withSpinner()
-      #                 )
-      #               )
-      #           )
-      #         )
-      # ),
       # Search Fragments ----
       tabItem("search_fragments",
               div(class = "overlay",

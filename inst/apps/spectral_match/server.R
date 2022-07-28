@@ -145,28 +145,25 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#data_input_overlay")
   hideElement(selector = "#data_input_next_actions")
   hideElement(selector = "#search_compounds_overlay")
-  # hideElement(selector = "#uncertainty_overlay")
   hideElement(selector = "#search_fragments_overlay")
-  # hideElement(selector = "#search_fragments_compound_info")
-  # hideElement(selector = "#search_fragments_peak_info")
   hideElement(selector = "#search_fragments_fragment_info")
   
   # Element Display ----
   observe({
     toggleElement("data_input_additional", condition = advanced_use())
     toggleElement("mod_uncertainty_additional", condition = advanced_use())
-    # if (!dev) {
-    toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-    toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-    toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
-    toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-    toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
-    toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
-    toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
-    toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
-    # toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
-    toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
-    # }
+    if (!dev) {
+      toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
+      toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
+      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
+      toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
+      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
+      toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
+      toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
+      toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
+    }
   })
   
   # Navigation ----
@@ -486,13 +483,6 @@ shinyServer(function(input, output, session) {
       session = session,
       inputId = "sidebar_menu",
       selected = "search_compounds"
-    )
-  })
-  observeEvent(input$data_input_go_uncertainty, {
-    updateTabsetPanel(
-      session = session,
-      inputId = "sidebar_menu",
-      selected = "uncertainty"
     )
   })
   observeEvent(input$data_input_go_fragment, {
