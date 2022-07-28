@@ -3,7 +3,9 @@ shinyServer(function(input, output, session) {
   observeEvent(input$browser, browser())
   
   # Session Data ----
+  # _General ----
   advanced_use <- reactiveVal(advanced_use)
+  # _User Data ----
   user_data <- reactiveVal(
     if (!toy_data) {
       NULL
@@ -11,6 +13,7 @@ shinyServer(function(input, output, session) {
       readRDS(src_toy_data)
     }
   )
+  # _Data Input page ----
   data_input_search_upload <- reactiveVal(NULL)
   data_input_search_parameters <- reactiveVal(
     if (!toy_data) {
@@ -25,8 +28,9 @@ shinyServer(function(input, output, session) {
     }
   )
   data_input_parameter_edit <- reactiveVal(FALSE)
+  # _Compound Match page ----
   search_compounds_results <- reactiveVal(NULL)
-  search_compounds_mzrt <- reactive(input$search_compounds_mzrt)
+  search_compounds_mzrt <- reactive(as.integer(input$search_compounds_mzrt))
   search_compounds_mzrt_text <- reactive(
     data_input_search_parameters() %>%
       mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
@@ -37,7 +41,7 @@ shinyServer(function(input, output, session) {
     old_val <- isolate(search_compounds_row_selected())
     if (is.null(input$search_compounds_dt_rows_selected)) {
       if (is.null(input$search_compounds_dt_row_last_clicked)) {
-        new_val <- 1
+        new_val <- "1"
       } else {
         new_val <- input$search_compounds_dt_row_last_clicked
       }
@@ -63,8 +67,9 @@ shinyServer(function(input, output, session) {
     )
   })
   uncertainty_results <- reactiveVal(NULL)
+  # _Fragment Match page ----
   search_fragments_results <- reactiveVal(NULL)
-  search_fragments_mzrt <- reactive(input$search_fragments_mzrt)
+  search_fragments_mzrt <- reactive(as.integer(input$search_fragments_mzrt))
   search_fragments_mzrt_text <- reactive(
     data_input_search_parameters() %>%
       mutate(label = glue::glue("m/z {round(precursor, 4)} @ {round(rt, 2)} ({round(rt_start, 2)} - {round(rt_end, 2)})")) %>%
@@ -75,7 +80,7 @@ shinyServer(function(input, output, session) {
     old_val <- isolate(search_fragments_row_selected())
     if (is.null(input$search_fragments_dt_rows_selected)) {
       if (is.null(input$search_fragments_dt_row_last_clicked)) {
-        new_val <- 1
+        new_val <- "1"
       } else {
         new_val <- input$search_fragments_dt_row_last_clicked
       }
@@ -514,7 +519,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  # COMPOUND SEARCH PAGE ----
+  # COMPOUND MATCH PAGE ----
   # _Outputs ----
   # __Match statuses ----
   output$search_compounds_match_top <- renderUI({
@@ -787,10 +792,9 @@ shinyServer(function(input, output, session) {
     uncertainty_results(NULL)
     showModal(mod_uncertainty_evaluation(input$search_compounds_msn))
   })
-  observeEvent({
-    input$mod_uncertainty_calculate
-    input$search_compounds_msn
-    }, ignoreNULL = TRUE, ignoreInit = TRUE, {
+  observeEvent(input$mod_uncertainty_calculate,
+               ignoreNULL = TRUE,
+               ignoreInit = TRUE, {
     tmp <- req(search_compounds_results())
     runjs(sprintf("$('#search_compounds_overlay_text').text('Running %s bootstrap iterations...');",
                   input$mod_uncertainty_iterations))
@@ -812,6 +816,7 @@ shinyServer(function(input, output, session) {
       inputId = "search_compounds_msn",
       selected = input$mod_uncertainty_msn
     )
+    click("mod_uncertainty_calculate")
   })
   output$mod_uncertainty_match_dt <- renderDT(
     server = FALSE,
@@ -893,7 +898,7 @@ shinyServer(function(input, output, session) {
     out
   })
   
-  # FRAGMENT SEARCH PAGE ----
+  # FRAGMENT MATCH PAGE ----
   # _Outputs ----
   # __Spectrum plot ----
   # output$search_fragments_spectral_plot <- renderPlotly({
@@ -1005,7 +1010,8 @@ shinyServer(function(input, output, session) {
       formatRound(columns = c("measured_mz", "fixedmass", "mass_error"), digits = 4, interval = 3)
   )
   # __Compound list ----
-  output$search_fragments_compound_list <- renderDT({
+  output$search_fragments_compound_list <- renderDT(
+    server = FALSE,
     DT::datatable(
       data = search_fragments_compounds_data(),
       rownames = FALSE,
@@ -1027,7 +1033,7 @@ shinyServer(function(input, output, session) {
         )
       )
     )
-  })
+  )
   # __Peak list ----
   output$search_fragments_peak_list <- renderDT({
     peaks <- req(search_fragments_peaks_data())
@@ -1037,7 +1043,6 @@ shinyServer(function(input, output, session) {
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
-      autoHideNavigation = TRUE,
       colnames = c("Identification Confidence", "n Points", "Precursor m/z", "Ion State", "RT Centroid", "RT Start", "RT End", "Peak ID", "Sample ID"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
