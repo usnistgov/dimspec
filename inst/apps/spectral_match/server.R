@@ -815,12 +815,26 @@ shinyServer(function(input, output, session) {
     hideElement("search_compounds_overlay")
   })
   observeEvent(input$mod_uncertainty_msn, {
-    updateRadioGroupButtons(
-      session = session,
-      inputId = "search_compounds_msn",
-      selected = input$mod_uncertainty_msn
-    )
-    click("mod_uncertainty_calculate")
+    if (is.na(search_compounds_results_selected()$ms2_dp) &&
+        input$mod_uncertainty_msn == "MS2") {
+      nist_shinyalert(
+        title = NULL,
+        type = "info",
+        text = "There are no MS2 match scores to evaluate."
+      )
+      updateRadioGroupButtons(
+        session = session,
+        inputId = "mod_uncertainty_msn",
+        selected = input$mod_uncertainty_msn
+      )
+    } else {
+      updateRadioGroupButtons(
+        session = session,
+        inputId = "search_compounds_msn",
+        selected = input$mod_uncertainty_msn
+      )
+      click("mod_uncertainty_calculate")
+    }
   })
   output$mod_uncertainty_match_dt <- renderDT(
     server = FALSE,
