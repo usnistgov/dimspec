@@ -1,13 +1,15 @@
 dev <- TRUE
 advanced_use <- FALSE
-toy_data <- TRUE
+toy_data <- FALSE
 provide_more_help <- TRUE
 src_toy_data <- "toy_data.RDS"
 src_toy_parameters <- "toy_parameters.RDS"
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 APP_TITLE <- "NIST PFAS Database Spectra Match"
-app_dir <- "spectral_match"
+app_name <- "spectral_match"
+app_dir  <- app_name
+app_ns   <- paste0("app_", app_name)
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "NIST HRAMS Database for PFAS")
 need_files <- c(
@@ -20,9 +22,9 @@ need_files <- c(
 )
 sapply(need_files, source)
 if (LOGGING_ON) {
-  log_ns <- "APP_SPECTRAL_MATCH"
-  log_it("info", "Starting app: app_spectral_match", "shiny")
-  log_it("info", "Starting app", tolower(log_ns), add_unknown_ns = TRUE, clone_settings_from = "SHINY")
+  log_ns <- toupper(app_ns)
+  log_it("info", sprintf("Starting app: %s", app_name), "shiny")
+  log_it("info", "Starting app", app_ns, add_unknown_ns = TRUE, clone_settings_from = "SHINY")
 }
 
 app_settings <- list(
