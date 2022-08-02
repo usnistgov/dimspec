@@ -22,9 +22,16 @@ need_files <- c(
 )
 sapply(need_files, source)
 if (LOGGING_ON) {
+  shiny_ns <- "shiny"
+  if (!shiny_ns %in% names(LOGGING)) {
+    log_it("info", sprintf("Creating logging namespace for '%s'", shiny_ns), shiny_ns, add_unknown_ns = TRUE)
+  }
   log_ns <- toupper(app_ns)
-  log_it("info", sprintf("Starting app: %s", app_name), "shiny")
-  log_it("info", "Starting app", app_ns, add_unknown_ns = TRUE, clone_settings_from = "SHINY")
+  if (!log_ns %in% names(LOGGING)) {
+    log_it("info", sprintf("Creating logging namespace for '%s'", app_ns), shiny_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
+    }
+  log_it("info", sprintf("Starting app: %s", app_name), shiny_ns)
+  log_it("info", "Starting app", log_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
 }
 
 app_settings <- list(

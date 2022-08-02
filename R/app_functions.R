@@ -603,7 +603,7 @@ log_it <- function(log_level,
     length(msg) < 2,
     is.logical(reset_logger_settings) && length(reset_logger_settings) == 1,
     !reset_logger_settings || (reset_logger_settings && length(logger_settings) == 1 && file.exists(logger_settings)),
-    is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING") && toupper(clone_settings_from) %in% toupper(names(LOGGING))),
+    is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING")),
     is.logical(add_unknown_ns) && length(add_unknown_ns) == 1
   )
   if (has_missing_elements(msg, logging = FALSE)) msg <- "[no message provided]"
@@ -657,17 +657,29 @@ log_it <- function(log_level,
           } else {
             i <- 1
           }
+          requested_clone <- clone_settings_from
           clone_settings_from <- names(LOGGING)[i]
           settings_from <- LOGGING[[i]]$ns
           if (add_unknown_ns) {
+            log_it("info", sprintf('Setting up namespace "%s"', log_ns))
             if (clone_exists) {
-              log_it("info", sprintf('Copying settings for "%s" from "%s". Access settings at LOGGING[["%s"]]', log_ns, settings_from, toupper(log_ns)))
+              log_it("info", sprintf('Copying settings for "%s" from "%s". Access settings at LOGGING$%s', log_ns, settings_from, toupper(log_ns)))
             } else {
-              log_it("warn", sprintf('Clone namespace "%s" is not set up. Settings for "%s" will be used instead.', tolower(clone_settings_from), settings_from))
+              msg <- ifelse(
+                is.null(requested_clone),
+                sprintf('No clone namespace provided. Settings for "%s" will be used as a default.', settings_from),
+                sprintf('Requestedlone namespace "%s" is not set up. Settings for "%s" will be used instead.', requested_clone, settings_from)
+              )
+              log_it("warn", msg)
             }
             LOGGING[[toupper(log_ns)]] <- LOGGING[[i]]
             LOGGING[[toupper(log_ns)]]$ns <- log_ns
+            LOGGING[[toupper(log_ns)]]$file <- file.path(
+              dirname(LOGGING[[toupper(log_ns)]]$file),
+              sprintf("log_%s.txt", tolower(log_ns))
+            )
             assign("LOGGING", LOGGING, envir = .GlobalEnv)
+            update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
             log_it(
               "warn",
               sprintf(
@@ -676,13 +688,11 @@ log_it <- function(log_level,
               log_ns)
           } else {
             log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace with the same settings as "%s".', log_ns, settings_from))
-            log_it("info", sprintf('Logs for "%s" will only be available in the console.', log_ns))
           }
           do_log <- TRUE
         }
       }
     }
-    if (!exists("do_log")) browser()
     if (do_log) {
       log_func  <- sprintf("log_%s", tolower(log_level))
       log_level <- toupper(log_level)
@@ -693,7 +703,7 @@ log_it <- function(log_level,
                   .topcall = sys.call(n_call),
                   msg)
       } else {
-        # # See below comment about package "cli"...if that reoute is desired, it is necessary to uncomment this block.
+        # # See below comment about package "cli"...if that route is desired, it is necessary to uncomment this block.
         #
         # log_level <- switch(log_level,
         #                     "WARN" = "WARNING",

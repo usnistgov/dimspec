@@ -66,6 +66,7 @@ if (LOGGING_ON) {
       logger_settings
     )
   }
+  LOGGING <<- LOGGING
   require(logger)
   update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
   rm(logger_settings)
