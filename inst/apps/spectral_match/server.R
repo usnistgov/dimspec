@@ -477,19 +477,23 @@ shinyServer(function(input, output, session) {
   })
   # __Process Data ----
   observeEvent(input$data_input_process_btn, {
-    showElement(selector = "#data_input_overlay")
-    user_data(NULL)
+    req(
+      input$data_input_filename,
+      nrow(data_input_search_parameters() > 0)
+    )
     required <- grep("data_input", names(input), value = TRUE)
     required <- required[-grep("dt_peak_list|import_search|filename|_process|^mod_data|_go_", required)]
-    req(input$data_input_filename,
-        data_input_search_parameters())
     sapply(required,
            function(x) {
              req(input[[x]])
            })
+    user_data(NULL)
+    showElement(selector = "#data_input_overlay")
+    log_it("info", sprintf("Processing user data from file %s...", input$data_input_filename$name), app_ns)
     mzml <- try(
       getmzML(data.frame(filename = input$data_input_filename$datapath))
     )
+    log_it("info", "User data processed.", app_ns)
     if (inherits(mzml, "try-error")) {
       nist_shinyalert(
         title = "Conversion issue",
