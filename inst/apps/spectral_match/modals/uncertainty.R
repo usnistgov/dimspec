@@ -1,4 +1,4 @@
-mod_uncertainty_evaluation <- function(msn) {
+mod_uncertainty_evaluation <- function(msn, advanced_use) {
   modalDialog(
     title = "Uncertainty Evaluation",
     size = "m",
