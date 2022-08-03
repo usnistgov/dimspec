@@ -59,24 +59,28 @@ dashboardPage(
         with_help(tooltip = "Your reference guide to this application, including user guides and other information.",
                   placement = "right"),
       span(id = "additional_options",
-           div(class = "nav-checkbox-right",
-               icon("question", verify_fa = FALSE),
-               tags$label("Show Tooltips"),
-               prettySwitch(inputId = "nav_show_help",
-                            label = NULL,
-                            value = provide_more_help,
-                            inline = TRUE,
-                            status = "success")
-           ),
-           div(class = "nav-checkbox-right",
-               icon("gear", verify_fa = FALSE),
-               tags$label("Advanced Settings"),
-               prettySwitch(inputId = "nav_show_advanced_settings",
-                            label = NULL,
-                            value = advanced_use,
-                            inline = TRUE,
-                            status = "warning")
-           )
+           if (enable_more_help) {
+             div(class = "nav-checkbox-right",
+                 icon("question", verify_fa = FALSE),
+                 tags$label("Show Tooltips"),
+                 prettySwitch(inputId = "nav_show_help",
+                              label = NULL,
+                              value = provide_more_help,
+                              inline = TRUE,
+                              status = "success")
+             )
+           },
+           if (enable_adv_use) {
+             div(class = "nav-checkbox-right",
+                 icon("gear", verify_fa = FALSE),
+                 tags$label("Advanced Settings"),
+                 prettySwitch(inputId = "nav_show_advanced_settings",
+                              label = NULL,
+                              value = advanced_use,
+                              inline = TRUE,
+                              status = "warning")
+             )
+           }
       )
     )
   ),

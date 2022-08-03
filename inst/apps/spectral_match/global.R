@@ -13,8 +13,11 @@ DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
 dev                <- TRUE
 
 # Set the start options to use advanced settings and tooltips by default. These
-# can be changed while using the app at any time.
+# can be changed while using the app at any time if the "enable" options are set
+# to TRUE, otherwise they will honor the individual settings.
+enable_adv_use     <- TRUE
 advanced_use       <- FALSE
+enable_more_help   <- TRUE
 provide_more_help  <- FALSE
 
 # If using dev mode, automatically fill with example data from local RDS files.
