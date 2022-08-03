@@ -26,6 +26,8 @@ dashboardPage(
       id = "sidebar_menu",
       menuItem(span(id = "nav_index", "Home"),
                tabName = "index",
+               badgeLabel = "WIP",
+               badgeColor = "orange",
                icon = icon("house", verify_fa = FALSE)
       ) %>%
         with_help(tooltip = "Contextural material for the application you are currently using, along with some information about the project itself.",
