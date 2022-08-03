@@ -10,15 +10,15 @@ DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- TRUE
+dev                <- FALSE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
 # to TRUE, otherwise they will honor the individual settings.
-enable_adv_use     <- TRUE
-advanced_use       <- FALSE
+enable_adv_use     <- FALSE
+advanced_use       <- TRUE
 enable_more_help   <- TRUE
-provide_more_help  <- FALSE
+provide_more_help  <- TRUE
 
 # If using dev mode, automatically fill with example data from local RDS files.
 toy_data           <- FALSE
@@ -71,19 +71,19 @@ app_settings <- list(
   data_input_minimum_error = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
   data_input_isolation_width = list(value = 0.7, min = 0.1, max = 100, step = 0.1),
   data_input_isolation_width_warn_threshold = 4,
-  data_input_search_zoom = list(value = c(1, 4), min = 0, max = 10, step = 0.1, ticks = FALSE),
-  data_input_correlation = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  data_input_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
-  data_input_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
-  data_input_normfn = c("sum", "mean"),
-  data_input_cormethod = c("pearson"),
-  # data_input_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  # data_input_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  # data_input_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
-  # data_input_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
-  # data_input_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
-  # data_input_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
-  # data_input_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
+  search_compounds_search_zoom = list(value = c(1, 4), min = 0, max = 10, step = 0.1, ticks = FALSE),
+  search_compounds_correlation = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  search_compounds_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
+  search_compounds_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
+  search_compounds_normfn = c("sum", "mean"),
+  search_compounds_cormethod = c("pearson"),
+  search_compounds_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  search_compounds_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
+  search_compounds_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
+  search_compounds_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
+  search_compounds_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
+  search_compounds_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
+  search_compounds_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
   uncertainty_mass_error_compare_actual = list(value = 5, min = 0.1, max = 50, step = 0.1),
   uncertainty_mass_error_compare_with = list(value = 5, min = 0.1, max = 50, step = 0.1),
   uncertainty_min_error_compare_actual = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),

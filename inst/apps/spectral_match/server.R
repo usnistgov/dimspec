@@ -170,10 +170,12 @@ shinyServer(function(input, output, session) {
   
   # Element Display ----
   observe({
-    toggleElement("data_input_additional", condition = advanced_use())
+    toggleElement("nav_show_help_div", condition = enable_more_help)
+    toggleElement("nav_show_advanced_settings_div", condition = enable_adv_use)
+    toggleElement("search_compounds_additional", condition = advanced_use())
     if (!dev) {
-      toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_dt_peak_list_edit_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_dt_peak_list_remove_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
       toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
       toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
@@ -184,7 +186,7 @@ shinyServer(function(input, output, session) {
       toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
     }
   })
-  observeEvent(show_help(), {
+  observeEvent(show_help(), ignoreInit = TRUE, {
     if (input$nav_show_help) {
       nist_shinyalert(
         title = "Tooltips Enabled",
@@ -197,6 +199,11 @@ shinyServer(function(input, output, session) {
       )
       runjs('$(".info-tooltip").show()')
     } else {
+      nist_shinyalert(
+        title = "Tooltips Disabled",
+        type = "info",
+        text = 'Click the toggle switch at the bottom left of the screen labeled "Show Tooltips" at any time to re-enable tooltips.'
+      )
       runjs('$(".info-tooltip").hide()')
     }
   })
@@ -733,15 +740,15 @@ shinyServer(function(input, output, session) {
       input$data_input_minimum_error,
       input$data_input_experiment_type,
       input$data_input_isolation_width,
-      input$data_input_search_zoom,
-      # input$data_input_max_correl,
-      # input$data_input_correl_bin,
-      input$data_input_ph
-      # input$data_input_max_ph,
-      # input$data_input_ph_bin,
-      # input$data_input_max_freq,
-      # input$data_input_freq_bin,
-      # input$data_input_min_n_peaks
+      input$search_compounds_search_zoom,
+      input$search_compounds_max_correl,
+      input$search_compounds_correl_bin,
+      input$search_compounds_ph,
+      input$search_compounds_max_ph,
+      input$search_compounds_ph_bin,
+      input$search_compounds_max_freq,
+      input$search_compounds_freq_bin,
+      input$search_compounds_min_n_peaks
     )
     search_compound_index <- req(search_compounds_mzrt())
     runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
@@ -766,7 +773,7 @@ shinyServer(function(input, output, session) {
     search_object <- try(
       get_search_object(
         searchmzml = tmp,
-        zoom = isolate(input$data_input_search_zoom)
+        zoom = isolate(input$search_compounds_search_zoom)
       )
     )
     if (inherits(search_object, "try-error")) {
@@ -782,19 +789,19 @@ shinyServer(function(input, output, session) {
     search_object <- search_object %>%
       create_search_ms(
         searchobj = .,
-        correl = isolate(input$data_input_correlation),
-        ph = isolate(input$data_input_ph),
-        freq = isolate(input$data_input_freq),
-        normfn = isolate(input$data_input_norm_function),
-        cormethod = isolate(input$data_input_correlation_method)
+        correl = isolate(input$search_compounds_correlation),
+        ph = isolate(input$search_compounds_ph),
+        freq = isolate(input$search_compounds_freq),
+        normfn = isolate(input$search_compounds_norm_function),
+        cormethod = isolate(input$search_compounds_correlation_method)
       )
     runjs("$('#search_compounds_overlay_text').text('Scoring database matches...');")
     search_result <- api_endpoint(
       path               = "search_compound",
       type               = isolate(input$search_compounds_search_type),
       search_ms          = jsonlite::toJSON(search_object),
-      norm_function      = isolate(input$data_input_norm_function),
-      correlation_method = isolate(input$data_input_correlation_method),
+      norm_function      = isolate(input$search_compounds_norm_function),
+      correlation_method = isolate(input$search_compounds_correlation_method),
       optimized_params   = isolate(input$search_compounds_use_optimized_parameters),
       return_format      = "list"
     )

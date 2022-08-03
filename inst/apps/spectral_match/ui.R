@@ -59,28 +59,26 @@ dashboardPage(
         with_help(tooltip = "Your reference guide to this application, including user guides and other information.",
                   placement = "right"),
       span(id = "additional_options",
-           if (enable_more_help) {
-             div(class = "nav-checkbox-right",
-                 icon("question", verify_fa = FALSE),
-                 tags$label("Show Tooltips"),
-                 prettySwitch(inputId = "nav_show_help",
-                              label = NULL,
-                              value = provide_more_help,
-                              inline = TRUE,
-                              status = "success")
-             )
-           },
-           if (enable_adv_use) {
-             div(class = "nav-checkbox-right",
-                 icon("gear", verify_fa = FALSE),
-                 tags$label("Advanced Settings"),
-                 prettySwitch(inputId = "nav_show_advanced_settings",
-                              label = NULL,
-                              value = advanced_use,
-                              inline = TRUE,
-                              status = "warning")
-             )
-           }
+           div(id = "nav_show_help_div",
+               class = "nav-checkbox-right",
+               icon("question", verify_fa = FALSE),
+               tags$label("Show Tooltips"),
+               prettySwitch(inputId = "nav_show_help",
+                            label = NULL,
+                            value = provide_more_help,
+                            inline = TRUE,
+                            status = "success")
+           ),
+           div(id = "nav_show_advanced_settings_div",
+               class = "nav-checkbox-right",
+               icon("gear", verify_fa = FALSE),
+               tags$label("Advanced Settings"),
+               prettySwitch(inputId = "nav_show_advanced_settings",
+                            label = NULL,
+                            value = advanced_use,
+                            inline = TRUE,
+                            status = "warning")
+           )
       )
     )
   ),
@@ -125,185 +123,61 @@ dashboardPage(
                                 tagList(
                                   tags$label(id = "data_input_filename_label",
                                              glue::glue("Choose a data file ({format_list_of_names(data_input_import_file_types)})")) %>%
-                                    tipify("Start by dragging a data file here, or click to select one from your computer"),
+                                    with_help('Start by dragging a data file here, or click "Load" to select one from your computer'),
                                   div(class = "form-grouping",
                                       fileInput(inputId = "data_input_filename",
                                                 label = NULL,
                                                 width = "100%",
                                                 multiple = FALSE,
                                                 accept = data_input_import_file_types,
-                                                buttonLabel = "Load",
+                                                buttonLabel = span(id = "data_input_filename_load_btn", "Load"),
                                                 placeholder = "Select a file to begin"
                                       )
                                   ),
                                   tags$label("Set Instrument Parameters"),
                                   div(class = "form-grouping",
-                                      numericInput(inputId = "data_input_relative_error",
-                                                   label = "Relative Error (ppm)",
-                                                   width = "100%",
-                                                   value = data_input_relative_error$value,
-                                                   min = data_input_relative_error$min,
-                                                   max = data_input_relative_error$max,
-                                                   step = data_input_relative_error$step
+                                      with(data_input_relative_error,
+                                           numericInput(inputId = "data_input_relative_error",
+                                                        label = "Relative Error (ppm)",
+                                                        width = "100%",
+                                                        value = value,
+                                                        min = min,
+                                                        max = max,
+                                                        step = step
+                                           ) %>%
+                                             with_help(glue::glue("Set the instrument mass-to-charge relative error in parts-per-million (ppm) for processing, ranging from {min} ppm to {max} ppm. The default of {value} ppm is typical for most applications."))
                                       ),
-                                      numericInput(inputId = "data_input_minimum_error",
-                                                   label = "Minimum Error (Da)",
-                                                   width = "100%",
-                                                   value = data_input_minimum_error$value,
-                                                   min = data_input_minimum_error$min,
-                                                   max = data_input_minimum_error$max,
-                                                   step = data_input_minimum_error$step
+                                      with(data_input_minimum_error,
+                                           numericInput(inputId = "data_input_minimum_error",
+                                                        label = "Minimum Error (Da)",
+                                                        width = "100%",
+                                                        value = value,
+                                                        min = min,
+                                                        max = max,
+                                                        step = step
+                                           ) %>%
+                                             with_help(glue::glue("Set the instrument minimum absolute error in Daltons (Da) for processing, ranging from {min} Da to {max} Da. The default of {value} Da is typical for most applications."))
                                       ),
                                       selectizeInput(inputId = "data_input_experiment_type",
                                                      label = "MS Experiment Type",
                                                      choices = experiment_types,
                                                      width = "100%"
-                                      ),
-                                      numericInput(inputId = "data_input_isolation_width",
-                                                   label = "Isolation Width (Da)",
-                                                   width = "100%",
-                                                   value = data_input_isolation_width$value,
-                                                   min = data_input_isolation_width$min,
-                                                   max = data_input_isolation_width$max,
-                                                   step = data_input_isolation_width$step
+                                      ) %>%
+                                        with_help('Set the experiment type for your data file; choices are defined in the "norm_ms_n_types" database table.'),
+                                      with(data_input_isolation_width,
+                                           numericInput(inputId = "data_input_isolation_width",
+                                                        label = "Isolation Width (Da)",
+                                                        width = "100%",
+                                                        value = value,
+                                                        min = min,
+                                                        max = max,
+                                                        step = step
+                                           ) %>%
+                                             with_help(glue::glue("Set the instrument data isolation width in Daltons (Da) for processing, ranging from {min} Da to {max} Da. The default of {value} Da is typical for data-dependent acquisition, but may be different for other acquisition types (e.g. for SWATH or HRM it may be much larger)."))
                                       )
                                   )
                                 )
                            )
-                       ),
-                       span(id = "data_input_additional",
-                            box(title = tagList(icon("screwdriver-wrench", verify_fa = FALSE),
-                                                "Advanced search parameters"),
-                                width = 12,
-                                solidHeader = FALSE,
-                                status = "primary",
-                                class = "left",
-                                collapsible = TRUE,
-                                collapsed = TRUE,
-                                with(app_settings,
-                                     tagList(
-                                       h4(style = "color: #3571a5;", "Fine tuning of search parameters should only be done under expert advice."),
-                                       tags$label("Search object settings"),
-                                       div(class = "form-grouping",
-                                           sliderInput(inputId = "data_input_search_zoom",
-                                                       label = "Search zoom window",
-                                                       width = "100%",
-                                                       ticks = data_input_search_zoom$ticks,
-                                                       value = data_input_search_zoom$value,
-                                                       min = data_input_search_zoom$min,
-                                                       max = data_input_search_zoom$max,
-                                                       step = data_input_search_zoom$step
-                                           )
-                                       ),
-                                       tags$label("Search mass spectra settings"),
-                                       div(class = "form-grouping",
-                                           sliderInput(inputId = "data_input_correlation",
-                                                       label = "Search correlation",
-                                                       width = "100%",
-                                                       ticks = data_input_correlation$ticks,
-                                                       value = data_input_correlation$value,
-                                                       min = data_input_correlation$min,
-                                                       max = data_input_correlation$max,
-                                                       step = data_input_correlation$step
-                                           ),
-                                           sliderInput(inputId = "data_input_ph",
-                                                       label = "Search peak height",
-                                                       width = "100%",
-                                                       ticks = data_input_ph$ticks,
-                                                       value = data_input_ph$value,
-                                                       min = data_input_ph$min,
-                                                       max = data_input_ph$max,
-                                                       step = data_input_ph$step
-                                           ),
-                                           sliderInput(inputId = "data_input_freq",
-                                                       label = "Search frequency",
-                                                       width = "100%",
-                                                       ticks = data_input_freq$ticks,
-                                                       value = data_input_freq$value,
-                                                       min = data_input_freq$min,
-                                                       max = data_input_freq$max,
-                                                       step = data_input_freq$step
-                                           ),
-                                           selectizeInput(inputId = "data_input_norm_function",
-                                                          label = "Search normalization function",
-                                                          choices = data_input_normfn,
-                                                          width = "100%"
-                                           ),
-                                           selectizeInput(inputId = "data_input_correlation_method",
-                                                          label = "Search correlation method",
-                                                          choices = data_input_cormethod,
-                                                          width = "100%"
-                                           )
-                                           # ),
-                                           # tags$label("Search match refinement settings"),
-                                           # div(class = "form-grouping",
-                                           #     sliderInput(inputId = "data_input_max_correl",
-                                           #                 label = "Maximum correlation",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_max_correl$ticks,
-                                           #                 value = data_input_max_correl$value,
-                                           #                 min = data_input_max_correl$min,
-                                           #                 max = data_input_max_correl$max,
-                                           #                 step = data_input_max_correl$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_correl_bin",
-                                           #                 label = "Correlation bin size",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_correl_bin$ticks,
-                                           #                 value = data_input_correl_bin$value,
-                                           #                 min = data_input_correl_bin$min,
-                                           #                 max = data_input_correl_bin$max,
-                                           #                 step = data_input_correl_bin$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_max_ph",
-                                           #                 label = "Maximum peak height",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_max_ph$ticks,
-                                           #                 value = data_input_max_ph$value,
-                                           #                 min = data_input_max_ph$min,
-                                           #                 max = data_input_max_ph$max,
-                                           #                 step = data_input_max_ph$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_ph_bin",
-                                           #                 label = "Peak height bin size",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_ph_bin$ticks,
-                                           #                 value = data_input_ph_bin$value,
-                                           #                 min = data_input_ph_bin$min,
-                                           #                 max = data_input_ph_bin$max,
-                                           #                 step = data_input_ph_bin$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_max_freq",
-                                           #                 label = "Maximum frequency",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_max_freq$ticks,
-                                           #                 value = data_input_max_freq$value,
-                                           #                 min = data_input_max_freq$min,
-                                           #                 max = data_input_max_freq$max,
-                                           #                 step = data_input_max_freq$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_freq_bin",
-                                           #                 label = "Frequency bin size",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_freq_bin$ticks,
-                                           #                 value = data_input_freq_bin$value,
-                                           #                 min = data_input_freq_bin$min,
-                                           #                 max = data_input_freq_bin$max,
-                                           #                 step = data_input_freq_bin$step
-                                           #     ),
-                                           #     sliderInput(inputId = "data_input_min_n_peaks",
-                                           #                 label = "Minimum number of spectra",
-                                           #                 width = "100%",
-                                           #                 ticks = data_input_min_n_peaks$ticks,
-                                           #                 value = data_input_min_n_peaks$value,
-                                           #                 min = data_input_min_n_peaks$min,
-                                           #                 max = data_input_min_n_peaks$max,
-                                           #                 step = data_input_min_n_peaks$step
-                                           #     )
-                                       )
-                                     )
-                                )
-                            )
                        )
                 ),
                 box(title = tagList(icon("magnifying-glass-location", verify_fa = FALSE),
@@ -314,20 +188,28 @@ dashboardPage(
                     collapsed = FALSE,
                     status = "primary",
                     class = "right",
-                    tags$label("Select parameters identifying peaks to examine."),
+                    tags$label(id = "data_input_parameters",
+                               "Select parameters identifying peaks to examine.") %>%
+                      with_help('Start by clicking "Add" to manually add a feature of interest, or by dragging a data file to the widget below or clicking "Import" to select one from your computer'),
                     div(class = "flex-container",
                         actionButton(inputId = "data_input_dt_peak_list_add_row",
                                      label = "Add",
+                                     width = "100%",
                                      icon = icon("plus")
-                        ),
+                        ) %>%
+                          with_help("Click to manually add a feature of interest by its mass-to-charge ratio value and retention time properties."),
                         actionButton(inputId = "data_input_dt_peak_list_edit_row",
                                      label = "Edit",
+                                     width = "100%",
                                      icon = icon("pencil-alt")
-                        ),
+                        ) %>%
+                          with_help("Click to edit a feature of interest selected in the table below."),
                         actionButton(inputId = "data_input_dt_peak_list_remove_row",
                                      label = "Remove",
+                                     width = "100%",
                                      icon = icon("times")
-                        )
+                        ) %>%
+                          with_help("Click to remove a feature of interest selected in the table below.")
                     ),
                     DTOutput(outputId = "data_input_dt_peak_list"),
                     fileInput(inputId = "data_input_import_search",
@@ -347,27 +229,31 @@ dashboardPage(
                                     icon = icon("circle-play",
                                                 verify_fa = FALSE),
                                     width = "100%"
-                       )
+                       ) %>%
+                         with_help("Click here to begin processing the data file provided and extract data matching the features of interest defined in the list above. More options will be available once data have been processed.")
                 ),
                 column(12,
                        id = "data_input_next_actions",
                        h4("Data processed. Choose next action from here or from the navigation menu on the left."),
                        div(class = "flex-container",
-                           
                            actionButton(inputId = "data_input_go_compound",
                                         label = "Compound Match",
+                                        width = "100%",
                                         icon = icon("magnifying-glass",
                                                     verify_fa = FALSE)
-                           ),
+                           ) %>%
+                             with_help("Data have been processed. Click here to go to the compound match screen and search for compounds matching your defined features of interest. This is most useful for a broad search or if you suspect an identity already."),
                            # actionButton(inputId = "data_input_go_uncertainty",
                            #              label = "Evaluate Uncertainty",
                            #              icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
                            # ),
                            actionButton(inputId = "data_input_go_fragment",
                                         label = "Fragment Match",
+                                        width = "100%",
                                         icon = icon("puzzle-piece",
                                                     verify_fa = FALSE)
-                           )
+                           ) %>%
+                             with_help("Data have been processed. Click here to go to the fragment match screen and search for fragments matching your defined features of interest. This is most useful for examining which fragments within your feature of interest are shared by other compounds.")
                        )
                 )
               )
@@ -398,7 +284,8 @@ dashboardPage(
                                                      choices = c("Precursor Search" = "precursor", "All" = "all"),
                                                      selected = 1,
                                                      multiple = FALSE,
-                                                     width = "100%")
+                                                     width = "100%") %>%
+                                        with_help("Select the type of search to perform. Precursor search limits itself to matching precursor mass-to-charge ratios between the error limits defined earlier. Search all attempts to find every possible match within the database and will take considerably longer.")
                                ),
                                column(9,
                                       selectizeInput(inputId = "search_compounds_mzrt",
@@ -407,19 +294,201 @@ dashboardPage(
                                                      selected = NULL,
                                                      multiple = FALSE,
                                                      width = "100%",
-                                                     options = list(placeholder = "Please add search parameters on the Data Input page."))
+                                                     options = list(placeholder = "Please add search parameters on the Data Input page.")) %>%
+                                        with_help("Select the feature of interest to use in the search. These were provided on the data input page. If you need to change them, go back to the data input page, alter the feature list, and process your data again.")
                                )
+                             ),
+                             span(id = "search_compounds_additional",
+                                  box(title = tagList(icon("screwdriver-wrench", verify_fa = FALSE),
+                                                      span(id = "search_compounds_additional_title", "Advanced search parameters") %>%
+                                                        with_help("Alter advanced parameters for compound matching here. Click the plus icon to the right to expand this box.")),
+                                      width = 12,
+                                      solidHeader = FALSE,
+                                      status = "primary",
+                                      collapsible = TRUE,
+                                      collapsed = TRUE,
+                                      h4(style = "color: #3571a5;", "Fine tuning of search parameters should only be done under expert advice."),
+                                      column(6,
+                                             with(app_settings,
+                                                  tagList(
+                                                    tags$label("Search object settings"),
+                                                    div(class = "form-grouping",
+                                                        with(search_compounds_search_zoom,
+                                                             sliderInput(inputId = "search_compounds_search_zoom",
+                                                                         label = "Search zoom window (Da)",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the search window which will determine how data are grouped, ranging from {min} to {max} Daltons. The default of {paste0(value, collapse = ' to ')} Da is typical for most applications."))
+                                                        )
+                                                    ),
+                                                    tags$label("Search mass spectra settings"),
+                                                    div(class = "form-grouping",
+                                                        with(search_compounds_correlation,
+                                                             sliderInput(inputId = "search_compounds_correlation",
+                                                                         label = HTML("Search correlation (&rho;)"),
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the correlation rho threshold for peak deconvolution, ranging from {min} (uncorrelated) to {max} (fully correlated). The default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_ph,
+                                                             sliderInput(inputId = "search_compounds_ph",
+                                                                         label = "Search peak height threshold (%)",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the percentage peak height threshold for processing, ranging from {min}% to {max}%. The default of {value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                        ),
+                                                        with(search_compounds_freq,
+                                                             sliderInput(inputId = "search_compounds_freq",
+                                                                         label = "Search frequency",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the minimum frequency for the number of times a mass must appear in scans across a peak, ranging from {min} to {max}. The default of {value} is typical for most applications, but this depends in part upon scan rate."))
+                                                        ),
+                                                        selectizeInput(inputId = "search_compounds_norm_function",
+                                                                       label = "Search normalization function",
+                                                                       choices = search_compounds_normfn,
+                                                                       width = "100%"
+                                                        ) %>%
+                                                          with_help('Choose a normalization function to use when matching compounds, either "sum" (typical default) for base peak normalization or "mean" for relative intensity normalization.'),
+                                                        selectizeInput(inputId = "search_compounds_correlation_method",
+                                                                       label = "Search correlation method",
+                                                                       choices = search_compounds_cormethod,
+                                                                       width = "100%"
+                                                        ) %>%
+                                                          with_help("Choose a correlation method to use when matching compounds; pearson is the only method currently supported.")
+                                                    )
+                                                  )
+                                             )
+                                      ),
+                                      column(6,
+                                             with(app_settings,
+                                                  tagList(
+                                                    tags$label("Search match refinement settings"),
+                                                    div(class = "form-grouping",
+                                                        with(search_compounds_max_correl,
+                                                             sliderInput(inputId = "search_compounds_max_correl",
+                                                                         label = HTML("Maximum correlation (&rho;)"),
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the maximum correlation to be used during the search refinement stage of the search function, ranging from {min} (uncorrelated) to {max} (completely correlated); the default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_correl_bin,
+                                                             sliderInput(inputId = "search_compounds_correl_bin",
+                                                                         label = "Correlation bin size",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the correlation bin size which will be used to group correlation results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_max_ph,
+                                                             sliderInput(inputId = "search_compounds_max_ph",
+                                                                         label = "Maximum peak height (%)",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the percentage of base peak height threshold to be used during the refinement stage of the search function, ranging from {min}% to {max}%; the default of {value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                        ),
+                                                        with(search_compounds_ph_bin,
+                                                             sliderInput(inputId = "search_compounds_ph_bin",
+                                                                         label = "Peak height bin size",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the peak height bin size which will be used to group potential results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_max_freq,
+                                                             sliderInput(inputId = "search_compounds_max_freq",
+                                                                         label = "Maximum frequency",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the maximum observation frequency will be used to group potential results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_freq_bin,
+                                                             sliderInput(inputId = "search_compounds_freq_bin",
+                                                                         label = "Frequency bin size",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the frequency bin size which will be used to during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                        ),
+                                                        with(search_compounds_min_n_peaks,
+                                                             sliderInput(inputId = "search_compounds_min_n_peaks",
+                                                                         label = "Minimum number of spectra",
+                                                                         width = "100%",
+                                                                         ticks = ticks,
+                                                                         value = value,
+                                                                         min = min,
+                                                                         max = max,
+                                                                         step = step
+                                                             ) %>%
+                                                               with_help(glue::glue("Set the minimum number of spectra which must be present to be included in a match, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                        ),
+                                                    )
+                                                  )
+                                             )
+                                      )
+                                  )
                              ),
                              div(class = "flex-container",
                                  actionButton(inputId = "search_compounds_search_btn",
                                               label = "Search",
+                                              width = "100%",
                                               icon = icon("magnifying-glass", verify_fa = FALSE)
-                                 ),
+                                 ) %>%
+                                   with_help("Click here to execute a search for compounds matching this feature."),
                                  div(id = "search_compounds_use_optimized_parameters_div",
                                      checkboxInput(inputId = "search_compounds_use_optimized_parameters",
                                                    label = "Use Optimized Search Parameters",
                                                    value = TRUE
-                                     )
+                                     ) %>%
+                                       with_help("Ensure this is checked to use optimized search parameters held within the database and speed up your search. If it is left unchecked, new search parameters will be generated, which may take a considerable amount of time.",
+                                                 placement = "left")
                                  )
                              )
                       )
@@ -572,7 +641,7 @@ dashboardPage(
                                            ),
                                            tabPanel("Peaks",
                                                     DTOutput(outputId = "search_fragments_peak_list",
-                                                               width = "100%") %>%
+                                                             width = "100%") %>%
                                                       withSpinner(),
                                                     actionLink(inputId = "search_fragments_peak_info",
                                                                label = "More Peak Information",

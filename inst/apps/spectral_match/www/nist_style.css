@@ -33,7 +33,7 @@ body {
   padding: 0px;
 }
 
-.flex-container > button {
+.flex-container > span, .flex-container > button {
   flex: auto;
 }
 
@@ -314,4 +314,8 @@ section {
 #mod_uncertainty_additional > div {
   padding-left: 0px !important;
   padding-right: 0px !important;
+}
+
+#search_compounds_additional > div {
+  padding: 0;
 }
