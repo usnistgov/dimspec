@@ -55,14 +55,34 @@ dashboardPage(
                icon = icon("circle-info", verify_fa = FALSE)
       ) %>%
         with_help(tooltip = "Your reference guide to this application, including user guides and other information.",
-                  placement = "right")
+                  placement = "right"),
+      span(id = "additional_options",
+           div(class = "nav-checkbox-right",
+               icon("question", verify_fa = FALSE),
+               tags$label("Show Tooltips"),
+               prettySwitch(inputId = "nav_show_help",
+                            label = NULL,
+                            value = provide_more_help,
+                            inline = TRUE,
+                            status = "success")
+           ),
+           div(class = "nav-checkbox-right",
+               icon("gear", verify_fa = FALSE),
+               tags$label("Advanced Settings"),
+               prettySwitch(inputId = "nav_show_advanced_settings",
+                            label = NULL,
+                            value = advanced_use,
+                            inline = TRUE,
+                            status = "warning")
+           )
+      )
     )
   ),
   body = dashboardBody(
     useShinyjs(),
     tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
     tags$script(type = "text/javascript", jscode),
-    if (dev) div(class = "title-banner", "DEVELOPMENT VERSION") else NULL,
+    # if (dev) div(class = "title-banner", "DEVELOPMENT VERSION") else NULL,
     tabItems(
       # Home Page ----
       tabItem("index",

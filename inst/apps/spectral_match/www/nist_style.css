@@ -5,13 +5,11 @@ body {
 }
 
 .title-banner {
-  position: absolute;
   top: 0;
-  right: 100vw;
   left: 0px;
   width: 100%;
   color: red;
-  text-align: right;
+  text-align: center;
   font-size: xx-large;
   z-index: 9000;
   padding-right: 7px;
@@ -271,4 +269,49 @@ ul.dtr-details > li > .dtr-data {
 
 .tooltip.in {
   opacity: 0.95;
+}
+
+.nav-checkbox-right {
+  padding: 0px 5px 12px 18px;
+  width: 100%;
+}
+
+.nav-checkbox-right > i {
+  padding-left: 2px;
+  padding-right: 4px;
+  width: 20px;
+  text-align: center;
+  color: #b8c7ce;
+}
+
+.nav-checkbox-right > label {
+  color: #b8c7ce;
+  margin-bottom: 0px;
+  font-weight: normal;
+}
+
+.nav-checkbox-right > .form-group {
+  margin: 0 !important;
+  padding: 0 !important;
+  float: right !important;
+}
+
+.nav-checkbox-right > .form-group > div {
+  margin: 0 !important;
+}
+
+section {
+  height: calc(100vh - 60px);
+}
+
+#additional_options {
+  bottom: 0;
+  position: absolute;
+  width: 100%;
+  padding-top: 12px;
+}
+
+#mod_uncertainty_additional > div {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
 }

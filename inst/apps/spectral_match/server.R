@@ -4,7 +4,7 @@ shinyServer(function(input, output, session) {
   
   # Session Data ----
   # _General ----
-  advanced_use <- reactiveVal(advanced_use)
+  advanced_use <- reactive(input$nav_show_advanced_settings)
   # _User Data ----
   user_data <- reactiveVal(
     if (!toy_data) {
@@ -165,11 +165,11 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#search_compounds_overlay")
   hideElement(selector = "#search_fragments_overlay")
   hideElement(selector = "#search_fragments_fragment_info")
+  runjs('$(".info-tooltip").hide()')
   
   # Element Display ----
   observe({
     toggleElement("data_input_additional", condition = advanced_use())
-    toggleElement("mod_uncertainty_additional", condition = advanced_use())
     if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
@@ -181,6 +181,22 @@ shinyServer(function(input, output, session) {
       toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
       toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
       toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
+    }
+  })
+  observeEvent(input$nav_show_help, {
+    if (input$nav_show_help) {
+      nist_shinyalert(
+        title = "Tooltips Enabled",
+        type = "info",
+        text = span(
+          "Look for a question mark icon (",
+          icon("question"),
+          ") next to any control and hover over it to get more information about that control.",
+        )
+      )
+      runjs('$(".info-tooltip").show()')
+    } else {
+      runjs('$(".info-tooltip").hide()')
     }
   })
   
@@ -794,7 +810,7 @@ shinyServer(function(input, output, session) {
   # __Evaluate uncertainty (modal) ----
   observeEvent(input$search_compounds_uncertainty_btn, ignoreNULL = TRUE, ignoreInit = TRUE, {
     uncertainty_results(NULL)
-    showModal(mod_uncertainty_evaluation(input$search_compounds_msn))
+    showModal(mod_uncertainty_evaluation(input$search_compounds_msn, advanced_use()))
   })
   observeEvent(input$mod_uncertainty_calculate,
                ignoreNULL = TRUE,
