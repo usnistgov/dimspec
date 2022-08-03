@@ -4,6 +4,7 @@ require(glue)
 # Universal settings -----------------------------------------------------------
 # Set the desired directory to store logs.
 LOG_DIRECTORY  <- ifelse(exists("LOG_DIRECTORY"), LOG_DIRECTORY, here::here("logs"))
+if (!dir.exists(LOG_DIRECTORY)) dir.create(LOG_DIRECTORY)
 
 # Set custom layouts here as needed here for each level or destination.
 layout_console <- layout_glue_generator(
