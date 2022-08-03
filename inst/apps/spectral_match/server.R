@@ -5,6 +5,7 @@ shinyServer(function(input, output, session) {
   # Session Data ----
   # _General ----
   advanced_use <- reactive(input$nav_show_advanced_settings)
+  show_help <- reactive(input$nav_show_help)
   # _User Data ----
   user_data <- reactiveVal(
     if (!toy_data) {
@@ -165,7 +166,7 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#search_compounds_overlay")
   hideElement(selector = "#search_fragments_overlay")
   hideElement(selector = "#search_fragments_fragment_info")
-  runjs('$(".info-tooltip").hide()')
+  if (!isolate(show_help())) runjs('$(".info-tooltip").hide()')
   
   # Element Display ----
   observe({
@@ -183,7 +184,7 @@ shinyServer(function(input, output, session) {
       toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
     }
   })
-  observeEvent(input$nav_show_help, {
+  observeEvent(show_help(), {
     if (input$nav_show_help) {
       nist_shinyalert(
         title = "Tooltips Enabled",

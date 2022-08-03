@@ -90,9 +90,6 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
 #' This may not work for certain widgets with heavily nested HTML. Note that
 #' classes may be CSS dependent.
 #'
-#' @note Set a LGL session scalar named "provide_more_help"  as FALSE to turn
-#'   these off without removing code from the UI file of your shiny app.
-#'
 #' @param widget shiny.tag widget
 #' @param tooltip CHR scalar of the tooltip text
 #' @param ... Other named arguments to be passed to `add_help`
@@ -107,9 +104,6 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
 #'   with_help("Large and green", size = "xl", class = "success")
 #'   
 with_help <- function(widget, tooltip, ...) {
-  if (exists("provide_more_help")) {
-    if (!provide_more_help) return(widget)
-  }
   id <- unlist(widget)[[grep("id", names(unlist(widget)))[1]]]
   helper <- add_help(id, tooltip, ...)
   tmp <- widget$children[[1]]$children
