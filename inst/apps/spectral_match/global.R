@@ -1,17 +1,32 @@
-dev <- TRUE
-advanced_use <- FALSE
-toy_data <- FALSE
-provide_more_help <- TRUE
-src_toy_data <- "toy_data.RDS"
+# Set the basics for display and identification for this application here, such
+# as the page name, logging namespace, and database title.
+APP_TITLE          <- "NIST PFAS Database Spectra Match"
+app_name           <- basename(getwd())
+app_dir            <- app_name
+app_ns             <- paste0("app_", app_name)
+default_title      <- "NIST HRAMS Database for PFAS"
+DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
+
+# Set to true to enable development mode, which includes a link to the
+# underlying API documentation and a live inspection button to see the app's
+# current state in the console.
+dev                <- TRUE
+
+# Set the start options to use advanced settings and tooltips by default. These
+# can be changed while using the app at any time.
+advanced_use       <- FALSE
+provide_more_help  <- FALSE
+
+# If using dev mode, automatically fill with example data from local RDS files.
+toy_data           <- FALSE
+src_toy_data       <- "toy_data.RDS"
 src_toy_parameters <- "toy_parameters.RDS"
+
+# The following settings are necessary for the application. Only change these if
+# it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
-APP_TITLE <- "NIST PFAS Database Spectra Match"
-app_name <- "spectral_match"
-app_dir  <- app_name
-app_ns   <- paste0("app_", app_name)
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
-DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "NIST HRAMS Database for PFAS")
 need_files <- c(
   "app_functions.R",
   "shiny_helpers.R",
@@ -20,7 +35,10 @@ need_files <- c(
              pattern = "\\.R$",
              full.names = TRUE)
 )
-sapply(need_files, source)
+sapply(need_files, source, keep.source = FALSE)
+
+# Set up logging options for this application. These again should only be
+# changed to meet the needs of the application.
 if (LOGGING_ON) {
   shiny_ns <- "shiny"
   if (!shiny_ns %in% names(LOGGING)) {
@@ -34,6 +52,8 @@ if (LOGGING_ON) {
   log_it("info", "Starting app", log_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
 }
 
+# Add any settings for controls within the application. These will be used to
+# populate controls in the UI at run time.
 app_settings <- list(
   experiment_types = api_endpoint(path = "table_search",
                                   query = list(table_name = "norm_ms_n_types"),
@@ -70,16 +90,21 @@ app_settings <- list(
   uncertainty_bootstrap_iterations = list(choices = c(50, 100, 250, 500, 1000, 2500, 5000, 10000), selected = 100)
 )
 
+# Check that rdkit is available in the API so the application can decide whether
+# to display certain elements that require rdkit, or to hide them.
 rdkit_available <- api_endpoint(path = "rdkit_active")
 
+# Load all modals in this directory
 lapply(list.files("modals", pattern = ".R", full.names = TRUE),
-       source)
+       source,
+       keep.source = FALSE)
 
+# Add any javascript queries that must run on the page itself.
 jscode <- HTML("
 $('body').on('shown.bs.modal', (x) =>
-  $(x.target).find('input[type=\"number\"]:first').focus())
+  $(x.target).find('input[type=\"number\"]:first').focus());
                ")
 
-# Increase the file upload size to 250 MB
+# Set the file upload size t(e.g. to 250 MB)
 file_MB_limit <- 250
 options(shiny.maxRequestSize = file_MB_limit*1024^2)
