@@ -80,7 +80,14 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
   help_icon <- tags$sup(icon(icon_name, class = sprintf("fa-%s", size)),
                         class = icon_class,
                         id    = id)
-  args <- c(id, tooltip, list(...))
+  dots <- list(...)
+  bs_kwargs <- dots[names(dots) %in% names(formals(bsTooltip))]
+  option_kwargs <- dots[!names(dots) %in% names(formals(bsTooltip))]
+  args <- c(
+    list(id = id, title = tooltip),
+    bs_kwargs,
+    options = list(option_kwargs)
+  )
   bsTT <- do.call("bsTooltip", args)
   return(tagList(help_icon, bsTT))
 }
@@ -104,11 +111,11 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
 #'   with_help("Large and green", size = "xl", class = "success")
 #'   
 with_help <- function(widget, tooltip, ...) {
-  if (exists("provide_more_help")) {
-    if (!provide_more_help) return(widget)
-  }
   id <- unlist(widget)[[grep("id", names(unlist(widget)))[1]]]
   helper <- add_help(id, tooltip, ...)
+  if (!"children" %in% names(widget$children[[1]])) {
+    widget <- span(id = paste0(id, "_span"), widget)
+  }
   tmp <- widget$children[[1]]$children
   widget$children[[1]]$children <- c(widget$children[[1]]$children, helper)
   return(widget)
