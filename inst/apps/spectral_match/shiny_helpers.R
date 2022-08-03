@@ -90,6 +90,9 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
 #' This may not work for certain widgets with heavily nested HTML. Note that
 #' classes may be CSS dependent.
 #'
+#' @note Set a LGL session scalar named "provide_more_help"  as FALSE to turn
+#'   these off without removing code from the UI file of your shiny app.
+#'
 #' @param widget shiny.tag widget
 #' @param tooltip CHR scalar of the tooltip text
 #' @param ... Other named arguments to be passed to `add_help`
