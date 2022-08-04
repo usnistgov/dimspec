@@ -5,20 +5,19 @@ app_name           <- basename(getwd())
 app_dir            <- app_name
 app_ns             <- paste0("app_", app_name)
 default_title      <- "NIST HRAMS Database for PFAS"
-DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- FALSE
+dev                <- TRUE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
 # to TRUE, otherwise they will honor the individual settings.
-enable_adv_use     <- FALSE
-advanced_use       <- TRUE
+enable_adv_use     <- TRUE
+advanced_use       <- FALSE
 enable_more_help   <- TRUE
-provide_more_help  <- TRUE
+provide_more_help  <- FALSE
 
 # If using dev mode, automatically fill with example data from local RDS files.
 toy_data           <- FALSE
@@ -40,6 +39,11 @@ need_files <- c(
 )
 sapply(need_files, source, keep.source = FALSE)
 
+# Load all modals in this directory
+lapply(list.files("modals", pattern = ".R", full.names = TRUE),
+       source,
+       keep.source = FALSE)
+
 # Set up logging options for this application. These again should only be
 # changed to meet the needs of the application.
 if (LOGGING_ON) {
@@ -50,57 +54,58 @@ if (LOGGING_ON) {
   log_ns <- toupper(app_ns)
   if (!log_ns %in% names(LOGGING)) {
     log_it("info", sprintf("Creating logging namespace for '%s'", app_ns), shiny_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
-    }
+  }
   log_it("info", sprintf("Starting app: %s", app_name), shiny_ns)
   log_it("info", "Starting app", log_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
 }
 
+# Override the database title from set up files once environment is established.
+DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
+
 # Add any settings for controls within the application. These will be used to
 # populate controls in the UI at run time.
 app_settings <- list(
-  experiment_types = api_endpoint(path = "table_search",
-                                  query = list(table_name = "norm_ms_n_types"),
-                                  return_format = "data.frame") %>%
-    filter(!name == "none", !is.na(name), !name == "") %>%
-    mutate(display = glue::glue("{acronym} ({name})")) %>%
-    with(.,
-         setNames(acronym, display)),
+  experiment_types = list(
+    choices = api_endpoint(path = "table_search",
+                           query = list(table_name = "norm_ms_n_types"),
+                           return_format = "data.frame") %>%
+      filter(!name == "none", !is.na(name), !name == "") %>%
+      arrange(acronym) %>%
+      mutate(display = glue::glue("{acronym} ({name})")) %>%
+      with(.,
+           setNames(acronym, display))
+  ),
   data_input_import_file_types = c(".mzML"),
   data_input_import_search_settings_types = c(".csv", ".xls", ".xlsx"),
-  data_input_relative_error = list(value = 5, min = 0.1, max = 50, step = 0.1),
-  data_input_minimum_error = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
-  data_input_isolation_width = list(value = 0.7, min = 0.1, max = 100, step = 0.1),
+  data_input_relative_error = list(this_value = 5, this_min = 0.1, this_max = 50, this_step = 0.1),
+  data_input_minimum_error = list(this_value = 0.002, this_min = 0.0001, this_max = 0.5, this_step = 0.0001),
+  data_input_isolation_width = list(this_value = 0.7, this_min = 0.1, this_max = 100, this_step = 0.1),
   data_input_isolation_width_warn_threshold = 4,
-  search_compounds_search_zoom = list(value = c(1, 4), min = 0, max = 10, step = 0.1, ticks = FALSE),
-  search_compounds_correlation = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  search_compounds_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
-  search_compounds_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
-  search_compounds_normfn = c("sum", "mean"),
-  search_compounds_cormethod = c("pearson"),
-  search_compounds_max_correl = list(value = 0.5, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  search_compounds_correl_bin = list(value = 0.1, min = 0, max = 1, step = 0.1, ticks = FALSE),
-  search_compounds_max_ph = list(value = 10, min = 0, max = 100, step = 1, ticks = FALSE),
-  search_compounds_ph_bin = list(value = 1, min = 0, max = 100, step = 1, ticks = FALSE),
-  search_compounds_max_freq = list(value = 10, min = 3, max = 15, step = 1, ticks = FALSE),
-  search_compounds_freq_bin = list(value = 1, min = 1, max = 10, step = 1, ticks = FALSE),
-  search_compounds_min_n_peaks = list(value = 4, min = 3, max = 15, step = 1, ticks = FALSE),
-  uncertainty_mass_error_compare_actual = list(value = 5, min = 0.1, max = 50, step = 0.1),
-  uncertainty_mass_error_compare_with = list(value = 5, min = 0.1, max = 50, step = 0.1),
-  uncertainty_min_error_compare_actual = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
-  uncertainty_min_error_compare_with = list(value = 0.002, min = 0.0001, max = 0.5, step = 0.0001),
-  uncertainty_weighting_mass = list(value = 1, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
-  uncertainty_weighting_intensity = list(value = 0.5, min = 0.1, max = 1, step = 0.1, ticks = FALSE),
+  search_compounds_search_zoom = list(this_value = c(1, 4), this_min = 0, this_max = 10, this_step = 0.1, ticks = FALSE),
+  search_compounds_correlation = list(this_value = 0.5, this_min = 0, this_max = 1, this_step = 0.1, ticks = FALSE),
+  search_compounds_ph = list(this_value = 10, this_min = 0, this_max = 100, this_step = 1, ticks = FALSE),
+  search_compounds_freq = list(this_value = 10, this_min = 3, this_max = 15, this_step = 1, ticks = FALSE),
+  search_compounds_normfn = list(choices = c("sum", "mean")),
+  search_compounds_cormethod = list(choices = c("pearson")),
+  search_compounds_max_correl = list(this_value = 0.5, this_min = 0, this_max = 1, this_step = 0.1, ticks = FALSE),
+  search_compounds_correl_bin = list(this_value = 0.1, this_min = 0, this_max = 1, this_step = 0.1, ticks = FALSE),
+  search_compounds_max_ph = list(this_value = 10, this_min = 0, this_max = 100, this_step = 1, ticks = FALSE),
+  search_compounds_ph_bin = list(this_value = 1, this_min = 0, this_max = 100, this_step = 1, ticks = FALSE),
+  search_compounds_max_freq = list(this_value = 10, this_min = 3, this_max = 15, this_step = 1, ticks = FALSE),
+  search_compounds_freq_bin = list(this_value = 1, this_min = 1, this_max = 10, this_step = 1, ticks = FALSE),
+  search_compounds_min_n_peaks = list(this_value = 4, this_min = 3, this_max = 15, this_step = 1, ticks = FALSE),
+  uncertainty_mass_error_compare_actual = list(this_value = 5, this_min = 0.1, this_max = 50, this_step = 0.1),
+  uncertainty_mass_error_compare_with = list(this_value = 5, this_min = 0.1, this_max = 50, this_step = 0.1),
+  uncertainty_min_error_compare_actual = list(this_value = 0.002, this_min = 0.0001, this_max = 0.5, this_step = 0.0001),
+  uncertainty_min_error_compare_with = list(this_value = 0.002, this_min = 0.0001, this_max = 0.5, this_step = 0.0001),
+  uncertainty_weighting_mass = list(this_value = 1, this_min = 0.1, this_max = 1, this_step = 0.1, ticks = FALSE),
+  uncertainty_weighting_intensity = list(this_value = 0.5, this_min = 0.1, this_max = 1, this_step = 0.1, ticks = FALSE),
   uncertainty_bootstrap_iterations = list(choices = c(50, 100, 250, 500, 1000, 2500, 5000, 10000), selected = 100)
 )
 
 # Check that rdkit is available in the API so the application can decide whether
 # to display certain elements that require rdkit, or to hide them.
 rdkit_available <- api_endpoint(path = "rdkit_active")
-
-# Load all modals in this directory
-lapply(list.files("modals", pattern = ".R", full.names = TRUE),
-       source,
-       keep.source = FALSE)
 
 # Add any javascript queries that must run on the page itself.
 jscode <- HTML("
