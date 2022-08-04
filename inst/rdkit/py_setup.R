@@ -528,7 +528,7 @@ rdkit_active <- function(rdkit_ref = NULL, rdkit_name = NULL, log_ns = NULL, mak
   success <- !"try-error" %in% class(active)
   if (logging) {
     if (success) {
-      log_it("success", sprintf('RDKit is assigned to .GlobalEnv as "%s".', rdkit_ref), log_ns)
+      log_it("success", sprintf('RDKit is assigned to the environment as "%s".', rdkit_ref), log_ns)
     } else {
       log_it("error", "An unknown error occurred. See log for details.", log_ns)
     }
