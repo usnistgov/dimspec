@@ -381,6 +381,9 @@ api_reload <- function(pr = NULL,
 #'   endpoint in the system's default browser; will be defaulted to FALSE if
 #'   `check_valid` == TRUE and the endpoint returns anything other than a valid
 #'   status code. (default: FALSE)
+#' @max_pings 
+#' @return_type 
+#' @return_format
 #'
 #' @return CHR scalar of the constructed endpoint, with messages regarding
 #'   status checks, return from the endpoint (typically JSON) if valid and
@@ -397,9 +400,11 @@ api_endpoint <- function(path,
                          execute         = TRUE,
                          open_in_browser = FALSE,
                          raw_result      = FALSE,
+                         max_pings       = 20L,
                          return_type     = c("text", "raw", "parsed"),
                          return_format   = c("vector", "data.frame", "list")) {
   require(httr)
+  stopifnot(is.integer(as.integer(max_pings)), length(max_pings) == 1)
   url <- parse_url(server_addr)
   url$path <- path
   kwargs <- list(...)
@@ -441,7 +446,7 @@ api_endpoint <- function(path,
   if (path == "_ping") {
     pinging <- TRUE
     ping_i <- 1
-    ping_limit <- 10
+    ping_limit <- max_pings
     while(pinging) {
       if (ping_i > ping_limit) {
         pinging <- FALSE
