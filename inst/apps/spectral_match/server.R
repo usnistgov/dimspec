@@ -5,7 +5,7 @@ shinyServer(function(input, output, session) {
   # Validation rules ----
   exclude_auto_validation <- c("search_compounds_search_zoom")
   validator <- InputValidator$new()
-  lapply(names(app_settings),
+  sapply(names(app_settings),
          function(x) {
            validator$add_rule(x, sv_required())
            if (!x %in% exclude_auto_validation) {

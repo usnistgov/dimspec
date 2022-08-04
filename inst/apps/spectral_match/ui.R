@@ -362,13 +362,13 @@ dashboardPage(
                                                         ),
                                                         selectizeInput(inputId = "search_compounds_norm_function",
                                                                        label = "Search normalization function",
-                                                                       choices = search_compounds_normfn$choices,
+                                                                       choices = search_compounds_norm_function$choices,
                                                                        width = "100%"
                                                         ) %>%
                                                           with_help('Choose a normalization function to use when matching compounds, either "sum" (typical default) for base peak normalization or "mean" for relative intensity normalization.'),
                                                         selectizeInput(inputId = "search_compounds_correlation_method",
                                                                        label = "Search correlation method",
-                                                                       choices = search_compounds_cormethod$choices,
+                                                                       choices = search_compounds_correlation_method$choices,
                                                                        width = "100%"
                                                         ) %>%
                                                           with_help("Choose a correlation method to use when matching compounds; pearson is the only method currently supported.")
