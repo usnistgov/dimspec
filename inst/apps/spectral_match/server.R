@@ -180,6 +180,12 @@ shinyServer(function(input, output, session) {
     "mod_upload_parameter_rt_end"
   )
   
+  # Initial logging statements ----
+  log_it("info", glue::glue("App launched with tooltips {ifelse(provide_more_help, 'activated', 'deactivated')}."), app_ns)
+  log_it("info", glue::glue("User {ifelse(enable_more_help, 'can', 'cannot')} toggle tooltips."), app_ns)
+  log_it("info", glue::glue("App launched with advanced settings {ifelse(isolate(advanced_use()), 'activated', 'deactivated')}."), app_ns)
+  log_it("info", glue::glue("User {ifelse(enable_adv_use, 'can', 'cannot')} toggle advanced settings."), app_ns)
+  
   # Style adjustments ----
   runjs("$('.box-body.left').parent().parent().addClass('box-left');")
   runjs("$('.box-body.right').parent().parent().addClass('box-right');")
@@ -219,6 +225,7 @@ shinyServer(function(input, output, session) {
           ") next to any control and hover over it to get more information about that control.",
         )
       )
+      log_it("info", "Tooltips activated.", app_ns)
       runjs('$(".info-tooltip").show()')
     } else {
       nist_shinyalert(
@@ -226,12 +233,21 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = 'Click the toggle switch at the bottom left of the screen labeled "Show Tooltips" at any time to re-enable tooltips.'
       )
+      log_it("info", "Tooltips deactivated.", app_ns)
       runjs('$(".info-tooltip").hide()')
+    }
+  })
+  observeEvent(advanced_use(), ignoreInit = TRUE, {
+    if (advanced_use()) {
+      log_it("info", "Advanced settings activated.", app_ns)
+    } else {
+      log_it("info", "Advanced settings deactivated.", app_ns)
     }
   })
   
   # Navigation ----
   observeEvent(input$sidebar_menu, {
+    log_it("info", glue::glue("Nav menu page '{input$sidebar_menu}' requested."), app_ns)
     if (!dev) {
       if (!input$sidebar_menu %in% c("data_input", "index", "about") && is.null(user_data())) {
         has_data_file <- !is.null(input$data_input_filename)
@@ -245,20 +261,15 @@ shinyServer(function(input, output, session) {
         } else {
           msg <- "Please load a data file and add search parameters first."
         }
+        log_it("warn", glue::glue("Insufficient data to activate page '{input$sidebar_menu}': {msg}."), app_ns)
         nist_shinyalert(title = "Insufficient data",
                         type = "info",
                         text = msg)
         updateTabsetPanel(session = session,
                           inputId = "sidebar_menu",
                           selected = "data_input")
-      }
-      if (input$sidebar_menu == "uncertainty" && is.null(search_compounds_results())) {
-        nist_shinyalert(title = "No match selected",
-                        type = "info",
-                        text = "Please run a compound match search first.")
-        updateTabsetPanel(session = session,
-                          inputId = "sidebar_menu",
-                          selected = "search_compounds")       
+      } else {
+        log_it("info", glue::glue("Page '{input$sidebar_menu}' activated."), app_ns)
       }
     }
   })
@@ -268,6 +279,7 @@ shinyServer(function(input, output, session) {
     updateTabsetPanel(session = session,
                       inputId = "sidebar_menu",
                       selected = "data_input")
+    log_it("trace", "Button 'index_go_data_input' clicked.", app_ns)
   })
   
   # DATA INPUT PAGE ----
@@ -296,7 +308,8 @@ shinyServer(function(input, output, session) {
   )
   # _Observers ----
   # __Search parameters ----
-  observeEvent(data_input_search_parameters(), {
+  observeEvent(data_input_search_parameters(), ignoreNULL = TRUE, ignoreInit = TRUE, {
+    log_it("trace", "New search parameters provided.", app_ns)
     n_orig <- nrow(data_input_search_parameters())
     n_uniq <- nrow(distinct(data_input_search_parameters()))
     if (!n_orig == n_uniq) {
@@ -305,6 +318,7 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = glue::glue("Search parameters must represent unique combinations. Duplicated settings (n = {n_orig - n_uniq}) have been removed.")
       )
+      log_it("warn", glue::glue("Duplicate (n = {n_orig - n_uniq}) search parameters provided and removed."), app_ns)
     }
     data_input_search_parameters() %>%
       distinct() %>%
@@ -323,6 +337,7 @@ shinyServer(function(input, output, session) {
         choices = character(0),
         options = list(placeholder = "Please add search parameters on the Data Input page.")
       )
+      log_it("warn", "No search parameters provided.", app_ns)
     } else {
       updateSelectizeInput(
         session = session,
@@ -338,6 +353,7 @@ shinyServer(function(input, output, session) {
           setNames(object = 1:length(.),
                    nm = .)
       )
+      log_it("trace", "Search parameters updated.", app_ns)
     }
     hideElement(id = "data_input_next_actions")
   })
@@ -356,6 +372,7 @@ shinyServer(function(input, output, session) {
           type = "info",
           text = glue::glue("Typically, the value of Isolation Width should be less than 4 Da unless the experiment type is SWATH or HRM.")
         )
+        log_it("warn", glue::glue("Isolation width ({input$data_input_isolation_width}) was not appropriate for the chosen experiment type ('{experiment_type}')."), app_ns)
       }
     }
   })
@@ -365,7 +382,10 @@ shinyServer(function(input, output, session) {
     fn <- input$data_input_filename
     valid <- valid_file_format(fn$name, app_settings$data_input_import_file_types)
     if (!valid) {
+      log_it("warn", glue::glue("Invalid file format ({tools::file_ext(fn$name)}) for 'data_input_filename'."), app_ns)
       reset("data_input_filename")
+    } else {
+      log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_filename'."), app_ns)
     }
     hideElement("data_input_next_actions")
   })
@@ -374,6 +394,7 @@ shinyServer(function(input, output, session) {
     req(input$data_input_import_search)
     fn <- input$data_input_import_search
     if (!valid_file_format(fn$name, app_settings$data_input_import_search_settings_types)) {
+      log_it("warn", glue::glue("Invalid file format ({tools::file_ext(fn$name)}) for 'data_input_import_search'."), app_ns)
       reset("data_input_import_search")
     } else {
       upload <- switch(
@@ -383,6 +404,7 @@ shinyServer(function(input, output, session) {
         "xlsx" = read_xlsx(path = fn$datapath, sheet = 1)
       )
       data_input_search_upload(upload)
+      log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_import_search'."), app_ns)
       showModal(mod_data_input_parameters_upload(data = upload))
     }
   })
@@ -405,6 +427,7 @@ shinyServer(function(input, output, session) {
         type = "error",
         text = "Please select unique columns."
       )
+      log_it("warn", "Duplicate columns selected in search parameter upload", app_ns)
     } else {
       upload_parameters <- data_input_search_upload() %>%
         select(all_of(select_cols)) %>%
@@ -434,6 +457,7 @@ shinyServer(function(input, output, session) {
             "<p style='font-weight: bold;'>Please address the following issues in the source file '{input$data_input_import_search$name}' and try again.</p><br>{paste0(bad_entries$message, collapse = '')}"
           )
         )
+        log_it("warn", "Unreasonable retention times identified during search parameter save.", app_ns)
       } else {
         which_complete <- complete.cases(upload_parameters)
         if (any(!which_complete)) {
@@ -443,12 +467,14 @@ shinyServer(function(input, output, session) {
             text = glue::glue("Some rows (n = {sum(!which_complete)}) in the file \"{input$data_input_import_search$name}\" do not contain values for all parameters. Those rows have been removed. Please adjust your file to contain complete values for all features of interest. Once fixed, you may upload this file again and any duplicates will be automatically removed.")
           )
           upload_parameters <- upload_parameters[which_complete, ]
+          log_it("warn", "Missing values in search parameter save.", app_ns)
         }
         if (input$mod_upload_parameter_append) {
           upload_parameters <- data_input_search_parameters() %>%
             bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
+        log_it("success", "Search parameters updated.", app_ns)
       }
       removeModal()
       reset("data_input_import_search")
@@ -459,6 +485,7 @@ shinyServer(function(input, output, session) {
     if (all(mod_search_params %in% names(input))) {
       lapply(mod_search_params, function(x) updateNumericInput(inputId = x, value = NULL))
     }
+    log_it("trace", "Request to add a search parameter manually.", app_ns)
     showModal(mod_data_input_parameters_manual())
   })
   observeEvent(input$data_input_dt_peak_list_edit_row, {
@@ -470,19 +497,27 @@ shinyServer(function(input, output, session) {
              updateNumericInput(inputId = x, value = val)
            }
     )
+    log_it("trace", "Request to edit a search parameter manually.", app_ns)
     data_input_parameter_edit(TRUE)
     showModal(mod_data_input_parameters_manual())
   })
   observeEvent(input$data_input_dt_peak_list_remove_row, {
+    log_it("trace", "Request to delete a search parameter manually.", app_ns)
     req(input$data_input_dt_peak_list_rows_selected)
     data_input_search_parameters()[-input$data_input_dt_peak_list_rows_selected, ] %>%
       data_input_search_parameters()
   })
   observeEvent(input$mod_search_parameter_cancel, {
+    log_it("trace", "Search parameter entry modal closed.", app_ns)
     removeModal()
   })
   observeEvent(input$mod_data_input_search_parameter_save, {
     valid <- complete_form_entry(input, mod_search_params)
+    if (valid) {
+      log_it("warn", "Search parameter save request: modal form was complete.", app_ns)
+    } else {
+      log_it("trace", "Search parameter save request: modal form was incomplete.", app_ns)
+    }
     req(valid)
     tmp <- data_input_search_parameters()
     values <- data.frame(
@@ -501,29 +536,34 @@ shinyServer(function(input, output, session) {
                       type = "warning",
                       text = "Retention Time (Centroid) should be after Retention Time (Start).")
       valid <- FALSE
+      log_it("error", "Search parameter save request: retention time centroid was before retention time start.", app_ns)
     }
     if (!input$mod_search_parameter_rt <= input$mod_search_parameter_rt_end) {
       nist_shinyalert(title = "Data Entry Validation",
                       type = "warning",
                       text = "Retention Time (Centroid) should be before Retention Time (End).")
       valid <- FALSE
+      log_it("error", "Search parameter save request: retention time centroid was after retention time end.", app_ns)
     }
     if (!input$mod_search_parameter_rt_start <= input$mod_search_parameter_rt_end) {
       nist_shinyalert(title = "Data Entry Validation",
                       type = "warning",
                       text = "Retention Time (Start) should be before Retention Time (End).")
       valid <- FALSE
+      log_it("error", "Search parameter save request: retention time start was after retention time centroid.", app_ns)
     }
     if (valid) {
       tmp %>%
         bind_rows(values) %>%
         data_input_search_parameters()
+      log_it("success", "Search parameter save request successful.", app_ns)
       removeModal()
       data_input_parameter_edit(FALSE)
     }
   })
   # __Process Data ----
   observeEvent(input$data_input_process_btn, {
+    log_it("trace", "Button 'data_input_process_btn' clicked.", app_ns)
     req(
       input$data_input_filename,
       nrow(data_input_search_parameters() > 0)
@@ -535,6 +575,11 @@ shinyServer(function(input, output, session) {
     #          req(input[[x]])
     #        })
     valid <- complete_form_entry(input, required)
+    if (valid) {
+      log_it("warn", "Data input process form was complete.", app_ns)
+    } else {
+      log_it("trace", "Data input process form was incomplete.", app_ns)
+    }
     req(valid)
     user_data(NULL)
     showElement(selector = "#data_input_overlay")
@@ -542,22 +587,24 @@ shinyServer(function(input, output, session) {
     mzml <- try(
       getmzML(data.frame(filename = input$data_input_filename$datapath))
     )
-    log_it("info", "User data processed.", app_ns)
     if (inherits(mzml, "try-error")) {
       nist_shinyalert(
         title = "Conversion issue",
         type = "error",
-        text = "Could not safely convert this file to a readable mzML file."
+        text = "Data from this file could not be safely extracted."
       )
+      log_it("error", "User data could not be safely extracted.", app_ns)
     } else {
       hideElement("data_input_overlay")
       hideElement("data_input_process_btn")
       showElement("data_input_next_actions")
+      log_it("success", "User data processed.", app_ns)
       user_data(mzml)
     }
   })
   # __Navigation to next ----
   observeEvent(input$data_input_go_compound, {
+    log_it("trace", "Button 'data_input_go_compound' clicked.", app_ns)
     updateTabsetPanel(
       session = session,
       inputId = "sidebar_menu",
@@ -565,6 +612,7 @@ shinyServer(function(input, output, session) {
     )
   })
   observeEvent(input$data_input_go_fragment, {
+    log_it("trace", "Button 'data_input_go_fragment' clicked.", app_ns)
     updateTabsetPanel(
       session = session,
       inputId = "sidebar_menu",
@@ -710,6 +758,7 @@ shinyServer(function(input, output, session) {
   # _Observers ----
   # __Navigation ----
   observeEvent(input$search_compounds_go_data_input, {
+    log_it("trace", "Button 'search_compounds_go_data_input' clicked.", app_ns)
     updateTabsetPanel(
       session = session,
       inputId = "sidebar_menu",
@@ -731,17 +780,20 @@ shinyServer(function(input, output, session) {
           inputId = "mod_uncertainty_msn",
           selected = "MS1"
         )
+        log_it("warn", "MS2 data requested but no MS2 data were found.", app_ns)
       }
     }
   })
   # __Execute search ----
   observeEvent(input$search_compounds_search_btn, {
+    log_it("trace", "Button 'search_compounds_search_btn' clicked.", app_ns)
     if (input$search_compounds_mzrt == "") {
       nist_shinyalert(
         title = "More information needed",
         type = "info",
         text = "Please choose a Feature of Interest"
       )
+      log_it("warn", "No feature of interest selected in 'search_compounds_mzrt'.", app_ns)
     }
     if (input$search_compounds_search_type == "") {
       nist_shinyalert(
@@ -749,6 +801,7 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "Please choose a Search Type"
       )
+      log_it("warn", "No search type selected in 'search_compounds_search_type'.", app_ns)
     }
     if (input$search_compounds_search_type == "all") {
       nist_shinyalert(
@@ -756,6 +809,7 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "This will search your measured spectrum against all records in the database regardless and may take quite a while to execute."
       )
+      log_it("info", "User requested long-running search of type 'all'.", app_ns)
     }
     req(
       user_data(),
@@ -779,7 +833,9 @@ shinyServer(function(input, output, session) {
     runjs("$('#search_compounds_overlay_text').text('Executing compound search...');")
     showElement("search_compounds_overlay")
     runjs("$('#search_compounds_overlay_text').text('Validating inputs...');")
+    log_it("trace", "Validating compound search inputs.", app_ns)
     mzrt <- isolate(data_input_search_parameters()[search_compound_index, ])
+    log_it("info", glue::glue("Compound search started for {search_compounds_mzrt_text()[search_compound_index]}."), app_ns)
     tmp <- list(
       mzML = isolate(user_data()$mzML),
       search_df = tibble(
@@ -795,6 +851,7 @@ shinyServer(function(input, output, session) {
       )
     )
     runjs("$('#search_compounds_overlay_text').text('Creating search object...');")
+    log_it("trace", "Creating search object.", app_ns)
     search_object <- try(
       get_search_object(
         searchmzml = tmp,
@@ -802,13 +859,15 @@ shinyServer(function(input, output, session) {
       )
     )
     if (inherits(search_object, "try-error")) {
+      msg <- sprintf("Could not find a feature in %s matching %s",
+                     input$data_input_filename$name,
+                     search_compound_index)
       nist_shinyalert(
         title = NULL,
         type = "warning",
-        text = sprintf("Could not find a feature in %s matching %s",
-                       input$data_input_filename$name,
-                       search_compound_index)
+        text = msg
       )
+      log_it("warn", msg, app_ns)
       return(NULL)
     }
     search_object <- search_object %>%
@@ -821,6 +880,7 @@ shinyServer(function(input, output, session) {
         cormethod = isolate(input$search_compounds_correlation_method)
       )
     runjs("$('#search_compounds_overlay_text').text('Scoring database matches...');")
+    log_it("trace", "Scoring database matches.", app_ns)
     search_result <- api_endpoint(
       path               = "search_compound",
       type               = isolate(input$search_compounds_search_type),
@@ -830,6 +890,7 @@ shinyServer(function(input, output, session) {
       optimized_params   = isolate(input$search_compounds_use_optimized_parameters),
       return_format      = "list"
     )
+    log_it("trace", "Creating compound search results.", app_ns)
     search_compounds_results(
       list(
         search_object = search_object,
@@ -838,16 +899,17 @@ shinyServer(function(input, output, session) {
         ums2_compare = lapply(search_result$ums2_compare, bind_rows)
       )
     )
+    log_it("success", glue::glue("Compound search complete with n = {nrow(search_result$result)} matches found."), app_ns)
     hideElement("search_compounds_overlay")
   })
   # __Evaluate uncertainty (modal) ----
   observeEvent(input$search_compounds_uncertainty_btn, ignoreNULL = TRUE, ignoreInit = TRUE, {
+    log_it("trace", "Button 'search_compounds_uncertainty_btn' clicked.", app_ns)
     uncertainty_results(NULL)
     showModal(mod_uncertainty_evaluation(input$search_compounds_msn, advanced_use()))
   })
-  observeEvent(input$mod_uncertainty_calculate,
-               ignoreNULL = TRUE,
-               ignoreInit = TRUE, {
+  observeEvent(input$mod_uncertainty_calculate, ignoreNULL = TRUE, ignoreInit = TRUE, {
+    log_it("info", "Calculating uncertainty.", app_ns)
     tmp <- req(search_compounds_results())
     runjs(sprintf("$('#search_compounds_overlay_text').text('Running %s bootstrap iterations...');",
                   input$mod_uncertainty_iterations))
@@ -864,6 +926,7 @@ shinyServer(function(input, output, session) {
     hideElement("search_compounds_overlay")
   })
   observeEvent(input$mod_uncertainty_msn, {
+    log_it("trace", "Changing MSn in uncertainty modal.", app_ns)
     if (is.na(search_compounds_results_selected()$ms2_dp) &&
         input$mod_uncertainty_msn == "MS2") {
       nist_shinyalert(
@@ -871,10 +934,11 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "There are no MS2 match scores to evaluate."
       )
+      log_it("warn", "There are no MS2 match scores to evaluate uncertainty.", app_ns)
       updateRadioGroupButtons(
         session = session,
         inputId = "mod_uncertainty_msn",
-        selected = input$mod_uncertainty_msn
+        selected = input$search_compounds_msn
       )
     } else {
       updateRadioGroupButtons(
@@ -882,6 +946,7 @@ shinyServer(function(input, output, session) {
         inputId = "search_compounds_msn",
         selected = input$mod_uncertainty_msn
       )
+      log_it("trace", "Updating MSn choice on 'search_compounds' page.", app_ns)
       click("mod_uncertainty_calculate")
     }
   })
@@ -1131,6 +1196,7 @@ shinyServer(function(input, output, session) {
   )
   # __Molecular model graphic
   output$search_fragments_ballstick <- renderImage({
+    log_it("trace", glue::glue("Finding or rendering molecular model (id = ) for display."), app_ns)
     shiny::validate(
       need(search_fragments_results_selected()$has_smiles,
            message = "This fragment has not had a structure assigned.")
@@ -1174,6 +1240,7 @@ shinyServer(function(input, output, session) {
   # _Observers ----
   # __Execute search ----
   observeEvent(input$search_fragments_search_btn, {
+    log_it("trace", "Button 'search_fragments_search_btn' clicked.", app_ns)
     if (input$search_fragments_mzrt == "") {
       nist_shinyalert(
         title = "More information needed",
@@ -1184,12 +1251,9 @@ shinyServer(function(input, output, session) {
     req(
       search_compounds_mzrt(),
       search_fragments_mzrt(),
-      user_data(),
-      input$data_input_relative_error,
-      input$data_input_minimum_error
+      user_data()
     )
-    mass_error <- input$data_input_relative_error
-    min_error <- input$data_input_minimum_error
+    log_it("info", glue::glue("Fragment search started for {search_fragments_mzrt_text[search_fragments_mzrt()]}."), app_ns)
     if (!is.null(search_compounds_results()) && search_compounds_mzrt() == search_fragments_mzrt()) {
       fragments <- search_compounds_results()$search_object$ums2
     } else {
@@ -1202,19 +1266,23 @@ shinyServer(function(input, output, session) {
         input$data_input_minimum_error,
         input$data_input_experiment_type,
         input$data_input_isolation_width,
-        input$data_input_search_zoom,
-        # input$data_input_max_correl,
-        # input$data_input_correl_bin,
-        input$data_input_ph
-        # input$data_input_max_ph,
-        # input$data_input_ph_bin,
-        # input$data_input_max_freq,
-        # input$data_input_freq_bin,
-        # input$data_input_min_n_peaks
+        input$search_compounds_search_zoom,
+        input$search_compounds_max_correl,
+        input$search_compounds_correl_bin,
+        input$search_compounds_ph,
+        input$search_compounds_max_ph,
+        input$search_compounds_ph_bin,
+        input$search_compounds_max_freq,
+        input$search_compounds_freq_bin,
+        input$search_compounds_min_n_peaks
       )
+      mass_error <- input$data_input_relative_error
+      min_error <- input$data_input_minimum_error
       runjs("$('#search_fragments_overlay_text').text('Executing fragment search...');")
+      log_it("trace", "Executing fragment search.", app_ns)
       showElement("search_fragments_overlay")
       runjs("$('#search_fragments_overlay_text').text('Validating inputs...');")
+      log_it("trace", "Validating fragment search inputs.", app_ns)
       mzrt <- isolate(data_input_search_parameters()[input$search_fragments_mzrt, ])
       tmp <- list(
         mzML = isolate(user_data()$mzML),
@@ -1231,6 +1299,7 @@ shinyServer(function(input, output, session) {
         )
       )
       runjs("$('#search_fragments_overlay_text').text('Identifying fragment ions...');")
+      log_it("trace", "Identifying fragment ions.", app_ns)
       search_object <- get_search_object(
         searchmzml = tmp,
         zoom = isolate(input$data_input_search_zoom)
@@ -1246,6 +1315,7 @@ shinyServer(function(input, output, session) {
       fragments <- search_object$ums2
     }
     runjs("$('#search_fragments_overlay_text').text('Matching with annotated fragments...');")
+    log_it("trace", "Matching with annotated fragments.", app_ns)
     fragment_matches <- api_endpoint(
       path = "search_fragments",
       fragment_ions = toJSON(fragments$mz),
@@ -1254,6 +1324,7 @@ shinyServer(function(input, output, session) {
       return_format = "data.frame"
     ) %>%
       arrange(desc(has_smiles), fixedmass)
+    log_it("trace", "Building fragment match output.", app_ns)
     fragment_links <- lapply(
       fragments$mz,
       function(x) {
@@ -1294,8 +1365,8 @@ shinyServer(function(input, output, session) {
         )
     ) %>%
       search_fragments_results()
+    log_it("success", glue::glue("Fragment matching complete with n = {nrow(search_fragments_results()$result)} matches found."), app_ns)
     hideElement("search_fragments_overlay")
-    # TODO start testing here
   })
   # __More compound information ----
   observeEvent(input$search_fragments_compound_info, {
@@ -1305,8 +1376,10 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "Please select a compound from the list."
       )
+      log_it("warn", "Compound info requested but no row selected in 'search_fragments_compound_list'.", app_ns)
     } else {
       compound_id <- req(search_fragments_compounds_data()$id[input$search_fragments_compound_list_rows_selected[1]])
+      log_it("trace", glue::glue("Compound info requested for id = {compound_id}. Getting aliases."), app_ns)
       aliases <- api_endpoint(
         path = "table_search",
         table_name = "compound_url",
@@ -1342,7 +1415,7 @@ shinyServer(function(input, output, session) {
                         }) %>%
             unlist()
         )
-      # showModal(endpoint_result(type = "compounds", pk_id = 1))
+      log_it("info", glue::glue("Displaying additional compound information for id = {compound_id}."), app_ns)
       nist_shinyalert(
         title = glue::glue("Additional Information for {unique(aliases$compound)}"),
         type = "info",
@@ -1384,8 +1457,12 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "Please select a fragment from the list."
       )
+      log_it("warn", "Fragment info requested but no row selected in 'search_fragments_fragment_list'.", app_ns)
     } else {
-      shinyalert(fragment_id)
+      log_it("info", glue::glue("Displaying additional fragment information for id = {compound_id}."), app_ns)
+      nist_shinyalert(title = glue::glue("Fragment id = {fragment_id}"),
+                      type = "info",
+                      text = "Work in progress")
     }
   })
   # __More peak information ----
@@ -1396,6 +1473,7 @@ shinyServer(function(input, output, session) {
         type = "info",
         text = "Please select a peak from the list."
       )
+      log_it("warn", "Peak info requested but no row selected in 'search_fragments_peak_list'.", app_ns)
     } else {
       peak_data <- req(search_fragments_peaks_data()[input$search_fragments_peak_list_rows_selected[1], ])
       method_narrative <- api_endpoint(
@@ -1430,6 +1508,7 @@ shinyServer(function(input, output, session) {
           hr()
         )
       )
+      log_it("info", glue::glue("Displaying additional peak information for id = {peak_data$id}."), app_ns)
     }
   })
 })
