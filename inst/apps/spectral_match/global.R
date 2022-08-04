@@ -9,7 +9,7 @@ default_title      <- "NIST HRAMS Database for PFAS"
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- TRUE
+dev                <- FALSE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
@@ -56,7 +56,7 @@ if (LOGGING_ON) {
     log_it("info", sprintf("Creating logging namespace for '%s'", app_ns), shiny_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
   }
   log_it("info", sprintf("Starting app: %s", app_name), shiny_ns)
-  log_it("info", "Starting app", log_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
+  log_it("info", sprintf("Starting app: %s", app_name), app_ns, add_unknown_ns = TRUE, clone_settings_from = toupper(shiny_ns))
 }
 
 # Override the database title from set up files once environment is established.
