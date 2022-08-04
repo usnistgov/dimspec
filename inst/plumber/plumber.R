@@ -19,7 +19,7 @@ function(req) {
 #* @param db_conn:character The name of the database connection object
 #* @filter active
 function(db_conn = "con", req, res) {
-  if (!exists("testing_api") || testing_api) {
+  if (!exists("testing_api") || !testing_api) {
     if (!exists(db_conn)) {
       res$status <- 401
       return(list(error = sprintf("No database connection object named %s is currently available to this plumber instance.", db_conn)))

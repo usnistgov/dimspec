@@ -35,30 +35,6 @@ api_start <- function(plumber_file = NULL,
   }
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
-  # if (is.null(on_host)) {
-  #   if (exists("PLUMBER_HOST")) {
-  #     on_host <- PLUMBER_HOST
-  #   } else {
-  #     if (exists("log_it")) {
-  #       log_it("error",
-  #              'Provide a host IP address for "on_host" or set variable "PLUMBER_HOST" in the "config/env_R.R" file.',
-  #              "api")
-  #       on_host <- getOption("plumber.host", "127.0.0.1")
-  #     }
-  #   }
-  # }
-  # if (is.null(on_port)) {
-  #   if (exists("PLUMBER_PORT")) {
-  #     on_port <- PLUMBER_PORT
-  #   } else {
-  #     if (exists("log_it")) {
-  #       log_it("error",
-  #              'Provide a port number for "on_port" or set variable "PLUMBER_PORT" in the "config/env_R.R" file.',
-  #              "api")
-  #       on_port <- getOption("plumber.port", 8080)
-  #     }
-  #   }
-  # }
   if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
   
   # Argument validation relies on verify_args
@@ -309,6 +285,14 @@ api_reload <- function(pr = NULL,
       ),
       envir = .GlobalEnv
     )
+    if (exists("log_it")) {
+      sapply(c("api", "global"),
+             function(x) {
+               log_it("info",
+                      glue::glue('Plumber service is spinning up in a background process. Control has been returned to your terminal. Check the status with {pr_name}$is_alive() or call api_endpoint("_ping").'),
+                      x)
+             })
+    }
   } else {
     api_start(
       on_host = on_host,
@@ -392,7 +376,7 @@ api_reload <- function(pr = NULL,
 #'
 #' @examples
 #' api_endpoint("https://www.google.com/search", list(q = "something"), open_in_browser = TRUE)
-#' api_endpoint("https://www.google.com/search", query = list(q = "NIST Public Data Repository"))
+#' api_endpoint("https://www.google.com/search", query = list(q = "NIST Public Data Repository"), open_in_browser = TRUE)
 api_endpoint <- function(path,
                          ...,
                          server_addr     = PLUMBER_URL,
@@ -405,6 +389,10 @@ api_endpoint <- function(path,
                          return_format   = c("vector", "data.frame", "list")) {
   require(httr)
   stopifnot(is.integer(as.integer(max_pings)), length(max_pings) == 1)
+  if (str_detect(path, "https|www\\.")) {
+    server_addr <- dirname(path)
+    path <- basename(path)
+  }
   url <- parse_url(server_addr)
   url$path <- path
   kwargs <- list(...)
