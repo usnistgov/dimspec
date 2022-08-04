@@ -140,27 +140,27 @@ dashboardPage(
                                            numericInput(inputId = "data_input_relative_error",
                                                         label = "Relative Error (ppm)",
                                                         width = "100%",
-                                                        value = value,
-                                                        min = min,
-                                                        max = max,
-                                                        step = step
+                                                        value = this_value,
+                                                        min = this_min,
+                                                        max = this_max,
+                                                        step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument mass-to-charge relative error in parts-per-million (ppm) for processing, ranging from {min} ppm to {max} ppm. The default of {value} ppm is typical for most applications."))
+                                             with_help(glue::glue("Set the instrument mass-to-charge relative error in parts-per-million (ppm) for processing, ranging from {this_min} ppm to {this_max} ppm. The default of {this_value} ppm is typical for most applications."))
                                       ),
                                       with(data_input_minimum_error,
                                            numericInput(inputId = "data_input_minimum_error",
                                                         label = "Minimum Error (Da)",
                                                         width = "100%",
-                                                        value = value,
-                                                        min = min,
-                                                        max = max,
-                                                        step = step
+                                                        value = this_value,
+                                                        min = this_min,
+                                                        max = this_max,
+                                                        step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument minimum absolute error in Daltons (Da) for processing, ranging from {min} Da to {max} Da. The default of {value} Da is typical for most applications."))
+                                             with_help(glue::glue("Set the instrument minimum mass-to-charge absolute error in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for most applications."))
                                       ),
                                       selectizeInput(inputId = "data_input_experiment_type",
                                                      label = "MS Experiment Type",
-                                                     choices = experiment_types,
+                                                     choices = experiment_types$choices,
                                                      width = "100%"
                                       ) %>%
                                         with_help('Set the experiment type for your data file; choices are defined in the "norm_ms_n_types" database table.'),
@@ -168,12 +168,12 @@ dashboardPage(
                                            numericInput(inputId = "data_input_isolation_width",
                                                         label = "Isolation Width (Da)",
                                                         width = "100%",
-                                                        value = value,
-                                                        min = min,
-                                                        max = max,
-                                                        step = step
+                                                        value = this_value,
+                                                        min = this_min,
+                                                        max = this_max,
+                                                        step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument data isolation width in Daltons (Da) for processing, ranging from {min} Da to {max} Da. The default of {value} Da is typical for data-dependent acquisition, but may be different for other acquisition types (e.g. for SWATH or HRM it may be much larger)."))
+                                             with_help(glue::glue("Set the instrument data isolation width in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for data-dependent acquisition, but may be different for other acquisition types (e.g. for SWATH or HRM it may be much larger)."))
                                       )
                                   )
                                 )
@@ -243,10 +243,6 @@ dashboardPage(
                                                     verify_fa = FALSE)
                            ) %>%
                              with_help("Data have been processed. Click here to go to the compound match screen and search for compounds matching your defined features of interest. This is most useful for a broad search or if you suspect an identity already."),
-                           # actionButton(inputId = "data_input_go_uncertainty",
-                           #              label = "Evaluate Uncertainty",
-                           #              icon = icon("arrows-left-right-to-line", verify_fa = FALSE)
-                           # ),
                            actionButton(inputId = "data_input_go_fragment",
                                         label = "Fragment Match",
                                         width = "100%",
@@ -318,12 +314,12 @@ dashboardPage(
                                                                          label = "Search zoom window (Da)",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the search window which will determine how data are grouped, ranging from {min} to {max} Daltons. The default of {paste0(value, collapse = ' to ')} Da is typical for most applications."))
+                                                               with_help(glue::glue("Set the search window which will determine how data are grouped, ranging from {this_min} to {this_max} Daltons. The default of {paste0(this_value, collapse = ' to ')} Da is typical for most applications."))
                                                         )
                                                     ),
                                                     tags$label("Search mass spectra settings"),
@@ -333,46 +329,46 @@ dashboardPage(
                                                                          label = HTML("Search correlation (&rho;)"),
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the correlation rho threshold for peak deconvolution, ranging from {min} (uncorrelated) to {max} (fully correlated). The default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the correlation rho threshold for peak deconvolution, ranging from {this_min} (uncorrelated) to {this_max} (fully correlated). The default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_ph,
                                                              sliderInput(inputId = "search_compounds_ph",
                                                                          label = "Search peak height threshold (%)",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the percentage peak height threshold for processing, ranging from {min}% to {max}%. The default of {value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                               with_help(glue::glue("Set the percentage peak height threshold for processing, ranging from {this_min}% to {this_max}%. The default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
                                                         ),
                                                         with(search_compounds_freq,
                                                              sliderInput(inputId = "search_compounds_freq",
                                                                          label = "Search frequency",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the minimum frequency for the number of times a mass must appear in scans across a peak, ranging from {min} to {max}. The default of {value} is typical for most applications, but this depends in part upon scan rate."))
+                                                               with_help(glue::glue("Set the minimum frequency for the number of times a mass must appear in scans across a peak, ranging from {this_min} to {this_max}. The default of {this_value} is typical for most applications, but this depends in part upon scan rate."))
                                                         ),
                                                         selectizeInput(inputId = "search_compounds_norm_function",
                                                                        label = "Search normalization function",
-                                                                       choices = search_compounds_normfn,
+                                                                       choices = search_compounds_normfn$choices,
                                                                        width = "100%"
                                                         ) %>%
                                                           with_help('Choose a normalization function to use when matching compounds, either "sum" (typical default) for base peak normalization or "mean" for relative intensity normalization.'),
                                                         selectizeInput(inputId = "search_compounds_correlation_method",
                                                                        label = "Search correlation method",
-                                                                       choices = search_compounds_cormethod,
+                                                                       choices = search_compounds_cormethod$choices,
                                                                        width = "100%"
                                                         ) %>%
                                                           with_help("Choose a correlation method to use when matching compounds; pearson is the only method currently supported.")
@@ -390,84 +386,84 @@ dashboardPage(
                                                                          label = HTML("Maximum correlation (&rho;)"),
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the maximum correlation to be used during the search refinement stage of the search function, ranging from {min} (uncorrelated) to {max} (completely correlated); the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the maximum correlation to be used during the search refinement stage of the search function, ranging from {this_min} (uncorrelated) to {this_max} (completely correlated); the default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_correl_bin,
                                                              sliderInput(inputId = "search_compounds_correl_bin",
                                                                          label = "Correlation bin size",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the correlation bin size which will be used to group correlation results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the correlation bin size which will be used to group correlation results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_max_ph,
                                                              sliderInput(inputId = "search_compounds_max_ph",
                                                                          label = "Maximum peak height (%)",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the percentage of base peak height threshold to be used during the refinement stage of the search function, ranging from {min}% to {max}%; the default of {value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                               with_help(glue::glue("Set the percentage of base peak height threshold to be used during the refinement stage of the search function, ranging from {this_min}% to {this_max}%; the default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
                                                         ),
                                                         with(search_compounds_ph_bin,
                                                              sliderInput(inputId = "search_compounds_ph_bin",
                                                                          label = "Peak height bin size",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the peak height bin size which will be used to group potential results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the peak height bin size which will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_max_freq,
                                                              sliderInput(inputId = "search_compounds_max_freq",
                                                                          label = "Maximum frequency",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the maximum observation frequency will be used to group potential results during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the maximum observation frequency will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_freq_bin,
                                                              sliderInput(inputId = "search_compounds_freq_bin",
                                                                          label = "Frequency bin size",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the frequency bin size which will be used to during the refinement stage of the search function, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the frequency bin size which will be used to during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
                                                         ),
                                                         with(search_compounds_min_n_peaks,
                                                              sliderInput(inputId = "search_compounds_min_n_peaks",
                                                                          label = "Minimum number of spectra",
                                                                          width = "100%",
                                                                          ticks = ticks,
-                                                                         value = value,
-                                                                         min = min,
-                                                                         max = max,
-                                                                         step = step
+                                                                         value = this_value,
+                                                                         min = this_min,
+                                                                         max = this_max,
+                                                                         step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the minimum number of spectra which must be present to be included in a match, ranging from {min} to {max}; the default of {value} is typical for most applications."))
+                                                               with_help(glue::glue("Set the minimum number of spectra which must be present to be included in a match, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
                                                         ),
                                                     )
                                                   )

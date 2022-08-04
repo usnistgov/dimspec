@@ -2,6 +2,28 @@ shinyServer(function(input, output, session) {
   # Live Inspect ----
   observeEvent(input$browser, browser())
   
+  # Validation rules ----
+  exclude_auto_validation <- c("search_compounds_search_zoom")
+  validator <- InputValidator$new()
+  lapply(names(app_settings),
+         function(x) {
+           validator$add_rule(x, sv_required())
+           if (!x %in% exclude_auto_validation) {
+             vals <- app_settings[[x]]
+             if ("this_min" %in% names(app_settings[[x]])) {
+               validator$add_rule(x, sv_gte(vals$this_min))
+             }
+             if ("this_max" %in% names(app_settings[[x]])) {
+               validator$add_rule(x, sv_lte(vals$this_max))
+             }
+             if ("choices" %in% names(app_settings[[x]])) {
+               validator$add_rule(x, sv_in_set(vals$choices))
+             }
+           }
+         })
+  validator$add_rule("data_input_experiment_type", sv_required())
+  validator$enable()
+  
   # Session Data ----
   # _General ----
   advanced_use <- reactive(input$nav_show_advanced_settings)
@@ -324,6 +346,7 @@ shinyServer(function(input, output, session) {
     input$data_input_isolation_width
     input$data_input_experiment_type
   }, {
+    req(input$data_input_isolation_width, input$data_input_experiment_type)
     if (input$data_input_isolation_width > app_settings$data_input_isolation_width_warn_threshold) {
       types <- app_settings$experiment_types
       experiment_type <- names(types[types == input$data_input_experiment_type])
@@ -507,10 +530,12 @@ shinyServer(function(input, output, session) {
     )
     required <- grep("data_input", names(input), value = TRUE)
     required <- required[-grep("dt_peak_list|import_search|filename|_process|^mod_data|_go_", required)]
-    sapply(required,
-           function(x) {
-             req(input[[x]])
-           })
+    # sapply(required,
+    #        function(x) {
+    #          req(input[[x]])
+    #        })
+    valid <- complete_form_entry(input, required)
+    req(valid)
     user_data(NULL)
     showElement(selector = "#data_input_overlay")
     log_it("info", sprintf("Processing user data from file %s...", input$data_input_filename$name), app_ns)
