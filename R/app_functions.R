@@ -673,7 +673,7 @@ log_it <- function(log_level,
               log_it("warn", msg)
             }
             LOGGING[[toupper(log_ns)]] <- LOGGING[[i]]
-            LOGGING[[toupper(log_ns)]]$ns <- log_ns
+            LOGGING[[toupper(log_ns)]]$ns <- tolower(log_ns)
             LOGGING[[toupper(log_ns)]]$file <- file.path(
               dirname(LOGGING[[toupper(log_ns)]]$file),
               sprintf("log_%s.txt", tolower(log_ns))
