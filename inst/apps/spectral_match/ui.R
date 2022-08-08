@@ -30,25 +30,25 @@ dashboardPage(
                badgeColor = "orange",
                icon = icon("house", verify_fa = FALSE)
       ) %>%
-        with_help(tooltip = "Contextural material for the application you are currently using, along with some information about the project itself.",
+        with_help(tooltip = tooltip_text[["nav_index"]],
                   placement = "right"),
       menuItem(span(id = "nav_data_input", "Data Input"),
                tabName = "data_input",
                icon = icon("file")
       ) %>%
-        with_help(tooltip = "Start here with data entry where you will upload a data file and select features of interest by mass-to-charge ratio (m/z) and retention time.",
+        with_help(tooltip = tooltip_text[["nav_data_input"]],
                   placement = "right"),
       menuItem(span(id = "nav_search_compounds", "Compound Match"),
                tabName = "search_compounds",
                icon = icon("magnifying-glass", verify_fa = FALSE)
       ) %>%
-        with_help(tooltip = "Search the library for compounds matching the mass spectrometric fingerprints for features of interest.",
+        with_help(tooltip = tooltip_text[["nav_search_compounds"]],
                   placement = "right"),
       menuItem(span(id = "nav_fragments", "Fragment Match"),
                tabName = "search_fragments",
                icon = icon("puzzle-piece", verify_fa = FALSE)
       ) %>%
-        with_help(tooltip = "Match fragments from your mass spectrometry experiment against those held in the library, including linked metrics for which compounds and peaks those fragments have been annotated within.",
+        with_help(tooltip = tooltip_text[["nav_fragments"]],
                   placement = "right"),
       menuItem(span(id = "nav_about", "About"),
                tabName = "about",
@@ -56,13 +56,15 @@ dashboardPage(
                badgeColor = "orange",
                icon = icon("circle-info", verify_fa = FALSE)
       ) %>%
-        with_help(tooltip = "Your reference guide to this application, including user guides and other information.",
+        with_help(tooltip = tooltip_text[["nav_about"]],
                   placement = "right"),
       span(id = "additional_options",
            div(id = "nav_show_help_div",
                class = "nav-checkbox-right",
                icon("question", verify_fa = FALSE),
-               tags$label("Show Tooltips"),
+               tags$label(id = "nav_show_help_label", "Show Tooltips") %>%
+                 with_help(tooltip = tooltip_text[["nav_show_help_label"]],
+                           placement = "top"),
                prettySwitch(inputId = "nav_show_help",
                             label = NULL,
                             value = provide_more_help,
@@ -72,7 +74,9 @@ dashboardPage(
            div(id = "nav_show_advanced_settings_div",
                class = "nav-checkbox-right",
                icon("gear", verify_fa = FALSE),
-               tags$label("Advanced Settings"),
+               tags$label(id = "nav_show_advanced_settings_label", "Advanced Settings") %>%
+                 with_help(tooltip = tooltip_text[["nav_show_advanced_settings_label"]],
+                           placement = "top"),
                prettySwitch(inputId = "nav_show_advanced_settings",
                             label = NULL,
                             value = advanced_use,
@@ -86,7 +90,6 @@ dashboardPage(
     useShinyjs(),
     tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
     tags$script(type = "text/javascript", jscode),
-    # if (dev) div(class = "title-banner", "DEVELOPMENT VERSION") else NULL,
     tabItems(
       # Home Page ----
       tabItem("index",
@@ -97,7 +100,7 @@ dashboardPage(
                            width = "100%",
                            icon = icon("circle-play", verify_fa = FALSE)
               ) %>%
-                with_help("Click here to go to the data input page and get started."),
+                with_help(tooltip = tooltip_text[["index_go_data_input"]]),
               hr(),
               includeHTML("index.html")
       ),
@@ -123,7 +126,7 @@ dashboardPage(
                                 tagList(
                                   tags$label(id = "data_input_filename_label",
                                              glue::glue("Choose a data file ({format_list_of_names(data_input_import_file_types)})")) %>%
-                                    with_help('Start by dragging a data file here, or click "Load" to select one from your computer'),
+                                    with_help(tooltip = tooltip_text[["data_input_filename_label"]]),
                                   div(class = "form-grouping",
                                       fileInput(inputId = "data_input_filename",
                                                 label = NULL,
@@ -145,7 +148,7 @@ dashboardPage(
                                                         max = this_max,
                                                         step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument mass-to-charge relative error in parts-per-million (ppm) for processing, ranging from {this_min} ppm to {this_max} ppm. The default of {this_value} ppm is typical for most applications."))
+                                             with_help(tooltip = glue::glue(tooltip_text[["data_input_relative_error"]]))
                                       ),
                                       with(data_input_minimum_error,
                                            numericInput(inputId = "data_input_minimum_error",
@@ -156,14 +159,14 @@ dashboardPage(
                                                         max = this_max,
                                                         step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument minimum mass-to-charge absolute error in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for most applications."))
+                                             with_help(tooltip = glue::glue(tooltip_text[["data_input_minimum_error"]]))
                                       ),
                                       selectizeInput(inputId = "data_input_experiment_type",
                                                      label = "MS Experiment Type",
                                                      choices = experiment_types$choices,
                                                      width = "100%"
                                       ) %>%
-                                        with_help('Set the experiment type for your data file; choices are defined in the "norm_ms_n_types" database table.'),
+                                        with_help(tooltip = tooltip_text[["data_input_experiment_type"]]),
                                       with(data_input_isolation_width,
                                            numericInput(inputId = "data_input_isolation_width",
                                                         label = "Isolation Width (Da)",
@@ -173,7 +176,7 @@ dashboardPage(
                                                         max = this_max,
                                                         step = this_step
                                            ) %>%
-                                             with_help(glue::glue("Set the instrument data isolation width in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for data-dependent acquisition, but may be different for other acquisition types (e.g. for SWATH or HRM it may be much larger)."))
+                                             with_help(tooltip = glue::glue(tooltip_text[["data_input_isolation_width"]]))
                                       )
                                   )
                                 )
@@ -190,26 +193,26 @@ dashboardPage(
                     class = "right",
                     tags$label(id = "data_input_parameters",
                                "Select parameters identifying peaks to examine.") %>%
-                      with_help('Start by clicking "Add" to manually add a feature of interest, or by dragging a data file to the widget below or clicking "Import" to select one from your computer'),
+                      with_help(tooltip = tooltip_text[["data_input_parameters"]]),
                     div(class = "flex-container",
                         actionButton(inputId = "data_input_dt_peak_list_add_row",
                                      label = "Add",
                                      width = "100%",
                                      icon = icon("plus")
                         ) %>%
-                          with_help("Click to manually add a feature of interest by its mass-to-charge ratio value and retention time properties."),
+                          with_help(tooltip = tooltip_text[["data_input_dt_peak_list_add_row"]]),
                         actionButton(inputId = "data_input_dt_peak_list_edit_row",
                                      label = "Edit",
                                      width = "100%",
                                      icon = icon("pencil-alt")
                         ) %>%
-                          with_help("Click to edit a feature of interest selected in the table below."),
+                          with_help(tooltip = tooltip_text[["data_input_dt_peak_list_edit_row"]]),
                         actionButton(inputId = "data_input_dt_peak_list_remove_row",
                                      label = "Remove",
                                      width = "100%",
                                      icon = icon("times")
                         ) %>%
-                          with_help("Click to remove a feature of interest selected in the table below.")
+                          with_help(tooltip = tooltip_text[["data_input_dt_peak_list_remove_row"]])
                     ),
                     DTOutput(outputId = "data_input_dt_peak_list"),
                     fileInput(inputId = "data_input_import_search",
@@ -230,7 +233,7 @@ dashboardPage(
                                                 verify_fa = FALSE),
                                     width = "100%"
                        ) %>%
-                         with_help("Click here to begin processing the data file provided and extract data matching the features of interest defined in the list above. More options will be available once data have been processed.")
+                         with_help(tooltip = tooltip_text[["data_input_process_btn"]])
                 ),
                 column(12,
                        id = "data_input_next_actions",
@@ -242,14 +245,14 @@ dashboardPage(
                                         icon = icon("magnifying-glass",
                                                     verify_fa = FALSE)
                            ) %>%
-                             with_help("Data have been processed. Click here to go to the compound match screen and search for compounds matching your defined features of interest. This is most useful for a broad search or if you suspect an identity already."),
+                             with_help(tooltip = tooltip_text[["data_input_go_compound"]]),
                            actionButton(inputId = "data_input_go_fragment",
                                         label = "Fragment Match",
                                         width = "100%",
                                         icon = icon("puzzle-piece",
                                                     verify_fa = FALSE)
                            ) %>%
-                             with_help("Data have been processed. Click here to go to the fragment match screen and search for fragments matching your defined features of interest. This is most useful for examining which fragments within your feature of interest are shared by other compounds.")
+                             with_help(tooltip = tooltip_text[["data_input_go_fragment"]])
                        )
                 )
               )
@@ -281,7 +284,7 @@ dashboardPage(
                                                      selected = 1,
                                                      multiple = FALSE,
                                                      width = "100%") %>%
-                                        with_help("Select the type of search to perform. Precursor search limits itself to matching precursor mass-to-charge ratios between the error limits defined earlier. Search all attempts to find every possible match within the database and will take considerably longer.")
+                                        with_help(tooltip = tooltip_text[["search_compounds_search_type"]])
                                ),
                                column(9,
                                       selectizeInput(inputId = "search_compounds_mzrt",
@@ -291,13 +294,13 @@ dashboardPage(
                                                      multiple = FALSE,
                                                      width = "100%",
                                                      options = list(placeholder = "Please add search parameters on the Data Input page.")) %>%
-                                        with_help("Select the feature of interest to use in the search. These were provided on the data input page. If you need to change them, go back to the data input page, alter the feature list, and process your data again.")
+                                        with_help(tooltip = tooltip_text[["search_compounds_mzrt"]])
                                )
                              ),
                              span(id = "search_compounds_additional",
                                   box(title = tagList(icon("screwdriver-wrench", verify_fa = FALSE),
                                                       span(id = "search_compounds_additional_title", "Advanced search parameters") %>%
-                                                        with_help("Alter advanced parameters for compound matching here. Click the plus icon to the right to expand this box.")),
+                                                        with_help(tooltip = tooltip_text[["search_compounds_additional_title"]])),
                                       width = 12,
                                       solidHeader = FALSE,
                                       status = "primary",
@@ -319,7 +322,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the search window which will determine how data are grouped, ranging from {this_min} to {this_max} Daltons. The default of {paste0(this_value, collapse = ' to ')} Da is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_search_zoom"]]))
                                                         )
                                                     ),
                                                     tags$label("Search mass spectra settings"),
@@ -334,7 +337,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the correlation rho threshold for peak deconvolution, ranging from {this_min} (uncorrelated) to {this_max} (fully correlated). The default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_correlation"]]))
                                                         ),
                                                         with(search_compounds_ph,
                                                              sliderInput(inputId = "search_compounds_ph",
@@ -346,7 +349,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the percentage peak height threshold for processing, ranging from {this_min}% to {this_max}%. The default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_ph"]]))
                                                         ),
                                                         with(search_compounds_freq,
                                                              sliderInput(inputId = "search_compounds_freq",
@@ -358,20 +361,20 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the minimum frequency for the number of times a mass must appear in scans across a peak, ranging from {this_min} to {this_max}. The default of {this_value} is typical for most applications, but this depends in part upon scan rate."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_freq"]]))
                                                         ),
                                                         selectizeInput(inputId = "search_compounds_norm_function",
                                                                        label = "Search normalization function",
                                                                        choices = search_compounds_norm_function$choices,
                                                                        width = "100%"
                                                         ) %>%
-                                                          with_help('Choose a normalization function to use when matching compounds, either "sum" (typical default) for base peak normalization or "mean" for relative intensity normalization.'),
+                                                          with_help(tooltip = tooltip_text[["search_compounds_norm_function"]]),
                                                         selectizeInput(inputId = "search_compounds_correlation_method",
                                                                        label = "Search correlation method",
                                                                        choices = search_compounds_correlation_method$choices,
                                                                        width = "100%"
                                                         ) %>%
-                                                          with_help("Choose a correlation method to use when matching compounds; pearson is the only method currently supported.")
+                                                          with_help(tooltip = tooltip_text[["search_compounds_correlation_method"]])
                                                     )
                                                   )
                                              )
@@ -391,7 +394,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the maximum correlation to be used during the search refinement stage of the search function, ranging from {this_min} (uncorrelated) to {this_max} (completely correlated); the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_max_correl"]]))
                                                         ),
                                                         with(search_compounds_correl_bin,
                                                              sliderInput(inputId = "search_compounds_correl_bin",
@@ -403,7 +406,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the correlation bin size which will be used to group correlation results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_correl_bin"]]))
                                                         ),
                                                         with(search_compounds_max_ph,
                                                              sliderInput(inputId = "search_compounds_max_ph",
@@ -415,7 +418,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the percentage of base peak height threshold to be used during the refinement stage of the search function, ranging from {this_min}% to {this_max}%; the default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_max_ph"]]))
                                                         ),
                                                         with(search_compounds_ph_bin,
                                                              sliderInput(inputId = "search_compounds_ph_bin",
@@ -427,7 +430,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the peak height bin size which will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_ph_bin"]]))
                                                         ),
                                                         with(search_compounds_max_freq,
                                                              sliderInput(inputId = "search_compounds_max_freq",
@@ -439,7 +442,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the maximum observation frequency will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_max_freq"]]))
                                                         ),
                                                         with(search_compounds_freq_bin,
                                                              sliderInput(inputId = "search_compounds_freq_bin",
@@ -451,7 +454,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the frequency bin size which will be used to during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_freq_bin"]]))
                                                         ),
                                                         with(search_compounds_min_n_peaks,
                                                              sliderInput(inputId = "search_compounds_min_n_peaks",
@@ -463,7 +466,7 @@ dashboardPage(
                                                                          max = this_max,
                                                                          step = this_step
                                                              ) %>%
-                                                               with_help(glue::glue("Set the minimum number of spectra which must be present to be included in a match, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."))
+                                                               with_help(tooltip = glue::glue(tooltip_text[["search_compounds_min_n_peaks"]]))
                                                         ),
                                                     )
                                                   )
@@ -477,13 +480,13 @@ dashboardPage(
                                               width = "100%",
                                               icon = icon("magnifying-glass", verify_fa = FALSE)
                                  ) %>%
-                                   with_help("Click here to execute a search for compounds matching this feature."),
+                                   with_help(tooltip = tooltip_text[["search_compounds_search_btn"]]),
                                  div(id = "search_compounds_use_optimized_parameters_div",
                                      checkboxInput(inputId = "search_compounds_use_optimized_parameters",
                                                    label = "Use Optimized Search Parameters",
                                                    value = TRUE
                                      ) %>%
-                                       with_help("Ensure this is checked to use optimized search parameters held within the database and speed up your search. If it is left unchecked, new search parameters will be generated, which may take a considerable amount of time.",
+                                       with_help(tooltip = tooltip_text[["search_compounds_use_optimized_parameters"]],
                                                  placement = "left")
                                  )
                              )
@@ -503,7 +506,7 @@ dashboardPage(
                                       h3(id = "search_compounds_butterfly_plot_title",
                                          "Comparison Mass Spectrum"
                                       ),
-                                      p(
+                                      p(id = "search_compounds_butterfly_plot_label",
                                         HTML(
                                           paste0(
                                             "Your measurement is in&nbsp;",
@@ -513,7 +516,8 @@ dashboardPage(
                                             "."
                                           )
                                         )
-                                      ),
+                                      ) %>%
+                                        with_help(tooltip = tooltip_text[["search_compounds_butterfly_plot_label"]]),
                                       shinyWidgets::radioGroupButtons(
                                         inputId = "search_compounds_msn",
                                         label = NULL,
@@ -531,9 +535,11 @@ dashboardPage(
                                       htmlOutput(outputId = "search_compounds_method_narrative",
                                                  width = "100%"),
                                       actionButton(inputId = "search_compounds_uncertainty_btn",
-                                                   label = "Estimate Spectral Uncertainty",
+                                                   label = "Estimate Match Score Uncertainty",
                                                    width = "100%",
-                                                   icon = icon("arrows-left-right-to-line", verify_fa = FALSE))    
+                                                   icon = icon("arrows-left-right-to-line", verify_fa = FALSE)) %>%
+                                        with_help(tooltip = tooltip_text[["search_compounds_uncertainty_btn"]],
+                                                  placement = "top")
                                ),
                                column(8,
                                       DTOutput(outputId = "search_compounds_dt",
@@ -567,13 +573,15 @@ dashboardPage(
                                             selected = NULL,
                                             multiple = FALSE,
                                             width = "100%",
-                                            options = list(placeholder = "Please add search parameters on the Data Input page.")),
+                                            options = list(placeholder = "Please add search parameters on the Data Input page.")) %>%
+                               with_help(tooltip = tooltip_text[["search_fragments_mzrt"]]),
                              htmlOutput(outputId = "search_fragments_has_mzrt_has_ions",
                                         width = "100%"),
                              actionButton(inputId = "search_fragments_search_btn",
                                           label = "Search",
                                           icon = icon("magnifying-glass", verify_fa = FALSE),
-                                          width = "100%"),
+                                          width = "100%") %>%
+                               with_help(tooltip = tooltip_text[["search_fragments_search_btn"]]),
                              textOutput(outputId = "search_fragments_status")
                       )
                     ),
@@ -584,8 +592,6 @@ dashboardPage(
                                   column(8,
                                          plotOutput(outputId = "search_fragments_spectral_plot",
                                                     width = "100%") %>%
-                                           # plotlyOutput(outputId = "search_fragments_spectral_plot",
-                                           #              width = "100%") %>%
                                            withSpinner()
                                   ),
                                   column(4,
@@ -598,7 +604,7 @@ dashboardPage(
                          ),
                          hr(),
                          column(12,
-                                h4("Select a row in the table to view additional information for that annotated fragment."),
+                                h4("Select a row in the left-hand table to view additional information for that annotated fragment."),
                                 fluidRow(
                                   column(width = ifelse(rdkit_available, 4, 6),
                                          DTOutput(outputId = "search_fragments_dt",
@@ -615,7 +621,9 @@ dashboardPage(
                                                   actionLink(inputId = "search_fragments_fragment_info",
                                                              label = "More Fragment Information",
                                                              icon = icon("search", verify_fa = FALSE)
-                                                  )
+                                                  ) %>%
+                                                    with_help(tooltip = tooltip_text[["search_fragments_fragment_info"]],
+                                                              placement = "top")
                                              )
                                            )
                                          } else {
@@ -633,7 +641,9 @@ dashboardPage(
                                                       withSpinner(),
                                                     actionLink(inputId = "search_fragments_compound_info",
                                                                label = "More Compound Information",
-                                                               icon = icon("search", verify_fa = FALSE))
+                                                               icon = icon("search", verify_fa = FALSE)) %>%
+                                                      with_help(tooltip = tooltip_text[["search_fragments_compound_info"]],
+                                                                placement = "top")
                                            ),
                                            tabPanel("Peaks",
                                                     DTOutput(outputId = "search_fragments_peak_list",
@@ -641,7 +651,9 @@ dashboardPage(
                                                       withSpinner(),
                                                     actionLink(inputId = "search_fragments_peak_info",
                                                                label = "More Peak Information",
-                                                               icon = icon("search", verify_fa = FALSE))
+                                                               icon = icon("search", verify_fa = FALSE)) %>%
+                                                      with_help(tooltip = tooltip_text[["search_fragments_peak_info"]],
+                                                                placement = "top")
                                            )
                                          )
                                          

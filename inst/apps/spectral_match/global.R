@@ -9,7 +9,7 @@ default_title      <- "NIST HRAMS Database for PFAS"
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- FALSE
+dev                <- TRUE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
@@ -18,6 +18,9 @@ enable_adv_use     <- TRUE
 advanced_use       <- FALSE
 enable_more_help   <- TRUE
 provide_more_help  <- FALSE
+tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv")) %>%
+  select(element_id, tooltip_text)
+tooltip_text       <- setNames(object = tooltip_text$tooltip_text, nm = tooltip_text$element_id)
 
 # If using dev mode, automatically fill with example data from local RDS files.
 toy_data           <- FALSE

@@ -22,6 +22,8 @@ shinyServer(function(input, output, session) {
            }
          })
   validator$add_rule("data_input_experiment_type", sv_required())
+  validator$add_rule("search_compounds_mzrt", sv_required())
+  validator$add_rule("search_fragments_mzrt", sv_required())
   validator$enable()
   
   # Session Data ----
@@ -344,14 +346,16 @@ shinyServer(function(input, output, session) {
         inputId = "search_compounds_mzrt",
         choices = search_compounds_mzrt_text() %>%
           setNames(object = 1:length(.),
-                   nm = .)
+                   nm = .),
+        options = list(placeholder = "Please select a Feature of Interest to proceed.")
       )
       updateSelectizeInput(
         session = session,
         inputId = "search_fragments_mzrt",
         choices = search_fragments_mzrt_text() %>%
           setNames(object = 1:length(.),
-                   nm = .)
+                   nm = .),
+        options = list(placeholder = "Please select a Feature of Interest to proceed.")
       )
       log_it("trace", "Search parameters updated.", app_ns)
     }
@@ -1029,6 +1033,7 @@ shinyServer(function(input, output, session) {
       )
     out
   })
+  observeEvent(input$mod_uncertainty_close, removeModal())
   
   # FRAGMENT MATCH PAGE ----
   # _Outputs ----
@@ -1196,13 +1201,13 @@ shinyServer(function(input, output, session) {
   )
   # __Molecular model graphic
   output$search_fragments_ballstick <- renderImage({
-    log_it("trace", glue::glue("Finding or rendering molecular model (id = ) for display."), app_ns)
     shiny::validate(
       need(search_fragments_results_selected()$has_smiles,
            message = "This fragment has not had a structure assigned.")
     )
     fragment_id <- search_fragments_results_selected()
-    alt_text <- glue::glue("Molecular model for fragment {fragment_id$formula} (ID {fragment_id$annotated_fragment_id}) with SMILES notation {fragment_id$smiles}.")
+    log_it("trace", glue::glue("Finding or rendering molecular model (id = {fragment_id$annotated_fragment_id}) for display."), app_ns)
+    alt_text <- glue::glue("Molecular model for fragment {fragment_id$formula} (ID {fragment_id$annotated_fragment_id}) with SMILES notation {fragment_id$smiles}, as generated from RDKit.")
     list(
       src =  api_endpoint(path = "molecular_model/file",
                           type = "fragment",
@@ -1253,7 +1258,7 @@ shinyServer(function(input, output, session) {
       search_fragments_mzrt(),
       user_data()
     )
-    log_it("info", glue::glue("Fragment search started for {search_fragments_mzrt_text[search_fragments_mzrt()]}."), app_ns)
+    log_it("info", glue::glue("Fragment search started for {search_fragments_mzrt_text()[search_fragments_mzrt()]}."), app_ns)
     if (!is.null(search_compounds_results()) && search_compounds_mzrt() == search_fragments_mzrt()) {
       fragments <- search_compounds_results()$search_object$ums2
     } else {
