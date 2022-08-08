@@ -95,9 +95,7 @@ mod_uncertainty_evaluation <- function(msn, advanced_use) {
     shinyWidgets::radioGroupButtons(
       inputId = "mod_uncertainty_msn",
       width = "100%",
-      # label = span(id = "mod_uncertainty_msn_label", "Spectral level") %>%
-      #   with_help("Change the MS level to plot by clicking one of the options below. If no data are available for that level then MS1 will be selected. This choice also affects the choice on the search compunds page."),
-      label = span(id = "mod_uncertainty_msn_label", "Spectral level"),
+      label = "Spectral level",
       size = "xs",
       choices = c("MS1", "MS2"),
       selected = msn,
