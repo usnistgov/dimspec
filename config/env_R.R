@@ -43,10 +43,9 @@ LAST_MODIFIED  <- max(file.info(list.files(path = here::here(), recursive = !EXP
 # These are the packages on which the project depends and must be loaded.
 DEPENDS_ON     <- c("base64enc",
                     "imager",
-                    "logger",
                     "here",
                     "DBI",
-                    "RSQLite",
+                    DB_PACKAGE,
                     "lubridate",
                     "glue",
                     "stringi",
@@ -93,6 +92,7 @@ IMPORT_MAP       <- readr::read_csv(here::here("config", "map_NTA_MRT.csv"))
 # Settings are in the config/env_logger.R file.
 # Whether to activate logging for this session. [SET IN env_glob.txt, override here if necessary.]
 LOGGING_ON       <- ifelse(exists("LOGGING_ON"), LOGGING_ON, TRUE)
+if (LOGGING_ON) DEPENDS_ON <- c(DEPENDS_ON, "logger")
 
 # Whether to use function argument verification. Set to FALSE to serve as a
 # global cut off and increase execution speed.

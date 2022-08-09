@@ -1,10 +1,10 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "NIST PFAS Database Spectra Match"
+APP_TITLE          <- "NIST Spectral Match"
 app_name           <- basename(getwd())
-app_dir            <- app_name
+app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "NIST HRAMS Database for PFAS"
+default_title      <- "NIST Spectral Match for PFAS"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
@@ -18,8 +18,7 @@ enable_adv_use     <- TRUE
 advanced_use       <- FALSE
 enable_more_help   <- TRUE
 provide_more_help  <- FALSE
-tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv")) %>%
-  select(element_id, tooltip_text)
+tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv"))[ ,c("element_id", "tooltip_text")]
 tooltip_text       <- setNames(object = tooltip_text$tooltip_text, nm = tooltip_text$element_id)
 
 # If using dev mode, automatically fill with example data from local RDS files.
