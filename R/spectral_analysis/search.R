@@ -487,6 +487,11 @@ get_errorinfo <- function(con, peakid) {
 search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata_precursors(con, searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
   peak_ids <- unique(msdata$peak_id)
+  if (length(peak_ids) == 0) {
+    return(list(result = data.frame(ms1match.scores = NULL, ms2match.scores = NULL, peak_sum = NULL, sample_classes = NULL, peak_ids = NULL, compounds = NULL),
+         ums2_compare = list(),
+         ums1_compare = list()))
+  }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
   if (optimized_params == TRUE) {
@@ -557,6 +562,11 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
 search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)
+  if (length(peak_ids) == 0) {
+    return(list(result = data.frame(ms1match.scores = NULL, ms2match.scores = NULL, peak_sum = NULL, sample_classes = NULL, peak_ids = NULL, compounds = NULL),
+                ums2_compare = list(),
+                ums1_compare = list()))
+  }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
   if (optimized_params == TRUE) {
@@ -607,7 +617,7 @@ search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", opt
   compounds <- get_compoundid(con, peak_ids)
   
   #scoring report, still doesn't work due to db issues 06152022 BJP
-  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds, row.names = NUL)
+  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds, row.names = NULL)
   reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
   list(result = result[reorder,],
        ums2_compare = l.ums2[reorder],
