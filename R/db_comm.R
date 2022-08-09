@@ -838,7 +838,10 @@ er_map <- function(db_conn = con) {
 #' This function seeks to abstract connection management objects to a degree. It
 #' seeks to streamline the process of connecting and disconnecting existing
 #' connections as defined by function parameters. This release has not been
-#' tested extensively drivers other than SQLite.
+#' tested extensively with drivers other than SQLite.
+#'
+#' @note If you want to disconnect everything but retain tibble pointers to your
+#'   data source as tibbles in this session, use [close_up_shop] instead.
 #'
 #' @param db CHR scalar name of the database to check, defaults to the name
 #'   supplied in config/env.R (default: session variable DB_NAME)
@@ -960,15 +963,23 @@ manage_connection <- function(db          = DB_NAME,
     if (is_local) {
       # Resolve database file location
       if (logger) log_it("trace", glue::glue('Finding local database file "{db}"'), log_ns)
-      db_where  <- list.files(pattern = db, full.names = TRUE, recursive = TRUE)
+      db_where  <- list.files(path = here::here(), pattern = db, full.names = TRUE, recursive = TRUE)
       if (length(db_where) == 0) {
         stop(sprintf('Unable to locate "%s".', db))
+      } else if (length(db_where) > 1) {
+        if (length(db_where[basename(db_where) == db]) == 1) {
+          db <- db_where[basename(db_where) == db]
+        } else {
+          stop(sprintf('More than one file named "%s" were located and none matched completely.', db))
+        }
+      } else {
+        db <- db_where
       }
     }
     global_env       <- as.list(.environ)
     global_env_names <- names(global_env)
     if (conn_name %in% global_env_names) {
-      if (connected) dbDisconnect(sym(conn_name))
+      if (connected) dbDisconnect(rlang::sym(conn_name))
       rm(list = conn_name, pos = ".GlobalEnv")
     }
     args <- list(db, ...)
@@ -980,13 +991,13 @@ manage_connection <- function(db          = DB_NAME,
         res <- do.call(dbExecute, args = list(conn = .GlobalEnv[[conn_name]], statement = "pragma foreign_keys = on"))
       )
     }
-    if (class(eval(sym(conn_name))) == "try-error") {
+    if (class(eval(rlang::sym(conn_name))) == "try-error") {
       stop(sprintf('Unable to connect to "%s".\nCall attempted was "assign(x = %s, value = try(do.call("dbConnect", args = c(drv = do.call(%s, list()), %s)))',
                    db,
                    drv,
                    paste0(args, collapse = ", ")))
     } else {
-      if (dbIsValid(eval(sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'), log_ns)
+      if (dbIsValid(eval(rlang::sym(conn_name)))) if (logger) log_it("trace", glue('"{db}" connected as "{conn_name}".'), log_ns)
     }
   }
   if (logger) log_fn("end")
@@ -1398,6 +1409,15 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 
 #' Convenience function to rebuild all database related files
 #'
+#' This is a development and deployment function that should be used with
+#' caution. It is intended solely to assist with the development process of
+#' rebuilding a database schema from source files and producing the supporting
+#' data. It will create both the JSON expressin of the data dictionary and the
+#' fallback SQL file.
+#'
+#' !! To preserve data, do not call this with both `rebuild` = TRUE and
+#' `archive` = FALSE !!
+#'
 #' @note This does not recast the views and triggers files created through
 #'   [sqlite_autoview] and [sqlite_autotrigger] as the output of those may often
 #'   need additional customization. Existing auto-views and -triggers will be
@@ -1406,11 +1426,11 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'
 #' @note This requires references to be in place to the individual functions in
 #'   the current environment.
-#'   
+#'
 #' @inheritParams build_db
 #'
 #' @param rebuild LGL scalar indicating whether to first rebuild from
-#'   environment settings
+#'   environment settings (default: FALSE for safety)
 #' @param api_running LGL scalar of whether or not the API service is currently
 #'   running (default: TRUE)
 #' @param api_monitor process object pointing to the API service (default: NULL)
@@ -1421,17 +1441,16 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'   be created in the project directory and objects will be created in the
 #'   global environment for the database map (LIST "db_map") and current
 #'   dictionary (LIST "db_dict")
-#' @export
 #'
 #' @examples
-update_all <- function(rebuild       = TRUE,
+update_all <- function(rebuild       = FALSE,
                        api_running   = TRUE,
                        api_monitor   = NULL,
                        db            = DB_NAME,
                        build_from    = DB_BUILD_FILE,
                        populate      = TRUE,
                        populate_with = DB_DATA,
-                       archive       = FALSE,
+                       archive       = TRUE,
                        sqlite_cli    = SQLITE_CLI,
                        connect       = FALSE,
                        log_ns = "db") {
@@ -1451,7 +1470,7 @@ update_all <- function(rebuild       = TRUE,
     }
   }
   if (rebuild) {
-    manage_connection(reconnect = FALSE)
+    manage_connection(db = db, reconnect = FALSE)
     tmp <- try(
       build_db(
         db            = db,
@@ -1467,7 +1486,7 @@ update_all <- function(rebuild       = TRUE,
       if (exists("log_it")) log_it("error", "There was a problem building the database. Build process halted.", log_ns)
       return(tmp)
     }
-    manage_connection()
+    manage_connection(db = db)
   }
   save_data_dictionary()
   dict_file <- list.files(pattern = "data_dictionary.json",
@@ -1491,7 +1510,11 @@ update_all <- function(rebuild       = TRUE,
   }
   if (exists("log_it")) log_it("info", "Saving entity relationship map to this session as object 'db_map'.", log_ns)
   db_map <<- tmp
-  create_fallback_build()
+  create_fallback_build(
+    build_file = build_from,
+    populate = populate,
+    populate_with = populate_with
+  )
   if (api_running && exists("api_reload")) {
     if (plumber_service_existed) {
       api_reload(pr = pr_name, background = TRUE)
@@ -1533,16 +1556,19 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   }
   # Argument validation relies on verify_args
-  if (exists("verify_args")) {
-    arg_check <- verify_args(
-      args       = list(back_up_connected_tbls),
-      conditions = list(
-        back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
-      ),
-      from_fn = "close_up_shop"
-    )
-    stopifnot(arg_check$valid)
-  }
+  stopifnot(
+    is.logical(back_up_connected_tbls),
+    length(back_up_connected_tbls) == 1
+  )
+  # if (exists("verify_args")) {
+  #   arg_check <- verify_args(
+  #     args       = list(back_up_connected_tbls),
+  #     conditions = list(
+  #       back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
+  #     )
+  #   )
+  #   stopifnot(arg_check$valid)
+  # }
   
   tmp <- lapply(as.list(.GlobalEnv), class)
   # Kill plumber instances
@@ -1556,8 +1582,8 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
   ]
   for (api in api_services) {
     if (.GlobalEnv[[api]]$is_alive()) {
-      api_stop(pr = .GlobalEnv[[api]], remove_service_obj = FALSE)
-      rm(list = api, envir = .GlobalEnv)
+      api_stop(pr = api, remove_service_obj = TRUE)
+      # rm(list = api, envir = .GlobalEnv)
     }
   }
   # Kill db connected objects
@@ -1575,7 +1601,7 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
       if (back_up_connected_tbls) {
         assign(
           x     = db_conn,
-          value = collect(eval(sym(db_conn))),
+          value = collect(eval(rlang::sym(db_conn))),
           envir = .GlobalEnv
         )
       } else {

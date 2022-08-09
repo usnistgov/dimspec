@@ -1,0 +1,20 @@
+@import url("https://use.fontawesome.com/releases/v6.1.1/css/all.css") all;
+
+.flex-container {
+  display: flex;
+  width: 100%;
+  padding: 10px 0px;
+}
+
+.flex-container > button {
+  flex: auto;
+}
+
+.logo > * > img {
+  width: 76px;
+  height: 20px;
+}
+
+.logo > a {
+  float: left;
+}

@@ -301,34 +301,106 @@
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
-		CREATE TABLE IF NOT EXISTS opt_ums_params
+	CREATE TABLE IF NOT EXISTS opt_ums_params
 	  /* table of optimal parameters for uncertainty mass spectra */
 	(
-	peak_id
-	  INTEGER NOT NULL,
-	/* foreign key to peaks(id) */
-	mslevel
-	  INTEGER NOT NULL,
-	/* mslevel for the optimal parameters */
-	correl
-	  REAL,
-	/* optimal correlation limit setting */
-	ph
-	  REAL,
-	/* optimal peak height setting */
-	freq
-	  REAL,
-	/* optimal observational frequency setting */
-	n
-	  INTEGER,
-	/**number of scans using optimal settings */
-	/* Check constraints */
-	 UNIQUE (peak_id, mslevel),
-	/* Foreign key relationships */
-	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
+  	peak_id
+  	  INTEGER NOT NULL,
+  	  /* foreign key to peaks(id) */
+  	mslevel
+  	  INTEGER NOT NULL,
+  	  /* mslevel for the optimal parameters */
+  	correl
+  	  REAL,
+  	  /* optimal correlation limit setting */
+  	ph
+  	  REAL,
+  	  /* optimal peak height setting */
+  	freq
+  	  REAL,
+  	  /* optimal observational frequency setting */
+  	n
+  	  INTEGER,
+  	  /* number of scans using optimal settings */
+  	/* Check constraints */
+  	 UNIQUE (peak_id, mslevel),
+  	/* Foreign key relationships */
+  	FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 /* Views */
+	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_samples AS 
+  		/* View of "samples" normalized by "norm_sample_classes", "norm_generation_type", and "norm_carriers". */ 
+  	SELECT 	
+  		s.id AS id, 
+  			/* Direct use column 'id' from table 'samples'. */ 	
+  		s.mzml_name AS mzml_name, 
+  			/* Direct use column 'mzml_name' from table 'samples'. */ 	
+  		s.description AS description, 
+  			/* Direct use column 'description' from table 'samples'. */ 	
+  		nsc.name AS sample_class_id, 
+  			/* Normalized value column 'name' from table 'nsc'. */ 	
+  		s.source_citation AS source_citation, 
+  			/* Direct use column 'source_citation' from table 'samples'. */ 	
+  		s.sample_contributor AS sample_contributor, 
+  			/* Direct use column 'sample_contributor' from table 'samples'. */ 	
+  		ngt.name AS generation_type, 
+  			/* Normalized value column 'name' from table 'norm_generation_type'. */ 	
+  		s.generated_on AS generated_on, 
+  			/* Direct use column 'generated_on' from table 'samples'. */ 	
+  		s.ms_methods_id AS ms_methods_id, 
+  			/* Direct use column 'ms_methods_id' from table 'samples'. */ 	
+  		nc.name AS sample_solvent
+  			/* Normalized value column 'name' from table 'norm_carriers'. */ 
+  	FROM samples s
+  	LEFT JOIN norm_sample_classes nsc ON s.sample_class_id = nsc.id 
+  	LEFT JOIN norm_generation_type ngt ON s.generation_type = ngt.id 
+  	LEFT JOIN norm_carriers nc ON s.sample_solvent = nc.id;
+	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS view_sample_narrative AS 
+	  /* Collapses the contents of view_samples and view_contributors into a single narrative string by ID */
+  	SELECT 
+  		vs.id AS "Sample ID",
+  		 /* Sample PK ID */
+  		"These " ||
+  		vs.generation_type ||
+  		" data from " ||
+  		CASE
+  			WHEN substr(vs.sample_class_id, 1, 1) IN ('a','e','i','o','u')
+  				THEN "an "
+  			ELSE "a "
+  		END ||
+  		vs.sample_class_id ||
+  		" in " ||
+  		vs.sample_solvent ||
+  		" were provided by " ||
+  		vc.name ||
+  		" (" ||
+  		vc.contact ||
+  		" - " ||
+  		vc.orcid_url ||
+  		") of " ||
+  		vc.affiliation ||
+  		' and described as "' ||
+  		vs.description ||
+  		'" in file "' ||
+  		vs.mzml_name ||
+  		'"' ||
+  		CASE 
+  			WHEN source_citation IS NULL 
+  				THEN ""
+  			ELSE source_citation
+  		END ||
+  		". Data were generated on " ||
+  		vs.generated_on ||
+  		" using the mass spectrometry method ID " ||
+  		vs.ms_methods_id ||
+  		"."
+  			AS "Narrative"
+  		/* narrative string collapsed into readable form from view_samples and view_contributors */
+  	FROM view_samples vs
+  	LEFT JOIN view_contributors vc ON vs.sample_contributor = vc.id;
 	/*magicsplit*/
   CREATE VIEW IF NOT EXISTS view_peaks AS 
   		/* View of "peaks" with text values displayed from normalization tables. */ 
@@ -369,8 +441,10 @@
 		SELECT
 			p.id AS peak_id,
 				/* internal peak id */
-			msd.id AS id,
+			msd.id AS ms_data_id,
 				/* internal id of ms_data */
+			"MS" || msd.ms_n as ms_n,
+			  /* mass spectral layer, e.g. MS1, MS2, ... MSn */
 			p.precursor_mz,
 				/* peak precursor ion */
 			msd.base_int,
@@ -387,18 +461,18 @@
 	CREATE VIEW IF NOT EXISTS peak_spectra AS
 		/* View archived and verified peak spectra for a specific peak */
 		SELECT
-			ps.peak_id,
+			pd.peak_id,
 				/* internal peak id */
-			ps.precursor_mz,
+			pd.precursor_mz,
 				/* peak precursor ion */
-			ps.scantime,
+			pd.scantime,
 				/* ms scantime for this spectrum */
 			mss.mz,
 				/* mass to charge ratio */
 			mss.intensity
 				/* measured signal intensity */
-		FROM peak_data ps
-		INNER JOIN ms_spectra mss ON ps.id = mss.ms_data_id;
+		FROM peak_data pd
+		INNER JOIN ms_spectra mss ON pd.ms_data_id = mss.ms_data_id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/

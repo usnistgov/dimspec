@@ -112,7 +112,7 @@ get_search_object <- function(searchmzml, zoom = c(1,4)) {
   if (searchmzml$search_df$ms2exp == "data-independent acquisition (DIA/AIF)" | searchmzml$search_df$ms2exp == "DIA") {
     ms2scans <- all_scans[which(mslevels[all_scans] == 2)]
   }
-  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA") {
+  if (searchmzml$search_df$ms2exp == "data-dependent acquisition (DDA/TopN)" | searchmzml$search_df$ms2exp == "DDA" | searchmzml$search_df$ms2exp == "DDA (data-dependent acquisition)") {
     ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(searchmzml$search_df$precursormz) - as.numeric(searchmzml$search_df$isowidth) & precursors[all_scans] <= as.numeric(searchmzml$search_df$precursormz) + as.numeric(searchmzml$search_df$isowidth))]
   }
   if (searchmzml$search_df$ms2exp == "SWATH") {
@@ -147,7 +147,7 @@ get_search_object <- function(searchmzml, zoom = c(1,4)) {
     mslevel = msdata$ms_n[x]))
   pt_ms1 <- create_peak_table_ms1(pl, mass = searchmzml$search_df$precursormz, masserror = searchmzml$search_df$masserror, minerror = searchmzml$search_df$minerror)
   pt_ms2 <- create_peak_table_ms2(pl, mass = searchmzml$search_df$precursormz, masserror = searchmzml$search_df$masserror, minerror = searchmzml$search_df$minerror)
-  list(pt_ms1 = pt_ms1, pt_ms2 = pt_ms2, search_df = search_df)
+  list(pt_ms1 = pt_ms1, pt_ms2 = pt_ms2, search_df = searchmzml$search_df)
 }
 
 
@@ -232,6 +232,26 @@ get_msdata_compound <- function(con, compoundid) {
   )
 }
 
+#' Get all mass spectral data for a specific peak id
+#'
+#' @param con  SQLite database connection
+#' @param peakid integer vector of peak ids
+#'
+#' @return data.frame of mass spectral data
+#' @export
+#'
+#' @examples
+
+get_msdata_peakid <- function(con, peakid) {
+  DBI::dbGetQuery(
+    conn = con,
+    paste0(
+      "SELECT * FROM ms_data
+      WHERE ms_data.peak_id IN (", paste(peakid, collapse = ","), ")"
+    )
+  )
+}
+
 #' Get all annotated fragments have matching masses
 #'
 #' @param con SQLite database connection
@@ -277,7 +297,7 @@ get_compound_fragments <- function(con, fragmentions, masserror, minerror) {
       conn = con,
       paste0(
         "SELECT * FROM norm_fragments 
-      LEFT JOIN compound_fragments ON norm_fragments.id = compound_fragments.fragment_id
+      LEFT JOIN compound_fragments ON norm_fragments.id = compound_fragments.annotated_fragment_id
       WHERE norm_fragments.fixedmass BETWEEN ", 
         ion - max(ion*masserror*10^-6,minerror),
         " AND ",
@@ -343,7 +363,7 @@ get_peak_fragments <- function(con, peakid) {
     conn = con,
     paste0(
       "SELECT peak_id, fixedmass, formula, radical, smiles, GROUP_CONCAT(citation) AS citations FROM compound_fragments 
-      LEFT JOIN norm_fragments ON compound_fragments.fragment_id = norm_fragments.id 
+      LEFT JOIN norm_fragments ON compound_fragments.annotated_fragment_id = norm_fragments.id 
       LEFT JOIN fragment_sources ON norm_fragments.id = fragment_sources.annotated_fragments_id
       WHERE compound_fragments.peak_id IN (",
       paste(peakid, collapse = ","),
@@ -464,19 +484,45 @@ get_errorinfo <- function(con, peakid) {
 #'
 #' @examples
 
-search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
+search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata_precursors(con, searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
   peak_ids <- unique(msdata$peak_id)
+  if (length(peak_ids) == 0) {
+    return(list(result = data.frame(ms1match.scores = NULL, ms2match.scores = NULL, peak_sum = NULL, sample_classes = NULL, peak_ids = NULL, compounds = NULL),
+         ums2_compare = list(),
+         ums1_compare = list()))
+  }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
+  if (optimized_params == TRUE) {
   opt_params <- get_opt_params(con, peak_ids)
   opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
-  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
-  l.ums2 <- lapply(1:length(ptms2), function(x) get_ums(ptms2[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
-  
+  }
+  if (optimized_params == FALSE) {
+    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+  }
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
+  l.ums2 <- lapply(1:length(ptms2), function(x) { ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
+    get_ums(
+      peaktable = ptms2[[x]],
+      correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      normfn = normfn,
+      cormethod = cormethod
+    )
+  })
   ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
-  l.ums1 <- lapply(1:length(ptms1), function(x) get_ums(ptms1[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)]))
-  
+  l.ums1 <- lapply(1:length(ptms1), function(x) {
+    get_ums(
+      peaktable = ptms1[[x]],
+      correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      normfn = normfn,
+      cormethod = cormethod
+    )
+  })
   #match_compare algorithm
   ms2match.scores <- do.call(rbind, lapply(l.ums2, compare_ms, ms1 = searchms$ums2))
   names(ms2match.scores) <- paste0("ms2_", names(ms2match.scores))
@@ -497,10 +543,10 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
   
   #scoring report
   result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
-  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
-  list(result = result,
-       ums2_compare = l.ums2,
-       ums1_compare = l.ums1)
+  reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
+  list(result = result[reorder,],
+       ums2_compare = l.ums2[reorder],
+       ums1_compare = l.ums1[reorder])
 }
 
 #' Search all mass spectra within database against unknown mass spectrum
@@ -513,18 +559,44 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
 #'
 #' @examples
 
-search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
+search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)
+  if (length(peak_ids) == 0) {
+    return(list(result = data.frame(ms1match.scores = NULL, ms2match.scores = NULL, peak_sum = NULL, sample_classes = NULL, peak_ids = NULL, compounds = NULL),
+                ums2_compare = list(),
+                ums1_compare = list()))
+  }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
-  opt_params <- get_opt_params(con, peak_ids)
-  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  if (optimized_params == TRUE) {
+    opt_params <- get_opt_params(con, peak_ids)
+    opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  }
+  if (optimized_params == FALSE) {
+    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+  }
   ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
-  l.ums2 <- lapply(1:length(ptms2), function(x) get_ums(ptms2[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
+  l.ums2 <- lapply(1:length(ptms2), function(x) {
+    get_ums(peaktable = ptms2[[x]],
+            correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+            ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+            freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+            normfn = normfn,
+            cormethod = cormethod
+    )
+  })
   
   ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
-  l.ums1 <- lapply(1:length(ptms1), function(x) get_ums(ptms1[[x]], correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)], freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)]))
+  l.ums1 <- lapply(1:length(ptms1), function(x) {
+    get_ums(peaktable = ptms1[[x]],
+            correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+            ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+            freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+            normfn = normfn,
+            cormethod = cormethod
+    )
+  })
   
   #match_compare algorithm
   ms2match.scores <- do.call(rbind, lapply(l.ums2, compare_ms, ms1 = searchms$ums2))
@@ -545,9 +617,9 @@ search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson") {
   compounds <- get_compoundid(con, peak_ids)
   
   #scoring report, still doesn't work due to db issues 06152022 BJP
-  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds)
-  result <- result[order(rowSums(result[1:7]), decreasing = TRUE),]
-  list(result = result,
-       ums2_compare = l.ums2,
-       ums1_compare = l.ums1)
+  result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds, row.names = NULL)
+  reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
+  list(result = result[reorder,],
+       ums2_compare = l.ums2[reorder],
+       ums1_compare = l.ums1[reorder])
 }

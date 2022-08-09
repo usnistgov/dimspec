@@ -26,16 +26,17 @@ support_info <- function(app_info = TRUE) {
     system          = sessionInfo(),
     project_dir     = getwd(),
     files_available = sort(list.files(full.names = TRUE, recursive  = TRUE)),
-    packs_installed = sort(installed.packages()[, 3]),
+    packs_installed = sort(installed.packages()[, 3]) %>% as.list(),
     packs_active    = sort((.packages()))
   )
   if (app_info) {
     if (exists("log_it")) log_it("debug", "Gathering application information...")
     global <- as.list(.GlobalEnv)
     app <- list(
-      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grepl("DB_", sort(names(global)))] else "Not set",
+      DB_SETTINGS     = if (any(grepl("DB_", names(global)))) global[grep("DB_", sort(names(global)), value = TRUE)] else "Not set",
       BUILD_FILE      = if (exists("DB_BUILD_FILE")) {
-        fpath <- list.files(pattern = DB_BUILD_FILE,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_BUILD_FILE,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_BUILD_FILE,
@@ -45,7 +46,8 @@ support_info <- function(app_info = TRUE) {
         "Not set"
       },
       BUILD_FILE_FULL = if (exists("DB_BUILD_FULL")) {
-        fpath <- list.files(pattern = DB_BUILD_FULL,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_BUILD_FULL,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_BUILD_FULL,
@@ -55,7 +57,8 @@ support_info <- function(app_info = TRUE) {
         "Not set"
       },
       POPULATED_WITH  = if (exists("DB_DATA")) {
-        fpath <- list.files(pattern = DB_DATA,
+        fpath <- list.files(path = here::here(),
+                            pattern = DB_DATA,
                             full.names = TRUE,
                             recursive = TRUE)
         list(file = DB_DATA,
@@ -76,7 +79,7 @@ support_info <- function(app_info = TRUE) {
           lapply(get_settings,
                function(x) {
                  if (exists(x)) {
-                   eval(sym(x))
+                   eval(rlang::sym(x))
                  } else {
                    "Not set"
                  }
@@ -91,15 +94,17 @@ support_info <- function(app_info = TRUE) {
           lapply(get_settings,
                  function(x) {
                    if (exists(x)) {
+                     tmp <- eval(rlang::sym(x))
                      if (x == "PLUMBER_FILE") {
-                       fpath <- list.files(pattern = x,
+                       fpath <- list.files(path = here::here(),
+                                           pattern = basename(tmp),
                                            full.names = TRUE,
                                            recursive = TRUE)
-                       list(file = eval(sym(x)),
+                       list(file = tmp,
                             exists = !length(fpath) == 0,
                             location = fpath)
                      } else {
-                       eval(sym(x))
+                       tmp
                      }
                    } else {
                      "Not set"
@@ -122,6 +127,7 @@ support_info <- function(app_info = TRUE) {
   } else {
     out <- sys_info
   }
+  out$packs_installed
   log_fn("end")
   return(out)
 }
@@ -307,7 +313,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   } else if (!any(is.character(args), !is.list(args))) {
     stop("Parameter 'args' must be either an environment or a list of values.")
   }
-  if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue('Verifying arguments for "{from_fn}".'))
+  if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue::glue('Verifying arguments for "{from_fn}".'))
   if (length(args) != length(conditions)) stop('Each item in "args" needs at least one matching condition.')
   check_types  <- c("class", "mode", "length", "no_na", "n>", "n<", "n>=", "n<=", ">", "<", ">=", "<=", "between", "choices", "FUN", "not_empty", "file_exists")
   supported    <- paste0("'", check_types, "'", collapse = ", ")
@@ -325,10 +331,10 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   for (i in 1:length(args)) {
     arg   <- args[i]
     if (is.null(names(arg))) {
-      names(arg) <- glue("argument_{i}")
+      names(arg) <- glue::glue("argument_{i}")
     }
     needs <- conditions[[i]]
-    if (exists("log_it")) log_it("trace", glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
+    if (exists("log_it")) log_it("trace", glue::glue('Verify provided value of "{paste0(args[i], collapse = \'", "\')}"'))
     out$results[[i]] <- vector("logical", length = length(needs))
     for(j in 1:length(needs)) {
       rslt  <- TRUE
@@ -339,16 +345,16 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
       check <- unlist(x[-1])
       if (missing(val)) {
         rslt <- FALSE
-        msg  <- glue('Parameter "{names(arg)}" is required.')
+        msg  <- glue::glue('Parameter "{names(arg)}" is required.')
       } else {
         switch(type,
                "class"   = {
                  rslt <- all(check %in% class(val))
                  class_real <- class(val)
                  class_need <- check[!check %in% class_real]
-                 class_real <- glue('{ifelse(length(class_real) == 1, "", "es")} {format_list_of_names(class_real, add_quotes = TRUE)}')
-                 class_need <- glue('{ifelse(length(class_need) == 1, "", "es")} {format_list_of_names(class_need, add_quotes = TRUE)}')
-                 msg  <- glue('Parameter "{names(arg)}" of class{class_real} was missing required class{class_need}.')
+                 class_real <- glue::glue('{ifelse(length(class_real) == 1, "", "es")} {format_list_of_names(class_real, add_quotes = TRUE)}')
+                 class_need <- glue::glue('{ifelse(length(class_need) == 1, "", "es")} {format_list_of_names(class_need, add_quotes = TRUE)}')
+                 msg  <- glue::glue('Parameter "{names(arg)}" of class{class_real} was missing required class{class_need}.')
                },
                "mode"    = {
                  mode_check <- grep(paste0("is[\\._]", check), mode_types, value = TRUE)
@@ -359,79 +365,79 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                  }
                  if (length(mode_check) == 1) {
                    rslt <- do.call(mode_check, list(val))
-                   msg  <- glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
+                   msg  <- glue::glue("Argument '{names(arg)}' (checked with '{mode_check}') must be of class '{check}' rather than '{class(val)}'.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
+                   msg  <- glue::glue("Unable to find function '{mode_check}' check argument '{names(arg)}' with '{mode_check}' as it ")
                  }
                },
                "length"  = {
                  rslt <- length(val) == as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length {check} rather than {length(val)}.")
                },
                "no_na"   = {
                  rslt <- !any(is.na(val))
-                 msg  <- glue("Argument '{names(arg)}' includes NA values.")
+                 msg  <- glue::glue("Argument '{names(arg)}' includes NA values.")
                },
                "n>"      = {
                  rslt <- length(val) > as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length greater than {check} rather than {length(val)}.")
                },
                "n<"      = {
                  rslt <- length(val) < as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length lesser than {check} rather than {length(val)}.")
                },
                "n>="     = {
                  rslt <- length(val) >= as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length greater than or equal to {check} rather than {length(val)}.")
                },
                "n<="     = {
                  rslt <- length(val) <= as.integer(check)
-                 msg  <- glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
+                 msg  <- glue::glue("Argument '{names(arg)}' must be of length lesser than or equal to {check} rather than {length(val)}.")
                },
                ">"       = {
                  if (length(check) == 1) {
                    rslt <- all(val > check)
-                   msg  <- glue("Argument '{names(arg)}' must be greater than {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be greater than {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                "<"       = {
                  if (length(check) == 1) {
                    rslt <- all(val < check)
-                   msg  <- glue("Argument '{names(arg)}' must be lesser than {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be lesser than {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                ">="       = {
                  if (length(check) == 1) {
                    rslt <- all(val >= check)
-                   msg  <- glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be greater than or equal to {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) were provided: {check}.")
                  }
                },
                "<="       = {
                  if (length(check) == 1) {
                    rslt <- all(val <= check)
-                   msg  <- glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
+                   msg  <- glue::glue("Argument '{names(arg)}' must be lesser than or equal to {check}.")
                  } else {
                    rslt <- FALSE
-                   msg  <- glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
+                   msg  <- glue::glue("Expected an exclusive upper bound, but {length(check)} value(s) provided: {check}.")
                  }
                },
                "between" = {
                  if (length(check) == 2) {
                    rslt <- all(val >= check[1] && val <= check[2])
                    if (is.numeric(val)) {
-                     msg  <- glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
+                     msg  <- glue::glue("Argument '{names(arg)}' must be between {check[1]} and {check[2]} but the range was {paste0(range(val), collapse = ' - ')}.")
                    } else {
-                     msg  <- glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
+                     msg  <- glue::glue("Argument '{names(arg)}' must be a numeric or date vector between {check[1]} and {check[2]} but was provided as {class(arg)}.")
                    }
                  } else {
                    if (length(check) < 2) {
@@ -440,12 +446,12 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                      len_check <- "more than"
                    }
                    rslt <- FALSE
-                   msg  <- glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
+                   msg  <- glue::glue("Expected an inclusive bounding range, but {len_check} 2 values were provided: {check}.")
                  }
                },
                "choices" = {
                  rslt <- all(val %in% check)
-                 msg  <- glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
+                 msg  <- glue::glue('Argument "{names(arg)}" was not present in choice list c("{paste0(check, collapse = \'", "\')}").')
                },
                "call"    = {
                  rslt <- tryCatch(do.call(check, list(val)),
@@ -453,46 +459,46 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
                                   warning = function(w) w)
                  val  <- paste0('"', val, '"', collapse = ", ")
                  if ("simpleError" %in% class(rslt)) {
-                   msg  <- glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   msg  <- glue::glue("Error evaluating 'do.call({check}, list({val}))': \"{rslt$message}\"")
                    rslt <- FALSE
                  } else if ("simpleWarning" %in% class(rslt)) {
-                   msg  <- glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
+                   msg  <- glue::glue("Warning on 'do.call({check}, list({val}))': \"{rslt$message}\"")
                    rslt <- FALSE
                  } else {
                    rslt <- TRUE
                  }
                },
                "not_empty" = {
-                 msg  <- glue("Object contained nothing but NAs, NULLs, or empty character strings.")
+                 msg  <- glue::glue("Object contained nothing but NAs, NULLs, or empty character strings.")
                  rslt <- !has_missing_elements(val)
                },
                "file_exists" = {
-                 msg  <- glue("Could not locate file '{val}'.")
+                 msg  <- glue::glue("Could not locate file '{val}'.")
                  rslt <- file.exists(val)
                },
                {
                  rslt <- FALSE
-                 msg  <- glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
+                 msg  <- glue::glue("Could not match condition type '{type}' for argument '{names(arg)}'. Ensure the check is one of: {supported}")
                }
         )
       }
-      log_msg <- glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
+      log_msg <- glue::glue('  Check type is "{type}" against: "{format_list_of_names(check)}"')
       out$results[[i]][j]   <- rslt
       if (!rslt) {
         out$valid           <- FALSE
         n_msg               <- length(out$messages) + 1
         out$messages[n_msg] <- msg
-        log_it("trace", glue('{log_msg} - FAIL'))
-        if (!silent) log_it("error", glue("    {msg}"))
+        log_it("trace", glue::glue('{log_msg} - FAIL'))
+        if (!silent) log_it("error", glue::glue("    {msg}"))
       } else {
-        if (exists("log_it")) log_it("trace", glue('{log_msg} - PASS'))
+        if (exists("log_it")) log_it("trace", glue::glue('{log_msg} - PASS'))
       }
     }
   }
   if (out$valid) {
-    if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue("Arguments verified for '{from_fn}'"))
+    if (!is.null(from_fn) && exists("log_it")) log_it("trace", glue::glue("Arguments verified for '{from_fn}'"))
   } else {
-    if (exists("log_it")) log_it("error", glue("Arguments could not be verified",
+    if (exists("log_it")) log_it("error", glue::glue("Arguments could not be verified",
                                                ifelse(from_fn == "NULL", ".", " for '{from_fn}'."),
                                                " See return for details."))
   }
@@ -521,7 +527,6 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #' format_list_of_names(c(1:3))
 #' format_list_of_names(seq.Date(Sys.Date(), Sys.Date() + 3, by = 1))
 format_list_of_names <- function(namelist, add_quotes = FALSE) {
-  stopifnot(require(glue))
   log_fn("start")
   if (length(namelist) == 0) {
     return("")
@@ -598,7 +603,7 @@ log_it <- function(log_level,
     length(msg) < 2,
     is.logical(reset_logger_settings) && length(reset_logger_settings) == 1,
     !reset_logger_settings || (reset_logger_settings && length(logger_settings) == 1 && file.exists(logger_settings)),
-    is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING") && toupper(clone_settings_from) %in% toupper(names(LOGGING))),
+    is.null(clone_settings_from) || (is.character(clone_settings_from) && length(clone_settings_from) == 1 && exists("LOGGING")),
     is.logical(add_unknown_ns) && length(add_unknown_ns) == 1
   )
   if (has_missing_elements(msg, logging = FALSE)) msg <- "[no message provided]"
@@ -652,17 +657,29 @@ log_it <- function(log_level,
           } else {
             i <- 1
           }
+          requested_clone <- clone_settings_from
           clone_settings_from <- names(LOGGING)[i]
           settings_from <- LOGGING[[i]]$ns
           if (add_unknown_ns) {
+            log_it("info", sprintf('Setting up namespace "%s"', log_ns))
             if (clone_exists) {
-              log_it("info", sprintf('Copying settings for "%s" from "%s". Access settings at LOGGING[["%s"]]', log_ns, settings_from, toupper(log_ns)))
+              log_it("info", sprintf('Copying settings for "%s" from "%s". Access settings at LOGGING$%s', log_ns, settings_from, toupper(log_ns)))
             } else {
-              log_it("warn", sprintf('Clone namespace "%s" is not set up. Settings for "%s" will be used instead.', tolower(clone_settings_from), settings_from))
+              msg <- ifelse(
+                is.null(requested_clone),
+                sprintf('No clone namespace provided. Settings for "%s" will be used as a default.', settings_from),
+                sprintf('Requestedlone namespace "%s" is not set up. Settings for "%s" will be used instead.', requested_clone, settings_from)
+              )
+              log_it("warn", msg)
             }
             LOGGING[[toupper(log_ns)]] <- LOGGING[[i]]
-            LOGGING[[toupper(log_ns)]]$ns <- log_ns
+            LOGGING[[toupper(log_ns)]]$ns <- tolower(log_ns)
+            LOGGING[[toupper(log_ns)]]$file <- file.path(
+              dirname(LOGGING[[toupper(log_ns)]]$file),
+              sprintf("log_%s.txt", tolower(log_ns))
+            )
             assign("LOGGING", LOGGING, envir = .GlobalEnv)
+            update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
             log_it(
               "warn",
               sprintf(
@@ -671,13 +688,11 @@ log_it <- function(log_level,
               log_ns)
           } else {
             log_it("info", sprintf('Call again with "add_unknown_ns = TRUE" to establish the "%s" namespace with the same settings as "%s".', log_ns, settings_from))
-            log_it("info", sprintf('Logs for "%s" will only be available in the console.', log_ns))
           }
           do_log <- TRUE
         }
       }
     }
-    if (!exists("do_log")) browser()
     if (do_log) {
       log_func  <- sprintf("log_%s", tolower(log_level))
       log_level <- toupper(log_level)
@@ -688,7 +703,7 @@ log_it <- function(log_level,
                   .topcall = sys.call(n_call),
                   msg)
       } else {
-        # # See below comment about package "cli"...if that reoute is desired, it is necessary to uncomment this block.
+        # # See below comment about package "cli"...if that route is desired, it is necessary to uncomment this block.
         #
         # log_level <- switch(log_level,
         #                     "WARN" = "WARNING",
@@ -932,16 +947,29 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #' @return
 #' @export
 #'
-#' @examples
-rectify_null_from_env <- function(parameter, env_parameter, default, log_ns = NA_character_) {
+#' @usage
+rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_ns = NA_character_) {
   logger <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   if (logger) log_fn("start", log_ns)
-  if (!is.null(parameter)) {
-    par_name <- deparse(substitute(parameter))
+  par_name <- deparse(substitute(parameter))
+  orig_length <- nchar(par_name)
+  par_name <- gsub('\\"', '', par_name)
+  new_length <- nchar(par_name)
+  param_chr <-  orig_length != new_length
+  if (!par_name %in% c("", "NULL", "NA")) {
     par_ref  <- ""
     suffix   <- "as provided"
-    out <- parameter
-  } else {
+    if (exists(par_name)) {
+      if (param_chr) {
+        out <- eval(rlang::sym(par_name))
+      } else {
+        out <- parameter
+      }
+    } else {
+      out <- NULL
+    }
+  }
+  if (is.null(out)) {
     env_par_name <- deparse(substitute(env_parameter))
     par_name <- env_par_name
     suffix   <- ""
@@ -1097,10 +1125,10 @@ obj_name_check <- function(obj, default_name = NULL) {
     # Placeholder to do maybe do something like preservation/backup of current
     # object or suggest a new name
     
-    # pr <- eval(sym(obj_name))
+    # pr <- eval(rlang::sym(obj_name))
   } else {
     if (exists("log_it")) {
-      log_it("warn", glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
+      log_it("warn", glue::glue('No object named "{obj_name}" exists. Defaulting to "{default_name}".'))
     }
     if (is.null(default_name)) {
       if (exists("log_it")) log_it("warn", "No default name provided. Name given back as-is.")
@@ -1123,7 +1151,7 @@ obj_name_check <- function(obj, default_name = NULL) {
 #'   conflicts between the two.
 #'
 #' @param src_dir CHR scalar file path to settings and functions enabling rdkit
-#'   (default: file.path(getwd(), "rdkit"))
+#'   (default: here::here("inst", "rdkit"))
 #' @param log_ns CHR scalar name of the logging namespace to use for this
 #'   function (default: "rdkit")
 #'
@@ -1131,7 +1159,8 @@ obj_name_check <- function(obj, default_name = NULL) {
 #'   successful
 #' @export
 #'
-start_rdkit <- function(src_dir = file.path(getwd(), "rdkit"), log_ns = "rdkit") {
+start_rdkit <- function(src_dir = here::here("inst", "rdkit"), log_ns = "rdkit") {
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "rdkit"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
   if (any(c("BiocManager", "rcdk", "ChemmineR") %in% loadedNamespaces())) {
     stop("RDKit cannot be loaded if Bioconductor is already running.")
   }
@@ -1151,4 +1180,89 @@ start_rdkit <- function(src_dir = file.path(getwd(), "rdkit"), log_ns = "rdkit")
          source,
          keep.source = FALSE)
   rdkit_active(make_if_not = TRUE)
+}
+
+#' Start the plumber interface from a clean environment
+#'
+#' This convenience function launches the plumber instance if it was not set to
+#' laumch during the session setup.
+#'
+#' @param background LGL scalar of whether to launch the API in a background
+#'   process (default: TRUE)
+#' @param src_dir  CHR scalar file path to settings and functions enabling the
+#'   plumber API (default: here::here("inst", "plumber"))
+#' @param log_ns CHR scalar name of the logging namespace to use for this
+#'   function (default: "API")
+#'
+#' @return None, launches the plumber instance
+#' @export
+#'
+#' @usage
+start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = NULL, background = TRUE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
+  if (!exists("api_reload")) {
+    source(file.path(src_dir, "api_control.R"))
+    reminder <- TRUE
+  } else {
+    reminder <- FALSE
+  }
+  plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, file.path(src_dir, "plumber.R"))
+  plumber_host <- rectify_null_from_env(plumber_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
+  plumber_port <- rectify_null_from_env(plumber_port, PLUMBER_PORT, getOption("plumber.port", 8080))
+  running_on   <- api_reload(plumber_file = plumber_file, on_host = plumber_host, on_port = plumber_port, background = background)
+  if (reminder) {
+    if (!exists("LOGGING_ON") || !LOGGING_ON) message("Logging will be turned on in the background instance.")
+    message("Remember to kill the plumber instance (e.g. plumber_service$kill() or api_stop()) when you are finished with it.")
+  }
+  PLUMBER_URL <<- running_on
+}
+
+#' WIP Launch an analysis shiny application
+#'
+#' Call this function to launch an app either directly or in a background
+#' process. The name must be present in the app directory
+#'
+#' @param app_name
+#' @param app_dir
+#' @param background
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+start_app <- function(app_name, app_dir = here::here("inst", "apps"), background = FALSE, ...) {
+  # TODO make these launchable in the background to keep the session free
+  # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
+  if (exists("SHINY_APPS")) {
+    app_dir <- SHINY_APPS[[app_name]]
+  } else {
+    app_dir <- file.path(app_dir, app_name)
+  }
+  background <- FALSE
+  kwargs <- c(
+    list(...),
+    appDir = app_dir
+  )
+  if (!is.null(kwargs)) {
+    kwargs <- kwargs[which(names(kwargs) %in% names(formals(shiny::runApp)))]
+  }
+  if (!dir.exists(app_dir)) stop(sprintf("Could not locate an app named %s at %s", app_name, app_dir))
+  app_name <- sprintf("app_%s_service", basename(app_dir))
+  if (background) {
+    assign(
+      x = app_name,
+      value = callr::r_bg(
+        args = kwargs,
+        func = {
+          if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+          do.call(what = shiny::runApp, args = kwargs)
+        }
+      ),
+      envir = .GlobalEnv
+    )
+    message(sprintf("Don't forget to close the application process (e.g. %s$kill()) when you finish with it.", app_name))
+  } else {
+    do.call(what = shiny::runApp, args = kwargs)
+  }
 }

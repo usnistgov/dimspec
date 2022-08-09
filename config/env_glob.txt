@@ -1,7 +1,6 @@
 # Title of this database -------------------------------------------------------
 DB_TITLE       = "NIST HRAMS Database for PFAS"
 
-
 # Database build and data ------------------------------------------------------
 # Treat DB_NAME, DB_BUILD_FILE, DB_BUILD_FULL, and DB_DATA as file names (FALSE) 
 # or explicit file locations (TRUE). If TRUE, R will treat these as specific
@@ -48,7 +47,7 @@ INIT_CONNECT   = TRUE
 LOGGING_ON     = TRUE
 
 # Whether to activate plumber integration. (requires R)
-USE_API        = FALSE
+USE_API        = TRUE
 
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
 # this session will provide support for RDKit or ChemMineR, and set USE_RDKIT
@@ -57,4 +56,5 @@ INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
 # Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
-USE_SHINY      = FALSE
+USE_SHINY      = TRUE
+SHINY_BG       = TRUE

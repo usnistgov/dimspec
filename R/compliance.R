@@ -1,45 +1,48 @@
-# Start with clean environment -------------------------------------------------
-# _Remove environment variables ------------------------------------------------
-rm(list = ls())
-# _Unload non-core packages ----------------------------------------------------
-#     Note this does not reliably remove namespaces.
-unload_packs <- unique(c(
-  if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
-  names(sessionInfo()$loadedOnly),
-  names(sessionInfo()$otherPkgs)
-))
-invisible(
-  lapply(unload_packs,
-         function(x) {
-           this_pack <- paste('package', x, sep = ":")
-           if (this_pack %in% search()) {
-             detach(
-               name = this_pack,
-               character.only = TRUE,
-               unload = TRUE,
-               force = TRUE
-             )
-           }
-         })
-)
+# # Start with clean environment -------------------------------------------------
+# # _Remove environment variables ------------------------------------------------
+# rm(list = ls())
+# # _Unload non-core packages ----------------------------------------------------
+# #     Note this does not reliably remove namespaces.
+# unload_packs <- unique(c(
+#   if (exists("DEPENDS_ON")) DEPENDS_ON else NULL,
+#   names(sessionInfo()$loadedOnly),
+#   names(sessionInfo()$otherPkgs)
+# ))
+# invisible(
+#   lapply(unload_packs,
+#          function(x) {
+#            this_pack <- paste('package', x, sep = ":")
+#            if (this_pack %in% search()) {
+#              detach(
+#                name = this_pack,
+#                character.only = TRUE,
+#                unload = TRUE,
+#                force = TRUE
+#              )
+#            }
+#          })
+# )
+# rm(unload_packs)
+
+# _Set operational env variables -----------------------------------------------
+installed_packages <- installed.packages()
+if (!"here" %in% installed_packages) install.packages("here")
+if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config", "env_R.R"))
 
 # Ensure compliant environment -------------------------------------------------
 # _Verify required directory presence ------------------------------------------
-if (!dir.exists("input")) {dir.create("input")}
-if (!dir.exists("output")) {dir.create("output")}
-if (!dir.exists(file.path("output", "gather"))) {dir.create(file.path("output", "gather"))}
-if (!dir.exists(file.path("output", "aggregate"))) {dir.create(file.path("output", "aggregate"))}
-if (!dir.exists(file.path("output", "extract"))) {dir.create(file.path("output", "extract"))}
-if (!dir.exists(file.path("output", "example"))) {dir.create(file.path("output", "example"))}
-
-# _Set operational env variables -----------------------------------------------
-source(file.path("config", "env_R.R"))
+if (!dir.exists(here::here("input"))) {dir.create(here::here("input"))}
+if (!dir.exists(here::here("output"))) {dir.create(here::here("output"))}
+if (!dir.exists(here::here("output", "gather"))) {dir.create(here::here("output", "gather"))}
+if (!dir.exists(here::here("output", "aggregate"))) {dir.create(here::here("output", "aggregate"))}
+if (!dir.exists(here::here("output", "extract"))) {dir.create(here::here("output", "extract"))}
+if (!dir.exists(here::here("output", "example"))) {dir.create(here::here("output", "example"))}
 
 # _Load required packages ------------------------------------------------------
 # - here all are from CRAN, ChemmineR and rcdk are set in env_R depending on the
 # set value of USE_RDKIT
 packs       <- DEPENDS_ON
-packs_TRUE  <- which(packs %in% installed.packages())
+packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
   install.packages(pkgs         = packs_FALSE,
@@ -47,18 +50,18 @@ if (length(packs_FALSE) > 0) {
                    dependencies = TRUE)
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
-rm(packs, unload_packs, packs_TRUE, packs_FALSE)
+rm(packs, packs_TRUE, packs_FALSE)
 
 # _Source required files -------------------------------------------------------
 # - If this changes to a formal package we'll want to redefine these
 exclusions <- paste0(EXCLUSIONS, collapse = "|")
-sources <- list.files("R", pattern = ".R$", full.names = TRUE, recursive = TRUE)
+sources <- list.files(path = here::here("R"), pattern = ".R$", full.names = TRUE, recursive = TRUE)
 sources <- sources[-grep(exclusions, sources)]
 invisible(sapply(sources, source, keep.source = FALSE))
 
 # _Set up logger ---------------------------------------------------------------
 if (LOGGING_ON) {
-  source(file.path("config", "env_logger.R"))
+  source(here::here("config", "env_logger.R"))
   update_logger_settings()
   log_it("info", "Setting up logger for use with this session...")
 } else {
@@ -80,7 +83,7 @@ if (INIT_CONNECT) {
   } else {
     if (LOGGING_ON) log_it("success", 'A database map is available as object "db_map".')
   }
-  db_dict <- list.files(pattern = "dictionary", full.names = TRUE)
+  db_dict <- list.files(path = here::here(), pattern = "dictionary", full.names = TRUE)
   if (length(db_dict) == 1) {
     if (LOGGING_ON) log_it("info", sprintf('Dictionary file located at %s', db_dict))
     db_dict <- try(lapply(read_json(db_dict), bind_rows))
@@ -118,9 +121,10 @@ if (INIT_CONNECT) {
 
 # _Plumber set up --------------------------------------------------------------
 if (USE_API) {
+  require(plumber)
   log_it("info", "Activating plumber API...", "api")
   if (!"plumber" %in% installed.packages()) install.packages("plumber")
-  source(file.path("plumber", "api_control.R"))
+  source(here::here("inst", "plumber", "api_control.R"))
   api_reload(
     pr = "plumber_service",
     background = TRUE,
@@ -143,8 +147,8 @@ if (INFORMATICS) {
     log_it("info", "Using RDKit for this session. Setting up...", "rdk")
     if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
     require(reticulate)
-    source(file.path("rdkit", "env_py.R"))
-    source(file.path("rdkit", "py_setup.R"))
+    source(here::here("inst", "rdkit", "env_py.R"))
+    source(here::here("inst", "rdkit", "py_setup.R"))
     if (!exists("PYENV_NAME")) PYENV_NAME <- "nist_hrms_db"
     if (!exists("PYENV_LIBRARIES")) PYENV_LIBRARIES <- c("rdkit=2021.09.4", "r-reticulate=1.24")
     if (!exists("PYENV_REF")) PYENV_REF <- "rdk"
@@ -162,5 +166,5 @@ if (INFORMATICS) {
 }
 
 # _Clean up --------------------------------------------------------------------
-rm(sources, exclusions)
-
+rm(sources, exclusions, installed_packages)
+RENV_ESTABLISHED_COMPLIANCE <- TRUE

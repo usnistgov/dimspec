@@ -191,14 +191,14 @@
 		compound_id
 			INTEGER,
 			/* foreign key to compounds */
-		fragment_id
+		annotated_fragment_id
 			INTEGER,
 			/* foreign key to annotated_fragments */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (compound_id) REFERENCES compounds(id) ON UPDATE CASCADE ON DELETE SET NULL,
-		FOREIGN KEY (fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+		FOREIGN KEY (annotated_fragment_id) REFERENCES annotated_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS annotated_fragments
@@ -308,6 +308,30 @@
 	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
+  CREATE VIEW IF NOT EXISTS compound_data AS
+  	/* View raw data from all peaks associated with compounds. */
+  	SELECT DISTINCT
+  		cf.compound_id,
+  			/* internal compound id */
+  		cf.peak_id,
+  			/* internal peak id */
+  		pd.ms_n,
+  			/* mass spectral layer, e.g. MS1, MS2, ... MSn */
+  		pd.precursor_mz,
+  			/* peak precursor ion */
+  		pd.base_int,
+  			/* measured mass of precursor_mz */
+  		pd.scantime,
+  			/* ms scantime for this spectrum */
+  		pd.mz,
+  			/* mass to charge ratios */
+  		pd.intensity
+  			/* measured signal intensities */
+  	FROM compound_fragments cf
+  	LEFT JOIN peak_data pd
+  	ON cf.peak_id = pd.peak_id
+  	WHERE NOT cf.peak_id IS NULL;
+	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
 		SELECT
@@ -321,11 +345,12 @@
 				/* annotated fragments mz field */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		ORDER BY mz ASC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments_stats AS 
+	  /* Summarization view of statistics associated with compound fragments, including the number of times they have recorded, their measured masses, and ppm error as compared with nominal exact masses. */
 		SELECT
 			c.id as compound_id,
 				/* compounds.id field */
@@ -359,7 +384,7 @@
 			  /* Sample standard deviation of the part per million error values at which the fragment has been measured */ 
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.id 
 		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = vfms.fragment_id 
@@ -377,7 +402,7 @@
 				/* distinct number of fragments associated with this compound as the count of associated fragments.formula */
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
-		INNER JOIN annotated_fragments af ON cf.fragment_id = af.id
+		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
 		GROUP BY compound
 		ORDER BY n_fragments DESC;
@@ -403,7 +428,7 @@
       annotated_fragments af 
       INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
   /*magicsplit*/
-  CREATE VIEW view_fragment_mz_stats AS 
+  CREATE VIEW IF NOT EXISTS view_fragment_mz_stats AS 
     /* Mean measures of measured_mz values - a supplementary calculation table. */
     SELECT
       af.fragment_id,
@@ -443,7 +468,9 @@
 				WHEN car.name == "SMILES"
 					THEN "https://www.google.com/search?q=canonical+SMILES+"||
 						REPLACE(ca.alias , "#", "%23")
-				WHEN c.obtained_from IS NOT NULL 
+				WHEN car.name == "NIST Suspect List"
+					THEN "https://data.nist.gov/od/id/mds2-2387"
+				WHEN c.obtained_from IS NOT NULL AND NOT c.obtained_from LIKE "https://comptox.epa.gov%"
 					THEN c.obtained_from
 				ELSE
 					"https://www.google.com/search?q="||ca.alias
@@ -456,18 +483,19 @@
 	CREATE VIEW IF NOT EXISTS view_masserror AS 
     /* Get the mass error information for all peaks */
     SELECT 
-      peaks.id AS peak_id, 
+      p.id AS peak_id, 
       /* Foreign key to peaks.id */
-      samples.id AS sample_id, 
+      s.id AS sample_id, 
       /* Foreign key to samples.id */
-      peaks.precursor_mz AS precursor_mz, 
+      p.precursor_mz AS precursor_mz, 
       /* Precursor mass of the peak */
-      value FROM qc_data
+      qcd.value
       /* msaccuracy value from qc_data */
-    INNER JOIN samples ON qc_data.sample_id = samples.id
-    INNER JOIN peaks ON samples.id = peaks.sample_id
-    WHERE qc_data.name = "msaccuracy"
-    GROUP BY peaks.id;
+    FROM qc_data qcd
+    INNER JOIN samples s ON qcd.sample_id = s.id
+    INNER JOIN peaks p ON s.id = p.sample_id
+    WHERE qcd.name = "msaccuracy"
+    GROUP BY p.id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
