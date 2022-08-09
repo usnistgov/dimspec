@@ -1,5 +1,28 @@
 @import url("https://use.fontawesome.com/releases/v6.1.1/css/all.css") all;
 
+.content {
+  overflow: auto;
+  height: calc(100vh - 50px);
+  padding-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .content {
+    height: calc(100vh - 100px);
+  }
+}
+.logo, .navbar {
+  background-color: #222d32 !important;
+}
+
+.logo > * > img {
+  width: 210px;
+}
+
+.logo > a {
+  float: left;
+}
+
 .flex-container {
   display: flex;
   width: 100%;
@@ -8,13 +31,4 @@
 
 .flex-container > button {
   flex: auto;
-}
-
-.logo > * > img {
-  width: 76px;
-  height: 20px;
-}
-
-.logo > a {
-  float: left;
 }

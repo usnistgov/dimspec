@@ -5,6 +5,7 @@ shinyServer(function(input, output) {
                                       query = list(table_name = input$selected_table),
                                       return_format = "data.frame"),
                   rownames = FALSE,
+                  extensions = "Responsive",
                   filter = "top")
   })
   output$dt_table_comments <- renderUI({

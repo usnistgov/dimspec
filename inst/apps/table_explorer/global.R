@@ -24,7 +24,7 @@ if (exists("LOGGING") && LOGGING_ON) {
 }
 
 # Session variables
-if (exists("PLUMBER_URL") && api_endpoint(PLUMBER_URL, path = "active")) {
+if (exists("PLUMBER_URL") && api_endpoint(PLUMBER_URL, path = "db_active")) {
   table_list <- sort(
     c(
       api_endpoint(PLUMBER_URL, path = "list_views"),
@@ -37,7 +37,8 @@ if (exists("PLUMBER_URL") && api_endpoint(PLUMBER_URL, path = "active")) {
 if (!exists("db_map")) db_map <- readRDS(file.path("data", "er_map.RDS"))
 if (!exists("db_dict")) {
   db_dict <- grep("dictionary.json",
-                  list.files(here::here()),
+                  list.files(here::here(),
+                             full.names = TRUE),
                   value = TRUE) %>%
     jsonlite::read_json() %>%
     lapply(bind_rows)
