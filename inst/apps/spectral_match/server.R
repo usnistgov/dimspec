@@ -410,6 +410,7 @@ shinyServer(function(input, output, session) {
       data_input_search_upload(upload)
       log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_import_search'."), app_ns)
       showModal(mod_data_input_parameters_upload(data = upload))
+      if (!show_help()) runjs('$(".info-tooltip").hide()')
     }
   })
   observeEvent(input$mod_upload_parameter_cancel, {
@@ -491,6 +492,7 @@ shinyServer(function(input, output, session) {
     }
     log_it("trace", "Request to add a search parameter manually.", app_ns)
     showModal(mod_data_input_parameters_manual())
+    if (!show_help()) runjs('$(".info-tooltip").hide()')
   })
   observeEvent(input$data_input_dt_peak_list_edit_row, {
     req(input$data_input_dt_peak_list_rows_selected)
@@ -504,6 +506,7 @@ shinyServer(function(input, output, session) {
     log_it("trace", "Request to edit a search parameter manually.", app_ns)
     data_input_parameter_edit(TRUE)
     showModal(mod_data_input_parameters_manual())
+    if (!show_help()) runjs('$(".info-tooltip").hide()')
   })
   observeEvent(input$data_input_dt_peak_list_remove_row, {
     log_it("trace", "Request to delete a search parameter manually.", app_ns)
@@ -911,6 +914,7 @@ shinyServer(function(input, output, session) {
     log_it("trace", "Button 'search_compounds_uncertainty_btn' clicked.", app_ns)
     uncertainty_results(NULL)
     showModal(mod_uncertainty_evaluation(input$search_compounds_msn, advanced_use()))
+    if (!show_help()) runjs('$(".info-tooltip").hide()')
   })
   observeEvent(input$mod_uncertainty_calculate, ignoreNULL = TRUE, ignoreInit = TRUE, {
     log_it("info", "Calculating uncertainty.", app_ns)
