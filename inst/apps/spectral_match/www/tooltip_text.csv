@@ -1,4 +1,4 @@
-﻿need_bjp_review,reviewed,element_location,element_id,tooltip_text
+need_bjp_review,reviewed,element_location,element_id,tooltip_text
 FALSE,TRUE,sidebar_menu,nav_index,"Contextural material for the application you are currently using, along with some information about the project itself."
 FALSE,TRUE,sidebar_menu,nav_data_input,Start here with data entry where you will upload a data file and select features of interest by mass-to-charge ratio (m/z) and retention time.
 FALSE,TRUE,sidebar_menu,nav_search_compounds,Search the library for compounds matching the mass spectrometric fingerprints for features of interest.
@@ -6,6 +6,9 @@ FALSE,TRUE,sidebar_menu,nav_fragments,"Match fragments from your mass spectromet
 FALSE,TRUE,sidebar_menu,nav_about,"Your reference guide to this application, including user guides and other information."
 FALSE,TRUE,sidebar_menu,nav_show_help_label,Click here to toggle tooltips throughout this application.
 FALSE,TRUE,sidebar_menu,nav_show_advanced_settings_label,Click here to toggle advanced settings throughout this application.
+FALSE,TRUE,sidebar_menu,nav_download_all,Click here to execute compound and fragment matches for all features of interest. Warning! This may take a considerable amount of time.
+FALSE,TRUE,sidebar_menu,mod_download_all_save,Click here to execute compound and fragment matches for all features of interest. Warning! This may take a considerable amount of time.
+FALSE,TRUE,sidebar_menu,mod_download_all_cancel,Click here to cancel this action and return to the application.
 FALSE,TRUE,index,index_go_data_input,Click here to go to the data input page and get started.
 FALSE,TRUE,index,data_input_filename_label,"Start by dragging a data file here, or click ""Load"" to select one from your computer."
 TRUE,FALSE,index,data_input_relative_error,"Set the instrument mass-to-charge ratio (m/z) relative error in parts-per-million (ppm) for processing, ranging from {this_min} ppm to {this_max} ppm. The default of {this_value} ppm is typical for most applications."

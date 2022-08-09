@@ -206,7 +206,8 @@ shinyServer(function(input, output, session) {
     if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0)
+      toggleElement("nav_download_all", condition = !is.null(user_data()))
+      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0 && is.null(user_data()))
       toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
       toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
       toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
@@ -275,6 +276,44 @@ shinyServer(function(input, output, session) {
       }
     }
   })
+  # Download All Utility (FEATURE) ----
+  # observeEvent(input$nav_download_all, {
+  #   nist_shinyalert(
+  #     title = "This action may take a long time.",
+  #     type = "warning",
+  #     text = tagList(
+  #       p("This application is intended for interactive use. Complete downloads are provided as a convenience. Please confirm."),
+  #       actionButton(inputId = "nav_download_all_confirm",
+  #                    label = "Confirm",
+  #                    icon = icon("exclamation"),
+  #                    width = "100%"),
+  #       actionButton(inputId = "nav_download_all_cancel",
+  #                    label = "Cancel",
+  #                    icon = icon("times"),
+  #                    width = "100%")
+  #     ),
+  #     showCancelButton = FALSE,
+  #     showConfirmButton = FALSE
+  #   )
+  # })
+  # observeEvent(input$nav_download_all_confirm, {
+  #   showModal(mod_download_all())
+  # })
+  # output$mod_download_all_save <- downloadHandler(
+  #   filename = function() glue::glue("{default_title} matches from file {input$data_input_filename$name}.xlsx"),
+  #   content = function() {
+  #     to_export <- list(
+  #       app_settings = data.frame(
+  #         all app settings here in a 2xN data frame showing the settings under which these matches were produced
+  #       ),
+  #       loop through features of interest
+  #         execute compound matching
+  #         execute fragment matching
+  #     )
+  #     pack_as_excel(to_export) # TODO write this function
+  #   }
+  # )
+  # observeEvent(input$mod_download_all_cancel, removeModal())
   
   # HOME PAGE ----
   observeEvent(input$index_go_data_input, {
@@ -577,10 +616,6 @@ shinyServer(function(input, output, session) {
     )
     required <- grep("data_input", names(input), value = TRUE)
     required <- required[-grep("dt_peak_list|import_search|filename|_process|^mod_data|_go_", required)]
-    # sapply(required,
-    #        function(x) {
-    #          req(input[[x]])
-    #        })
     valid <- complete_form_entry(input, required)
     if (valid) {
       log_it("warn", "Data input process form was complete.", app_ns)
@@ -898,15 +933,27 @@ shinyServer(function(input, output, session) {
       return_format      = "list"
     )
     log_it("trace", "Creating compound search results.", app_ns)
-    search_compounds_results(
-      list(
-        search_object = search_object,
-        result = bind_rows(search_result$result),
-        ums1_compare = lapply(search_result$ums1_compare, bind_rows),
-        ums2_compare = lapply(search_result$ums2_compare, bind_rows)
+    if (!is.list(search_result) || length(search_result$result) == 0) {
+      if (!is.list(search_result)) {
+        msg <- glue::glue("There was a problem with the API call when searching for compound matches for the feature of interest at {search_compounds_mzrt_text()[search_compounds_mzrt()]}.")
+        msg_title <- "Communication Error"
+      } else {
+        msg <- glue::glue("No compound matches were found for the feature of interest at {search_compounds_mzrt_text()[search_compounds_mzrt()]}.")
+        msg_title <- "No Matches"
+      }
+      nist_shinyalert(type = "warning", title = msg_title, text = msg)
+      log_it("warn", msg, app_ns)
+    } else {
+      search_compounds_results(
+        list(
+          search_object = search_object,
+          result = bind_rows(search_result$result),
+          ums1_compare = lapply(search_result$ums1_compare, bind_rows),
+          ums2_compare = lapply(search_result$ums2_compare, bind_rows)
+        )
       )
-    )
-    log_it("success", glue::glue("Compound search complete with n = {nrow(search_result$result)} matches found."), app_ns)
+      log_it("success", glue::glue("Compound search complete with n = {nrow(search_result$result)} matches found."), app_ns)
+    }
     hideElement("search_compounds_overlay")
   })
   # __Evaluate uncertainty (modal) ----
@@ -1154,7 +1201,7 @@ shinyServer(function(input, output, session) {
   output$search_fragments_compound_list <- renderDT(
     server = FALSE,
     DT::datatable(
-      data = search_fragments_compounds_data(),
+      data = req(search_fragments_compounds_data()),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
@@ -1176,10 +1223,10 @@ shinyServer(function(input, output, session) {
     )
   )
   # __Peak list ----
-  output$search_fragments_peak_list <- renderDT({
-    peaks <- req(search_fragments_peaks_data())
+  output$search_fragments_peak_list <- renderDT(
+    server = FALSE,
     DT::datatable(
-      data = peaks,
+      data = req(search_fragments_peaks_data()),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
@@ -1188,7 +1235,7 @@ shinyServer(function(input, output, session) {
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
-        dom = ifelse(nrow(peaks) <= 10, "tB", "tBp"),
+        dom = ifelse(nrow(search_fragments_peaks_data()) <= 10, "tB", "tBp"),
         pageLength = 10,
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
@@ -1197,7 +1244,7 @@ shinyServer(function(input, output, session) {
         )
       )
     )
-  })
+  )
   # __Molecular model ----
   # __Molecular model candidate formula
   output$search_fragments_selected_formula <- renderText(

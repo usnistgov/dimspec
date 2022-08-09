@@ -59,6 +59,14 @@ dashboardPage(
         with_help(tooltip = tooltip_text[["nav_about"]],
                   placement = "right"),
       span(id = "additional_options",
+           if (support_excel_downloads) {
+             actionButton(inputId = "nav_download_all",
+                          label = "Download All Results",
+                          icon = icon("download")
+             ) %>%
+               with_help(tooltip = tooltip_text[["nav_download_all"]],
+                         placement = "top")
+           },
            div(id = "nav_show_help_div",
                class = "nav-checkbox-right",
                icon("question", verify_fa = FALSE),

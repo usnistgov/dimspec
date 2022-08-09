@@ -319,3 +319,8 @@ section {
 #search_compounds_additional > div {
   padding: 0;
 }
+
+#nav_download_all {
+  width: 205px;
+  margin-bottom: 15px;
+}
