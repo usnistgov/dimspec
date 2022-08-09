@@ -1311,15 +1311,15 @@ shinyServer(function(input, output, session) {
       log_it("trace", "Identifying fragment ions.", app_ns)
       search_object <- get_search_object(
         searchmzml = tmp,
-        zoom = isolate(input$data_input_search_zoom)
+        zoom = isolate(input$search_compounds_search_zoom)
       ) %>%
         create_search_ms(
           searchobj = .,
-          correl = isolate(input$data_input_correlation),
-          ph = isolate(input$data_input_ph),
-          freq = isolate(input$data_input_freq),
-          normfn = isolate(input$data_input_norm_function),
-          cormethod = isolate(input$data_input_correlation_method)
+          correl = isolate(input$search_compounds_correlation),
+          ph = isolate(input$search_compounds_ph),
+          freq = isolate(input$search_compounds_freq),
+          normfn = isolate(input$search_compounds_norm_function),
+          cormethod = isolate(input$search_compounds_correlation_method)
         )
       fragments <- search_object$ums2
     }
