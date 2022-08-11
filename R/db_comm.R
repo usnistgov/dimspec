@@ -263,6 +263,7 @@ build_db <- function(db            = DB_NAME,
                      populate_with = DB_DATA,
                      archive       = FALSE,
                      sqlite_cli    = SQLITE_CLI,
+                     db_conn_name  = DB_CONN_NAME,
                      connect       = FALSE) {
   logger <- exists("log_it")
   if (logger) {
@@ -320,7 +321,7 @@ build_db <- function(db            = DB_NAME,
     }
   }
   if (logger) log_it("trace", glue('Attempting to connect to "{db}".'))
-  manage_connection(db = db, reconnect = FALSE, disconnect = TRUE)
+  manage_connection(db = db, conn_name = db_conn_name, reconnect = FALSE, disconnect = TRUE)
   # Populate with all data sources
   # -- RSQLite does not allow for the CLI [.DOT] commands
   # -- If sqlite3 CLI is installed, use that by preference
@@ -393,7 +394,7 @@ build_db <- function(db            = DB_NAME,
   }
   if (connect) {
     if (logger) log_it("trace", glue::glue('Connecting to "{db}".'), "db")
-    manage_connection(db = db, reconnect = TRUE)
+    manage_connection(db = db, conn_name = db_conn_name, reconnect = TRUE)
   }
   if (logger) log_fn("end")
 }
@@ -916,6 +917,7 @@ manage_connection <- function(db          = DB_NAME,
   connection_object_classes <- sprintf("%sConnection", conn_class)
   for (env in global_env_names) {
     connected      <- FALSE
+    connection     <- ""
     this_obj       <- global_env[[env]]
     this_obj_class <- class(this_obj)
     if (any(grepl(conn_class, this_obj_class))) {
@@ -936,25 +938,33 @@ manage_connection <- function(db          = DB_NAME,
         connection <- ""
       }
       if (
-        any(
-          all(basename(connection) == db,
-              this_obj_class %in% connection_object_classes),
-          class(this_obj) == conn_class
+        all(
+          basename(connection) == db,
+          any(class(this_obj) %in% connection_object_classes)
         )
       ){
         connected <- dbIsValid(this_obj)
         if (connected && logger) log_it("trace", glue::glue('Database "{db}" is currently open.'), log_ns)
-        if (all(connected, disconnect)) {
+        if (all(connected, disconnect, basename(connection) == db)) {
+          if (logger) log_it("trace", glue::glue('Disconnecting from "{db}"...'), log_ns)
           check <- try(invisible(dbDisconnect(this_obj)))
-          status <- ifelse(class(check)[1] == "try-error",
+          status <- ifelse(inherits(check, "try-error"),
                            "unable to be disconnected",
                            "disconnected")
           log_it("trace", glue::glue('Database "{db}" {status}.'), log_ns)
           connected <- dbIsValid(this_obj)
         }
       }
-      if (logger) log_it("trace", glue::glue('Closing and removing "{env}"...'), log_ns)
-      if (all(rm_objects, disconnect, !connection == "")) {
+      if (
+        all(
+          rm_objects, disconnect,
+          any(
+            basename(connection) == db,
+            connection == "other"
+          )
+        )
+      ) {
+        if (logger) log_it("trace", glue::glue('Removing session object "{env}"...'), log_ns)
         rm(list = env, pos = ".GlobalEnv")
       }
     }
@@ -1556,19 +1566,15 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
     )
   }
   # Argument validation relies on verify_args
-  stopifnot(
-    is.logical(back_up_connected_tbls),
-    length(back_up_connected_tbls) == 1
-  )
-  # if (exists("verify_args")) {
-  #   arg_check <- verify_args(
-  #     args       = list(back_up_connected_tbls),
-  #     conditions = list(
-  #       back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
-  #     )
-  #   )
-  #   stopifnot(arg_check$valid)
-  # }
+  if (exists("verify_args")) {
+    arg_check <- verify_args(
+      args       = list(back_up_connected_tbls),
+      conditions = list(
+        back_up_connected_tbls = list(c("mode", "logical"), c("length", 1))
+      )
+    )
+    stopifnot(arg_check$valid)
+  }
   
   tmp <- lapply(as.list(.GlobalEnv), class)
   # Kill plumber instances
@@ -1583,11 +1589,20 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
   for (api in api_services) {
     if (.GlobalEnv[[api]]$is_alive()) {
       api_stop(pr = api, remove_service_obj = TRUE)
-      # rm(list = api, envir = .GlobalEnv)
     }
   }
   # Kill db connected objects
-  db_connections <- names(tmp)[
+  tbls <- tmp[
+    which(
+      unlist(
+        lapply(
+          tmp,
+          function(x) any(str_detect(x, "^tbl_.*Connection$")))
+      ) == TRUE
+    )
+  ]
+  if (length(tbls) > 0) tmp <- tmp[-which(names(tmp) %in% names(tbls))]
+  connections <- tmp[
     which(
       unlist(
         lapply(
@@ -1596,23 +1611,23 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
       ) == TRUE
     )
   ]
-  for (db_conn in db_connections) {
-    if (any(str_detect(tmp[[db_conn]], "^tbl_"))) {
-      if (back_up_connected_tbls) {
-        assign(
-          x     = db_conn,
-          value = collect(eval(rlang::sym(db_conn))),
-          envir = .GlobalEnv
-        )
-      } else {
-        rm(list = db_conn, envir = .GlobalEnv)
-      }
-    } else {
-      manage_connection(conn_name = db_conn, reconnect = FALSE)
+  for (tbl in names(tbls)) {
+    if (back_up_connected_tbls) {
+      assign(
+        x     = tbl,
+        value = collect(eval(rlang::sym(tbl))),
+        envir = .GlobalEnv
+      )
     }
   }
-  manage_connection(reconnect = T)
-  manage_connection(reconnect = F)
+  for (connection in names(connections)) {
+    manage_connection(
+      db = basename(eval(sym(eval(connection)))@dbname),
+      conn_name = connection,
+      reconnect = FALSE,
+      rm_objects = TRUE
+    )
+  }
   if (exists("log_it")) log_fn("end")
 }
 
