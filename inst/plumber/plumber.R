@@ -235,7 +235,7 @@ function(db_conn = "con") {
 function() return(exists("rdkit_active") && rdkit_active())
 
 # /molecular_model/file ----
-#* Returns a file path to a molecular ball-and-stick plot of a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must 
+#* Returns a file path to a molecular ball-and-stick plot of a compound or fragment in portable-network-graphics (png) format. Requires RDKit integration. If notation is provided, it must match the "notation_type" provided.
 #* @param type:character The type of notation provided, whether it should be treated as direct notation, a compound id, or a fragment id. One of "notation", "compound", or "fragment"
 #* @param molecular_notation:character Character string of the machine readable notation to visualize.
 #* @param compound_id:int An integer value indicating the compound id (required if type is "compound").
