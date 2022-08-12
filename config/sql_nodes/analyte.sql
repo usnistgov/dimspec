@@ -42,6 +42,20 @@
 =============================================================================*/
 /* Tables */
 	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_generation_type
+		/* Normalization table for fragment generation source type */
+	(
+		id
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL,
+			/* one of "in silico" or "empirical" */
+		/* Check constraints */
+		CHECK (name IN ("in silico", "empirical"))
+		/* Foreign key relationships */
+	);
+	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_source_types
 		/* Validation list of source types to be used in the compounds TABLE. */
 	(
@@ -57,19 +71,6 @@
 		definition
 			TEXT NOT NULL
 			/* definition of the source type */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_ion_states
-		/* Normalization table for the measured ion state as comared with the molecular ion. */
-	(
-		id
-			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL UNIQUE
-			/* state of the found ion with common mass spectrometric adjuncts/losses/charge */
 		/* Check constraints */
 		/* Foreign key relationships */
 	);
@@ -479,23 +480,6 @@
 		FROM compounds c
 		INNER JOIN compound_aliases ca ON c.id = ca.compound_id
 		INNER JOIN norm_analyte_alias_references car ON ca.alias_type = car.id;
-	/*magicsplit*/
-	CREATE VIEW IF NOT EXISTS view_masserror AS 
-    /* Get the mass error information for all peaks */
-    SELECT 
-      p.id AS peak_id, 
-      /* Foreign key to peaks.id */
-      s.id AS sample_id, 
-      /* Foreign key to samples.id */
-      p.precursor_mz AS precursor_mz, 
-      /* Precursor mass of the peak */
-      qcd.value
-      /* msaccuracy value from qc_data */
-    FROM qc_data qcd
-    INNER JOIN samples s ON qcd.sample_id = s.id
-    INNER JOIN peaks p ON s.id = p.sample_id
-    WHERE qcd.name = "msaccuracy"
-    GROUP BY p.id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/

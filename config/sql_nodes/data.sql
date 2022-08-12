@@ -44,7 +44,7 @@
 /* Tables */
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_generation_type
-		/* Normalization table for fragmenet generation source type */
+		/* Normalization table for fragment generation source type */
 	(
 		id
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +66,19 @@
 		name
 			TEXT NOT NULL UNIQUE
 			/* name of the sample class */
+	);
+	/*magicsplit*/
+	CREATE TABLE IF NOT EXISTS norm_ion_states
+		/* Normalization table for the measured ion state as compared with the molecular ion. */
+	(
+		id
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			/* primary key */
+		name
+			TEXT NOT NULL UNIQUE
+			/* state of the found ion with common mass spectrometric adjuncts/losses/charge */
+		/* Check constraints */
+		/* Foreign key relationships */
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_peak_confidence
@@ -225,7 +238,7 @@
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS ms_data
-		/* Mass spectral data derived from experiments on a compound by compound basis. Emperical isotopic pattern. */
+		/* Mass spectral data derived from experiments on a compound by compound basis. Empirical isotopic pattern. */
 	(
 		id
 			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -473,6 +486,23 @@
 				/* measured signal intensity */
 		FROM peak_data pd
 		INNER JOIN ms_spectra mss ON pd.ms_data_id = mss.ms_data_id;
+	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_masserror AS 
+    /* Get the mass error information for all peaks */
+    SELECT 
+      p.id AS peak_id, 
+      /* Foreign key to peaks.id */
+      s.id AS sample_id, 
+      /* Foreign key to samples.id */
+      p.precursor_mz AS precursor_mz, 
+      /* Precursor mass of the peak */
+      qcd.value
+      /* msaccuracy value from qc_data */
+    FROM qc_data qcd
+    INNER JOIN samples s ON qcd.sample_id = s.id
+    INNER JOIN peaks p ON s.id = p.sample_id
+    WHERE qcd.name = "msaccuracy"
+    GROUP BY p.id;
 	/*magicsplit*/
 /* Triggers */
 	/*magicsplit*/
