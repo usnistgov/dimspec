@@ -365,9 +365,15 @@ api_reload <- function(pr = NULL,
 #'   endpoint in the system's default browser; will be defaulted to FALSE if
 #'   `check_valid` == TRUE and the endpoint returns anything other than a valid
 #'   status code. (default: FALSE)
-#' @max_pings 
-#' @return_type 
-#' @return_format
+#' @param max_pings INT scalar maximum number of pings to try before timeout if
+#'   using endpoint "_ping"; this is only used for endpoint "_ping" (default:
+#'   20)
+#' @param return_type CHR scalar on which return type to use, which must be one
+#'   of "text", "raw", or "parsed" which will be used to read the content of the
+#'   response item (default: "text")
+#' @param return_format CHR scalar on which form to return data, which must be
+#'   one of "vector", "data.frame", or "list" (default: "vector" to support
+#'   primarily single value responses)
 #'
 #' @return CHR scalar of the constructed endpoint, with messages regarding
 #'   status checks, return from the endpoint (typically JSON) if valid and

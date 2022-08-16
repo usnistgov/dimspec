@@ -9,7 +9,7 @@
 #' @return LIST of values
 #' @export
 #'
-#' @example support_info()
+#' @usage support_info()
 support_info <- function(app_info = TRUE) {
   log_fn("start")
   arg_check <- verify_args(
@@ -196,20 +196,20 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'   directly from a function definition in the form \code{args = list(foo =
 #'   1:2, bar = c("a", "b", "c"))} or directly by passing \code{environment()}
 #' @param conditions Nested LIST of conditions and values to check, with one
-#'   list item for each element in \code{args}. \itemize{\item The first element
-#'   of each list should be a character scalar in the supported list. \item The
-#'   second element of each list should be the check values themselves and may
-#'   be of any type.} Multiple expectation conditions can be set for each
-#'   element of \code{args} in the form \itemize{\item \code{conditions =
+#'   list item for each element in \code{args}. \itemize{ \item The first
+#'   element of each list should be a character scalar in the supported list.
+#'   \item The second element of each list should be the check values themselves
+#'   and may be of any type. } Multiple expectation conditions can be set for
+#'   each element of \code{args} in the form \itemize{ \item \code{conditions =
 #'   list(foo = list(c("mode", "numeric"), c("length", 2)), bar = list(c("mode",
-#'   "character"), c("n<", 5)))}} Currently supported expectations are:\itemize{
-#'   \item \preformatted{"class"    checks strict class expectation by direct
+#'   "character"), c("n<", 5)))} } Currently supported expectations are:
+#'   \describe{ \item {"class"},{checks strict class expectation by direct
 #'   comparison with \code{class} to support object classes not supported with
 #'   the \code{is.x} or \code{is_x} family of functions; much stricter than a
 #'   "mode" check in that the requested check must be present in the return from
 #'   a call to \code{class} e.g. "list" will fail if a "data.frame" object is
-#'   passed \item \preformatted{"mode"    checks class expectation by applying
-#'   the \code{is.X} or the \code{is_X} family of functions either directly or
+#'   passed} \item {"mode"},{checks class expectation by applying the
+#'   \code{is.X} or the \code{is_X} family of functions either directly or
 #'   flexibly depending on the value provided to \code{conditions} (e.g.
 #'   c("mode", "character") and c("mode", "is.character") and c("mode",
 #'   "is_character") all work equally well) and will default to the version you
@@ -217,29 +217,26 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'   "is.character" simply provide "is_character" as the condition. Only those
 #'   modes able to be checked by this family of functions are supported. Run
 #'   function \code{mode_checks()} for a complete sorted list for your current
-#'   configuration.} \item \preformatted{"length" length of values matches a
-#'   pre-determined exact length, typically a single value expectation (e.g.
-#'   c("length",#'   1))} \item \preformatted{"no_na" no NA values are present}
-#'   \item \preformatted{"n>"      length of values is greater than a given
-#'   value - "n<" length of values is lesser than a given value} \item
-#'   \preformatted{"n>="     length of values is greater than or equal to a
-#'   given value} \item \preformatted{"n<="     length of values is lesser than
-#'   or equal to a given value} \item \preformatted{">" numeric or date value is
-#'   greater than a given value} \item \preformatted{"<" numeric or date value
-#'   is greater than a given value} \item \preformatted{">=" numeric or date
-#'   value is greater than or equal to a given value} \item \preformatted{"<="
-#'   numeric or date value is lesser than or equal to a given value} \item
-#'   \preformatted{"between" numeric or date values are bound within an
-#'   INCLUSIVE range (e.g. c("range", 1:5))} \item \preformatted{"choices"
-#'   provided values are part of a selected list of expectations (e.g.
-#'   \code{c("choices", list(letters[1:3]))})} \item \preformatted{"FUN" apply a
-#'   function to the value and check that the result is valid or that the
-#'   function can be executed without error; this evaluates the check condition
-#'   using \code{tryCatch} via \code{do.call} and so can also accept a full
-#'   named list of arg values. This is a strict check in the sense that a
-#'   warning will also result in a failed result, passing the warning (or error
-#'   if the function fails) message back to the user, but does not halt checks}
-#'   }
+#'   configuration.} \item {"length"},{length of values matches a pre-determined
+#'   exact length, typically a single value expectation (e.g. c("length",#'
+#'   1))} \item {"no_na"},{no NA values are present} \item {"n>"},{length of
+#'   values is greater than a given value - "n<" length of values is lesser than
+#'   a given value} \item {"n>="},{length of values is greater than or equal to
+#'   a given value} \item {"n<="},{length of values is lesser than or equal to a
+#'   given value} \item {">"},{numeric or date value is greater than a given
+#'   value} \item {"<" numeric or date value is greater than a given value}
+#'   \item {">="},{numeric or date value is greater than or equal to a given
+#'   value} \item {"<="},{ numeric or date value is lesser than or equal to a
+#'   given value} \item {"between"},{numeric or date values are bound within an
+#'   INCLUSIVE range (e.g. c("range", 1:5))} \item {"choices"},{provided values
+#'   are part of a selected list of expectations (e.g. \code{c("choices",
+#'   list(letters[1:3]))})} \item {"FUN"},{apply a function to the value and
+#'   check that the result is valid or that the function can be executed without
+#'   error; this evaluates the check condition using \code{tryCatch} via
+#'   \code{do.call} and so can also accept a full named list of arg values. This
+#'   is a strict check in the sense that a warning will also result in a failed
+#'   result, passing the warning (or error if the function fails) message back
+#'   to the user, but does not halt checks} }
 #' @param from_fn CHR scalar of the function from which this is called, used if
 #'   logger is enabled and ignored if not; by default it will pull the calling
 #'   function's name from the call stack, but can be overwritten by a manual
@@ -251,7 +248,7 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'   $message
 #' @export
 #'
-#' @examples
+#' @usage
 #' \preformatted{
 #' verify_args(args = list(character_length_2 = c("a", "b")),
 #'             conditions = list(character_length_2 = list(c("mode", "character"),
@@ -848,7 +845,7 @@ has_missing_elements <- function(x, logging = TRUE) {
 #' @return None, hands logging messages to [log_it]
 #' @export
 #'
-#' @examples
+#' @usage
 #' fn <- function() {log_fn("start"); 1+1; log_fn("end")}
 #' fn()
 log_fn <- function(status = "start", log_ns = NA_character_, level = "trace") {
@@ -876,10 +873,10 @@ log_fn <- function(status = "start", log_ns = NA_character_, level = "trace") {
 #' @param archive LGL scalar on whether to archive current logs
 #' @param directory CHR scalar path to the directory to flush
 #'
-#' @return
+#' @return None, executes directory actions
 #' @export
 #'
-#' @examples
+#' @usage flush_dir("logs", ".txt")
 flush_dir <- function(directory, pattern, archive = FALSE) {
   logger <- exists("log_it")
   if (logger) log_fn("start")
@@ -947,7 +944,7 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #' @return
 #' @export
 #'
-#' @usage
+#' @usage rectify_null_from_env(test, test, "test")
 rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_ns = NA_character_) {
   logger <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
   if (logger) log_fn("start", log_ns)
@@ -1016,7 +1013,7 @@ rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_
 #' @return None
 #' @export
 #'
-#' @examples 
+#' @usage reset_logger_settings() 
 reset_logger_settings <- function(reload = FALSE) {
   if (reload) source(file.path("config", "env_R.R"))
   if (exists("update_logger_settings")) {
@@ -1042,7 +1039,7 @@ reset_logger_settings <- function(reload = FALSE) {
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage flush_dir(directory = "logs")
 flush_dir <- function(archive = FALSE, directory, pattern) {
   logger <- exists("log_it")
   if (logger) log_fn("start")
@@ -1101,7 +1098,7 @@ flush_dir <- function(archive = FALSE, directory, pattern) {
 #' @return CHR scalar of the resolved name
 #'
 #' @export
-#' @example
+#' @usage
 #' \dontrun {\preformatted {
 #'   if (exists("log_it")) {
 #'     obj_name_check("test", "test")
@@ -1185,20 +1182,30 @@ start_rdkit <- function(src_dir = here::here("inst", "rdkit"), log_ns = "rdkit")
 #' Start the plumber interface from a clean environment
 #'
 #' This convenience function launches the plumber instance if it was not set to
-#' laumch during the session setup.
+#' launch during the session setup. It is a thin wrapper with a more intuitive
+#' name than [api_reload] and the default background setting turned off to test
+#' the server in the current session.
 #'
+#' @note This function is intended to pull from the environment variables
+#'   identifying the plumber file, host, and port.
+#'
+#' @param plumber_file CHR scalar name of the plumber definition file, which
+#'   should be in `src_dir` (default: NULL)
+#' @param plumber_host CHR scalar of the host server address (default: NULL)
+#' @param plumber_port INT scalar of the listening port on the host server
+#'   (default: NULL)
 #' @param background LGL scalar of whether to launch the API in a background
-#'   process (default: TRUE)
+#'   process (default: FALSE)
 #' @param src_dir  CHR scalar file path to settings and functions enabling the
 #'   plumber API (default: here::here("inst", "plumber"))
 #' @param log_ns CHR scalar name of the logging namespace to use for this
-#'   function (default: "API")
+#'   function (default: "api")
 #'
 #' @return None, launches the plumber instance
 #' @export
 #'
-#' @usage
-start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = NULL, background = TRUE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
+#' @usage start_api()
+start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = NULL, background = FALSE, src_dir = here::here("inst", "plumber"), log_ns = "api") {
   # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
   if (!exists("api_reload")) {
     source(file.path(src_dir, "api_control.R"))
@@ -1217,20 +1224,28 @@ start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = N
   PLUMBER_URL <<- running_on
 }
 
-#' WIP Launch an analysis shiny application
+#' {WIP} Launch an analysis shiny application
 #'
 #' Call this function to launch an app either directly or in a background
-#' process. The name must be present in the app directory
+#' process. The name must be present in the app directory or as a named
+#' element of `SHINY_APPS` in the current environment.
 #'
-#' @param app_name
-#' @param app_dir
-#' @param background
-#' @param ...
+#' @note Background launching of shiny apps is not yet supported.
+#'
+#' @param app_name CHR scalar name of the shiny app to run, this should be the
+#'   name of a directory containing a shiny app that is located within the
+#'   directory defined by `app_dir` or the name of an app as defined in your
+#'   environment SHINY_APPS variable
+#' @param app_dir file path to a directory containing shiny apps (default:
+#'   here::here("inst", "apps"))
+#' @param background LGL scalar of whether to launch the application in a
+#'   background process (default: FALSE)
+#' @param ... Other named parameters to be passed to [shiny::runApp]
 #'
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage start_app("table_explorer")
 start_app <- function(app_name, app_dir = here::here("inst", "apps"), background = FALSE, ...) {
   # TODO make these launchable in the background to keep the session free
   # TODO for publication, src_dir should direct to grep(file.path("[package_name]", "inst", "plumber"), list.dirs(c(.libPaths(), here::here()), full.names = TRUE), value = TRUE)
@@ -1239,7 +1254,6 @@ start_app <- function(app_name, app_dir = here::here("inst", "apps"), background
   } else {
     app_dir <- file.path(app_dir, app_name)
   }
-  background <- FALSE
   kwargs <- c(
     list(...),
     appDir = app_dir
@@ -1250,19 +1264,95 @@ start_app <- function(app_name, app_dir = here::here("inst", "apps"), background
   if (!dir.exists(app_dir)) stop(sprintf("Could not locate an app named %s at %s", app_name, app_dir))
   app_name <- sprintf("app_%s_service", basename(app_dir))
   if (background) {
-    assign(
-      x = app_name,
-      value = callr::r_bg(
-        args = kwargs,
-        func = {
-          if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
-          do.call(what = shiny::runApp, args = kwargs)
-        }
-      ),
-      envir = .GlobalEnv
-    )
-    message(sprintf("Don't forget to close the application process (e.g. %s$kill()) when you finish with it.", app_name))
+    message("Background launching of shiny apps is not yet supported.")
+    background = FALSE
+  }
+  if (background) {
+    # assign(
+    #   x = app_name,
+    #   value = callr::r_bg(
+    #     args = kwargs,
+    #     func = {
+    #       if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+    #       do.call(what = shiny::runApp, args = kwargs)
+    #     }
+    #   ),
+    #   envir = .GlobalEnv
+    # )
+    # message(sprintf("Don't forget to close the application process (e.g. %s$kill()) when you finish with it.", app_name))
   } else {
     do.call(what = shiny::runApp, args = kwargs)
   }
+}
+
+#' Resolve components from a list or named vector
+#'
+#' Call this to pull a component named `obj_component` from a list or named
+#' vector provided as `obj` and optionally use [tack_on] to append to it. This
+#' is intended to ease the process of pulling specific components from a list
+#' for further treatment in the import process by isolating that component.
+#'
+#' This is similar in scope to [purrr::pluck] in many regards, but always
+#' returns items with names, and will search an entire list structure, including
+#' data frames, to return all values associated with that name in individual
+#' elements.
+#' 
+#' @note This is a recursive function.
+#'
+#' @note If ellipsis arguments are provided, they will be appended to each
+#'   identified component via [tack_on]. Use with caution, but this can be
+#'   useful for appending common data to an entire list (e.g. a datetime stamp
+#'   for logging processing time or a processor name, human or software).
+#'
+#' @inheritParams tack_on
+#'
+#' @param obj LIST or NAMED vector in which to find `obj_component`
+#' @param obj_component CHR vector of named elements to find in `obj`
+#' @param silence LGL scalar indicating whether to silence recursive messages,
+#'   which may be the same for each element of `obj` (default: TRUE)
+#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
+#' @param ... Optional additional arguments to [tack_on] to the resulting list
+#'
+#' @return LIST object containing the elements of `obj`
+#' @export
+#' 
+#' @examples
+#' get_component(list(a = letters, b = 1:10), "a")
+#' get_component(list(ex = list(a = letters, b = 1:10), ex2 = list(c = 1:5, a = LETTERS)), "a")
+#' get_component(list(a = letters, b = 1:10), "a", c = 1:5)
+#' 
+get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global", ...) {
+  stopifnot(is.character(obj_component), length(obj_component) > 0, is.character(log_ns), length(log_ns) == 1)
+  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
+  names_present <- obj_component %in% names(obj)
+  if (any(names_present)) {
+    if (!all(names_present)) {
+      msg <- glue::glue("Requested component{ifelse(sum(!names_present) > 1, 's', '')} {format_list_of_names(obj_component[!names_present], add_quotes = TRUE)} {ifelse(sum(!names_present) > 1, 'were', 'was')} missing.")
+      if (logging) {
+        log_it("warn", msg, log_ns)
+      } else {
+        warning(msg)
+      }
+      return(NULL)
+    }
+    out <- obj[obj_component[names_present]]
+  } else if (is.list(obj)) {
+    out <- lapply(obj,
+                  function(x) {
+                    tmp <- get_component(
+                      obj = x,
+                      obj_component = obj_component,
+                      silence = silence
+                    )
+                  }) %>%
+      purrr::keep(~ length(.x) > 0)
+  } else {
+    if (logging && !silence) log_it("warn", glue::glue('"No components named {gsub(" and ", " or ", format_list_of_names(obj_component, add_quotes = TRUE))}" found in the namespace of this object..'), log_ns)
+    return(NULL)
+  }
+  kwargs <- list(...)
+  if (length(kwargs) > 0) {
+    out <- tack_on(obj = out, ... = ...)
+  }
+  return(out)
 }

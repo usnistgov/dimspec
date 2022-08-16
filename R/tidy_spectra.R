@@ -118,8 +118,8 @@ ms_spectra_zipped <- function(df, spectra_col = "data") {
 
 #' Tidy Spectra
 #'
-#' A convenience function to take outputs from `ms_spectra_separated` and
-#' `ms_spectra_zipped` and return them as a tidy data frame by unpacking the
+#' A convenience function to take outputs from [ms_spectra_separated] and
+#' [ms_spectra_zipped] and return them as a tidy data frame by unpacking the
 #' list column "spectra".
 #'
 #' @param df data.frame object containing nested spectra in a column
@@ -127,7 +127,7 @@ ms_spectra_zipped <- function(df, spectra_col = "data") {
 #' @return data.frame object containing tidy spectra
 #' @export
 #'
-#' @examples
+#' @usage tidy_ms_spectra(df = packed_data)
 tidy_ms_spectra <- function(df) {
   if (exists("verify_args")) {
     arg_check <- verify_args(

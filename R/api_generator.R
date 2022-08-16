@@ -22,7 +22,7 @@ queries <- list(
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage validate_tables(con, "peaks")
 validate_tables <- function(db_conn, table_names) {
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -67,7 +67,7 @@ validate_tables <- function(db_conn, table_names) {
 #' @return None
 #' @export
 #'
-#' @examples
+#' @usage validate_column_names(con, "peaks", "id")
 validate_column_names <- function(db_conn, table_names, column_names) {
   if (exists("verify_args")) {
     arg_check <- verify_args(
@@ -150,7 +150,7 @@ validate_column_names <- function(db_conn, table_names, column_names) {
 #' @return CHR scalar of the constructed where clause for an SQL statement
 #' @export
 #'
-#' @examples
+#' @usage
 #' clause_where(ANSI(), "example", list(foo = "bar", cat = "dog"))
 #' clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
 #' clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
@@ -173,7 +173,6 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
     }
   }
   # Check connection
-  stopifnot(active_connection(db_conn))
   and_or <- toupper(str_trim(and_or))
   and_or <- match.arg(and_or, c("AND", "OR"))
   and_or <- paste0(" ", and_or, " ")
@@ -182,6 +181,7 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
   is_ansi <- identical(db_conn, ANSI())
   # Ensure column names exist
   if (!is_ansi) {
+    stopifnot(active_connection(db_conn))
     validate_column_names(db_conn, table_names, names(match_criteria))
   }
   keywords <- c("values", "exclude", "like", "query")

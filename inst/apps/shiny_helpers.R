@@ -146,7 +146,7 @@ remove_icon_from <- function(id) {
 #' @return JS function to apply to a DT object by row
 #' @export
 #'
-#' @examples
+#' @usage dt_color_by(names(DT_table_data), "color_by")
 dt_color_by <- function(table_names, look_for) {
   color_by <- which(tolower(table_names) == tolower(look_for)) - 1
   out <- JS(

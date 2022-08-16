@@ -8,7 +8,8 @@
 #'
 #' Primarily, this requires a list object referring to tables that contains in
 #' each element a child element with the name provided in `references_in`. The
-#' pre-pass parsing function [get_relationships] is used to pull references from
+#' pre-pass parsing function [get_fkpk_relationships] is used to pull references
+#' from
 #' the full map is used.
 #'
 #' @note Tables in `db_map` that do not contain foreign key relationships will
@@ -19,7 +20,7 @@
 #'   foreign key relationships for which triggers are undesirable, remove those
 #'   tables from `db_map` prior to calling this function.
 #'
-#' @inheritParams get_relationships
+#' @inheritParams get_fkpk_relationships
 #'
 #' @param create_insert_trigger LGL scalar indicating whether to build an insert
 #'   trigger for each table (default: TRUE).
@@ -180,7 +181,7 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
                                  tidyr::separate(one,
                                                  into = c("fk_col", "norm_table", "pk_col"),
                                                  sep = " REFERENCES |\\(") %>%
-                                 dplyr::filter(grepl("norm", .$norm_table)) %>%
+                                 # dplyr::filter(grepl("norm", .$norm_table)) %>%
                                  mutate(val_col = vector(mode = "list", length = nrow(.)))
                              })
   fk_relationships <- fk_relationships[sapply(fk_relationships, nrow) > 0]
@@ -220,6 +221,12 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #' to the normalization table and the resulting new key will be replaced in the
 #' target table column.
 #'
+#' @note While this will work on any number of combinations, all triggers should
+#'   be heavily inspected prior to use. The default case for this trigger is to
+#'   set it for a single FK/PK relationship with a single normalization value.
+#'   It will run on any number of normalized columns however trigger behavior
+#'   may be unexpected for more complex relationships.
+#'
 #' @note If `or_ignore` is set to TRUE, errors in adding to the parent table
 #'   will be ignored silently, possibly causing NULL values to be inserted into
 #'   the target table foreign key column. For this reason it is recommended that
@@ -243,11 +250,12 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #'   three `norm_table`(s) and one `pk_col` and one `val_col`, the arguments for
 #'   `pk_col` and `val_col` will apply to each `norm_table`.
 #'
-#' @note The example is built on a simple SQLite schema containing four tables,
-#'   one of which ("test" - with columns "id", "col1", "col2", and "col3")
-#'   defines foreign key relationships to the other three ("norm_col1",
-#'   "norm_col2", and "norm_col3"); this schema can be added into a "sandbox"
-#'   database and is located at ./examples/sql/schema_make_sql_triggers.sql
+#' @note The usage example is built on a hypothetical SQLite schema containing
+#'   four tables, one of which ("test" - with columns "id", "col1", "col2", and
+#'   "col3") defines foreign key relationships to the other three ("norm_col1",
+#'   "norm_col2", and "norm_col3").
+#'   
+#' @seealso build_triggers
 #'
 #' @param target_table CHR scalar name of a table with a foreign key constraint.
 #' @param fk_col CHR vector name(s) of the column(s) in `target_table` with
@@ -291,9 +299,9 @@ get_fkpk_relationships <- function(db_map, references_in = "references", diction
 #'   communication pipelines dictate.
 #' @export
 #'
-#' @example sqlite_auto_trigger(target_table = "test", fk_col = c("col1",
-#'   "col2", "col3"), norm_table = c("norm_col1", "norm_col2", "norm_col3"),
-#'   pk_col = "id", val_col = "value", action_occurs = "after", trigger_action =
+#' @usage sqlite_auto_trigger(target_table = "test", fk_col = c("col1", "col2",
+#'   "col3"), norm_table = c("norm_col1", "norm_col2", "norm_col3"), pk_col =
+#'   "id", val_col = "value", action_occurs = "after", trigger_action =
 #'   "insert", table_action = "update")
 #'   
 sqlite_auto_trigger <- function(target_table,
@@ -317,6 +325,8 @@ sqlite_auto_trigger <- function(target_table,
   trigger_action <- match.arg(trigger_action)
   table_action <- match.arg(table_action)
   for_each <- match.arg(for_each, c("row", "statement"))
+  if (length(val_col) == 1) val_col <- rep(val_col, times = length(norm_table))
+  if (length(pk_col) == 1) pk_col <- rep(pk_col, times = length(norm_table))
   if (action_occurs == "instead") action_occurs <- "instead of"
   stopifnot(length(target_table) == 1,
             length(or_ignore) == 1,
@@ -379,24 +389,64 @@ sqlite_auto_trigger <- function(target_table,
   return(trigger_sql)
 }
 
-#' Title
+#' Create a basic SQL view of a normalized table
 #'
-#' @param table_pragma 
-#' @param target_table 
-#' @param relationships 
-#' @param drop_if_exists 
+#' Many database viewers will allow links for normalization tables to get the
+#' human-readable value of a normalized column. Instead it is often preferable
+#' to build in views automatically that "denormalize" such tables for display or
+#' use in an application. This function seeks to script the process of creating
+#' those views. It examines the table definition from [pragma_table_info] and
+#' will extract the primary/foreign key relationships to build a "denormalized"
+#' view of the table using [get_fkpk_relationships] which requires a database
+#' map created from [er_map] and data dictionary created from [data_dictionary].
 #'
-#' @return
+#' TODO for v2: abstract the relationships call by looking for objects in the
+#' current session.
+#'
+#' @note No schema checking is performed by this function, but rather relies on
+#'   definitions from other functions.
+#'
+#' @seealso build_views
+#' @seealso pragma_table_info
+#' @seealso get_fkpk_relationships
+#' @seealso er_map
+#' @seealso data_dictionary
+#'
+#' @note This example will run slowly if the database map [er_map] and
+#'   dictionary [data_dictionary] haven't yet been called. If they exist in your
+#'   session, use those as arguments to get_fkpk_relationships.
+#'
+#' @param table_pragma data.frame object from [pragma_table_info] for a given
+#'   table name in the database
+#' @param target_table CHR scalar name of the database table to build for, which
+#'   should be present in the relationship definition
+#' @param relationships data.frame object describing the foreign key
+#'   relationships for `target_table`, which should generally be the result of a
+#'   call to [get_fkpk_relationships]
+#' @param drop_if_exists LGL scalar indicating whether to include a "DROP VIEW"
+#'   prefix for the generated view statement; as this has an impact on schema,
+#'   no default is set
+#'
+#' @return CHR scalar of class glue containing the SQL necessary to create a
+#'   "denormalized" view. This is raw text; it is not escaped and should be
+#'   further manipulated (e.g. via dbplyr::sql()) as your needs and database
+#'   communication pipelines dictate.
 #' @export
 #'
-#' @usage 
-#' # This example will run slowly if the database map (`er_map`) and dictionary (`data_dictionary`) haven't yet been called.
-#' sqlite_auto_view(table_pragma = pragma_table_info("contributors"), target_table = "contributors", relationships = get_fkpk_relationships(db_map = er_map(con), dictionary = data_dictionary(con)), drop_if_exists = FALSE)
-#' 
+#' @usage sqlite_auto_view(table_pragma = pragma_table_info("contributors"),
+#'   target_table = "contributors", relationships =
+#'   get_fkpk_relationships(db_map = er_map(con), dictionary =
+#'   data_dictionary(con)), drop_if_exists = FALSE)
+#'   
 sqlite_auto_view <- function(table_pragma, target_table, relationships, drop_if_exists) {
+  stopifnot(is.logical(drop_if_exists), !length(drop_if_exists) == 1)
+  if (target_table %in% names(relationships)) {
+    relationships <- relationships[[target_table]]
+  }
   tmp <- table_pragma %>%
     left_join(relationships, by = c("name" = "fk_col")) %>%
     select(name, norm_table:val_col) %>%
+    unnest(c(val_col), keep_empty = TRUE) %>%
     mutate(lhs = str_c(target_table, name, sep = "."),
            rhs_val = str_c(norm_table, val_col, sep = "."),
            rhs_join = str_c(norm_table, pk_col, sep = "."),
@@ -409,7 +459,9 @@ sqlite_auto_view <- function(table_pragma, target_table, relationships, drop_if_
                                   "'. */"),
            sql_select = str_c("\n\t\t",
                               ifelse(is.na(norm_table), lhs, rhs_val),
-                              " AS ", name, ", ", 
+                              " AS ",
+                              ifelse(is.na(norm_table), name, str_replace(rhs_val, "\\.", "_")),
+                              ", ", 
                               select_comment),
            sql_join = ifelse(is.na(norm_table),
                              NA,
@@ -423,7 +475,7 @@ sqlite_auto_view <- function(table_pragma, target_table, relationships, drop_if_
   norm_tables <- format_list_of_names(unique(tmp$norm_table[!is.na(tmp$norm_table)]), add_quotes = TRUE)
   view_comment <- glue::glue('/* [autogenerated by sqlite_auto_view()] View of "{target_table}" normalized by {norm_tables}. */')
   target_columns <- paste0(tmp$sql_select, collapse = " \t")
-  norm_tables_join <- paste0(tmp$sql_join[!is.na(tmp$sql_join)], collapse = " \n\t")
+  norm_tables_join <- paste0(unique(tmp$sql_join[!is.na(tmp$sql_join)]), collapse = " \n\t")
   drop_statement <- ifelse(drop_if_exists,
                            glue::glue("DROP VIEW IF EXISTS view_{target_table}; "),
                            "")

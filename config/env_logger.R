@@ -111,7 +111,7 @@ RENV_ESTABLISHED_LOGGER <- TRUE
 #' @return tibble with one row per log entry (or groups)
 #' @export
 #'
-#' @examples
+#' @usage log_as_dataframe("log.txt")
 log_as_dataframe <- function(file = NULL,
                              last_n = Inf,
                              condense = TRUE,
@@ -196,7 +196,7 @@ log_as_dataframe <- function(file = NULL,
 #'   or none with a console print if `as_object` is FALSE
 #' @export
 #'
-#' @examples
+#' @usage read_log("log.txt")
 read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
   if (!file.exists(file)) {
     if (!exists("LOG_DIRECTORY")) stop("Session object LOG_DIRECTORY is not set.")
@@ -242,6 +242,8 @@ read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
 #' @return None
 #' @export
 #' 
+#' @usage update_logger_settings(log_all_warnings = FALSE, log_all_errors =
+#'   FALSE)
 update_logger_settings <- function(log_all_warnings = TRUE, log_all_errors = TRUE) {
   if (!exists("LOGGING")) stop("Object LOGGING containing logger settings is not available.")
   if (!exists("LOG_DIRECTORY")) LOG_DIRECTORY <- here::here("logs")

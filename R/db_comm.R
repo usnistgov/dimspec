@@ -134,7 +134,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage pragma_table_info("compounds")
 pragma_table_info <- function(db_table,
                               db_conn          = con,
                               condition        = NULL,
@@ -256,7 +256,7 @@ pragma_table_info <- function(db_table,
 #' @return None, check console for details
 #' @export
 #'
-#' @examples
+#' @usage build_db(db = "test_db.sqlite", db_conn_name = "test_conn")
 build_db <- function(db            = DB_NAME,
                      build_from    = DB_BUILD_FILE,
                      populate      = TRUE,
@@ -416,7 +416,7 @@ build_db <- function(db            = DB_NAME,
 #' @return None, check console for details
 #' @export
 #'
-#' @examples
+#' @usage remove_db("test.sqlite", archive = TRUE)
 remove_db <- function(db = DB_NAME, archive = FALSE) {
   require(tools)
   logger <- exists("log_it")
@@ -482,7 +482,7 @@ remove_db <- function(db = DB_NAME, archive = FALSE) {
 #' @return CHR vector of existing tables
 #' @export
 #'
-#' @examples
+#' @usage resolve_table_name(db_table = "compounds", db_conn = "test_con")
 resolve_table_name <- function(db_table, db_conn = con, log_ns = "db") {
   can_log <- exists("log_it")
   if (can_log) log_fn("start")
@@ -514,7 +514,7 @@ resolve_table_name <- function(db_table, db_conn = con, log_ns = "db") {
 #'   identifying which tables, if any, failed to render into the dictionary.
 #' @export
 #'
-#' @examples
+#' @usage data_dictionary(db_conn = con)
 data_dictionary <- function(db_conn = con) {
   if (exists("log_it")) log_fn("start")
   # Check connection
@@ -571,7 +571,7 @@ data_dictionary <- function(db_conn = con) {
 #' @return LIST of length equal to `obj` containing extracted comments
 #' @export
 #'
-#' @examples
+#' @usage tidy_comments(pragma_table_def("compounds", get_sql = TRUE))
 tidy_comments <- function(obj) {
   if (exists("log_it")) log_fn("start")
   # Argument validation
@@ -625,7 +625,7 @@ tidy_comments <- function(obj) {
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage save_data_dictionary(db_conn = con)
 save_data_dictionary <- function(db_conn            = con,
                                  output_format      = "json",
                                  output_file        = NULL,
@@ -746,7 +746,7 @@ save_data_dictionary <- function(db_conn            = con,
 #' @return nested LIST object
 #' @export
 #'
-#' @examples
+#' @usage er_map(db_conn = con)
 er_map <- function(db_conn = con) {
   if (exists("log_it")) log_fn("start")
   # Verify arguments
@@ -876,7 +876,7 @@ er_map <- function(db_conn = con) {
 #' @note For more complicated setups, it may be easier to use this function by
 #'   storing parameters in a list and calling with [base::do.call()]
 #'
-#' @examples
+#' @usage manage_connection("test.sqlite", conn_name = "test_con")
 manage_connection <- function(db          = DB_NAME,
                               drv_pack    = DB_PACKAGE,
                               drv         = DB_DRIVER,
@@ -1237,7 +1237,7 @@ sqlite_parse_import <- function(build_statements) {
 #' @return None: a file will be written at `out_file` with the output.
 #' @export
 #'
-#' @examples
+#' @usage create_fallback_build(build_file = file.path("config", "build.sql"))
 create_fallback_build <- function(build_file    = NULL,
                                   populate      = TRUE,
                                   populate_with = NULL,
@@ -1452,7 +1452,7 @@ build_db_logging_triggers <- function(db = DB_NAME, connection = "con", log_tabl
 #'   global environment for the database map (LIST "db_map") and current
 #'   dictionary (LIST "db_dict")
 #'
-#' @examples
+#' @usage update_all()
 update_all <- function(rebuild       = FALSE,
                        api_running   = TRUE,
                        api_monitor   = NULL,
@@ -1551,11 +1551,9 @@ update_all <- function(rebuild       = FALSE,
 #' 
 #' @export
 #' 
-#' @example 
-#' \notrun {
+#' @usage
 #' manage_connection()
 #' close_up_shop(TRUE)
-#' }
 close_up_shop <- function(back_up_connected_tbls = FALSE) {
   if (exists("log_it")) {
     log_fn("start")
@@ -1639,12 +1637,12 @@ close_up_shop <- function(back_up_connected_tbls = FALSE) {
 #'
 #' @aliases [DBI::dbIsValid]
 #' 
-#' @param db_conn 
+#' @param db_conn connection object (default "con")
 #'
-#' @return
+#' @return LGL scalar indicating whether the database is available
 #' @export
 #'
-#' @examples
+#' @usage active_connection(db_conn = con)
 active_connection <- function(db_conn = con) {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
@@ -1690,7 +1688,7 @@ active_connection <- function(db_conn = con) {
 #' @return NULL if unable to add the values, INT scalar of the new ID otherwise
 #' @export
 #'
-#' @examples
+#' @usage add_normalization_value("norm_table", name = "new value", acronym = "NV")
 add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_column = "id", database_map = NULL, ...) {
   if (exists("log_it")) log_fn("start")
   new_values <- list(...)

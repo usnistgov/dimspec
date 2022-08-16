@@ -1,4 +1,92 @@
-# TODO documentation
+#' Import one or more files from the NIST Method Reporting Tool for NTA
+#'
+#' This function serves as a single entry point for data imports. It is
+#' predicated upon the NIST import routine defined here and relies on several
+#' assumptions. It is intended ONLY as an interactive manner of importing n data
+#' files from the NIST Method Reporting Tool for NTA (MRT NTA).
+#'
+#' Import files should be in JSON format as created by the MRT NTA. Examples are
+#' provided in the "example" directory of the project.
+#'
+#' Defaults for this release are set throughout as of the latest database
+#' schema, but left here as arguments in case those should change, or slight
+#' changes are made to column and table names.
+#'
+#' @note Many calls within this function are executed as do.call with a filtered
+#'   argument list based on the names of formals for the called function.
+#'   Several arguments to those functions are also left as the defaults set
+#'   there; names must match exactly to be passed in this manner. See the list
+#'   of inherited parameters.
+#'
+#' @inheritParams verify_import_requirements
+#' @inheritParams resolve_method
+#' @inheritParams resolve_description_NTAMRT
+#' @inheritParams resolve_sample
+#' @inheritParams resolve_mobile_phase_NTAMRT
+#' @inheritParams resolve_qc_methods_NTAMRT
+#' @inheritParams resolve_peaks
+#' @inheritParams resolve_compounds
+#' @inheritParams resolve_fragments_NTAMRT
+#'
+#' @param import_object nested LIST object of JSON data to import; this import
+#'   routine was built around output from the NTA MRT (default: NULL) - note you
+#'   may supply either import object or file_name
+#' @param file_name external file in JSON format of data to import;  this import
+#'   routine was built around output from the NTA MRT (default: NULL) - note you
+#'   may supply either import object or file_name
+#' @param exclude_missing_required LGL scalar of whether or not to skip imports
+#'   missing required information (default: FALSE); if set to TRUE, this will
+#'   override the setting for `stop_if_missing_required` and the import will
+#'   continue with logging messages for which files were incomplete
+#' @param stop_if_missing_required LGL scalar of whether or not to to stop the
+#'   import routine if a file is missing required information (default: TRUE)
+#' @param include_if_missing_recommended LGL scalar of whether or not to include
+#'   imports missing recommended information (default: FALSE)
+#' @param stop_if_missing_recommended LGL scalar of whether or not to to stop
+#'   the import routine if a file is missing recommended information (default:
+#'   TRUE)
+#' @param ignore_insert_conflicts LGL scalar of whether to ignore insert
+#'   conflicts during the qc methods and qc data import steps (default: TRUE)
+#' @param instrument_properties_table CHR scalar name of the database table
+#'   holding instrument property information for a given method (default:
+#'   "instrument_properties")
+#' @param sample_info_in CHR scalar name of the element within `import_object`
+#'   containing samples information
+#' @param contributor_in CHR scalar name of the element within
+#'   `import_object[[sample_info_in]]` containing contributor information
+#'   (default: "data_generator")
+#' @param contributors_table CHR scalar name of the database table holding
+#'   contributor information (default: "contributors")
+#' @param sample_aliases named CHR vector of aliases with names matching the
+#'   alias, and values of the alias reference e.g. c("ACU1234" = "NIST
+#'   Biorepository GUAID") which can be virutally any reference text; it is
+#'   recommended that the reference be to a resolver service if connecting with
+#'   external data sources (default: NULL)
+#' @param mobile_phases_in CHR scalar name of the database table holding mobile
+#'   phase and chromatographic information (default: "chromatography")
+#' @param id_mix_by regex CHR to identify mobile phase mixtures (default:
+#'   "^mp*[0-9]+" matches the generated mixture names)
+#' @param peaks_in CHR scalar name of the element within `import_object`
+#'   containing peak information
+#' @param fragment_alias_type_norm_table CHR scalar name of the alias reference
+#'   normalization table, by default the return of
+#'   \code{ref_table_from_map(fragment_aliases_table, "alias_type")}
+#' @param type The type of chemical structure notation (default: SMILES)
+#' @param compound_aliases_in CHR scalar name of where compound aliases are
+#'   located within the import (default: "compound_aliases"), passed to
+#'   [resolve_compounds] as "norm_alias_table"
+#' @param compound_aliases_table CHR scalar name of the alias reference table to
+#'   use when assigning compound aliases (default: "compound_aliases") passed to
+#'   [resolve_compounds] as "compounds_table"
+#' @param compound_alias_type_norm_table CHR scalar name of the alias reference
+#'   normalization table, by default the return of
+#'   \code{ref_table_from_map(compound_aliases_table, "alias_type")}
+#'
+#' @return Console logging if enabled and interactive prompts when user
+#'   intervention is required. There is no formal return as it executes database
+#'   actions.
+#' @export
+#' 
 full_import <- function(import_object                  = NULL,
                         file_name                      = NULL,
                         db_conn                        = con,
@@ -82,7 +170,6 @@ full_import <- function(import_object                  = NULL,
                         inspection_info_in             = "fragment_inspections",
                         inspection_table               = "fragment_inspections",
                         generate_missing_aliases       = TRUE,
-                        fragment_aliases               = NULL,
                         fragment_aliases_in            = "fragment_aliases",
                         fragment_aliases_table         = "fragment_aliases",
                         fragment_alias_type_norm_table = ref_table_from_map(fragment_aliases_table, "alias_type"),
@@ -430,7 +517,8 @@ full_import <- function(import_object                  = NULL,
     compounds <- do.call(
       resolve_compounds,
       args = append(list(obj = obj),
-                    func_env[names(func_env) %in% names(formals(resolve_compounds))]
+                    func_env[names(func_env) %in% names(formals(resolve_compounds))],
+                    norm_alias_table = compound_alias_type_norm_table
       )
     )
     # _Fragments node ----
@@ -2060,7 +2148,6 @@ resolve_method <- function(obj,
 #'   import format. If using a different import format, customize to your needs
 #'   using this function as a guide.
 #'
-#' @inheritParams get_component
 #' @inheritParams build_db_action
 #'
 #' @param obj LIST object containing data formatted from the import generator
@@ -2068,10 +2155,14 @@ resolve_method <- function(obj,
 #' @param type CHR scalar, one of "massspec" or "chromatography" depending on
 #'   the type of description to add; much of the logic is shared, only details
 #'   differ
+#' @param mass_spec_in CHR scalar name of the element in `obj` holding mass
+#'   spectrometry information (default: "massspectrometry")
+#' @param chrom_spec_in CHR scalar name of the element in `obj` holding
+#'   chromatographic information (default: "chromatography")
 #'
 #' @return None, executes actions on the database
 #' @export
-#'
+#' 
 resolve_description_NTAMRT <- function(obj,
                                        method_id,
                                        type = c("massspec", "chromatography"),
@@ -3134,17 +3225,26 @@ resolve_peak_ums_params <- function(obj,
 #'
 #' @note This function is called as part of [full_import]
 #'
-#' @inheritParams full_import
-#' @inheritParams get_component
+#' @inheritParams build_db_action
 #'
+#' @param obj LIST object containing data formatted from the import generator
 #' @param method_id INT scalar of the method id (e.g. from the import workflow)
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
 #' @param qc_method_in CHR scalar of the name in `obj` that contains QC method
 #'   check information (default: "qcmethod")
 #' @param qc_method_table CHR scalar of the database table name holding QC
 #'   method check information (default: "qc_methods")
+#' @param qc_method_norm_table CHR scalar name of the database table normalizing
+#'   QC methods type (default: "norm_qc_methods_name")
+#' @param qc_method_norm_reference CHR scalar name of the database table
+#'   normalizing QC methods reference type (default:
+#'   "norm_qc_methods_reference")
 #' @param qc_references_in CHR scalar of the name in `obj[[qc_method_in]]` that
 #'   contains the reference or citation for the QC protocol (default: "source")
+#' @param ms_methods_table CHR scalar name of the database table holding mass
+#'   spectrometry methods data (default: "ms_methods")
+#' @param sample_table CHR scalar name of the database table holding sample
+#'   information (default: "samples")
 #' @param ignore LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
 #'   constraints; default: FALSE)
 #'
@@ -3234,16 +3334,14 @@ resolve_qc_methods_NTAMRT <- function(obj,
 #'
 #' @note This function is called as part of [full_import]
 #'
-#' @inheritParams full_import
-#' @inheritParams get_component
+#' @inheritParams build_db_action
 #'
+#' @param obj LIST object containing data formatted from the import generator
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
 #' @param qc_data_in CHR scalar name of the component in `obj` containing QC
 #'   data (default: "qc")
 #' @param qc_data_table CHR scalar name of the database table holding QC data
 #'   (default: "qc_data")
-#' @param ignore LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
-#'   constraints; default: FALSE)
 #'
 #' @return None, executes actions on the database
 #' @export
@@ -3844,78 +3942,6 @@ tack_on <- function(obj, ..., log_ns = "db") {
   }
   if (logging) log_it("info", glue::glue("Tacking on {length(addl_args)} additional item{ifelse(length(addl_args) > 1, 's', '')} ({format_list_of_names(names(addl_args), add_quotes = TRUE)})."), log_ns)
   out <- append(obj, addl_args)
-  return(out)
-}
-
-#' Resolve components from a list or named vector
-#'
-#' Call this to pull a component named `obj_component` from a list or named
-#' vector provided as `obj` and optionally use [tack_on] to append to it. This
-#' is intended to ease the process of pulling specific components from a list
-#' for further treatment in the import process by isolating that component.
-#'
-#' This is similar in scope to [purrr::pluck] in many regards, but always
-#' returns items with names, and will search an entire list structure, including
-#' data frames, to return all values associated with that name in individual
-#' elements.
-#' 
-#' @note This is a recursive function.
-#'
-#' @note If ellipsis arguments are provided, they will be appended to each
-#'   identified component via [tack_on]. Use with caution, but this can be
-#'   useful for appending common data to an entire list (e.g. a datetime stamp
-#'   for logging processing time or a processor name, human or software).
-#'
-#' @inheritParams tack_on
-#'
-#' @param obj LIST or NAMED vector in which to find `obj_component`
-#' @param obj_component CHR vector of named elements to find in `obj`
-#' @param silence LGL scalar indicating whether to silence recursive messages,
-#'   which may be the same for each element of `obj` (default: TRUE)
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
-#' @param ... Optional additional arguments to [tack_on] to the resulting list
-#'
-#' @return LIST object containing the elements of `obj`
-#' @export
-#' 
-#' @examples
-#' get_component(list(a = letters, b = 1:10), "a")
-#' get_component(list(ex = list(a = letters, b = 1:10), ex2 = list(c = 1:5, a = LETTERS)), "a")
-#' get_component(list(a = letters, b = 1:10), "a", c = 1:5)
-#' 
-get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global", ...) {
-  stopifnot(is.character(obj_component), length(obj_component) > 0, is.character(log_ns), length(log_ns) == 1)
-  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
-  names_present <- obj_component %in% names(obj)
-  if (any(names_present)) {
-    if (!all(names_present)) {
-      msg <- glue::glue("Requested component{ifelse(sum(!names_present) > 1, 's', '')} {format_list_of_names(obj_component[!names_present], add_quotes = TRUE)} {ifelse(sum(!names_present) > 1, 'were', 'was')} missing.")
-      if (logging) {
-        log_it("warn", msg, log_ns)
-      } else {
-        warning(msg)
-      }
-      return(NULL)
-    }
-    out <- obj[obj_component[names_present]]
-  } else if (is.list(obj)) {
-    out <- lapply(obj,
-                  function(x) {
-                    tmp <- get_component(
-                      obj = x,
-                      obj_component = obj_component,
-                      silence = silence
-                    )
-                  }) %>%
-      purrr::keep(~ length(.x) > 0)
-  } else {
-    if (logging && !silence) log_it("warn", glue::glue('"No components named {gsub(" and ", " or ", format_list_of_names(obj_component, add_quotes = TRUE))}" found in the namespace of this object..'), log_ns)
-    return(NULL)
-  }
-  kwargs <- list(...)
-  if (length(kwargs) > 0) {
-    out <- tack_on(obj = out, ... = ...)
-  }
   return(out)
 }
 

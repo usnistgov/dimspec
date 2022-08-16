@@ -137,7 +137,7 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage update_env_from_file("nist_hrms_db")
 update_env_from_file <- function(env_name, requirements_file, conda_alias = NULL, log_ns = NULL) {
   logger <- exists("log_it")
   if (logger) {
@@ -201,8 +201,7 @@ update_env_from_file <- function(env_name, requirements_file, conda_alias = NULL
 #' @return None
 #' @export
 #'
-#' @examples
-#' create_py_env()
+#' @usage create_py_env("nist_hrms_db", c("reticulate", "rdkit"))
 create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = NULL, conda_path = NULL, activate = TRUE) {
   stopifnot(require(reticulate))
   if (is.null(required_libraries)) {
@@ -360,7 +359,7 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
 #' @return None, or displays the resulting picture if `show == TRUE`
 #' @export
 #'
-#' @examples
+#' @usage
 #' caffeine <- "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12"
 #' molecule_picture(caffeine, show = TRUE)
 molecule_picture <- function(mol,
@@ -434,7 +433,7 @@ molecule_picture <- function(mol,
 #' @return
 #' @export
 #'
-#' @examples
+#' @usage py_modules_available("rdkit")
 py_modules_available <- function(required_modules, log_ns = NULL) {
   log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
   logging <- exists("log_it")
@@ -546,8 +545,8 @@ rdkit_active <- function(rdkit_ref = NULL, rdkit_name = NULL, log_ns = NULL, mak
 #' @param ns CHR scalar
 #'
 #' @return None, though calls to utility functions will give their own returns
-#' @export
-#'
+#' 
+#' @usage setup_rdkit(env_name = "nist_hrms_db", required_libraries = c("reticulate", "rdkit"), env_ref = "rdk")
 setup_rdkit <- function(env_name = NULL, required_libraries = NULL, env_ref = NULL, log_ns = NULL, conda_path = NULL) {
   logger <- exists("log_it")
   if (logger) {
