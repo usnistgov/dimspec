@@ -1,4 +1,4 @@
-# exactmasschart <- readRDS(file.path("R", "qualitycontrol", "exactmasschart.RDS"))
+
 
 #' Quality Control Check of Import Data
 #' 
@@ -15,19 +15,19 @@
 #'
 #' @examples
 
-gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {
+gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002) {
   #performs quality check on the submitted data and adds 'check' list item
   check <- list()
   
   #check 1: is the compound identified accurate to the measured m/z
   true_compound <- gather_peak$compounddata
-  true_compound_form <- true_compound$FORMULA
+  true_compound_form <- true_compound$formula
   adduct <- gather_peak$peak$ionstate
   if (adduct == "[M+H]+") {adduct = "+H"; charge = "positive"}
   if (adduct == "[M-H]-") {adduct = "-H"; charge = "negative"}
   if (adduct == "[M]+") {adduct = "+"; charge = "positive"}
   true_compound_ion_form <- adduct_formula(true_compound_form, adduct)
-  true_compound_mz <- calculate.monoisotope(extract.elements(true_compound_form), exactmasses, adduct = adduct)
+  true_compound_mz <- calculate.monoisotope(true_compound_form, exactmasses, adduct = adduct)
   measurederror <- (1E6)*(as.numeric(gather_peak$peak$mz) - true_compound_mz)/true_compound_mz
   result <- abs(measurederror) <= as.numeric(gather_peak$massspectrometry$msaccuracy)
   check[[length(check)+1]] <- data.frame(parameter = "measurederror", reportedmz = as.numeric(gather_peak$peak$mz), compoundmz = true_compound_mz, value = measurederror, limit = as.numeric(gather_peak$massspectrometry$msaccuracy), result = result)
@@ -36,7 +36,8 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   peaklist <- create_peak_list(gather_peak$msdata)
   ms1empirical <- create_peak_table_ms1(peaklist, mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
   ms1empirical <- data.frame(mz = rowMeans(ms1empirical$peaktable_mass, na.rm = TRUE), int = rowMeans(ms1empirical$peaktable_int, na.rm = TRUE))
-  ms1match <- check_isotopedist(ms1empirical, true_compound_ion_form, exactmasschart, error = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, max.dist = ms1range[2], min.int = 0.001, charge = charge, m = 1, n = 0.5)
+  #comment: must adjust max range to fit within m/z range, ms1range - 1 will fit all ions
+  ms1match <- check_isotopedist(ms1empirical, true_compound_ion_form, exactmasschart, error = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, max.dist = ms1range[2]-1, min.int = 0.001, charge = charge, m = 1, n = 0.5)
   matchscore <- as.numeric(ms1match[2])
   result <- matchscore >= ms1isomatchlimit
   check[[length(check)+1]] <- data.frame(parameter = "ms1_isotopepattern", value = matchscore, limit = ms1isomatchlimit, result = result)
@@ -76,7 +77,7 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
       if (gather_peak$annotation$fragment_radical[x] == TRUE) {return("radical")}
       if (gather_peak$annotation$fragment_radical[x] == FALSE) {return("")}
     }), sep = "")
-    calculated_mz <- sapply(1:nrow(gather_peak$annotation), function(x) calculate.monoisotope(extract.elements(gather_peak$annotation$fragment_formula[x]), exactmasses, adducts[x]))
+    calculated_mz <- sapply(1:nrow(gather_peak$annotation), function(x) calculate.monoisotope(gather_peak$annotation$fragment_formula[x], exactmasses, adducts[x]))
     massdiff <- sapply(1:length(mz), function(x) mz[x] - calculated_mz[x])
     value <- sapply(1:length(mz), function(x) ((mz[x] - calculated_mz[x])/mz[x])*1E6)
     result <- sapply(1:length(mz), function(x) abs(value[x]) <= as.numeric(gather_peak$massspectrometry$msaccuracy) | abs(massdiff[x]) <= minerror)
@@ -87,8 +88,8 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   if (is.null(gather_peak$annotation)) {check[[length(check) + 1]] <- data.frame(parameter = "annfragments_subset", value = NA, result = NA)}
   if (!is.null(gather_peak$annotation)) {
   fragment_form <- gather_peak$annotation$fragment_formula
-  result <- sapply(fragment_form, function(x) is_elemental_subset(x, gather_peak$compounddata$FORMULA))
-  check[[length(check)+1]] <- data.frame(parameter = "annfragments_subset", reportedformula = fragment_form, parentformula = gather_peak$compounddata$FORMULA, result = result, row.names = c())
+  result <- sapply(fragment_form, function(x) is_elemental_subset(x, gather_peak$compounddata$formula))
+  check[[length(check)+1]] <- data.frame(parameter = "annfragments_subset", reportedformula = fragment_form, parentformula = gather_peak$compounddata$formula, result = result, row.names = c())
   }
   #check 7: do the structures give the same formula as the proposed formula?
   if (is.null(gather_peak$annotation)) {check[[length(check) + 1]] <- data.frame(parameter = "annfragments_elementalmatch", value = NA, result = NA)}
@@ -118,8 +119,8 @@ gather_qc <- function(gather_peak, exactmasses, ms1range = c(0.5, 3), ms1isomatc
   opt_ums1_params <- optimal_ums(ms1empirical, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson")
   ms2empirical <- create_peak_table_ms2(peaklist,mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
   opt_ums2_params <- optimal_ums(ms2empirical, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson")
-  check[[length(check) + 1]] <- data.frame(parameter = optimized_ums_parameters_ms1, mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
-  
+  check[[length(check) + 1]] <- data.frame(parameter = "optimized_ums_parameters_ms1", mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
+
   #return results
 
   check
