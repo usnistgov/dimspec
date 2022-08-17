@@ -324,9 +324,9 @@
   			/* measured mass of precursor_mz */
   		pd.scantime,
   			/* ms scantime for this spectrum */
-  		pd.mz,
+  		pd.measured_mz,
   			/* mass to charge ratios */
-  		pd.intensity
+  		pd.measured_intensity
   			/* measured signal intensities */
   	FROM compound_fragments cf
   	LEFT JOIN peak_data pd

@@ -464,9 +464,9 @@
 				/* measured mass of precursor_mz */
 			msd.scantime,
 				/* ms scantime for this spectrum */
-			msd.measured_mz AS mz,
+			msd.measured_mz,
 				/* mass to charge ratios */
-			msd.measured_intensity AS intensity
+			msd.measured_intensity
 				/* measured signal intensities */
 		FROM ms_data msd
 		INNER JOIN peaks p ON msd.peak_id = p.id;

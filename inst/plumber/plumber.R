@@ -116,13 +116,14 @@ function(table_name      = "contributors",
 }
 
 # /compound_data ----
-#* Return mass spectral data for a compound by its internal ID number.
+#* Return mass spectral data for a compound by its internal ID number. This endpoint operates from the compound_data view.
 #* @param compound_id:int A single integer value of the peak ID for which to retrieve mass spectral data.
 #* @param tidy_spectra:logical Whether spectra should be made "tidy" or remain packed.
-#* @param test:logical
 #* @get /compound_data
-function(compound_id = 1L,
-         tidy_spectra = TRUE) {
+function(compound_id = 2627L,
+         tidy_spectra = TRUE,
+         format = "separated",
+         column_flags = c("measured_mz", "measured_intensity")) {
   tidy_spectra <- as.logical(tidy_spectra)
   compound_id <- as.integer(compound_id)
   ms_data <- dbGetQuery(
@@ -132,7 +133,7 @@ function(compound_id = 1L,
                         compound_id = compound_id)
   )
   if (tidy_spectra && nrow(ms_data) > 0) {
-    ms_data <- tidy_spectra(ms_data)
+    ms_data <- tidy_spectra(target = ms_data, is_format = "separated", ms_col_sep = c("measured_mz", "measured_intensity"))
   }
   return(ms_data)
 }
@@ -153,7 +154,7 @@ function(peak_id = 1L,
                         peak_id = peak_id)
   )
   if (tidy_spectra && nrow(ms_data) > 0) {
-    ms_data <- tidy_spectra(ms_data)
+    ms_data <- tidy_spectra(target = ms_data, is_format = "separated", ms_col_sep = c("measured_mz", "measured_intensity"))
   }
   return(ms_data)
 }
