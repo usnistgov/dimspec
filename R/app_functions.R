@@ -1400,3 +1400,51 @@ fn_help <- function(fn_name) {
     utils::browseURL(fn_file_rendered)
   }
 }
+
+#' Rebuild the help files as HTML with an index
+#'
+#' @return None
+rebuild_help_htmls <- function() {
+  help_files <- list.files(here::here("man"), pattern = ".Rd$")
+  html_dir <- here::here("man", "html")
+  if (!dir.exists(html_dir)) dir.create(html_dir)
+  index <- '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>DIMSpec Help Index</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><link rel="stylesheet" type="text/css" href="R.css" /></head><body><table width="100%" summary="Help Index for DIMSpec Project"><tr><td><h2>DIMSpec Help Index</h2></td><td style="text-align: right;">R Documentation</td></tr></table><table id="function_list">'
+  for (fname in help_files) {
+    in_file <- here::here("man", fname)
+    out_file <- gsub(".Rd", ".html", here::here(html_dir, fname))
+    print(sprintf("(%d of %d) Knitting %s to %s", which(help_files == fname), length(help_files), basename(in_file), basename(out_file)))
+    tools::Rd2HTML(in_file, out_file)
+    contents <- readLines(in_file)
+    title <- grep("^\\\\title", contents, value = TRUE)
+    title <- gsub("\\\\|title|\\{|\\}", "", title)
+    index <- paste0(
+      index,
+      sprintf(
+        '<tr><td><a href=%s>%s</a></td><td>%s</td></tr>',
+        out_file,
+        tools::file_path_sans_ext(basename(out_file)),
+        title
+      )
+    )
+  }
+  index <- paste0(index, "</table></body></html>")
+  readr::write_file(index, here::here(html_dir, "_index.html"))
+}
+
+#' View an index of help documentation in your browser
+#'
+#' @return None
+#' @export
+fn_guide <- function() {
+  index_file <- grep("index", list.files(here::here("man", "html"), full.names = TRUE), value = TRUE)
+  if (index_file == "") stop("Could not locate the index file. Do you need to use rebuild_help_htmls()?")
+  using_rstudio <- try(rstudioapi::isAvailable())
+  if (inherits(using_rstudio, "try-error")) {
+    using_rstudio <- FALSE
+  }
+  if (using_rstudio) {
+    rstudioapi::viewer(index_file)
+  } else {
+    utils::browseURL(index_file)
+  }
+}
