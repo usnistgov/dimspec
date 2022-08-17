@@ -1356,3 +1356,47 @@ get_component <- function(obj, obj_component, silence = TRUE, log_ns = "global",
   }
   return(out)
 }
+
+#' Get function documentation for this project
+#'
+#' This function is analogous to "?", "??", and "help". For now, this effort is
+#' distributed as a project instead of a package. This imposes certain
+#' limitations, particularly regarding function documentation. Use this function
+#' to see the documentation for functions in this project just as you would any
+#' installed package. The other limitation is that these help files will not
+#' populate directly as a pop up when using RStudio tab completion.
+#' 
+#' @note This function will be deprecated if the project is moved to a package.
+#'
+#' @param fn_name Object or CHR string name of a function in this project.
+#'
+#' @return None, opens help file.
+#' @export
+#'
+#' @examples
+#' fn_help(fn_help)
+fn_help <- function(fn_name) {
+  fn_name <- gsub('"', '', deparse(substitute(fn_name)))
+  stopifnot(length(fn_name) == 1)
+  using_rstudio <- try(rstudioapi::isAvailable())
+  if (inherits(using_rstudio, "try-error")) {
+    using_rstudio <- FALSE
+  }
+  rd_dir <- here::here("man")
+  html_dir <- here::here(rd_dir, "_html")
+  fn_file <- sprintf("%s.Rd", fn_name)
+  fn_file_rendered <- here::here(html_dir, gsub(".Rd", ".html", fn_file))
+  fn_file <- here::here(rd_dir, fn_file)
+  if (!file.exists(fn_file)) {
+    stop(sprintf("No help file exists for %s.", fn_name))
+  }
+  if (using_rstudio) {
+    rstudioapi::previewRd(fn_file)
+  } else {
+    if (!dir.exists(html_dir)) dir.create(html_dir)
+    if (!file.exists(fn_file_rendered)) {
+      tools::Rd2HTML(Rd = fn_file, out = fn_file_rendered)
+    }
+    utils::browseURL(fn_file_rendered)
+  }
+}
