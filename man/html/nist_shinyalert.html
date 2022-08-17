@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Call [shinyalert::shinyalert] with specific styling</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body>
+
+<table width="100%" summary="page for nist_shinyalert"><tr><td>nist_shinyalert</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Call [shinyalert::shinyalert] with specific styling</h2>
+
+<h3>Description</h3>
+
+<p>This pass through function serves only to call [shinyalert::shinyalert] with
+parameters defined by this function, and can be used for additional styling
+that may be necessary. It is used solely for consistency sake.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+nist_shinyalert("test", "info", shiny::h3("test"))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>title</code></td>
+<td>
+<p>The title of the modal.</p>
+</td></tr>
+<tr valign="top"><td><code>type</code></td>
+<td>
+<p>The type of the modal. There are 4 built-in types which will show
+a corresponding icon: <code>"warning"</code>, <code>"error"</code>, <code>"success"</code> and
+<code>"info"</code>. You can also set <code>type="input"</code> to get a prompt
+in the modal where the user can enter a response. By default, the modal has
+no type.</p>
+</td></tr>
+<tr valign="top"><td><code>text</code></td>
+<td>
+<p>The modal's text. Can either be simple text, or Shiny tags (including
+Shiny inputs and outputs). If using Shiny tags, then you must also set <code>html=TRUE</code>.</p>
+</td></tr>
+<tr valign="top"><td><code>className</code></td>
+<td>
+<p>A custom CSS class name for the modal's container.</p>
+</td></tr>
+<tr valign="top"><td><code>html</code></td>
+<td>
+<p>If <code>TRUE</code>, the content of the title and text will not be
+escaped. By default, the content in the title and text are escaped, so any
+HTML tags will not render as HTML.</p>
+</td></tr>
+<tr valign="top"><td><code>closeOnClickOutside</code></td>
+<td>
+<p>If <code>TRUE</code>, the user can dismiss the modal by
+clicking outside it.</p>
+</td></tr>
+<tr valign="top"><td><code>immediate</code></td>
+<td>
+<p>If <code>TRUE</code>, close any previously opened alerts and display
+the current one immediately.</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Additional named parameters to be passed to shinyalert.
+Unrecognized ones will be ignored.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, shows a shinyalert modal
+</p>
+
+
+<h3>See Also</h3>
+
+<p>shinyalert::shinyalert
+</p>
+
+
+</body></html>

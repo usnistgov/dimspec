@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve and import quality control data for import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_qc_data_NTAMRT"><tr><td>resolve_qc_data_NTAMRT</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve and import quality control data for import</h2>
+
+<h3>Description</h3>
+
+<p>This imports the defined object component containing QC data (i.e. a nested
+list of multiple quality control checks) from the NIST Non-Targeted Analysis
+Method Reporting Tool (NTA MRT).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_qc_data_NTAMRT(
+  obj,
+  sample_id,
+  qc_data_in = "qc",
+  qc_data_table = "qc_data",
+  ignore = FALSE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>sample_id</code></td>
+<td>
+<p>INT scalar of the sample id (e.g. from the import workflow)</p>
+</td></tr>
+<tr valign="top"><td><code>qc_data_in</code></td>
+<td>
+<p>CHR scalar name of the component in 'obj' containing QC
+data (default: &quot;qc&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>qc_data_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding QC data
+(default: &quot;qc_data&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>existing connection object (e.g. of class &quot;SQLiteConnection&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, executes actions on the database
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import]
+</p>
+
+
+</body></html>

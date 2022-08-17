@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Ensure files uploaded to a shiny app are of the required file...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body>
+
+<table width="100%" summary="page for valid_file_format"><tr><td>valid_file_format</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Ensure files uploaded to a shiny app are of the required file type</h2>
+
+<h3>Description</h3>
+
+<p>This input validation check uses [tools::file_ext] to ensure that files
+uploaded to [shiny::fileInput] are among the acceptable file formats. Users
+may sometimes wish to load a file outside the &quot;accepts&quot; format list by
+manually changing it during the upload process. If they are not, a
+[nist_shinyalert] modal is displayed prompting the user to upload a file in
+one of the requested formats.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+req(valid_file_format(input$file_upload, c(".csv", ".xls")))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>filename</code></td>
+<td>
+<p>CHR scalar name of the file uploaded to the shiny server</p>
+</td></tr>
+<tr valign="top"><td><code>accepts</code></td>
+<td>
+<p>CHR vector of acceptable file formats</p>
+</td></tr>
+<tr valign="top"><td><code>show_alert</code></td>
+<td>
+<p>LGL scalar indicating whether or not to show an alert, set
+FALSE to return the status of the check</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>Whether or not all required values are present.
+</p>
+
+
+</body></html>
