@@ -669,7 +669,7 @@ rdkit_mol_aliases <- function(identifiers, type = "smiles", mol_from_prefix = "M
                    function(x) {
                      rdk$Chem[[to_mol]](x)
                    })
-    if (is.null(aliases)) {
+    if (is.null(get_aliases)) {
       aliases <- grep(paste0("^", mol_to_prefix), names(rdk$Chem), value = TRUE)
       alias_funcs <- aliases
     } else {
