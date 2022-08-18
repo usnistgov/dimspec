@@ -3,58 +3,156 @@ shinyServer(function(input, output) {
   observeEvent(input$browser, browser())
   
   # Environment Objects ----
-  import_results <- reactiveValues(processed_data = NULL, qc_results = list(), data_select = NULL, qc_check_select = NULL)
-  data_react <- reactiveValues(compoundtable = api_endpoint(path = "table_search",
-                                                query = list(table_name = "view_compounds"),
-                                                return_format = "data.frame"),
-                 exactmasses = api_endpoint(path = "table_search",
-                                            query = list(table_name = "view_exact_masses"),
-                                            return_format = "data.frame"),
-                 exactmasschart = create_exactmasschart(api_endpoint(path = "table_search",
-                                                                     query = list(table_name = "view_element_isotopes"),
-                                                                                  return_format = "data.frame")),
+  import_results <- reactiveValues(processed_data = NULL, 
+                                   qc_results = list(), 
+                                   data_select = NULL, 
+                                   qc_check_select = NULL,
+                                   file_dt = data.frame(RawFile = NULL, SampleJSON = NULL, Valid = NULL),
+                                   sample_list = NULL,
+                                   peak_list = NULL
+                                   )
+  data_react <- reactiveValues(compoundtable = NULL,
+                 exactmasses = NULL,
+                 exactmasschart = NULL,
                  export_dir = paste0(getwd(), "/data/")
   )
   
   if (is.null(isolate(import_results$processed_data))) {
     output$qc_review_status <- renderText("No processed data.")
     import_results$qc_results <- list()
+  }
+  
+  # Check data ----
+  observeEvent(input$rawdata_filename, isolate({
+    if (!is.null(input$rawdata_filename) & !is.null(input$sampleJSON_filename)) {
+      sampleJSONs <- lapply(input$sampleJSON_filename$datapath, parse_methodjson)
+      sampleJSON_name <- input$sampleJSON_filename$name
+      RawFile <- input$rawdata_filename$name
+      sampleJSON_raw <- sapply(sampleJSONs, function(x) x$sample$name)
+      SampleJSON <- rep(NA, length(RawFile))
+      Valid <- rep(FALSE, length(RawFile))
+      for (i in 1:length(RawFile)) {
+        ind <- which(sampleJSON_raw == RawFile[i])
+        if (length(ind) > 0) {
+          SampleJSON[i] <- sampleJSON_name[ind]
+          Valid[i] <- TRUE
+        }
+      }
+      output$file_table <- DT::renderDataTable(data.frame(RawFile = RawFile, SampleJSON = SampleJSON, Valid = Valid))
     }
+  }))
+  
+  observeEvent(input$sampleJSON_filename, isolate({
+    if (!is.null(input$rawdata_filename) & !is.null(input$sampleJSON_filename)) {
+      sampleJSONs <- lapply(input$sampleJSON_filename$datapath, parse_methodjson)
+      sampleJSON_name <- input$sampleJSON_filename$name
+      RawFile <- input$rawdata_filename$name
+      sampleJSON_raw <- sapply(sampleJSONs, function(x) x$sample$name)
+      SampleJSON <- rep(NA, length(RawFile))
+      Valid <- rep(FALSE, length(RawFile))
+      for (i in 1:length(RawFile)) {
+        ind <- which(sampleJSON_raw == RawFile[i])
+        if (length(ind) > 0) {
+          SampleJSON[i] <- sampleJSON_name[ind]
+          Valid[i] <- TRUE
+        }
+      }
+      import_results$file_dt <- data.frame(RawFile = RawFile, SampleJSON = SampleJSON, Valid = Valid)
+      output$file_table <- DT::renderDataTable(DT::datatable(import_results$file_dt,
+                                                            options = list(paging = FALSE, searching = FALSE, ordering = FALSE)))
+    }
+  }))
   
   # Process data ----
   observeEvent(input$process_data_btn, isolate({
-    mzml <- mzMLtoR(input$rawdata_filename$datapath)
-    samplejson <- parse_methodjson(input$sampleJSON_filename$datapath)
+    #get reference information
+    data_react$compoundtable <- api_endpoint(path = "table_search",
+                                             query = list(table_name = "view_compounds"),
+                                             return_format = "data.frame")
+    data_react$exactmasses <-  api_endpoint(path = "table_search",
+                                            query = list(table_name = "view_exact_masses"),
+                                            return_format = "data.frame")
+    data_react$exactmasschart <- create_exactmasschart(api_endpoint(path = "table_search",
+                                                                    query = list(table_name = "view_element_isotopes"),
+                                                                    return_format = "data.frame"))
     
-    # Import data quality check
+    
+    # Import Data into Environment
+    if (!is.null(input$rawdata_filename) & !is.null(input$sampleJSON_filename) & !is.null(import_results$file_dt)) {
+    mzmls <- list()
+    samplejsons <- list()
+    for (i in 1:nrow(import_results$file_dt)) {
+      if (import_results$file_dt$Valid[i] == TRUE) {
+        mzmls[[length(mzmls)+1]] <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
+        samplejsons[[length(samplejsons) + 1]] <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
+      }
+    }
     
     # Process data
-    import_results$processed_data <- peak_gather_json(samplejson, mzml, data_react$compoundtable)
+    import_results$processed_data <- lapply(1:length(mzmls), function(x) {
+      peak_gather_json(samplejsons[[x]], mzmls[[x]], data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
+    })
     
+    peak_results <- list()
+    sample_results <- rep(FALSE, length(import_results$processed_data))
     for (j in 1:length(import_results$processed_data)) {
-      qc <- gather_qc(import_results$processed_data[[j]],
+    import_results$qc_results[[j]] <- list()
+    peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
+      for (i in 1:length(import_results$processed_data[[j]])) {
+      qc <- gather_qc(import_results$processed_data[[j]][[i]],
                       exactmasses = data_react$exactmasses,
                       exactmasschart = data_react$exactmasschart,
                       ms1range = c(input$ms1zoom_low, input$ms1zoom_high),
                       ms1isomatchlimit = input$ms1matchlimit,
                       minerror = input$minerror
                       )
-        import_results$qc_results[[j]] <- qc
+        import_results$qc_results[[j]][[i]] <- qc
+        
+        # populate summary tables
+        all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
+        if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
+      }
+      import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
+      sample_results[j] <- FALSE
+      if (!FALSE %in% peak_results[[j]]) {sample_results[j] <- TRUE}
     }
     
     # put out the various updates
-    import_results$data_select <- sapply(import_results$processed_data, function(x) paste("m/z ", x$peak$mz[1], " @ ", x$peak$rt[1], " min", sep = ""))
-    updateSelectizeInput(inputId = "select_peak", choices = import_results$data_select, selected = 1)
+    import_results$sample_list <- data.frame(RawFile = import_results$file_dt$RawFile, PassCheck = sample_results)
+    output$sample_qc <- DT::renderDataTable(DT::datatable(import_results$sample_list, 
+                                                          options = list(
+                                                            paging = FALSE,
+                                                            filtering = FALSE,
+                                                            ordering = FALSE,
+                                                            searching = FALSE
+                                                          ),
+                                                          selection = "single"
+                                                          ))
     output$qc_review_status <- renderText("Data processing complete!")
     print("Complete!")
+    }
   }))
   
   # QC Review functions ---
-  observeEvent(input$select_peak, isolate({
-    ind <- which(import_results$data_select == input$select_peak)
-    if (length(ind) != 0) {
-      dat <- import_results$processed_data[[ind]]
-      qc <- import_results$qc_results[[ind]]
+
+  observeEvent(input$sample_qc_rows_selected, isolate({
+    if (!is.null(input$sample_qc_rows_selected)) {
+      output$peak_qc <- DT::renderDataTable(DT::datatable(import_results$peak_list[[input$sample_qc_rows_selected]],
+                                                          options = list(
+                                                            paging = FALSE,
+                                                            filtering = FALSE,
+                                                            ordering = FALSE,
+                                                            searching = FALSE
+                                                          ),
+                                                          selection = "single"
+                                                          ))
+    }
+  }))
+  
+  observeEvent(input$peak_qc_rows_selected, isolate({
+    if (!is.null(input$peak_qc_rows_selected) & !is.null(input$sample_qc_rows_selected)) {
+      dat <- import_results$processed_data[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+      qc <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
       all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
       if (FALSE %in% all_results) {output$overall_qc_results <- renderText(paste0("There are ", length(which(all_results == FALSE)), " failed QC checks for this peak."))}
       if (!FALSE %in% all_results) {output$overall_qc_results <- renderText("There are no failed QC checks for this peak.")}
@@ -64,40 +162,46 @@ shinyServer(function(input, output) {
   }))
   
   observeEvent(input$select_qc_check, isolate({
-    ind <- which(import_results$data_select == input$select_peak)
-    if (length(ind) != 0) {
-      dat <- import_results$processed_data[[ind]]
-      qc <- import_results$qc_results[[ind]]
-      ind2 <- which(import_results$qc_check_select == input$select_qc_check)
-      if (length(ind2) != 0) {
-        outtable <- qc[[ind2]]
-        outtable <- outtable[,-1]
-        output$qc_dt <- DT::renderDataTable(outtable)
-      }
+    if (!is.null(input$peak_qc_rows_selected) & !is.null(input$sample_qc_rows_selected)) {
+        dat <- import_results$processed_data[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+        qc <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+        ind <- which(import_results$qc_check_select == input$select_qc_check)
+        if (length(ind) != 0) {
+          outtable <- qc[[ind]]
+          outtable <- outtable[,-1]
+          output$peak_data <- DT::renderDataTable(DT::datatable(outtable, options = list(filtering = FALSE, ordering = FALSE, paging = FALSE, searching = FALSE)))
+        }
+      
     }
   }))
   
-  #shinyFiles::shinyDirChoose(input, id = "export_dir", roots = getVolumes())
   
-  # observeEvent(input$export_dir, {
-  #   if (!is.null(input$export_dir)) {
-  #     output$output_dir <- renderText(input$export_dir)
-  #   }
-  #   if (is.null(input$export_dir)) {
-  #     output$output_dir <- renderText("No directory has been selected")
-  #   }
-  # })
+# Export Functions ---- 
   
-  observeEvent(input$export_btn, isolate({
-    if (!is.null(data_react$export_dir)) {
-      for (i in 1:length(import_results$processed_data)) {
-        outdat <- import_results$processed_data[[i]]
-        outdat$qc <- import_results$qc_results[[i]]
-        write_json(outdat, paste(data_react$export_dir, gsub("\\.", "_", outdat$sample$name),
-                                 "_cmpd", outdat$compounddata$id, ".JSON", sep = ""), auto_unbox = TRUE,
+output$export_btn <- downloadHandler(
+  filename = function() {
+    paste0("database_import_files", Sys.Date(), ".zip")
+  },
+  content = function(file) {
+    temp_directory <- file.path(tempdir(), as.integer(Sys.time()))
+    dir.create(temp_directory)
+    
+    for (j in 1:length(import_results$processed_data)) {
+      for (i in 1:length(import_results$processed_data[[j]])) {
+        outdat <- import_results$processed_data[[j]][[i]]
+        outdat$qc <- import_results$qc_results[[j]][[i]]
+        write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
+                   auto_unbox = TRUE,
                    pretty = TRUE)
       }
-      output$export_status <- renderText("All files have been exported.")
     }
-  }))
+    
+    zip::zip(zipfile = file,
+             files = dir(temp_directory),
+             root = temp_directory)
+    
+  },
+  contentType = "application/zip"
+)
+  
 })
