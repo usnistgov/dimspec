@@ -22,6 +22,9 @@ shinyServer(function(input, output) {
     import_results$qc_results <- list()
   }
   
+  # Element Display ----
+  hideElement("process_data_btn")
+  
   # Check data ----
   observeEvent(input$rawdata_filename, isolate({
     if (!is.null(input$rawdata_filename) & !is.null(input$sampleJSON_filename)) {
@@ -39,6 +42,7 @@ shinyServer(function(input, output) {
         }
       }
       output$file_table <- DT::renderDataTable(data.frame(RawFile = RawFile, SampleJSON = SampleJSON, Valid = Valid))
+      showElement("process_data_btn")
     }
   }))
   
@@ -60,6 +64,7 @@ shinyServer(function(input, output) {
       import_results$file_dt <- data.frame(RawFile = RawFile, SampleJSON = SampleJSON, Valid = Valid)
       output$file_table <- DT::renderDataTable(DT::datatable(import_results$file_dt,
                                                             options = list(paging = FALSE, searching = FALSE, ordering = FALSE)))
+      showElement("process_data_btn")
     }
   }))
   

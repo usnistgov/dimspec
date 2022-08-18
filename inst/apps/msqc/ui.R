@@ -44,7 +44,9 @@ dashboardPage(
         )
     ),
     body = dashboardBody(
-        tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
+      useShinyjs(),
+      tags$link(rel = "stylesheet", type = "text/css", href = "nist_style.css"),
+      tags$script(type = "text/javascript", jscode),
         tabItems(
           tabItem("about",
                   h3("Quality Control Check Tool for Data Import"),
@@ -97,7 +99,7 @@ dashboardPage(
             ),
             tabItem("export",
                     h5("Export all QC data for sample."),
-                    downloadButton(outputId = "export_btn", label = "Export all data", icon = icon("file-download")),
+                    downloadButton(outputId = "export_btn", label = "Export all data", icon = icon("file-download", verify_fa = FALSE)),
                     textOutput(outputId = "export_status")
                     ),
             tabItem("settings",

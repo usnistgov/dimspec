@@ -32,6 +32,8 @@ vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 need_files <- c(
+  "app_functions.R",
+  "shiny_helpders.R",
   here::here("R", "tidy_spectra.R"),
   list.files(path = here::here("R", c("spectral_analysis", "base", "gather", "misc")),
              pattern = "\\.R$",
@@ -40,9 +42,9 @@ need_files <- c(
 sapply(need_files, source, keep.source = FALSE)
 
 # Load all modals in this directory
-lapply(list.files("modals", pattern = ".R", full.names = TRUE),
-       source,
-       keep.source = FALSE)
+# lapply(list.files("modals", pattern = ".R", full.names = TRUE),
+#        source,
+#        keep.source = FALSE)
 
 # Set up logging options for this application. These again should only be
 # changed to meet the needs of the application.
