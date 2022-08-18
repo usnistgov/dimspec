@@ -35,7 +35,7 @@ api_start <- function(plumber_file = NULL,
   }
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
-  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  if (!is.integer(on_port)) on_port <- as.integer(on_port)
   
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
