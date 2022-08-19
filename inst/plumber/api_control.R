@@ -219,7 +219,7 @@ api_reload <- function(pr = NULL,
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
   plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, here::here("inst", "plumber", "plumber.R"))
-  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  if (!is.integer(on_port)) on_port <- as.integer(on_port)
   service_exists <- suppressWarnings(exists(pr))
   if (!service_exists) {
     pr <- NULL
