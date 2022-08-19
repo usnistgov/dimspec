@@ -1,10 +1,10 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "NIST Spectral Match"
+APP_TITLE          <- "Mass Spectral Match for PFAS"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "NIST Spectral Match for PFAS"
+default_title      <- "Mass Spectral Match"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's

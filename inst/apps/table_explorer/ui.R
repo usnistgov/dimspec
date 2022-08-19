@@ -1,7 +1,7 @@
 # Define UI for application that draws a histogram
 dashboardPage(
     skin = "blue",
-    title = DB_TITLE,
+    title = paste0(APP_TITLE, " - ", DB_TITLE),
     header = dashboardHeader(
       title = a(
         img(src = "NIST-Logo-Brand-White.svg"),
@@ -18,7 +18,7 @@ dashboardPage(
         } else {
             NULL
         },
-        h3(DB_TITLE, style = "padding: 5px; margin: 0px;"),
+        h3("Currently connected to ", DB_TITLE, style = "padding: 5px; margin: 0px;"),
         sidebarMenu(
             id = "sidebar_menu",
             menuItem("Table Viewer",

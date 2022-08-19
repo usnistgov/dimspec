@@ -5,13 +5,11 @@ body {
 }
 
 .title-banner {
-  position: absolute;
   top: 0;
-  right: 100vw;
   left: 0px;
   width: 100%;
   color: red;
-  text-align: right;
+  text-align: center;
   font-size: xx-large;
   z-index: 9000;
   padding-right: 7px;
@@ -20,22 +18,24 @@ body {
 .content {
   overflow: auto;
   height: calc(100vh - 50px);
+  padding-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .content {
+    height: calc(100vh - 100px);
+  }
 }
 
 .flex-container {
   display: flex;
   width: 100%;
-  padding: 10px 0px;
+  padding: 0px;
 }
 
-.flex-container > button {
+.flex-container > span, .flex-container > button {
   flex: auto;
 }
-
-.logo > a {
-  float: left;
-}
-
 
 .logo, .navbar {
   background-color: #222d32 !important;
@@ -75,9 +75,6 @@ button.dt-button {
   .box-left {
     padding-right: 7px;
   }
-}
-
-@media (min-width: 768px) {
   .box-right {
     padding-left: 8px;
   }
@@ -142,4 +139,111 @@ a > i {
   text-align: center;
   margin: auto;
   padding-top: calc(50vh + 100px);
+}
+
+td.dtr-control {
+  padding-left: 30px !important;
+}
+
+ul.dtr-details {
+  width: 100%;
+  padding-left: 30px !important;
+}
+
+ul.dtr-details > li {
+  padding: 0 !important;
+  display: inline-block;
+  width: 100%;
+}
+
+ul.dtr-details > li > .dtr-title {
+  float: left !important;
+  text-align: left;
+}
+
+ul.dtr-details > li > .dtr-data {
+  float: right !important;
+}
+
+.success {
+  color: #00a65a;
+}
+
+.warning {
+  color: #f39c12;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.primary {
+  color: #0073b7
+}
+
+.info {
+  color: #00c0ef;
+}
+
+.tooltip {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.tooltip-inner {
+  background-color: #606060;
+  color: #dcf3fb;
+}
+
+.tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #606060;
+}
+
+.tooltip.left .tooltip-arrow {
+  border-left-color: #606060;
+}
+
+.tooltip.right .tooltip-arrow {
+  border-right-color: #606060;
+}
+
+.tooltip.top .tooltip-arrow {
+  border-top-color: #606060;
+}
+
+.tooltip.in {
+  opacity: 0.95;
+}
+
+.nav-checkbox-right {
+  padding: 0px 5px 12px 18px;
+  width: 100%;
+}
+
+.nav-checkbox-right > i {
+  padding-left: 2px;
+  padding-right: 4px;
+  width: 20px;
+  text-align: center;
+  color: #b8c7ce;
+}
+
+.nav-checkbox-right > label {
+  color: #b8c7ce;
+  margin-bottom: 0px;
+  font-weight: normal;
+}
+
+.nav-checkbox-right > .form-group {
+  margin: 0 !important;
+  padding: 0 !important;
+  float: right !important;
+}
+
+.nav-checkbox-right > .form-group > div {
+  margin: 0 !important;
+}
+
+section {
+  height: calc(100vh - 60px);
 }

@@ -1,6 +1,6 @@
 dashboardPage(
   skin = "blue",
-  title = DB_TITLE,
+  title = paste0(DB_TITLE, " - ", APP_TITLE),
   header = dashboardHeader(
     title = a(
       img(src = "NIST-Logo-Brand-White.svg"),
@@ -8,7 +8,7 @@ dashboardPage(
     )
   ),
   sidebar = dashboardSidebar(
-    h4(style = "padding-left: 15px;", "HRAMS Database for PFAS"),
+    h4(style = "padding-left: 15px;", APP_TITLE),
     if (dev) {
       div(style = "padding-left: 15px;",
           if (dev) {
