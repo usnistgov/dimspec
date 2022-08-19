@@ -1,7 +1,7 @@
 # Set up environment -----------------------------------------------------------
 if (!exists("start_api")) {
   source(here::here("R", "app_functions.R"))
-  start_api()
+  start_api(background = TRUE)
 }
 
 # Check API
