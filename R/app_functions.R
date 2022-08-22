@@ -971,13 +971,18 @@ rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_
         out <- NULL
         suffix <- sprintf(" as '%s' is either not set or NULL", par_name)
       } else {
-        if (par_name == parameter) {
-          par_ref <- ""
+        if (length(parameter) == 1) {
+          if (par_name == parameter) {
+            par_ref <- ""
+          } else {
+            par_ref <- " calling"
+          }
+          suffix <- " as provided"
+          out <- parameter
         } else {
-          par_ref <- " calling"
+          suffix <- " as provided"
+          out <- parameter
         }
-        suffix <- " as provided"
-        out <- parameter
       }
     }
   }
