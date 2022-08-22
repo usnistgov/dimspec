@@ -1,6 +1,7 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
 APP_TITLE          <- "Mass Spectral Match for PFAS"
+if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)

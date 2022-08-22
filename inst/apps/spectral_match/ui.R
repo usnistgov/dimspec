@@ -147,6 +147,12 @@ dashboardPage(
                                   ),
                                   tags$label("Set Instrument Parameters"),
                                   div(class = "form-grouping",
+                                      selectizeInput(inputId = "data_input_experiment_type",
+                                                     label = "MS Experiment Type",
+                                                     choices = experiment_types$choices,
+                                                     width = "100%"
+                                      ) %>%
+                                        with_help(tooltip = tooltip_text[["data_input_experiment_type"]]),
                                       with(data_input_relative_error,
                                            numericInput(inputId = "data_input_relative_error",
                                                         label = "Relative Error (ppm)",
@@ -169,12 +175,6 @@ dashboardPage(
                                            ) %>%
                                              with_help(tooltip = glue::glue(tooltip_text[["data_input_minimum_error"]]))
                                       ),
-                                      selectizeInput(inputId = "data_input_experiment_type",
-                                                     label = "MS Experiment Type",
-                                                     choices = experiment_types$choices,
-                                                     width = "100%"
-                                      ) %>%
-                                        with_help(tooltip = tooltip_text[["data_input_experiment_type"]]),
                                       with(data_input_isolation_width,
                                            numericInput(inputId = "data_input_isolation_width",
                                                         label = "Isolation Width (Da)",
