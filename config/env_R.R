@@ -41,17 +41,17 @@ LAST_MODIFIED  <- max(file.info(list.files(path = here::here(), recursive = !EXP
 
 # Dependencies -----------------------------------------------------------------
 # These are the packages on which the project depends and must be loaded.
-DEPENDS_ON     <- c("base64enc",
+DEPENDS_ON     <- c("tidyverse",
+                    "base64enc",
                     "imager",
                     "here",
                     "DBI",
                     DB_PACKAGE,
                     "lubridate",
                     "glue",
-                    "stringi",
-                    "tidyverse",
                     "dbplyr",
                     "jsonlite",
+                    "stringi",
                     "tools",
                     "usethis",
                     "XML")
