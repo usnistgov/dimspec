@@ -334,7 +334,7 @@ shinyServer(function(input, output, session) {
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
-      editable = TRUE,
+      editable = FALSE,
       autoHideNavigation = TRUE,
       colnames = c("Precursor m/z", "RT", "RT Start", "RT End"),
       caption = "Data will be searched for peaks matching these characteristics. Select a row to edit or remove it.",
