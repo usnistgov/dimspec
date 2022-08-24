@@ -477,7 +477,7 @@ shinyServer(function(input, output, session) {
         select(all_of(select_cols)) %>%
         setNames(names(data_input_search_parameters()))
       reasonable_rts <- upload_parameters %>%
-        mutate(reasonable_rt = rt >= rt_start && rt <= rt_end,
+        mutate(reasonable_rt = (rt >= rt_start & rt <= rt_end),
                reasonable_rtstart = rt_start <= rt_end,
                reasonable = all(reasonable_rt, reasonable_rtstart))
       if (!all(reasonable_rts$reasonable)) {
