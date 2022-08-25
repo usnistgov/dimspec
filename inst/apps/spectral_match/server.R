@@ -214,12 +214,12 @@ shinyServer(function(input, output, session) {
     toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
     toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
     toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
-    toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
+    toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()))
     toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
     toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
     toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
-    toggleElement("search_fragments_no_results", condition = is.null(search_fragments_results()))
-    toggleElement("search_fragments_has_results", condition = !is.null(search_fragments_results()))
+    toggleElement("search_fragments_no_results", condition = nrow(search_fragments_results()$result) == 0)
+    toggleElement("search_fragments_has_results", condition = nrow(search_fragments_results()$result) > 0)
   })
   observeEvent(show_help(), ignoreInit = TRUE, {
     if (input$nav_show_help) {
@@ -1383,7 +1383,7 @@ shinyServer(function(input, output, session) {
         log_it("warn", msg, app_ns)
         return(NULL)
       }
-      searc_object <- search_object %>%
+      search_object <- search_object %>%
         create_search_ms(
           searchobj = .,
           correl = isolate(input$search_compounds_correlation),

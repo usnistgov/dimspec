@@ -614,7 +614,7 @@ dashboardPage(
                          span(id = "search_fragments_no_results",
                               h3(width = "100%",
                                  style = "text-align: center; color: grey",
-                                 "No Matching Fragments")
+                                 "No Matching Fragments Identified")
                          ),
                          span(id = "search_fragments_has_results",
                               column(12,
