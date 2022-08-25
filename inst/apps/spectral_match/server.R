@@ -907,7 +907,7 @@ shinyServer(function(input, output, session) {
       )
     )
     if (inherits(search_object, "try-error")) {
-      msg <- sprintf("Could not find a feature in %s matching %s",
+      msg <- sprintf("Could not find a feature in data file %s matching %s",
                      input$data_input_filename$name,
                      search_compounds_mzrt_text()[search_compound_index])
       nist_shinyalert(
@@ -1371,7 +1371,7 @@ shinyServer(function(input, output, session) {
         )
       )
       if (inherits(search_object, "try-error")) {
-        msg <- sprintf("Could not find a feature in %s matching %s",
+        msg <- sprintf("Could not find a feature in file %s matching %s",
                        input$data_input_filename$name,
                        search_fragments_mzrt_text()[search_fragment_index])
         nist_shinyalert(
