@@ -206,6 +206,8 @@ shinyServer(function(input, output, session) {
     if (!dev) {
       toggleElement("data_input_dt_peak_list_edit_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
       toggleElement("data_input_dt_peak_list_remove_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
+      toggleElement("data_input_process_btn", condition = is.null(user_data()))
+      toggleElement("data_input_next_actions", condition = !is.null(user_data()))
       toggleElement("nav_download_all", condition = !is.null(user_data()))
       toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0 && is.null(user_data()))
       toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
@@ -430,7 +432,7 @@ shinyServer(function(input, output, session) {
     } else {
       log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_filename'."), app_ns)
     }
-    hideElement("data_input_next_actions")
+    user_data(NULL)
   })
   # __Import parameters ----
   observeEvent(input$data_input_import_search, {
@@ -518,6 +520,7 @@ shinyServer(function(input, output, session) {
             bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
+        user_data(NULL)
         log_it("success", "Search parameters updated.", app_ns)
       }
       removeModal()
@@ -552,6 +555,7 @@ shinyServer(function(input, output, session) {
     req(input$data_input_dt_peak_list_rows_selected)
     data_input_search_parameters()[-input$data_input_dt_peak_list_rows_selected, ] %>%
       data_input_search_parameters()
+    user_data(NULL)
   })
   observeEvent(input$mod_search_parameter_cancel, {
     log_it("trace", "Search parameter entry modal closed.", app_ns)
@@ -606,6 +610,7 @@ shinyServer(function(input, output, session) {
       removeModal()
       data_input_parameter_edit(FALSE)
     }
+    user_data(NULL)
   })
   # __Process Data ----
   observeEvent(input$data_input_process_btn, {
@@ -623,7 +628,6 @@ shinyServer(function(input, output, session) {
       log_it("trace", "Data input process form was incomplete.", app_ns)
     }
     req(valid)
-    user_data(NULL)
     showElement(selector = "#data_input_overlay")
     log_it("info", sprintf("Processing user data from file %s...", input$data_input_filename$name), app_ns)
     mzml <- try(
@@ -638,8 +642,6 @@ shinyServer(function(input, output, session) {
       log_it("error", "User data could not be safely extracted.", app_ns)
     } else {
       hideElement("data_input_overlay")
-      hideElement("data_input_process_btn")
-      showElement("data_input_next_actions")
       log_it("success", "User data processed.", app_ns)
       user_data(mzml)
     }
