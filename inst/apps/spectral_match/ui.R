@@ -608,65 +608,72 @@ dashboardPage(
                                                   width = "100%") %>%
                                            withSpinner()
                                   )
-                                )
+                                ),
+                                hr()
                          ),
-                         hr(),
-                         column(12,
-                                h4("Select a row in the left-hand table to view additional information for that annotated fragment."),
-                                fluidRow(
-                                  column(width = ifelse(rdkit_available, 4, 6),
-                                         DTOutput(outputId = "search_fragments_dt",
-                                                  width = "100%") %>%
-                                           withSpinner()
-                                  ),
-                                  column(width = ifelse(rdkit_available, 4, 0),
-                                         if (rdkit_available) {
-                                           tagList(
-                                             htmlOutput(outputId = "search_fragments_ballstick_caption"),
-                                             span(class = "centered-image",
-                                                  imageOutput(outputId = "search_fragments_ballstick",
-                                                              height = "200px"),
-                                                  actionLink(inputId = "search_fragments_fragment_info",
-                                                             label = "More Fragment Information",
-                                                             icon = icon("search", verify_fa = FALSE)
-                                                  ) %>%
-                                                    with_help(tooltip = tooltip_text[["search_fragments_fragment_info"]],
-                                                              placement = "top")
-                                             )
-                                           )
-                                         } else {
-                                           NULL
-                                         }
-                                  ),
-                                  column(width = ifelse(rdkit_available, 4, 6),
-                                         h4("This fragment has been annotated in the following"),
-                                         tabsetPanel(
-                                           type = "tabs",
-                                           id = "search_fragments_compounds_peaks_tabset",
-                                           tabPanel("Compounds",
-                                                    DTOutput(outputId = "search_fragments_compound_list",
-                                                             width = "100%") %>%
-                                                      withSpinner(),
-                                                    actionLink(inputId = "search_fragments_compound_info",
-                                                               label = "More Compound Information",
-                                                               icon = icon("search", verify_fa = FALSE)) %>%
-                                                      with_help(tooltip = tooltip_text[["search_fragments_compound_info"]],
-                                                                placement = "top")
-                                           ),
-                                           tabPanel("Peaks",
-                                                    DTOutput(outputId = "search_fragments_peak_list",
-                                                             width = "100%") %>%
-                                                      withSpinner(),
-                                                    actionLink(inputId = "search_fragments_peak_info",
-                                                               label = "More Peak Information",
-                                                               icon = icon("search", verify_fa = FALSE)) %>%
-                                                      with_help(tooltip = tooltip_text[["search_fragments_peak_info"]],
-                                                                placement = "top")
-                                           )
-                                         )
-                                         
-                                  )
-                                )
+                         span(id = "search_fragments_no_results",
+                              h3(width = "100%",
+                                 style = "text-align: center; color: grey",
+                                 "No Matching Fragments")
+                         ),
+                         span(id = "search_fragments_has_results",
+                              column(12,
+                                     h4("Select a row in the left-hand table to view additional information for that annotated fragment."),
+                                     fluidRow(
+                                       column(width = ifelse(rdkit_available, 4, 6),
+                                              DTOutput(outputId = "search_fragments_dt",
+                                                       width = "100%") %>%
+                                                withSpinner()
+                                       ),
+                                       column(width = ifelse(rdkit_available, 4, 0),
+                                              if (rdkit_available) {
+                                                tagList(
+                                                  htmlOutput(outputId = "search_fragments_ballstick_caption"),
+                                                  span(class = "centered-image",
+                                                       imageOutput(outputId = "search_fragments_ballstick",
+                                                                   height = "200px"),
+                                                       actionLink(inputId = "search_fragments_fragment_info",
+                                                                  label = "More Fragment Information",
+                                                                  icon = icon("search", verify_fa = FALSE)
+                                                       ) %>%
+                                                         with_help(tooltip = tooltip_text[["search_fragments_fragment_info"]],
+                                                                   placement = "top")
+                                                  )
+                                                )
+                                              } else {
+                                                NULL
+                                              }
+                                       ),
+                                       column(width = ifelse(rdkit_available, 4, 6),
+                                              h4("This fragment has been annotated in the following"),
+                                              tabsetPanel(
+                                                type = "tabs",
+                                                id = "search_fragments_compounds_peaks_tabset",
+                                                tabPanel("Compounds",
+                                                         DTOutput(outputId = "search_fragments_compound_list",
+                                                                  width = "100%") %>%
+                                                           withSpinner(),
+                                                         actionLink(inputId = "search_fragments_compound_info",
+                                                                    label = "More Compound Information",
+                                                                    icon = icon("search", verify_fa = FALSE)) %>%
+                                                           with_help(tooltip = tooltip_text[["search_fragments_compound_info"]],
+                                                                     placement = "top")
+                                                ),
+                                                tabPanel("Peaks",
+                                                         DTOutput(outputId = "search_fragments_peak_list",
+                                                                  width = "100%") %>%
+                                                           withSpinner(),
+                                                         actionLink(inputId = "search_fragments_peak_info",
+                                                                    label = "More Peak Information",
+                                                                    icon = icon("search", verify_fa = FALSE)) %>%
+                                                           with_help(tooltip = tooltip_text[["search_fragments_peak_info"]],
+                                                                     placement = "top")
+                                                )
+                                              )
+                                              
+                                       )
+                                     )
+                              )
                          )
                     )
                 )
