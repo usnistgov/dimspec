@@ -19,6 +19,7 @@ enable_adv_use     <- TRUE
 advanced_use       <- FALSE
 enable_more_help   <- TRUE
 provide_more_help  <- FALSE
+if (!"readr" %in% installed.packages()) install.packages("readr")
 tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv"))[ ,c("element_id", "tooltip_text")]
 tooltip_text       <- setNames(object = tooltip_text$tooltip_text, nm = tooltip_text$element_id)
 
@@ -40,6 +41,7 @@ src_toy_parameters <- "toy_parameters.RDS"
 # it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
+if (!"here" %in% installed.packages()) install.packages("here")
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 need_files <- c(
   "app_functions.R",
