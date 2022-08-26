@@ -24,7 +24,7 @@ if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
   source(here::here("inst", "plumber", "api_control.R"))
 }
 
-lapply(c(DEPENDS_ON, "plumber", "reticulate", "httr"), library, character.only = TRUE, quietly = TRUE)
+lapply(c(DEPENDS_ON, "plumber"), library, character.only = TRUE, quietly = TRUE)
 
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings

@@ -185,7 +185,7 @@ tidy_spectra <- function(target,
                          is_file     = FALSE,
                          is_format   = c("separated", "zipped"),
                          spectra_set = "msdata",
-                         ms_col_sep  = c("mz", "intensity"),
+                         ms_col_sep  = c("measured_mz", "measured_intensity"),
                          ms_col_zip  = "data",
                          is_JSON     = FALSE) {
   is_format <- match.arg(is_format)
@@ -243,7 +243,7 @@ tidy_spectra <- function(target,
     check_cols <- ms_col_zip
   }
   req_col_count <- stringr::str_detect(names(out), paste0(check_cols, collapse = "|")) %>% sum()
-  if (any(is_format == "separated" && !req_col_count > 1,
+  if (any(is_format == "separated" && !req_col_count == 2,
           is_format == "zipped" && !req_col_count == 1)) {
     stop(glue::glue("Could not find required names ({format_list_of_names(check_cols, add_quote = TRUE)}) in the object provided to argument `target`."))
   }

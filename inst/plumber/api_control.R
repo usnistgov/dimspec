@@ -35,7 +35,7 @@ api_start <- function(plumber_file = NULL,
   }
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
-  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  if (!is.integer(on_port)) on_port <- as.integer(on_port)
   
   # Argument validation relies on verify_args
   if (exists("verify_args")) {
@@ -219,19 +219,20 @@ api_reload <- function(pr = NULL,
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
   plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, here::here("inst", "plumber", "plumber.R"))
-  if (!is.numeric(on_port)) on_port <- as.numeric(on_port)
+  if (!is.integer(on_port)) on_port <- as.integer(on_port)
   service_exists <- suppressWarnings(exists(pr))
   if (!service_exists) {
     pr <- NULL
   }
   # Argument validation relies on verify_args
-  check_args <- list(pr, background, on_host, on_port)
+  check_args <- list(pr, background, on_host, on_port, plumber_file)
   check_args <- check_args[!unlist(lapply(check_args, is.null))]
   check_conds <- list(
     pr         = if (is.null(pr)) NULL else list(c("mode", "character"), c("length", 1)),
     background = list(c("mode", "logical"), c("length", 1)),
     on_host    = list(c("mode", "character"), c("length", 1)),
-    on_port    = list(c("mode", "numeric"), "no_na", c("length", 1))
+    on_port    = list(c("mode", "numeric"), "no_na", c("length", 1)),
+    plumber_file = list(c("mode", "character"), c("length", 1))
   )
   check_conds <- check_conds[!unlist(lapply(check_conds, is.null))]
   if (exists("verify_args")) {
@@ -248,8 +249,8 @@ api_reload <- function(pr = NULL,
     stopifnot(length(on_port) == 1)
     stopifnot(is.character(plumber_file))
     stopifnot(length(plumber_file) == 1)
-    stopifnot(file.exists(plumber_file))
   }
+  stopifnot(file.exists(plumber_file))
   if (!is.null(pr) && eval(rlang::sym(pr))$is_alive()) {
     api_stop(pr = pr)
   }

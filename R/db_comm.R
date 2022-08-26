@@ -1063,11 +1063,13 @@ sqlite_parse_build <- function(sql_statements,
     stopifnot(arg_check$valid)
   }
   if (exists("log_it")) log_it("trace", 'Parsing sql_statements for build commands.', "db")
-  to_remove <- paste0(c(header, comment, "\\t", "\\r"), collapse = "|")
+  # to_remove <- paste0(c(header, comment, "\\t", "\\r"), collapse = "|")
+  to_remove <- paste0(c(header, "\\t", "\\r"), collapse = "|")
   out       <- sql_statements %>%
     str_replace_all("CREATE ", paste0(magicsplit, "CREATE ")) %>%
     str_replace_all("\\.import ", paste0(magicsplit, ".import ")) %>%
     str_replace_all("\\.read ", paste0(magicsplit, ".read ")) %>%
+    str_replace_all(paste0("/\\* ", magicsplit, ".read"), paste0(magicsplit, "/* .read")) %>%
     str_replace_all("DELETE FROM ", paste0(magicsplit, "DELETE FROM ")) %>%
     str_replace_all("PRAGMA ", paste0(magicsplit, "PRAGMA ")) %>%
     str_replace_all("\\;\\nINSERT ", paste0("; ", magicsplit, "\nINSERT ")) %>%
@@ -1077,7 +1079,6 @@ sqlite_parse_build <- function(sql_statements,
     .[[1]] %>%
     str_replace_all("\\n{2,10}", "\n") %>%
     str_squish() %>%
-    # str_replace_all(" {2,10}", " ") %>%
     str_split("\\n") %>%
     lapply(str_squish) %>%
     lapply(function(x) x[! x %in% c("", " ")])
@@ -1307,8 +1308,7 @@ create_fallback_build <- function(build_file    = NULL,
         populate_file <- populate_files
       }
     }
-    msg <- 
-      if (exists("log_it")) log_it("info", glue::glue("Populating data insert reads from '{populate_file}'..."), "db")
+    if (exists("log_it")) log_it("info", glue::glue("Populating data insert reads from '{populate_file}'..."), "db")
     populate <- readr::read_file(populate_file) %>%
       sqlite_parse_build()
     build <- c(
@@ -1317,8 +1317,7 @@ create_fallback_build <- function(build_file    = NULL,
       populate)
   }
   
-  build   <- unlist(build) %>%
-    as.list()
+  build   <- as.list(unlist(build))
   
   # Make SQL build statements
   index_read   <- grep("^.read", build)
@@ -1326,11 +1325,16 @@ create_fallback_build <- function(build_file    = NULL,
     if (exists("log_it")) log_it("info", "Expanding .read statements...", "db")
     temp_read    <- lapply(build[index_read],
                            function(x) {
-                             node_file <- str_remove(x, ".read ")
+                             node_file <- str_remove(x, ".read ") %>%
+                               str_remove(comments) %>%
+                               str_trim()
                              read_file(node_file) %>%
                                sqlite_parse_build()
                            })
-    source_read  <- str_remove(unlist(build[index_read]), ".read ")
+    source_read  <- unlist(build[index_read]) %>%
+      str_remove(".read ") %>%
+      str_remove(comments) %>%
+      str_trim()
     names(temp_read) <- source_read %>%
       basename() %>%
       tools::file_path_sans_ext()

@@ -1,7 +1,7 @@
 # Set up environment -----------------------------------------------------------
 if (!exists("start_api")) {
   source(here::here("R", "app_functions.R"))
-  start_api()
+  start_api(background = TRUE)
 }
 
 # Check API
@@ -37,7 +37,7 @@ packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
   install.packages(pkgs         = packs_FALSE,
-                   quiet        = TRUE,
+                   quiet        = FALSE,
                    dependencies = TRUE)
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)

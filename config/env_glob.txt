@@ -1,5 +1,5 @@
 # Title of this database -------------------------------------------------------
-DB_TITLE       = "NIST HRAMS Database for PFAS"
+DB_TITLE       = "DIMSpec for PFAS"
 
 # Database build and data ------------------------------------------------------
 # Treat DB_NAME, DB_BUILD_FILE, DB_BUILD_FULL, and DB_DATA as file names (FALSE) 

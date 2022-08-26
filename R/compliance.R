@@ -33,6 +33,7 @@ if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) source(here::here("config"
 # _Verify required directory presence ------------------------------------------
 if (!dir.exists(here::here("input"))) {dir.create(here::here("input"))}
 if (!dir.exists(here::here("output"))) {dir.create(here::here("output"))}
+if (!dir.exists(here::here("images"))) {dir.create(here::here("images"))}
 if (!dir.exists(here::here("output", "gather"))) {dir.create(here::here("output", "gather"))}
 if (!dir.exists(here::here("output", "aggregate"))) {dir.create(here::here("output", "aggregate"))}
 if (!dir.exists(here::here("output", "extract"))) {dir.create(here::here("output", "extract"))}
@@ -46,7 +47,7 @@ packs_TRUE  <- which(packs %in% installed_packages)
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
   install.packages(pkgs         = packs_FALSE,
-                   quiet        = TRUE,
+                   quiet        = FALSE,
                    dependencies = TRUE)
 }
 lapply(packs, library, character.only = TRUE, quietly = TRUE)
@@ -121,10 +122,10 @@ if (INIT_CONNECT) {
 
 # _Plumber set up --------------------------------------------------------------
 if (USE_API) {
-  require(plumber)
-  log_it("info", "Activating plumber API...", "api")
-  if (!"plumber" %in% installed.packages()) install.packages("plumber")
-  source(here::here("inst", "plumber", "api_control.R"))
+  if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
+    log_it("info", "Resolving plumber API environment...", "api")
+    source(here::here("inst", "plumber", "env_plumb.R"))
+  }
   api_reload(
     pr = "plumber_service",
     background = TRUE,

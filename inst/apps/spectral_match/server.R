@@ -39,6 +39,7 @@ shinyServer(function(input, output, session) {
     }
   )
   # _Data Input page ----
+  data_file_loaded <- reactiveVal(FALSE)
   data_input_search_upload <- reactiveVal(NULL)
   data_input_search_parameters <- reactiveVal(
     if (!toy_data) {
@@ -195,6 +196,7 @@ shinyServer(function(input, output, session) {
   hideElement(selector = "#data_input_next_actions")
   hideElement(selector = "#search_compounds_overlay")
   hideElement(selector = "#search_fragments_overlay")
+  hideElement(selector = "#search_fragments_no_results")
   hideElement(selector = "#search_fragments_fragment_info")
   if (!isolate(show_help())) runjs('$(".info-tooltip").hide()')
   
@@ -203,19 +205,21 @@ shinyServer(function(input, output, session) {
     toggleElement("nav_show_help_div", condition = enable_more_help)
     toggleElement("nav_show_advanced_settings_div", condition = enable_adv_use)
     toggleElement("search_compounds_additional", condition = advanced_use())
-    if (!dev) {
-      toggleElement("data_input_dt_peak_list_edit_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("data_input_dt_peak_list_remove_row_span", condition = !is.null(input$data_input_dt_peak_list_rows_selected))
-      toggleElement("nav_download_all", condition = !is.null(user_data()))
-      toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0 && is.null(user_data()))
-      toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
-      toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
-      toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
-      toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()) && nrow(search_fragments_results()$result) > 0)
-      toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
-      toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
-      toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
-    }
+    toggleElement("data_input_dt_peak_list_edit_row_span", condition = nrow(data_input_search_parameters()) > 0 && !is.null(input$data_input_dt_peak_list_rows_selected))
+    toggleElement("data_input_dt_peak_list_remove_row_span", condition = nrow(data_input_search_parameters()) > 0 && !is.null(input$data_input_dt_peak_list_rows_selected))
+    toggleElement("data_input_process_btn", condition = is.null(user_data()))
+    toggleElement("data_input_next_actions", condition = !is.null(user_data()))
+    toggleElement("nav_download_all", condition = !is.null(user_data()))
+    toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0 && is.null(user_data()))
+    toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
+    toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
+    toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
+    toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()))
+    toggleElement("mod_uncertainty_results", condition = !is.null(uncertainty_results()$results))
+    toggleElement("search_fragments_ballstick", condition = !is.null(search_fragments_results_selected()) && search_fragments_results_selected()$has_smiles)
+    toggleElement("search_fragments_plot_div", condition = !is.null(search_fragments_results()))
+    toggleElement("search_fragments_no_results", condition = nrow(search_fragments_results()$result) == 0)
+    toggleElement("search_fragments_has_results", condition = nrow(search_fragments_results()$result) > 0)
   })
   observeEvent(show_help(), ignoreInit = TRUE, {
     if (input$nav_show_help) {
@@ -276,7 +280,7 @@ shinyServer(function(input, output, session) {
       }
     }
   })
-  # Download All Utility (FEATURE) ----
+  # Download All Utility (PLANNED FEATURE) ----
   # observeEvent(input$nav_download_all, {
   #   nist_shinyalert(
   #     title = "This action may take a long time.",
@@ -334,7 +338,7 @@ shinyServer(function(input, output, session) {
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
-      editable = TRUE,
+      editable = FALSE,
       autoHideNavigation = TRUE,
       colnames = c("Precursor m/z", "RT", "RT Start", "RT End"),
       caption = "Data will be searched for peaks matching these characteristics. Select a row to edit or remove it.",
@@ -429,8 +433,10 @@ shinyServer(function(input, output, session) {
       reset("data_input_filename")
     } else {
       log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_filename'."), app_ns)
+      if (data_file_loaded()) data_input_search_parameters(slice(data_input_search_parameters(), 0))
     }
-    hideElement("data_input_next_actions")
+    data_file_loaded(TRUE)
+    user_data(NULL)
   })
   # __Import parameters ----
   observeEvent(input$data_input_import_search, {
@@ -477,7 +483,7 @@ shinyServer(function(input, output, session) {
         select(all_of(select_cols)) %>%
         setNames(names(data_input_search_parameters()))
       reasonable_rts <- upload_parameters %>%
-        mutate(reasonable_rt = rt >= rt_start && rt <= rt_end,
+        mutate(reasonable_rt = (rt >= rt_start & rt <= rt_end),
                reasonable_rtstart = rt_start <= rt_end,
                reasonable = all(reasonable_rt, reasonable_rtstart))
       if (!all(reasonable_rts$reasonable)) {
@@ -518,6 +524,7 @@ shinyServer(function(input, output, session) {
             bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
+        user_data(NULL)
         log_it("success", "Search parameters updated.", app_ns)
       }
       removeModal()
@@ -552,6 +559,7 @@ shinyServer(function(input, output, session) {
     req(input$data_input_dt_peak_list_rows_selected)
     data_input_search_parameters()[-input$data_input_dt_peak_list_rows_selected, ] %>%
       data_input_search_parameters()
+    user_data(NULL)
   })
   observeEvent(input$mod_search_parameter_cancel, {
     log_it("trace", "Search parameter entry modal closed.", app_ns)
@@ -606,6 +614,7 @@ shinyServer(function(input, output, session) {
       removeModal()
       data_input_parameter_edit(FALSE)
     }
+    user_data(NULL)
   })
   # __Process Data ----
   observeEvent(input$data_input_process_btn, {
@@ -623,7 +632,6 @@ shinyServer(function(input, output, session) {
       log_it("trace", "Data input process form was incomplete.", app_ns)
     }
     req(valid)
-    user_data(NULL)
     showElement(selector = "#data_input_overlay")
     log_it("info", sprintf("Processing user data from file %s...", input$data_input_filename$name), app_ns)
     mzml <- try(
@@ -638,8 +646,6 @@ shinyServer(function(input, output, session) {
       log_it("error", "User data could not be safely extracted.", app_ns)
     } else {
       hideElement("data_input_overlay")
-      hideElement("data_input_process_btn")
-      showElement("data_input_next_actions")
       log_it("success", "User data processed.", app_ns)
       user_data(mzml)
     }
@@ -901,14 +907,15 @@ shinyServer(function(input, output, session) {
       )
     )
     if (inherits(search_object, "try-error")) {
-      msg <- sprintf("Could not find a feature in %s matching %s",
+      msg <- sprintf("Could not find a feature in data file %s matching %s",
                      input$data_input_filename$name,
-                     search_compound_index)
+                     search_compounds_mzrt_text()[search_compound_index])
       nist_shinyalert(
         title = NULL,
         type = "warning",
         text = msg
       )
+      hideElement("search_compounds_overlay")
       log_it("warn", msg, app_ns)
       return(NULL)
     }
@@ -1226,7 +1233,7 @@ shinyServer(function(input, output, session) {
   output$search_fragments_peak_list <- renderDT(
     server = FALSE,
     DT::datatable(
-      data = req(search_fragments_peaks_data()),
+      data = req(search_fragments_compounds_data()),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
@@ -1332,6 +1339,7 @@ shinyServer(function(input, output, session) {
         input$search_compounds_freq_bin,
         input$search_compounds_min_n_peaks
       )
+      search_fragment_index <- req(search_fragments_mzrt())
       mass_error <- input$data_input_relative_error
       min_error <- input$data_input_minimum_error
       runjs("$('#search_fragments_overlay_text').text('Executing fragment search...');")
@@ -1356,10 +1364,26 @@ shinyServer(function(input, output, session) {
       )
       runjs("$('#search_fragments_overlay_text').text('Identifying fragment ions...');")
       log_it("trace", "Identifying fragment ions.", app_ns)
-      search_object <- get_search_object(
-        searchmzml = tmp,
-        zoom = isolate(input$search_compounds_search_zoom)
-      ) %>%
+      search_object <- try(
+        get_search_object(
+          searchmzml = tmp,
+          zoom = isolate(input$search_compounds_search_zoom)
+        )
+      )
+      if (inherits(search_object, "try-error")) {
+        msg <- sprintf("Could not find a feature in file %s matching %s",
+                       input$data_input_filename$name,
+                       search_fragments_mzrt_text()[search_fragment_index])
+        nist_shinyalert(
+          title = NULL,
+          type = "warning",
+          text = msg
+        )
+        hideElement("search_fragments_overlay")
+        log_it("warn", msg, app_ns)
+        return(NULL)
+      }
+      search_object <- search_object %>%
         create_search_ms(
           searchobj = .,
           correl = isolate(input$search_compounds_correlation),
@@ -1378,7 +1402,23 @@ shinyServer(function(input, output, session) {
       mass_error = input$data_input_relative_error,
       min_error = input$data_input_minimum_error,
       return_format = "data.frame"
-    ) %>%
+    )
+    if (nrow(fragment_matches) == 0) {
+      fragment_matches <- tibble(
+        annotated_fragment_id = integer(),
+        compounds = list(),
+        peak_id = list(),
+        formula = character(),
+        fixedmass = numeric(),
+        radical = integer(),
+        has_smiles = logical(),
+        n_compounds = integer(),
+        n_peaks = integer(),
+        netcharge = integer(),
+        smiles = character()
+      )
+    }
+    fragment_matches <- fragment_matches %>%
       arrange(desc(has_smiles), fixedmass)
     log_it("trace", "Building fragment match output.", app_ns)
     fragment_links <- lapply(

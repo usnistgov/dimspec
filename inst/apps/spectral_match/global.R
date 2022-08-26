@@ -1,10 +1,11 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "NIST Spectral Match"
+APP_TITLE          <- "Mass Spectral Match for PFAS"
+if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "NIST Spectral Match for PFAS"
+default_title      <- "Mass Spectral Match"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
@@ -18,6 +19,7 @@ enable_adv_use     <- TRUE
 advanced_use       <- FALSE
 enable_more_help   <- TRUE
 provide_more_help  <- FALSE
+if (!"readr" %in% installed.packages()) install.packages("readr")
 tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv"))[ ,c("element_id", "tooltip_text")]
 tooltip_text       <- setNames(object = tooltip_text$tooltip_text, nm = tooltip_text$element_id)
 
@@ -39,6 +41,7 @@ src_toy_parameters <- "toy_parameters.RDS"
 # it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
+if (!"here" %in% installed.packages()) install.packages("here")
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 need_files <- c(
   "app_functions.R",

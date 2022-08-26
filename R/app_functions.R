@@ -953,23 +953,42 @@ rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_
   par_name <- gsub('\\"', '', par_name)
   new_length <- nchar(par_name)
   param_chr <-  orig_length != new_length
-  if (!par_name %in% c("", "NULL", "NA")) {
-    par_ref  <- ""
-    suffix   <- "as provided"
+  par_ref  <- ""
+  suffix <- ""
+  if (par_name %in% c("", "NULL", "NA")) {
+    out <- NULL
+  } else {
     if (exists(par_name)) {
       if (param_chr) {
         out <- eval(rlang::sym(par_name))
       } else {
         out <- parameter
       }
+      par_ref  <- " environment"
     } else {
-      out <- NULL
+      out <- try(parameter, silent = TRUE)
+      if (inherits(out, "try-error") || is.null(parameter)) {
+        out <- NULL
+        suffix <- sprintf(" as '%s' is either not set or NULL", par_name)
+      } else {
+        if (length(parameter) == 1) {
+          if (par_name == parameter) {
+            par_ref <- ""
+          } else {
+            par_ref <- " calling"
+          }
+          suffix <- " as provided"
+          out <- parameter
+        } else {
+          suffix <- " as provided"
+          out <- parameter
+        }
+      }
     }
   }
   if (is.null(out)) {
     env_par_name <- deparse(substitute(env_parameter))
     par_name <- env_par_name
-    suffix   <- ""
     if (exists(env_par_name)) {
       par_ref  <- " environment"
       out      <- env_parameter
@@ -988,7 +1007,7 @@ rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_
                           paste0('c("', paste0(out, collapse = '", "'), '")'),
                           paste0('"', out, '"'))
   if (par_ref == "") {
-    feedback <- sprintf("%s ", par_value_str)
+    feedback <- sprintf("%s", par_value_str)
   } else if (par_ref == " default") {
     feedback <- sprintf("%s", par_value_str)
   } else {

@@ -18,13 +18,7 @@ INSTALL_FROM <- "local"
 
 # [REQUIRED IF INSTALL_FROM == "local"] Set the file from which the python
 # environment will be built.
-# INSTALL_FROM_FILE <- file.path(
-#   "rdkit",
-#   switch(.Platform$OS.type,
-#          "windows" = "environment_windows.yml",
-#          "unix"    = "environment_ubuntu.yml")
-# )
-INSTALL_FROM_FILE <- file.path("inst", "rdkit", "environment.yml")
+INSTALL_FROM_FILE <- here::here("inst", "rdkit", "environment.yml")
 
 # [OPTIONAL] -------------------------------------------------------------------
 # [ADVANCED] Set required conda libraries to install, depending on it to define
@@ -77,9 +71,11 @@ if (exists("LOGGING_ON") && LOGGING_ON) {
   update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
 }
 # _[FINALIZE] ------------------------------------------------------------------
+if (!"reticulate" %in% installed.packages()) install.packages("reticulate")
 require(reticulate)
 source(here::here("inst", "rdkit", "py_setup.R"))
 if (!exists("rectify_null_from_env")) {
+  if (!"magrittr" %in% installed.packages()) install.packages("magrittr")
   require(magrittr)
   source(here::here("R", "app_functions.R"))
 }
