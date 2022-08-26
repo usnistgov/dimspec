@@ -58,19 +58,19 @@ dashboardPage(
                     fluidRow(
                         column(4,
                                fileInput(inputId = "rawdata_filename",
-                                         label = NULL,
+                                         label = "1) Load raw mzML file(s)",
                                          multiple = TRUE,
                                          width = "100%",
                                          accept = ".mzML",
-                                         buttonLabel = span(id = "rawdata_filename_load_btn", "Load"),
+                                         buttonLabel = "Load",
                                          placeholder = "Select a raw data file to begin"
                                ),
                                fileInput(inputId = "sampleJSON_filename",
-                                         label = NULL,
+                                         label = "2) Load Sample JSON file(s)",
                                          width = "100%",
                                          multiple = TRUE,
                                          accept = ".JSON",
-                                         buttonLabel = span(id = "sampleJSON_filename_load_btn", "Load"),
+                                         buttonLabel = "Load",
                                          placeholder = "Select a sample.JSON file to begin"
                                )
                         ),
@@ -86,6 +86,7 @@ dashboardPage(
                       )
                     ),
                     fluidRow(
+                      h5("QC Data Import Status:"),
                       textOutput(outputId = "qc_review_status")
                     )
             ),
@@ -93,7 +94,9 @@ dashboardPage(
                     h3("Review Quality Control check data."),
                     DT::dataTableOutput(outputId = "sample_qc", width = "50%"),
                     DT::dataTableOutput(outputId = "peak_qc", width = "50%"),
+                    br(),
                     textOutput(outputId = "overall_qc_results"),
+                    br(),
                     selectizeInput(inputId = "select_qc_check", label = "Select QC Check", choices = NULL, width = "25%"),
                     DT::dataTableOutput(outputId = "peak_data", width = "50%")
             ),
@@ -128,7 +131,57 @@ dashboardPage(
                                         min = 0,
                                         max = 1,
                                         width = "100%")
-                    )
+                    ),
+                    column(2),
+                    column(4,
+                           h4("Initial Uncertainty Mass Spectrum Settings"),
+                           sliderInput(inputId = "max_correl",
+                                       label = "Maximum correlation limit",
+                                       min = 0,
+                                       max = 1,
+                                       value = 0.8,
+                                       step = 0.1),
+                           sliderInput(inputId = "correl_bin",
+                                       label = "Correlation limit bin size",
+                                       min = 0,
+                                       max = 0.5,
+                                       value = 0.1,
+                                       step = 0.05),
+                           sliderInput(inputId = "max_ph",
+                                       label = "Maxmimum peak height limit",
+                                       min = 0,
+                                       max = 90,
+                                       value = 10,
+                                       step = 5),
+                           sliderInput(inputId = "ph_bin",
+                                       label = "Peak height limit bin size",
+                                       min = 0,
+                                       max = 10,
+                                       value = 1,
+                                       step = 1),
+                           sliderInput(inputId = "max_freq",
+                                       label = "Maxmimum observational frequency limit",
+                                       min = 0,
+                                       max = 90,
+                                       value = 10,
+                                       step = 5),
+                           sliderInput(inputId = "freq_bin",
+                                       label = "Observational frequency limit bin size",
+                                       min = 0,
+                                       max = 10,
+                                       value = 1,
+                                       step = 1),
+                           numericInput(inputId = "min_n_peaks",
+                                        label = "Minimum number of scans to include in mass spectrum",
+                                        value = 3,
+                                        min = 1,
+                                        max = 10),
+                           selectInput(inputId = "cormethod",
+                                       label = "Correlation function method",
+                                       choices = c("pearson", "kendall", "spearman"),
+                                       selected = "pearson"
+                                       )
+                           )
                     )
         )
     )

@@ -1,50 +1,34 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "NIST MS Data Quality Checker"
+APP_TITLE          <- "NIST Mass Spectral Quality Control"
+if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "NIST MS Data Quality Checker for PFAS"
+default_title      <- "Mass Spectral Quality Control for PFAS"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
 dev                <- TRUE
 
-# Set the start options to use advanced settings and tooltips by default. These
-# can be changed while using the app at any time if the "enable" options are set
-# to TRUE, otherwise they will honor the individual settings.
-#enable_adv_use     <- TRUE
-#advanced_use       <- FALSE
-#enable_more_help   <- TRUE
-#provide_more_help  <- FALSE
-#tooltip_text       <- readr::read_csv(file.path("www", "tooltip_text.csv"))[ ,c("element_id", "tooltip_text")]
-#tooltip_text       <- setNames(object = tooltip_text$tooltip_text, nm = tooltip_text$element_id)
-
-# If using dev mode, automatically fill with example data from local RDS files.
-toy_data           <- FALSE
-src_toy_data       <- "toy_data.RDS"
-src_toy_parameters <- "toy_parameters.RDS"
 
 # The following settings are necessary for the application. Only change these if
 # it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
+if (!"here" %in% installed.packages()) install.packages("here")
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 need_files <- c(
   "app_functions.R",
-  "shiny_helpders.R",
+  "shiny_helpers.R",
   here::here("R", "tidy_spectra.R"),
-  list.files(path = here::here("R", c("spectral_analysis", "base", "gather", "misc")),
+  list.files(path = here::here("R", c("spectral_analysis", "base", "gather", "misc", "qualitycontrol", "methodreportingtool")),
              pattern = "\\.R$",
              full.names = TRUE)
 )
 sapply(need_files, source, keep.source = FALSE)
 
-# Load all modals in this directory
-# lapply(list.files("modals", pattern = ".R", full.names = TRUE),
-#        source,
-#        keep.source = FALSE)
 
 # Set up logging options for this application. These again should only be
 # changed to meet the needs of the application.
@@ -67,16 +51,6 @@ DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
 # Add any settings for controls within the application. These will be used to
 # populate controls in the UI at run time.
 app_settings <- list(
-  experiment_types = list(
-    choices = api_endpoint(path = "table_search",
-                           query = list(table_name = "norm_ms_n_types"),
-                           return_format = "data.frame") %>%
-      filter(!name == "none", !is.na(name), !name == "") %>%
-      arrange(acronym) %>%
-      mutate(display = glue::glue("{acronym} ({name})")) %>%
-      with(.,
-           setNames(acronym, display))
-  ),
   rawdata_import_file_types = c(".mzML"),
   methodjson_import_file_types = c(".JSON")
 )

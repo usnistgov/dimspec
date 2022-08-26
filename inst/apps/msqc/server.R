@@ -69,6 +69,7 @@ shinyServer(function(input, output) {
   }))
   
   # Process data ----
+  # Process data ----
   observeEvent(input$process_data_btn, isolate({
     #get reference information
     data_react$compoundtable <- api_endpoint(path = "table_search",
@@ -84,57 +85,60 @@ shinyServer(function(input, output) {
     
     # Import Data into Environment
     if (!is.null(input$rawdata_filename) & !is.null(input$sampleJSON_filename) & !is.null(import_results$file_dt)) {
-    mzmls <- list()
-    samplejsons <- list()
-    for (i in 1:nrow(import_results$file_dt)) {
-      if (import_results$file_dt$Valid[i] == TRUE) {
-        mzmls[[length(mzmls)+1]] <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
-        samplejsons[[length(samplejsons) + 1]] <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
+      for (i in 1:nrow(import_results$file_dt)) {
+        if (import_results$file_dt$Valid[i] == TRUE) {
+          mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
+          samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
+          import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
+        }
       }
-    }
-    
-    # Process data
-    import_results$processed_data <- lapply(1:length(mzmls), function(x) {
-      peak_gather_json(samplejsons[[x]], mzmls[[x]], data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
-    })
-    
-    peak_results <- list()
-    sample_results <- rep(FALSE, length(import_results$processed_data))
-    for (j in 1:length(import_results$processed_data)) {
-    import_results$qc_results[[j]] <- list()
-    peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
-      for (i in 1:length(import_results$processed_data[[j]])) {
-      qc <- gather_qc(import_results$processed_data[[j]][[i]],
-                      exactmasses = data_react$exactmasses,
-                      exactmasschart = data_react$exactmasschart,
-                      ms1range = c(input$ms1zoom_low, input$ms1zoom_high),
-                      ms1isomatchlimit = input$ms1matchlimit,
-                      minerror = input$minerror
-                      )
-        import_results$qc_results[[j]][[i]] <- qc
-        
-        # populate summary tables
-        all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
-        if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
+      
+      # Process data
+      peak_results <- list()
+      sample_results <- rep(FALSE, length(import_results$processed_data))
+      for (j in 1:length(import_results$processed_data)) {
+        import_results$qc_results[[j]] <- list()
+        peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
+        for (i in 1:length(import_results$processed_data[[j]])) {
+          qc <- gather_qc(import_results$processed_data[[j]][[i]],
+                          exactmasses = data_react$exactmasses,
+                          exactmasschart = data_react$exactmasschart,
+                          ms1range = c(input$ms1zoom_low, input$ms1zoom_high),
+                          ms1isomatchlimit = input$ms1matchlimit,
+                          minerror = input$minerror,
+                          max_correl = input$max_correl,
+                          correl_bin = input$correl_bin,
+                          max_ph = input$max_ph,
+                          ph_bin = input$ph_bin,
+                          max_freq = input$max_freq,
+                          freq_bin = input$freq_bin,
+                          min_n_peaks = input$min_n_peaks,
+                          cormethod = input$cormethod
+          )
+          import_results$qc_results[[j]][[i]] <- qc
+          
+          # populate summary tables
+          all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
+          if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
+        }
+        import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
+        sample_results[j] <- FALSE
+        if (!FALSE %in% peak_results[[j]]) {sample_results[j] <- TRUE}
       }
-      import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
-      sample_results[j] <- FALSE
-      if (!FALSE %in% peak_results[[j]]) {sample_results[j] <- TRUE}
-    }
-    
-    # put out the various updates
-    import_results$sample_list <- data.frame(RawFile = import_results$file_dt$RawFile, PassCheck = sample_results)
-    output$sample_qc <- DT::renderDataTable(DT::datatable(import_results$sample_list, 
-                                                          options = list(
-                                                            paging = FALSE,
-                                                            filtering = FALSE,
-                                                            ordering = FALSE,
-                                                            searching = FALSE
-                                                          ),
-                                                          selection = "single"
-                                                          ))
-    output$qc_review_status <- renderText("Data processing complete!")
-    print("Complete!")
+      
+      # put out the various updates
+      import_results$sample_list <- data.frame(RawFile = import_results$file_dt$RawFile, PassCheck = sample_results)
+      output$sample_qc <- DT::renderDataTable(DT::datatable(import_results$sample_list, 
+                                                            options = list(
+                                                              paging = FALSE,
+                                                              filtering = FALSE,
+                                                              ordering = FALSE,
+                                                              searching = FALSE
+                                                            ),
+                                                            selection = "single"
+      ))
+      output$qc_review_status <- renderText("Data processing complete!")
+      print("Complete!")
     }
   }))
   
