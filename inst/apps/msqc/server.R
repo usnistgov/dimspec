@@ -123,48 +123,62 @@ shinyServer(function(input, output) {
                                              query = list(table_name = "view_compounds"),
                                              return_format = "data.frame")
     
-    
     # Import Data into Environment
-    for (i in 1:nrow(import_results$file_dt)) {
-      if (import_results$file_dt$Valid[i] == TRUE) {
-        mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
-        samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
-        import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
+    
+    withProgress(message = "Processing Data", value = 0, {
+      check_name <- ""
+      n <- nrow(import_results$file_dt)
+      for (i in 1:n) {
+        if (import_results$file_dt$Valid[i] == TRUE) {
+          if (!check_name = import_results$file_dt$RawFile[i]) {
+            mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
+          }
+          samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
+          import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
+          check_name <- import_results$file_dt$RawFile[i]
+        }
+        incProgress(amount = 1/n, detail = sprintf("Processing entry %d of %d", i, n))
       }
-    }
+    })
     
     # Process data
     peak_results <- list()
     sample_results <- rep(FALSE, length(import_results$processed_data))
-    for (j in 1:length(import_results$processed_data)) {
-      import_results$qc_results[[j]] <- list()
-      peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
-      for (i in 1:length(import_results$processed_data[[j]])) {
-        qc <- gather_qc(import_results$processed_data[[j]][[i]],
-                        exactmasses = data_react$exactmasses,
-                        exactmasschart = data_react$exactmasschart,
-                        ms1range = c(input$ms1zoom_low, input$ms1zoom_high),
-                        ms1isomatchlimit = input$ms1matchlimit,
-                        minerror = input$minerror,
-                        max_correl = input$max_correl,
-                        correl_bin = input$correl_bin,
-                        max_ph = input$max_ph,
-                        ph_bin = input$ph_bin,
-                        max_freq = input$max_freq,
-                        freq_bin = input$freq_bin,
-                        min_n_peaks = input$min_n_peaks,
-                        cormethod = input$cormethod
-        )
-        import_results$qc_results[[j]][[i]] <- qc
-        
-        # populate summary tables
-        all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
-        if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
+    withProgress(message = "Processing Data", value = 0, {
+      nj <- length(import_results$processed_data)
+      ntotal <- sum(sapply(import_results$processed_data, length))
+      for (j in 1:nj) {
+        import_results$qc_results[[j]] <- list()
+        peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
+        ni <- length(import_results$processed_data[[j]])
+        for (i in 1:ni) {
+          qc <- gather_qc(import_results$processed_data[[j]][[i]],
+                          exactmasses = data_react$exactmasses,
+                          exactmasschart = data_react$exactmasschart,
+                          ms1range = c(input$ms1zoom_low, input$ms1zoom_high),
+                          ms1isomatchlimit = input$ms1matchlimit,
+                          minerror = input$minerror,
+                          max_correl = input$max_correl,
+                          correl_bin = input$correl_bin,
+                          max_ph = input$max_ph,
+                          ph_bin = input$ph_bin,
+                          max_freq = input$max_freq,
+                          freq_bin = input$freq_bin,
+                          min_n_peaks = input$min_n_peaks,
+                          cormethod = input$cormethod
+          )
+          import_results$qc_results[[j]][[i]] <- qc
+          
+          # populate summary tables
+          all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
+          if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
+          incProgress(amount = 1/ntotal, detail = sprintf("File %d of %d - Gathering quality control data %d of %d.", j, ng, i, ni))
+        }
+        import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
+        sample_results[j] <- FALSE
+        if (!FALSE %in% peak_results[[j]]) {sample_results[j] <- TRUE}
       }
-      import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
-      sample_results[j] <- FALSE
-      if (!FALSE %in% peak_results[[j]]) {sample_results[j] <- TRUE}
-    }
+    })
     
     # put out the various updates
     import_results$sample_list <- data.frame(RawFile = import_results$file_dt$RawFile, PassCheck = sample_results)
@@ -232,20 +246,25 @@ output$export_btn <- downloadHandler(
   content = function(file) {
     temp_directory <- file.path(tempdir(), as.integer(Sys.time()))
     dir.create(temp_directory)
-    
-    for (j in 1:length(import_results$processed_data)) {
-      for (i in 1:length(import_results$processed_data[[j]])) {
-        outdat <- import_results$processed_data[[j]][[i]]
-        outdat$qc <- import_results$qc_results[[j]][[i]]
-        write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
-                   auto_unbox = TRUE,
-                   pretty = TRUE)
+    withProgress(message = "Creating download file.", value = 0, {
+      nj <- length(import_results$processed_data)
+      ntotal <- sapply(import_results$processed_data, length) + 1
+      for (j in 1:nj) {
+        ni <- length(import_results$processed_data[[j]])
+        for (i in 1:ni) {
+          outdat <- import_results$processed_data[[j]][[i]]
+          outdat$qc <- import_results$qc_results[[j]][[i]]
+          write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
+                     auto_unbox = TRUE,
+                     pretty = TRUE)
+        }
+        incProgress(amount = 1/ntotal, details = paste0("Input file %d of %d, writing peak JSON file %d of %d.", j, nj, i, ni))
       }
-    }
-    
-    zip::zip(zipfile = file,
-             files = dir(temp_directory),
-             root = temp_directory)
+      zip::zip(zipfile = file,
+               files = dir(temp_directory),
+               root = temp_directory)
+      incProgress(amount = 1/ntotal, details = "Zipping up results.")
+    })
     
   },
   contentType = "application/zip"
