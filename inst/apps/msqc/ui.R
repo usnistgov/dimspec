@@ -1,6 +1,6 @@
 dashboardPage(
     skin = "blue",
-    title = DB_TITLE,
+    title = paste0(DB_TITLE, " - ", APP_TITLE),
     header = dashboardHeader(
       title = a(
         img(src = "NIST-Logo-Brand-White.svg"),
@@ -17,7 +17,7 @@ dashboardPage(
         } else {
             NULL
         },
-        h3(DB_TITLE, style = "padding: 5px; margin: 0px;"),
+        h3(APP_TITLE, style = "padding: 5px; margin: 0px;"),
         
         sidebarMenu(
             id = "sidebar_menu",
@@ -72,6 +72,11 @@ dashboardPage(
                                          accept = ".JSON",
                                          buttonLabel = "Load",
                                          placeholder = "Select a sample.JSON file to begin"
+                               ),
+                               actionButton(inputId = "process_data_btn",
+                                            label = "Process Data",
+                                            width = "100%",
+                                            icon = icon("circle-play")
                                )
                         ),
                         column(4,
@@ -79,15 +84,10 @@ dashboardPage(
                                )
                     ),
                     fluidRow(
-                      actionButton(inputId = "process_data_btn",
-                                   label = "Process Data",
-                                   width = "50%",
-                                   icon = icon("circle-play")
+                      span(id = "qc_results_span",
+                           h5("QC Data Import Status:"),
+                           textOutput(outputId = "qc_review_status")
                       )
-                    ),
-                    fluidRow(
-                      h5("QC Data Import Status:"),
-                      textOutput(outputId = "qc_review_status")
                     )
             ),
             tabItem("qc_review",

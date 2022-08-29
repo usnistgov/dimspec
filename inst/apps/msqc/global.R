@@ -1,11 +1,11 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "NIST Mass Spectral Quality Control"
+APP_TITLE          <- "Mass Spectral Quality Control for PFAS"
 if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "Mass Spectral Quality Control for PFAS"
+default_title      <- "Mass Spectral Quality Control"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
@@ -68,3 +68,11 @@ $('body').on('shown.bs.modal', (x) =>
 # Set the file upload size t(e.g. to 250 MB)
 file_MB_limit <- 250
 options(shiny.maxRequestSize = file_MB_limit*1024^2)
+
+# Get required data
+exactmasses <-  api_endpoint(path = "table_search",
+                             query = list(table_name = "view_exact_masses"),
+                             return_format = "data.frame")
+exactmasschart <- create_exactmasschart(api_endpoint(path = "table_search",
+                                                     query = list(table_name = "view_element_isotopes"),
+                                                     return_format = "data.frame"))
