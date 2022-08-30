@@ -172,7 +172,7 @@ shinyServer(function(input, output) {
           # populate summary tables
           all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
           if (!FALSE %in% all_results) {peak_results[[j]][i] <- TRUE}
-          incProgress(amount = 1/ntotal, detail = sprintf("File %d of %d - Gathering quality control data %d of %d.", j, ng, i, ni))
+          incProgress(amount = 1/ntotal, detail = sprintf("File %d of %d - Gathering quality control data %d of %d.", j, nj, i, ni))
         }
         import_results$peak_list[[j]] <- data.frame(peak = sapply(import_results$processed_data[[j]], function(x) x$peak$name), PassCheck = peak_results[[j]])
         sample_results[j] <- FALSE
