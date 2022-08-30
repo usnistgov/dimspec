@@ -106,11 +106,17 @@ shinyServer(function(input, output) {
     toggleElement(id = "process_data_btn", condition = !is.null(import_results$file_dt))
     toggleElement(id = "qc_results_span", condition = !is.null(import_results$processed_data))
   })
+  hideElement("results_rendered")
+  
+  observeEvent(input$go_data_import, {
+    updateTabsetPanel(inputId = "sidebar_menu", selected = "data_import")
+  })
   
   # Check data ----
   output$file_table <- renderDT(
     DT::datatable(
       data = req(import_results$file_dt),
+      rownames = FALSE,
       options = list(paging = FALSE, searching = FALSE, ordering = FALSE)
     )
   )
@@ -188,6 +194,7 @@ shinyServer(function(input, output) {
   output$sample_qc <- renderDT(
     DT::datatable(
       data = req(import_results$sample_list), 
+      rownames = FALSE,
       options = list(
         paging = FALSE,
         filtering = FALSE,
@@ -202,6 +209,7 @@ shinyServer(function(input, output) {
   output$peak_qc <- renderDT(
     DT::datatable(
       data = req(import_results$peak_list)[[req(input$sample_qc_rows_selected)]],
+      rownames = FALSE,
       options = list(
         paging = FALSE,
         filtering = FALSE,
@@ -213,7 +221,7 @@ shinyServer(function(input, output) {
   )
   
   output$overall_qc_results <- renderText({
-    req(qc_check_results())
+    qc <- req(qc_check_results())
     all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
     ifelse(any(FALSE %in% all_results),
            paste0("There are ", length(which(all_results == FALSE)), " failed QC checks for this peak."),
@@ -221,12 +229,80 @@ shinyServer(function(input, output) {
     )
   })
   
+  observeEvent(input$go_to_quality_review, {
+    updateTabsetPanel(inputId = "sidebar_menu", selected = "qc_review")
+  })
+  
   observeEvent(qc_check_results()$qc, ignoreNULL = TRUE, {
     import_results$qc_check_select <- unique(do.call(c, lapply(qc_check_results()$qc, function(x) c(x$parameter))))
   })
   
-  observeEvent(import_results$qc_check_select, ignoreNULL = TRUE, {
-    updateSelectizeInput(inputId = "select_qc_check", choices = import_results$qc_check_select, selected = 1)
+  # observeEvent(import_results$qc_check_select, ignoreNULL = TRUE, {
+  #   updateSelectizeInput(inputId = "select_qc_check", choices = import_results$qc_check_select, selected = 1)
+  # })
+  output$quality_data <- renderUI({
+    req(import_results)
+    shiny::validate(
+      need(!is.null(input$sample_qc_rows_selected), message = "Please select a file on the left."),
+      need(!is.null(input$peak_qc_rows_selected), message = "Please select a peak on the left.")
+    )
+    qc_data <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+    tagList(
+      h3("Quality Control Metrics"),
+      p("Click to expand or collapse details for any given metric."),
+      lapply(qc_data,
+             function(x) {
+               span(
+                 id = sprintf("qc_result_box_%s", unique(x$parameter)),
+                 box(
+                   title = x$parameter %>%
+                     unique() %>%
+                     str_replace_all("_", " ") %>%
+                     str_to_title(),
+                   solidHeader = FALSE,
+                   height = "auto",
+                   status = "primary",
+                   width = "100%",
+                   collapsible = TRUE,
+                   collapsed = FALSE,
+                   # Will not render properly while collapsed until a screen resize
+                   DT::datatable(
+                     data = select(x, -parameter),
+                     rownames = FALSE,
+                     width = "100%",
+                     height = "auto",
+                     extensions = "Responsive",
+                     options = list(
+                       dom = "t"
+                     )
+                   ),
+                 )
+               )
+             }),
+      tags$script('Shiny.setInputValue("results_rendered", "TRUE")'),
+      tags$script("
+      $('.box').on('click', '.box-header h3', function() {
+          $(this).closest('.box')
+                 .find('[data-widget=collapse]')
+                 .click();
+      });")
+    )
+  })
+  
+  observeEvent(input$results_rendered, {
+    if (input$results_rendered) {
+      # Collapse all result boxes but the first
+      qc_data <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+      qc_names <- lapply(qc_data, function(x) unique(x$parameter)) %>%
+        unlist() %>% unname()
+      if (length(qc_names) > 1) {
+      lapply(qc_names[-1],
+             function(x) {
+               runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
+             })
+      }
+      updateCheckboxInput(inputId = "results_rendered", value = FALSE)
+    }
   })
   
   output$peak_data <- renderDT(

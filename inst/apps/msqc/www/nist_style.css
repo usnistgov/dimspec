@@ -58,6 +58,10 @@ body {
   text-align: center;
 }
 
+.box-title {
+  width: 100%;
+}
+
 .dt-buttons {
   padding-top: 4.5px;
 }
@@ -141,53 +145,10 @@ a > i {
   padding-top: calc(50vh + 100px);
 }
 
-#index_go_data_input, #data_input_process_btn, 
-#data_input_go_compound, #data_input_go_fragment {
+#go_data_import, #go_to_quality_review {
   padding: 20px 0;
   font-size: large;
   margin-bottom: 20px;
-}
-
-#search_compounds_dt {
-  margin-top: 12px;
-}
-
-#search_compounds_method_narrative {
-  padding: 10px 0;
-}
-
-#search_compounds_use_optimized_parameters_div {
-  margin: 0;
-}
-
-#search_compounds_use_optimized_parameters_div > div {
-  text-align: right;
-  padding-left: 10px;
-  margin: 0;
-}
-
-#search_compounds_use_optimized_parameters_div > div > .checkbox {
-  margin: 0;
-}
-
-#search_fragments_ballstick > img {
-  width: 200px;
-  height: 200px;
-}
-
-#search_fragments_ballstick_caption {
-  padding-top: 8px;
-}
-
-
-#search_fragments_compound_list > div > table > tbody > tr > td,
-#search_fragments_spectral_data > div > table > tbody > tr > td,
-#search_fragments_peak_list > div > table > tbody > tr > td {
-  padding: 0;
-}
-
-#search_fragments_compounds_peaks_tabset > li > a {
-  padding: 0px 15px;
 }
 
 td.dtr-control {
@@ -212,13 +173,6 @@ ul.dtr-details > li > .dtr-title {
 
 ul.dtr-details > li > .dtr-data {
   float: right !important;
-}
-
-
-#search_fragments_compound_info, #search_fragments_peak_info {
-  width: 100%;
-  text-align: center;
-  z-index: 999;
 }
 
 .success {
@@ -309,18 +263,4 @@ section {
   position: absolute;
   width: 100%;
   padding-top: 12px;
-}
-
-#mod_uncertainty_additional > div {
-  padding-left: 0px !important;
-  padding-right: 0px !important;
-}
-
-#search_compounds_additional > div {
-  padding: 0;
-}
-
-#nav_download_all {
-  width: 205px;
-  margin-bottom: 15px;
 }
