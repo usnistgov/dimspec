@@ -3906,45 +3906,6 @@ verify_import_requirements <- function(obj,
   return(out)
 }
 
-#' Append additional named elements to a list
-#'
-#' This does nothing more than [base::append] ellipsis arguments to be added
-#' directly to the end of an existing list object. This primarily supports
-#' additional property assignment during the import process for future
-#' development and refinement. Call this as part of any function with additional
-#' arguments. This may result in failures or ignoring unrecognized named
-#' parameters. If no additional arguments are passed `obj` is returned as
-#' provided.
-#'
-#' @note If duplicate names exists in `obj` and those provided as ellipsis
-#'   arguments, those provided as part of the ellipsis will replace those in
-#'   `obj`.
-#'
-#' @param obj LIST of any length to be appended to
-#' @param ... Additional arguments passed to/from the ellipsis parameter of
-#'   calling functions. If named, names are preserved.
-#' @param log_ns CHR scalar of the logging namespace to use (default: "db")
-#'
-#' @return LIST object of length equal to `obj` plus additional named arguments
-#' @export
-#'
-#' @examples
-#' tack_on(list(a = 1:3), b = letters, c = rnorm(10))
-#' tack_on(list(a = 1:3))
-tack_on <- function(obj, ..., log_ns = "db") {
-  logging <- exists("LOGGING_ON") && LOGGING_ON && exists("log_it")
-  addl_args <- list(...)
-  if (any(names(addl_args) %in% names(obj))) {
-    applies_to <- names(addl_args)[names(addl_args) %in% names(obj)]
-    for(i in applies_to) {
-      obj[[i]] <- NULL
-    }
-  }
-  if (logging) log_it("info", glue::glue("Tacking on {length(addl_args)} additional item{ifelse(length(addl_args) > 1, 's', '')} ({format_list_of_names(names(addl_args), add_quotes = TRUE)})."), log_ns)
-  out <- append(obj, addl_args)
-  return(out)
-}
-
 #' Map an import file to the database schema
 #'
 #' This parses an import object and attempts to map it to database fields and
