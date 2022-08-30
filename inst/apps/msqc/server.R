@@ -130,7 +130,7 @@ shinyServer(function(input, output) {
       n <- nrow(import_results$file_dt)
       for (i in 1:n) {
         if (import_results$file_dt$Valid[i] == TRUE) {
-          if (!check_name = import_results$file_dt$RawFile[i]) {
+          if (!check_name == import_results$file_dt$RawFile[i]) {
             mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
           }
           samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
