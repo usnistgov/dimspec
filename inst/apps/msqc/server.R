@@ -104,6 +104,7 @@ shinyServer(function(input, output) {
   # Element Display ----
   observe({
     toggleElement(id = "process_data_btn", condition = !is.null(import_results$file_dt))
+    toggleElement(id = "peak_qc_selector", condition = !is.null(input$sample_qc_rows_selected))
     toggleElement(id = "qc_results_span", condition = !is.null(import_results$processed_data))
   })
   hideElement("results_rendered")
@@ -114,12 +115,30 @@ shinyServer(function(input, output) {
     updateTabsetPanel(inputId = "sidebar_menu", selected = "data_import")
   })
   
+  observeEvent(input$sidebar_menu, {
+    if (input$sidebar_menu %in% c("qc_review", "export")) {
+      if (is.null(import_results$processed_data)) {
+        nist_shinyalert(
+          title = "No data",
+          type = "info",
+          text = "Please load and process data before using this page."
+        )
+        updateTabsetPanel(inputId = "sidebar_menu", selected = "data_import")
+      }
+    }
+  })
+  
   # Check data ----
   output$file_table <- renderDT(
     DT::datatable(
       data = req(import_results$file_dt),
       rownames = FALSE,
-      options = list(paging = FALSE, searching = FALSE, ordering = FALSE)
+      options = list(
+        dom = 't',
+        paging = FALSE,
+        searching = FALSE,
+        ordering = FALSE
+      )
     )
   )
   
@@ -203,7 +222,9 @@ shinyServer(function(input, output) {
     DT::datatable(
       data = req(import_results$sample_list), 
       rownames = FALSE,
+      caption = "1) Click a row to select an mzML file.",
       options = list(
+        dom = "t",
         paging = FALSE,
         filtering = FALSE,
         ordering = FALSE,
@@ -218,7 +239,9 @@ shinyServer(function(input, output) {
     DT::datatable(
       data = req(import_results$peak_list)[[req(input$sample_qc_rows_selected)]],
       rownames = FALSE,
+      caption = "2) Click a row to see metrics for that peak.",
       options = list(
+        dom = "t",
         paging = FALSE,
         filtering = FALSE,
         ordering = FALSE,
@@ -254,9 +277,11 @@ shinyServer(function(input, output) {
       need(!is.null(input$sample_qc_rows_selected), message = "Please select a file on the left."),
       need(!is.null(input$peak_qc_rows_selected), message = "Please select a peak on the left.")
     )
+    selected_file <- import_results$sample_list$RawFile[input$sample_qc_rows_selected]
+    selected_analyte <- import_results$peak_list[[input$sample_qc_rows_selected]]$peak[input$peak_qc_rows_selected]
     qc_data <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
     tagList(
-      h3("Quality Control Metrics"),
+      h3(sprintf("Metrics for %s in %s", selected_analyte, selected_file)),
       p("Click to expand or collapse details for any given metric."),
       lapply(qc_data,
              function(x) {

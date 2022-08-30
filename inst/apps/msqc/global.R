@@ -10,7 +10,7 @@ default_title      <- "Mass Spectral Quality Control"
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- TRUE
+dev                <- FALSE
 
 
 # The following settings are necessary for the application. Only change these if

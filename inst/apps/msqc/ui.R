@@ -18,7 +18,6 @@ dashboardPage(
       NULL
     },
     h3(APP_TITLE, style = "padding: 5px; margin: 0px;"),
-    
     sidebarMenu(
       id = "sidebar_menu",
       menuItem("About",
@@ -104,20 +103,20 @@ dashboardPage(
               )
       ),
       tabItem("qc_review",
-              h3("Review Quality Control check data."),
               fluidRow(
                 column(4,
+                       h3("Quality Control Checks"),
                        DT::dataTableOutput(outputId = "sample_qc", width = "100%"),
-                       DT::dataTableOutput(outputId = "peak_qc", width = "100%"),
-                       br(),
-                       textOutput(outputId = "overall_qc_results")#,
-                       # br(),
-                       # selectizeInput(inputId = "select_qc_check", label = "Select QC Check", choices = NULL, width = "100%")
+                       hr(),
+                       span(id = "peak_qc_selector",
+                            DT::dataTableOutput(outputId = "peak_qc", width = "100%"),
+                            hr(),
+                            textOutput(outputId = "overall_qc_results")
+                       )
                 ),
                 column(8,
                        checkboxInput(inputId = "results_rendered", label = "New Results Rendered (hidden input)", value = FALSE),
                        uiOutput(outputId = "quality_data")
-                       # DT::dataTableOutput(outputId = "peak_data", width = "100%")
                 )
               )
       ),
