@@ -59,6 +59,11 @@ dashboardPage(
               includeHTML('about.html')
       ),
       tabItem("data_import",
+              div(class = "overlay",
+                  id = "data_import_overlay",
+                  img(src = "processing.gif"),
+                  h3(id = "data_import_overlay_text")
+              ),
               h3("Import Raw Data Files and Sample JSON Files"),
               fluidRow(
                 column(4,
@@ -117,6 +122,11 @@ dashboardPage(
               )
       ),
       tabItem("export",
+              div(class = "overlay",
+                  id = "export_overlay",
+                  img(src = "processing.gif"),
+                  h3(id = "export_overlay_text")
+              ),
               h5("Export all QC data for sample."),
               downloadButton(outputId = "export_btn", label = "Export all data", icon = icon("file-download", verify_fa = FALSE)),
               textOutput(outputId = "export_status")

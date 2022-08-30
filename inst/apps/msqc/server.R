@@ -107,6 +107,8 @@ shinyServer(function(input, output) {
     toggleElement(id = "qc_results_span", condition = !is.null(import_results$processed_data))
   })
   hideElement("results_rendered")
+  hideElement("data_import_overlay")
+  hideElement("export_overlay")
   
   observeEvent(input$go_data_import, {
     updateTabsetPanel(inputId = "sidebar_menu", selected = "data_import")
@@ -130,19 +132,22 @@ shinyServer(function(input, output) {
                                              return_format = "data.frame")
     
     # Import Data into Environment
-    
+    runjs("$('#data_import_overlay_text').text('Processing Data...');")
+    showElement("data_import_overlay")
     withProgress(message = "Processing Data", value = 0, {
       check_name <- ""
       n <- nrow(import_results$file_dt)
       for (i in 1:n) {
         if (import_results$file_dt$Valid[i] == TRUE) {
           if (!check_name == import_results$file_dt$RawFile[i]) {
+            runjs("$('#data_import_overlay_text').text('Reading mzML file...');")
             mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
           }
           samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
           import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
           check_name <- import_results$file_dt$RawFile[i]
         }
+        runjs("$('#data_import_overlay_text').text('Processing mzML data...');")
         incProgress(amount = 1/n, detail = sprintf("Processing entry %d of %d", i, n))
       }
     })
@@ -150,6 +155,7 @@ shinyServer(function(input, output) {
     # Process data
     peak_results <- list()
     sample_results <- rep(FALSE, length(import_results$processed_data))
+    runjs("$('#data_import_overlay_text').text('Processing Sample JSONs...');")
     withProgress(message = "Processing Data", value = 0, {
       nj <- length(import_results$processed_data)
       ntotal <- sum(sapply(import_results$processed_data, length))
@@ -189,6 +195,8 @@ shinyServer(function(input, output) {
     # put out the various updates
     import_results$sample_list <- data.frame(RawFile = import_results$file_dt$RawFile, PassCheck = sample_results)
     print("Complete!")
+    runjs("$('#data_import_overlay_text').text('');")
+    hideElement("data_import_overlay")
   })
   
   output$sample_qc <- renderDT(
@@ -296,10 +304,10 @@ shinyServer(function(input, output) {
       qc_names <- lapply(qc_data, function(x) unique(x$parameter)) %>%
         unlist() %>% unname()
       if (length(qc_names) > 1) {
-      lapply(qc_names[-1],
-             function(x) {
-               runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
-             })
+        lapply(qc_names[-1],
+               function(x) {
+                 runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
+               })
       }
       updateCheckboxInput(inputId = "results_rendered", value = FALSE)
     }
@@ -313,16 +321,17 @@ shinyServer(function(input, output) {
   )
   
   
-# Export Functions ---- 
+  # Export Functions ---- 
   
-output$export_btn <- downloadHandler(
-  filename = function() {
-    paste0("database_import_files", Sys.Date(), ".zip")
-  },
-  content = function(file) {
-    temp_directory <- file.path(tempdir(), as.integer(Sys.time()))
-    dir.create(temp_directory)
-    withProgress(message = "Creating download file.", value = 0, {
+  output$export_btn <- downloadHandler(
+    filename = function() {
+      paste0("DIMSpec_import_files_", Sys.Date(), ".zip")
+    },
+    content = function(file) {
+      runjs("$('#export_overlay_text').text('Preparing download file...');")
+      showElement("export_overlay")
+      temp_directory <- file.path(tempdir(), as.integer(Sys.time()))
+      dir.create(temp_directory)
       nj <- length(import_results$processed_data)
       ntotal <- sapply(import_results$processed_data, length) + 1
       for (j in 1:nj) {
@@ -333,17 +342,16 @@ output$export_btn <- downloadHandler(
           write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
                      auto_unbox = TRUE,
                      pretty = TRUE)
+          runjs(sprintf("$('#data_import_overlay_text').text('%s');", sprintf("Input file %d of %d, writing peak JSON file %d of %d.", j, nj, i, ni)))
         }
-        incProgress(amount = 1/ntotal, details = paste0("Input file %d of %d, writing peak JSON file %d of %d.", j, nj, i, ni))
       }
+      runjs("$('#data_import_overlay_text').text('Zipping up results...');")
+      hideElement("export_overlay")
       zip::zip(zipfile = file,
                files = dir(temp_directory),
                root = temp_directory)
-      incProgress(amount = 1/ntotal, details = "Zipping up results.")
-    })
-    
-  },
-  contentType = "application/zip"
-)
+    },
+    contentType = "application/zip"
+  )
   
 })
