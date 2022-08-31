@@ -919,15 +919,50 @@ shinyServer(function(input, output, session) {
       log_it("warn", msg, app_ns)
       return(NULL)
     }
-    search_object <- search_object %>%
-      create_search_ms(
-        searchobj = .,
+    #needed to make this search_ms object because it needs to check and re-run and should not replace object
+    search_ms <- 
+      try(create_search_ms(
+        searchobj = search_object,
         correl = isolate(input$search_compounds_correlation),
         ph = isolate(input$search_compounds_ph),
         freq = isolate(input$search_compounds_freq),
         normfn = isolate(input$search_compounds_norm_function),
         cormethod = isolate(input$search_compounds_correlation_method)
+      ))
+    if (inherits(search_ms, "try-error")) {
+      msg <- sprintf("Could not generate consensus mass spectra for data file %s and compound %s using optimized parameters due to sparse MS2 data. The application will attempt to calculate non-optimal consensus mass spectra.",
+                     input$data_input_filename$name,
+                     search_compounds_mzrt_text()[search_compound_index])
+      nist_shinyalert(
+        title = NULL,
+        type = "warning",
+        text = msg
       )
+      log_it("warn", msg, app_ns)
+      search_ms <- 
+        try(create_search_ms(
+          searchobj = search_object,
+          correl = NA,
+          ph = NA,
+          freq = NA,
+          normfn = isolate(input$search_compounds_norm_function),
+          cormethod = isolate(input$search_compounds_correlation_method)
+        ))
+    }
+    if (inherits(search_ms, "try-error")) {
+      msg <- sprintf("Could not generate consensus mass spectra for data file %s and compound %s due to sparse MS2 data.",
+                     input$data_input_filename$name,
+                     search_compounds_mzrt_text()[search_compound_index])
+      nist_shinyalert(
+        title = NULL,
+        type = "warning",
+        text = msg
+      )
+      hideElement("search_compounds_overlay")
+      log_it("warn", msg, app_ns)
+      return(NULL)
+    }
+    search_object <- search_ms #had to swap these due to language following this point
     runjs("$('#search_compounds_overlay_text').text('Scoring database matches...');")
     log_it("trace", "Scoring database matches.", app_ns)
     search_result <- api_endpoint(
