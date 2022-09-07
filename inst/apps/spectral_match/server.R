@@ -1295,6 +1295,8 @@ shinyServer(function(input, output, session) {
   # __Molecular model graphic
   output$search_fragments_ballstick <- renderImage({
     shiny::validate(
+      need(rdkit_available,
+           message = "[ This version of MSMatch requires RDKit integration to display molecular models, but it is currently unavailable. ]"),
       need(search_fragments_results_selected()$has_smiles,
            message = "This fragment has not had a structure assigned.")
     )
