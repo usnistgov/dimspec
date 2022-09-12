@@ -1,0 +1,29 @@
+# Introduction
+
+The objective of **non-targeted analysis (NTA)** is to detect and identify unknown (generally) organic compounds using a combination of advanced analytical instrumentation, such as high-resolution mass spectrometry, and computational tools. For NTA using mass spectrometry, the use of reference libraries containing fragmentation mass spectra of known compounds is essential to successfully identifying unknown compounds in complex mixtures. However, due to the diversity of vendors of mass spectrometers and mass spectrometry software, it is difficult to easily share mass spectral data sets between laboratories using different instrument vendors while maintaining the quality of complex data and metadata that makes the mass spectra commutable and useful.
+
+The purpose of the developed toolset described in this report is to provide a database infrastructure for the management and use of mass spectrometry data and its associated metadata. In addition, as part of a NIST-wide effort to make data more Findable, Accessible, Interoperable, and Reusable (FAIR), the database and affiliated tools were designed using open-source formats that can be easily shared and reused by researchers within and outside of NIST. The information provided in this report includes guidance for the setup, population, and use of the database and its affiliated analysis tools. This effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program (DOD-SERDP), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview). As that project focuses of per- and polyfluoroalkyl substances (PFAS), DIMSpec is distributed with mass spectra including compounds on the NIST Suspect List of Possible PFAS (Place 2021) as collected using the [Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool'). As this user guide contains a considerable amount of detailed content, a table of contents is provided.
+
+This toolset was developed by the [NIST PFAS program](https://www.nist.gov/programs-projects/measurement-science-and-polyfluoroalkyl-substances-pfas), part of the Material Measurement Laboratory's Chemical Sciences Division. It is primarily developed in R and SQLite. The remainder of this book describes the toolset, how to use it, its technical details, and
+
+### Contributors
+
+The main two contributors to code and data in this project are
+
+-   [Benjamin J. Place](https://www.nist.gov/people/benjamin-place) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0003-0953-5215) (PI, OCM)
+
+-   [Jared M. Ragland](https://www.nist.gov/people/jared-ragland) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0002-8055-2432) (co-PI, CI)
+
+Additional members of NIST PFAS project team providing guidance, input, and testing for this project includes
+
+-   [Jessica L. Reiner](https://www.nist.gov/people/jessica-l-reiner) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0002-1419-6062) (co-PI, BES)
+
+-   [Alix Rodawa](https://www.nist.gov/people/alix-rodowa) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0002-2650-0981) (BES)
+
+-   [Katherine Peter](https://www.researchgate.net/profile/Katherine-Peter) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0001-7379-265X) (Univ of Washington)
+
+-   [John Kucklick](https://www.nist.gov/people/john-kucklick) (Group Leader, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group))
+
+-   [Catherine A. Rimmer](https://www.nist.gov/people/catherine-rimmer) (Group Leader, [Organic Chemical Metrology Group](https://www.nist.gov/mml/csd/organic-chemical-metrology))
+
+-   [Vincent K. Shen](https://www.nist.gov/people/vincent-k-shen) (Group Leader, [Chemical Informatics Group](https://www.nist.gov/mml/csd/chemical-informatics-group))

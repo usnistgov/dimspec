@@ -1,0 +1,25 @@
+--- 
+title: "A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset"
+author: "Jared M. Ragland and Benjamin J. Place"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+# url: your book url like https://bookdown.org/yihui/bookdown
+# cover-image: path to the social sharing image like images/cover.jpg
+description: |
+  This is the User Guide distributed alongside the R Project containing the toolset supporting the "Database Infrastructure for Mass Spectrometry (DIMSpec)".
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+---
+
+# Preface {-}
+
+The use of mass spectral libraries is essential for the confident identification and reporting of analytical chemistry measureands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```

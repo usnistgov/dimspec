@@ -1,0 +1,215 @@
+# Instructions
+
+## Installation
+
+At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this toolset includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^1] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+
+[^1]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
+
+### System Requirements
+
+DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^2] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
+
+[^2]: This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:
+
+    `apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev`
+
+    After following the R [installation instructions for Ubuntu](https://cran.r-project.org/bin/linux/ubuntu), reduce package installations within R using:
+
+    `apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny`
+
+**[REQUIRED]** **R 4.1+** ([download](https://cran.r-project.org/)) and many packages are required (R Core Team, 2021; various); necessary packages will be installed when the compliance file is sourced, which may take some time when the project is first installed. The RStudio IDE ([download](https://www.rstudio.com/products/rstudio/download/#download); RStudio Team, 2015) is highly recommended for ease of use as this project is distributed as a R project.
+
+**[STRONGLY RECOMMENDED]** **SQLite3** ([download](https://www.sqlite.com/download.html)) and its command line interface (CLI; [download](https://www.sqlite.org/cli.html)) provide the database engine in structured query language (SQL) and are not technically required as the build can be accomplished purely through R, but it highly recommended to streamline the process and manipulate the database. A lightweight database interface such as [DBeaver Lite](https://dbeaver.com/download/lite/) is also suggested for interacting with the database in a classical sense. **Git** ([install instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)) is a repository manager which will make it much easier to install and update the project without downloads. The sqlite3 CLI and git executables must be available via PATH.
+
+**[RECOMMENDED]** For chemical informatics support, both **Python 3.9+** and the **rdkit** library are required for certain operations supporting display and calculations, primarily generation of machine-readable identifiers (e.g. InChI, InChIKey, SMILES, etc) but the full capabilities of rdkit are available (see <https://www.rdkit.org/docs/index.html> for details); these are turned on by default but are completely optional. An **anaconda** or **miniconda** installation is required. Python integration is not required for spinning up the basic database infrastructure. Users may need to add the conda executable to their PATH and, if conda is already installed, should pay close attention to the Python section of Technical Details. If these are not available, R will install miniconda (this requires user confirmation at the console) and create the necessary environment as part of automated setup during the compliance script. (Another option for chemical informatics is to use the Java-based R package rcdk instead; users will need to install the Java framework prior to installing rcdk (see [Windows](https://cimentadaj.github.io/blog/2018-05-25-installing-rjava-on-windows-10/installing-rjava-on-windows-10/); [Ubuntu](https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/)). This package is not well supported and rdkit is preferred.)
+
+The following sections provide more detailed information on how to use the tools provided to interact with the database and customize it for other uses or go directly to the "Using DIMSpec" section and continue using the project.
+
+**[OPTIONAL]** It is helpful to have some data on hand to populate and evaluate the database. Every effort has been made to simplify the process of building databases using this tool, and data can be populated from CSV files of a defined structure; examples are provided but the process of generating them can be somewhat onerous as key relationships must be defined to automatically populate in this manner. Future work may be able to simplify this process further, if necessary, but for now, interested researchers within 646 are encouraged to contact this ROA's authors for guidance on how to transform data to fit this schema.
+
+### Quick Start Guide
+
+This section provides instructions in a "quick start" format. While every effort has been made when building the underlying functionality to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed.
+
+-   *If using RStudio:*
+    1.  Download the project and open it in RStudio.
+    2.  Open the file at "R/compliance.R" in the editor.
+    3.  Click the "Source" button at the top right of the editor pane.
+-   *If not using RStudio:*
+    1.  Open an R session in the project directory or launch R and set your working directory to that of the project (e.g. `setwd(file.path("path", "to", "dimspec_dir")`).
+    2.  Execute the command `source("R/compliance.R")`.
+
+Using either method should in most cases establish the compute environment, including logging and argument validation, binding to a python environment providing rdkit support, launching an API server, and listing out the shiny apps available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to to evaluate capabilities for reuse in other projects.
+
+## Project Directory
+
+The project directory contains the following directories of interest:
+
+-   `/config` Files pertaining to the build, description, and population of the underlying database, as well as certain compute environment settings and import settings. This serves for rapid rebuilding and reuse of the underlying database structure. Also included are environment establishment files for the project ("env_glob.txt"), the R session ("env_R.R") and the optional logging ("env_logger.R") functionality.
+
+    -   `/sql_nodes` Files containing the sql scripts defining the database schema, as run by the "build.sql" script. Files are separated into database "nodes" with the hope that many can be repurposed or used a la carte in future projects. A graphical representation of the database schema, the entity-relationship diagram (ERD) is also available.
+
+    -   `/data` Comma-separated-value (CSV) files which can be used to populate tables defined by their SQL nodes and which will be populated according to the chosen population script. This directory contains common data which should be applicable to all database produced by this tool (i.e. normalization tables, elements and isotopes, etc.) and subdirectories containing project-specific CSV files.
+
+-   `/example` Files providing examples of (mainly) import files in JavaScript Object Notation (JSON) format. These are the files used to populate empirical data and were produced by the [NIST Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool').
+
+-   `/images` If molecular models are produced by rdkit, they will be housed here, named by the molecule's known structure identifier (e.g. SMILES, InChI, etc.). Other images may be produced during routine work and should also be placed in this directory, though user-produced images and graphics can be saved anywhere.
+
+-   `/inst` Files for rdkit integration (/rdkit), the API service (/plumber), and applications like this one (/apps).
+
+    -   `/rdkit` Environment establishment and rdkit functions are located here. These will determine how R connects to the python environment to integrate rdkit into an R session as well as the files necessary to build the environment (e.g. "environment.yml"). Functions in the "py_setup.R" file should suffice for most use cases.
+
+    -   `/plumber` Environment establishment and API definition functions are located here. These will determine how requests to the API are routed and functionality are provided through http protocols in a RESTful manner. It comes complete with Swagger documentation available when the server is running.
+
+    -   `/apps` Environment establishment, general resources, and shiny application files are located here. Each application is contained within its own directory.
+
+-   `/logs` If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. "logs/log_db.txt"). /R Most files providing functionality for the project reside in the
+
+-   `/R` directory; most general R functions are housed here or in one of the subdirectories.
+
+## Project Set Up
+
+Running the compliance script using source("R/compliance.R") from the R console will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the [Compute Environments](#compute-environments) section. To accept the default settings, source the compliance file and move on to the [Using DIMSpec](#using-dimspec) section(. This may take a while to resolve package dependencies. To customize your implementation, read on.
+
+### Step 1 - Global compute environment settings
+
+Several options are available to customize application to any given project; settings are in the file "/config/env_glob.txt". These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.
+
+|                |          |                                                                                                                                                                                                                                                            |
+|----------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Setting**    | **Type** | **Description**                                                                                                                                                                                                                                            |
+| DB_TITLE       | String   | The title to use for this implementation.                                                                                                                                                                                                                  |
+| DB_NAME        | String   | The name of the database to create or use. For SQLite this should be a file name.                                                                                                                                                                          |
+| EXPLICIT_PATHS | Logical  | Whether or not file names are fully qualified with their path.                                                                                                                                                                                             |
+| DB_BUILD_FILE  | String   | The .sql file name of the script used to build the database (e.g. "build.sql"; see [Database Schema]{.underline}).                                                                                                                                         |
+| DB_BUILD_FULL  | String   | The .sql file name of the fallback build script that should be used if the sqlite3 command line interface (CLI) tool is not available (e.g. "build_full.sql"; see [Database Schema]{.underline}).                                                          |
+| DB_DATA        | String   | The .sql file name of the data population script to run when populating the database at build time (e.g. "populate_common.sql"; see [Populating Data]{.underline}).                                                                                        |
+| SQLITE_CLI     | String   | The name of the terminal command to launch the sqlite shell (e.g. "sqlite3"). This must be available in your PATH.                                                                                                                                         |
+| CONDA_CLI      | String   | The name of the terminal command to execute ana-/miniconda commands (e.g. "conda"). This must be available in your PATH.                                                                                                                                   |
+| INIT_CONNECT   | Logical  | Whether or not to connect to the database when starting a session by sourcing the compliance script.                                                                                                                                                       |
+| LOGGING_ON     | Logical  | Whether or not to establish an environment to perform action logging, which will carry additional information about what the tool is doing (see [Logger]{.underline}).                                                                                     |
+| USE_API        | Logical  | Whether or not to activate the plumber application programming interface (API) for this session (see [Plumber]{.underline}). If this is set to TRUE, the plumber service will launch in a background process by default and return control to the console. |
+| INFORMATICS    | Logical  | Whether or not to establish an environment providing informatics support, primarily with RDKit. To streamline installation of only the database and R tools, set this to FALSE.                                                                            |
+| USE_RDKIT      | Logical  | Whether or not to use RDKit for informatics (requires python). If set to FALSE, the packages BiocManager, ChemmineR, and rcdk will be installed if not available, though support for these is not provided at this time.                                   |
+| USE_SHINY      | Logical  | Whether or not to establish an environment providing support for web applications provided as part of the project (defaults to TRUE).                                                                                                                      |
+| SHINY_BG       | Logical  | [PLANNED FEATURE] Whether or not to launch shiny apps as part of a background process, making them immediately available from a web browser when the compliance script is executed (defaults to FALSE).                                                    |
+
+: Table 1: Customizing global settings in the "/config/env_glob.txt" file
+
+### Step 2 - Customizing R session settings in the "env_R.R" file
+
+More customization options that require R are available to set up the project specifically for your application. Open the file "config/env_R.R" to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.
+
+|                  |                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Setting**      | **Type**         | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| DB_DATE          | Date             | The date the database file was last created, as determined by file properties. Override with a date value (e.g. as.Date("2022-06-01"))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| DB_RELEASE       | String           | The major and minor release versions for this database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| DB_VERSION       | Generated String | Combines the DB_RELEASE and DB_DATE (if built) values for a complete version of the database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| DB_PACKAGE       | String           | The name of the R package allowing connection to your database (e.g. "RSQLite" in most cases, but could be any database connection package).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| DB_DRIVER        | String           | The name of the database driver function allowing connection to your database, which must be a function available in DB_PACKAGE (e.g. "SQLite").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| DB_CLASS         | String           | The class of an R object resulting from a call to the function defined by DB_PACKAGE::DB_DRIVER (e.g. "SQLite"); this will be used to search for and manage connections in the session.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| DB_CONN_NAME     | String           | The name to be used for the R object database connection (e.g. "con" in most cases); this defaults to a session variable named DB_CONN which can be set independently to manage multiple connections.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| DEPENDS_ON       | String Vector    | The list of packages required by your project. The list provided is the bare minimum required for functionality in the project as distributed. Add more to expand functionality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| EXCLUSIONS       | String Vector    | The list of files and directories to exclude from automatic loading when the compliance script is run.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| IMPORT_MAP       | String           | Imports the mapping file determining relationships between import files and the database structure (see [Importing Data]{.underline}); change the name of the CSV file (change also the function calling it if using formats other than CSV) to point to a different map.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| LOGGING_ON       | Logical          | Whether to activate logging functionality when a session begins. This defaults to the session variable named LOGGING_ON and, if not present, to TRUE. If TRUE, adds the logger package to the dependency list.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| VERIFY_ARGUMENTS | Logical          | Whether or not to activate function argument verification for this project. The default of TRUE will check arguments provided to many functions for compliance with function expectations and is good for development work, but also slows down execution times. Set to FALSE to turn this off.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| MINIMIZE         | Logical          | If TRUE, turns off both LOGGING_ON and VERIFY_ARGUMENTS to speed up execution time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| USE_API          | Logical          | Defaults to the global setting of USE_API. If TRUE, several options are provided to customize properties of the API. Set these as appropriate for advanced use cases; the defaults will make the API available on your local system at [http://127.0.0.1:8080.](http://127.0.0.1:8080.)                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| USE_SHINY        | Logical          | Defaults to the global setting of USE_SHINY. If TRUE, a list of installed shiny applications will be available to your session under the named character variable SHINY_APPS which contains absolute paths to the application directories. These are launchable (and should resolve their environment) at any time during a session from the console using shiny::runApp(SHINY_APPS[[*app_name*]]) where *app_name* is the name of a shiny app in the variable. See ROA 646.04-22-002 for an example of a shiny application named "Mass Spectral Match for Non-Targeted Analysis" that ships with this project for mass spectral matching of known compounds and fragments in a user supplied data file. |
+
+: Table 2: Customizing settings specific to the R environment
+
+### Step 3 - Customizing logger settings in the "env_logger.R" file
+
+To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function `log_it` which uses the `logger` package for additional functionality (see [Logger](#logger)). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.
+
+Three support functions are also provided in this file to update the logger settings during a session (`update_logger_settings`), read logs from a file back into the session (`read_log`), and convert a log file into a session data frame for deeper inspection (`log_as_dataframe`).
+
+Environment set up files that follow the same approach are also provided for rdkit integration, the plumber API server, and shiny web applications; these are not detailed here and should only be changed when necessary. See those sections in Technical Details for more information.
+
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Setting**      | **Type**        | **Description**                                                                                                                                                                                                                                                    |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| LOG_DIRECTORY    | String          | The relative path to the project directory housing logs. This defaults to the session variable named LOG_DIRECTORY and, if not present, to "logs". If that directory is not present, it will be created.                                                           |
+|                  |                 |                                                                                                                                                                                                                                                                    |
+|                  | Path            |                                                                                                                                                                                                                                                                    |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| layout_console   | Function String | The format to use when printing logs to the console, by default interpreted by logger::layout_glue_generator, but could be any logger generator.                                                                                                                   |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| layout_file      | Function String | The format to use when printing logs to a file, by default interpreted by logger::layout_glue_generator, but could be any logger generator.                                                                                                                        |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| log_remove_color | Regex String    | A regular expression describing color formatting to strip out when reading logs back into a data frame. If printing to the console in RStudio, colors will be maintained. This should coordinate with the layout_console format.                                   |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| log_split_column | Regex String    | A regular expression describing the character formatting used to split log records into columns when reading logs back in as a data frame object with the log_as_dataframe function. This should always be coordinated with the layout_file format.                |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| LOGGING          | List            | A nested list object defining logging settings for different namespaces. Each must include the following named settings:                                                                                                                                           |
+|                  |                 |                                                                                                                                                                                                                                                                    |
+|                  |                 | -   ***log*** determines whether to log a given namespace (TRUE/FALSE);                                                                                                                                                                                            |
+|                  |                 | -   ***ns*** is the character scalar namespace called as part of `log_it`;                                                                                                                                                                                         |
+|                  |                 | -   ***to*** is the destination of the log message, one of `"file"`, `"console"`, or `"both"`;                                                                                                                                                                     |
+|                  |                 | -   ***file*** is the file path to the log file which will be created if it does not exist;                                                                                                                                                                        |
+|                  |                 | -   ***threshold*** determines what level at which to log messages (e.g. setting a threshold of `"info"` will not log messages at the `"trace"` level; see the logger [package documentation](https://daroczig.github.io/logger/articles/Intro.html) for details). |
+|                  |                 |                                                                                                                                                                                                                                                                    |
+|                  |                 | New namespaces can be added during the session if desired, but this list should define the most common ones. More information about the logging environment is provided in the [Logger](#logger) section of Technical Details.                                     |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| LOGGING_WARNS    | Logical         | Whether to log all warning messages generated during this session by default.                                                                                                                                                                                      |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| LOGGING_ERRORS   | Logical         | Whether to log all error messages generated during this session by default.                                                                                                                                                                                        |
++------------------+-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+: Table 3: Customizing logger settings; generally, these should not be changed, but LOGGING is easily extended for developing different applications of DIMSpec.
+
+## Using DIMSpec {#using-dimspec}
+
+### Database Connections
+
+### Using a Database Connection in an R Session
+
+### Inspecting Database Properties
+
+### Using the Application Programming Interface (API)
+
+### Using rdkit
+
+### Logging
+
+### Using Shiny Applications
+
+### Importing Data
+
+### Ending Your Session
+
+### Updating the Schema
+
+# Technical Details
+
+## Database Schema
+
+### SQL Nodes
+
+## Populating Data at Build
+
+## Compute Environments {#compute-environments}
+
+## Shiny Applications
+
+### Table Explorer
+
+### Mass Spectral Match (MSMatch)
+
+### Mass Spectral Quality Control (MSQC)
+
+## Logger {#logger}
+
+## Plumber
+
+## Python
+
+## Importing Data
+
+## Future Development
+
+# Conclusions
