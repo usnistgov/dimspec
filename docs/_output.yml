@@ -3,7 +3,8 @@ bookdown::gitbook:
   config:
     toc:
       before: |
-        <li><a href="./">DIMSpec User Guide</a></li>
+        <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg"></img></a>
+        <p id="book-title">DIMSpec User Guide</p>
       after: |
         <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
     download: ["pdf", "epub"]

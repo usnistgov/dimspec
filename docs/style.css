@@ -12,3 +12,32 @@ pre {
 pre code {
   white-space: inherit;
 }
+img {
+  display: block;
+  margin: auto;
+}
+p.caption {
+  text-align: center;
+}
+#nist-logo {
+  width: 100%;
+  filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
+  padding: 15px 15px 0 15px;
+}
+#book-title {
+  color: #364149;
+  margin-left: 15px;
+}
+
+#contributors > ul > li > p > a > img {
+  display: inline;
+  padding-bottom: 5px;
+}
+#contributors > ul > li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+p {
+  text-align: justify;
+}

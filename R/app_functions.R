@@ -1467,3 +1467,8 @@ fn_guide <- function() {
     utils::browseURL(index_file)
   }
 }
+
+user_guide <- function(path = "_book/index.html") {
+  stopifnot(file.exists(file.path(getwd(), path)))
+  browseURL(url = path)
+}

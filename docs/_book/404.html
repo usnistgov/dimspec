@@ -5,25 +5,25 @@
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Page not found | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset</title>
-  <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)”." />
+  <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
 
   <meta property="og:title" content="Page not found | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset" />
   <meta property="og:type" content="book" />
+  <meta property="og:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   
-  <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)”." />
-  <meta name="github-repo" content="rstudio/bookdown-demo" />
 
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Page not found | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset" />
   
-  <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)”." />
-  
+  <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  <meta name="twitter:image" content="/assets/NIST-Logo-Brand-White.svg" />
 
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-12" />
+<meta name="date" content="2022-09-14" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -55,28 +55,6 @@
 
 
 
-<style type="text/css">
-/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}
-</style>
 
 <link rel="stylesheet" href="style.css" type="text/css" />
 </head>
@@ -91,33 +69,70 @@ div.csl-indent {
       <nav role="navigation">
 
 <ul class="summary">
-<li><a href="./">DIMSpec User Guide</a></li>
+<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg"></img></a>
+<p id="book-title">DIMSpec User Guide</p>
 
 <li class="divider"></li>
 <li><a href="index.html#preface">Preface<span></span></a></li>
-<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction<span></span></a>
+<li><a href="introduction.html#introduction">Introduction<span></span></a>
 <ul>
-<li class="chapter" data-level="1.1" data-path="introduction.html"><a href="introduction.html#contributors"><i class="fa fa-check"></i><b>1.1</b> Contributors<span></span></a></li>
+<li><a href="introduction.html#contributors">Contributors<span></span></a></li>
+<li><a href="introduction.html#contributing">Contributing<span></span></a></li>
+<li><a href="introduction.html#about-this-book">About this Book<span></span></a></li>
 </ul></li>
-<li class="chapter" data-level="2" data-path="cross.html"><a href="cross.html"><i class="fa fa-check"></i><b>2</b> Cross-references<span></span></a>
+<li><a href="instructions.html#instructions">Instructions<span></span></a>
 <ul>
-<li class="chapter" data-level="2.1" data-path="cross.html"><a href="cross.html#chapters-and-sub-chapters"><i class="fa fa-check"></i><b>2.1</b> Chapters and sub-chapters<span></span></a></li>
-<li class="chapter" data-level="2.2" data-path="cross.html"><a href="cross.html#captioned-figures-and-tables"><i class="fa fa-check"></i><b>2.2</b> Captioned figures and tables<span></span></a></li>
-</ul></li>
-<li class="chapter" data-level="3" data-path="parts.html"><a href="parts.html"><i class="fa fa-check"></i><b>3</b> Parts<span></span></a></li>
-<li class="chapter" data-level="4" data-path="footnotes-and-citations.html"><a href="footnotes-and-citations.html"><i class="fa fa-check"></i><b>4</b> Footnotes and citations<span></span></a>
+<li><a href="instructions.html#installation">Installation<span></span></a>
 <ul>
-<li class="chapter" data-level="4.1" data-path="footnotes-and-citations.html"><a href="footnotes-and-citations.html#footnotes"><i class="fa fa-check"></i><b>4.1</b> Footnotes<span></span></a></li>
-<li class="chapter" data-level="4.2" data-path="footnotes-and-citations.html"><a href="footnotes-and-citations.html#citations"><i class="fa fa-check"></i><b>4.2</b> Citations<span></span></a></li>
+<li><a href="instructions.html#system-requirements">System Requirements<span></span></a></li>
+<li><a href="instructions.html#quick-start-guide">Quick Start Guide<span></span></a></li>
 </ul></li>
-<li class="chapter" data-level="5" data-path="blocks.html"><a href="blocks.html"><i class="fa fa-check"></i><b>5</b> Blocks<span></span></a>
+<li><a href="instructions.html#project-directory">Project Directory<span></span></a></li>
+<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a>
 <ul>
-<li class="chapter" data-level="5.1" data-path="blocks.html"><a href="blocks.html#equations"><i class="fa fa-check"></i><b>5.1</b> Equations<span></span></a></li>
-<li class="chapter" data-level="5.2" data-path="blocks.html"><a href="blocks.html#theorems-and-proofs"><i class="fa fa-check"></i><b>5.2</b> Theorems and proofs<span></span></a></li>
-<li class="chapter" data-level="5.3" data-path="blocks.html"><a href="blocks.html#callout-blocks"><i class="fa fa-check"></i><b>5.3</b> Callout blocks<span></span></a></li>
+<li><a href="instructions.html#step-1---global-compute-environment-settings">Step 1 - Global compute environment settings<span></span></a></li>
+<li><a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file">Step 2 - Customizing R session settings in the “env_R.R” file<span></span></a></li>
+<li><a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file">Step 3 - Customizing logger settings in the “env_logger.R” file<span></span></a></li>
 </ul></li>
+<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a>
+<ul>
+<li><a href="instructions.html#database-connections">Database Connections<span></span></a></li>
+<li><a href="instructions.html#using-a-database-connection-in-an-r-session">Using a Database Connection in an R Session<span></span></a></li>
+<li><a href="instructions.html#inspecting-database-properties">Inspecting Database Properties<span></span></a></li>
+<li><a href="instructions.html#using-the-api">Using the Application Programming Interface (API)<span></span></a></li>
+<li><a href="instructions.html#using-rdkit">Using rdkit<span></span></a></li>
+<li><a href="instructions.html#logging">Logging<span></span></a></li>
+<li><a href="instructions.html#using-shiny-applications">Using Shiny Applications<span></span></a></li>
+<li><a href="instructions.html#importing-data">Importing Data<span></span></a></li>
+<li><a href="instructions.html#ending-your-session">Ending Your Session<span></span></a></li>
+<li><a href="instructions.html#updating-the-schema">Updating the Schema<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="technical-details.html#technical-details">Technical Details<span></span></a>
+<ul>
+<li><a href="technical-details.html#database-schema">Database Schema<span></span></a>
+<ul>
+<li><a href="technical-details.html#sql-nodes">SQL Nodes<span></span></a></li>
+</ul></li>
+<li><a href="technical-details.html#populating-data-at-build">Populating Data at Build<span></span></a></li>
+<li><a href="technical-details.html#compute-environments">Compute Environments<span></span></a></li>
+<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a>
+<ul>
+<li><a href="technical-details.html#app-table-explorer">Table Explorer<span></span></a></li>
+<li><a href="technical-details.html#app-msmatch">Mass Spectral Match (MSMatch)<span></span></a></li>
+<li><a href="technical-details.html#app-mscq">Mass Spectral Quality Control (MSQC)<span></span></a></li>
+</ul></li>
+<li><a href="technical-details.html#logger">Logger<span></span></a></li>
+<li><a href="technical-details.html#plumber">Plumber<span></span></a></li>
+<li><a href="technical-details.html#python">Python<span></span></a></li>
+<li><a href="technical-details.html#importing-data-td">Importing Data<span></span></a></li>
+<li><a href="technical-details.html#future-development">Future Development<span></span></a></li>
+</ul></li>
+<li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
+<li><a href="table-explorer.html#table-explorer">Table Explorer<span></span></a></li>
+<li><a href="mass-spectral-match-msmatch-a-shiny-application.html#mass-spectral-match-msmatch-a-shiny-application">Mass Spectral Match (MSMatch, a Shiny application)<span></span></a></li>
+<li><a href="mass-spectral-quality-control-msqc-a-shiny-application.html#mass-spectral-quality-control-msqc-a-shiny-application">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
 <li><a href="references.html#references">References<span></span></a></li>
-<li class="chapter" data-level="6" data-path="about.html"><a href="about.html"><i class="fa fa-check"></i><b>6</b> About<span></span></a></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
 

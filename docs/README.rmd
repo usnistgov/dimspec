@@ -1,3 +1,1 @@
-# About
 
-This book, written in [bookdown](https://github.com/rstudio/bookdown), serves as a user guide to the NIST Chemical Sciences Division project creating a database infrastructure for mass spectrometry. That collected set of tools serves as a way to reusably leverage a known database schema in SQLite to capture data for high resolution accurate mass spectrometry applications and tie it to metadata regarding samples and analytical methods.

@@ -1,4 +1,4 @@
-# Introduction
+# Introduction {-}
 
 In analytical chemistry, the objective of **non-targeted analysis (NTA)** is to detect and identify unknown (generally) organic compounds using a combination of advanced analytical instrumentation, such as high-resolution mass spectrometry, and computational tools. For NTA using mass spectrometry, the use of reference libraries containing fragmentation mass spectra of known compounds is essential to successfully identifying unknown compounds in complex mixtures. However, due to the diversity of vendors of mass spectrometers and mass spectrometry software, it is difficult to easily share mass spectral data sets between laboratories using different instrument vendor software packages while maintaining the quality and detail of complex data and metadata that makes the mass spectra commutable and useful. Additionally, this diversity can also alter fragmentation patterns as instrument engineering and method settings can differ between analyses.
 
@@ -12,7 +12,7 @@ This tool set[^1] was developed as part of the [NIST PFAS program](https://www.n
 
     You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
 
-## Contributors
+## Contributors {-}
 
 The main two contributors to code and data in this project are
 
@@ -30,14 +30,14 @@ Additional members of NIST PFAS project team providing guidance, input, and test
 
 -   [John Kucklick](https://www.nist.gov/people/john-kucklick) (Group Leader, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group))
 
--   [Catherine A. Rimmer](https://www.nist.gov/people/catherine-rimmer)[![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0001-6734-6629) (Group Leader, [Organic Chemical Metrology Group](https://www.nist.gov/mml/csd/organic-chemical-metrology))
+-   [Catherine A. Rimmer](https://www.nist.gov/people/catherine-rimmer) [![](assets/ORCIDiD_iconvector.svg){width="10"}](https://orcid.org/0000-0001-6734-6629) (Group Leader, [Organic Chemical Metrology Group](https://www.nist.gov/mml/csd/organic-chemical-metrology))
 
 -   [Vincent K. Shen](https://www.nist.gov/people/vincent-k-shen) (Group Leader, [Chemical Informatics Group](https://www.nist.gov/mml/csd/chemical-informatics-group))
 
-## Contributing
+## Contributing {-}
 
 Contributions to this project are encouraged! NIST engaged in this project to meet the goals of a single research project. We have made this project available in the name of the public interest and with hopes it will prove useful outside the immediate context. Issues with the code are most effectively reported through GitHub. Pull requests are also encouraged.
 
-## About this Book
+## About this Book {-}
 
 Chapters and sections in this book were originally drafted and approved as NIST Reports of Analysis within the Chemical Sciences Division. This book serves as the official User Guide for the DIMSpec project and will be expanded and updated appropriately. Reports of Analysis were converted to R Markdown documents and stitched together using the [bookdown](https://bookdown.org/yihui/bookdown/) package (v0.25). As a "living" document, this book will be maintained as long as the underlying project is active and as author time obligations allow. If a section is insufficiently documented, [let us know](mailto:pfas@nist.gov).

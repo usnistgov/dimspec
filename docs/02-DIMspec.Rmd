@@ -1,12 +1,12 @@
-# Instructions
+# Instructions {#instructions .unnumbered}
 
-## Installation
+## Installation {#installation .unnumbered}
 
 At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^1] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
 
 [^1]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
-### System Requirements
+### System Requirements {#system-requirements .unnumbered}
 
 DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^2] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
 
@@ -28,7 +28,7 @@ The following sections provide more detailed information on how to use the tools
 
 **[OPTIONAL]** It is helpful to have some data on hand to populate and evaluate the database. Every effort has been made to simplify the process of building databases using this tool, and data can be populated from CSV files of a defined structure; examples are provided but the process of generating them can be somewhat onerous as key relationships must be defined to automatically populate in this manner. Future work may be able to simplify this process further, if necessary, but for now, interested researchers within 646 are encouraged to contact this ROA's authors for guidance on how to transform data to fit this schema.
 
-### Quick Start Guide
+### Quick Start Guide {#quick-start-guide .unnumbered}
 
 This section provides instructions in a "quick start" format. While every effort has been made when building the underlying functionality to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed.
 
@@ -42,7 +42,7 @@ This section provides instructions in a "quick start" format. While every effort
 
 Using either method should in most cases establish the compute environment, including logging and argument validation, binding to a python environment providing rdkit support, launching an API server, and listing out the shiny apps available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to to evaluate capabilities for reuse in other projects.
 
-## Project Directory
+## Project Directory {#project-directory .unnumbered}
 
 The project directory contains the following directories of interest:
 
@@ -68,11 +68,11 @@ The project directory contains the following directories of interest:
 
 -   `/R` directory; most general R functions are housed here or in one of the subdirectories.
 
-## Project Set Up {#project-set-up}
+## Project Set Up {#project-set-up .unnumbered}
 
 Running the compliance script using source("R/compliance.R") from the R console will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the [Compute Environments](#compute-environments) section. To accept the default settings, source the compliance file and move on to the [Using DIMSpec](#using-dimspec) section(. This may take a while to resolve package dependencies. To customize your implementation, read on.
 
-### Step 1 - Global compute environment settings
+### Step 1 - Global compute environment settings {#step-1---global-compute-environment-settings .unnumbered}
 
 Several options are available to customize application to any given project; settings are in the file "/config/env_glob.txt". These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.
 
@@ -112,7 +112,7 @@ Several options are available to customize application to any given project; set
 
 : Table 1: Customizing global settings in the "/config/env_glob.txt" file
 
-### Step 2 - Customizing R session settings in the "env_R.R" file
+### Step 2 - Customizing R session settings in the "env_R.R" file {#step-2---customizing-r-session-settings-in-the-env_r.r-file .unnumbered}
 
 More customization options that require R are available to set up the project specifically for your application. Open the file "config/env_R.R" to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.
 
@@ -152,7 +152,7 @@ More customization options that require R are available to set up the project sp
 
 : Table 2: Customizing settings specific to the R environment
 
-### Step 3 - Customizing logger settings in the "env_logger.R" file
+### Step 3 - Customizing logger settings in the "env_logger.R" file {#step-3---customizing-logger-settings-in-the-env_logger.r-file .unnumbered}
 
 To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function `log_it` which uses the `logger` package for additional functionality (see [Logger](#logger)). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.
 
@@ -190,37 +190,37 @@ Environment set up files that follow the same approach are also provided for rdk
 
 : Table 3: Customizing logger settings; generally, these should not be changed, but LOGGING is easily extended for developing different applications of DIMSpec.
 
-## Using DIMSpec {#using-dimspec}
+## Using DIMSpec {#using-dimspec .unnumbered}
 
 There are several R packages required for this project, so initial set up may take some time. To streamline this process once set up is complete, a compliance script is available that will install and load required packages; run `source("R/compliance.R")` in the console to establish the runtime environment. See [References](#references) for the complete list of library dependencies. Based on project settings, components can be turned on or off as desired for lighter weight applications. In many cases helper functions are available to turn these components back on during an active session without interrupting the current environment. The following sections assume the compliance script has run and that all functions are available. At any time, use `fn_guide()` or `fn_help(fn)` where *`fn`* is the name of a function to view function documentation.
 
-### Database Connections
+### Database Connections {#database-connections .unnumbered}
 
-#### Connecting to an Existing Database
+#### Connecting to an Existing Database {#connecting-to-an-existing-database .unnumbered}
 
 This project uses SQLite by default as a portable database engine where the database is contained to a single file. To connect a project to a particular database (e.g. you have multiple databases for different projects), simply change the value of `DB_NAME` in "env_glob.txt" prior to sourcing the compliance file. The database distributed with the project contains mass spectral data for per- and polyfluoroalkyl substances as an example. It (and any databases created using this project), opens in [write-ahead logging](https://www.sqlite.org/wal.html) (WAL) mode for speed and concurrency. This does generally require the database file to be present on the same machine as the project but allows installation on instrument controllers that may not comply with network security restrictions. As with all SQLite databases, foreign key enforcement must be turned on when connecting with `pragma foreign_keys = on;` the `manage_connection` function takes care of this and other connection management aspects automatically and is the recommended way to connect and disconnect to DIMSpec databases. Call `manage_connection(reconnect = FALSE)` to close the connection. Calling `manage_connection` calls `DBI::dbConnect` and `DBI::dbDisconnect` with certain checks and parameter defined side effects to manage the connection.
 
-#### Creating a New Database
+#### Creating a New Database {#creating-a-new-database .unnumbered}
 
 Tooling to create a new SQLite database using this schema are built into the project; functions are in the "R/db_comm.R" file and help documentation is available from within the project using the `fn_guide` and `fn_help` functions. When creating a new database, prior to sourcing the compliance file, set options in the "env_glob.txt" and "env_r.R" files appropriately. If the file identified by `DB_NAME` does not exist it will be created according to the SQL scripts selected as `DB_BUILD_FILE` and `DB_DATA`; edit those files if necessary for your use case. To build a new, empty database users need only set `DB_NAME` to a file that does not exist in the project directory, and `DB_DATA` to "populate_common.sql" which contains the majority of source data necessary to populate normalization tables (see the [Database Schema](#database-schema) and [Populating Data](#populating-data-at-build) sections for more detail).
 
 Alternatively, once the compliance file has been sourced, a new database may be created directly from R with the `build_db` function; this function takes as default values those provided in the environment, but you can at any time define different specifications. For example, to create a new database with a different SQL definition and population script use:
 
-    build_db(
-      db = “new_database.sqlite”,
-      build_from = “this_file.sql”,
-      populate = TRUE,
-      populate_with = “new_data.sql”,
-      connect = FALSE
-    )
+      build_db(
+        db = “new_database.sqlite”,
+        build_from = “this_file.sql”,
+        populate = TRUE,
+        populate_with = “new_data.sql”,
+        connect = FALSE
+      )
 
 If a connection already exists that you wish to maintain in the session, be sure to call this with `connect = FALSE` in order to not drop the connection (see next section for managing multiple connections). If you do not wish to maintain a connection to the previous database, this can be safely called with `connect = TRUE` (the default) and the prior connection will be replaced with the new one.
 
-#### Connecting to Multiple Databases
+#### Connecting to Multiple Databases {#connecting-to-multiple-databases .unnumbered}
 
 If your project needs to connect to multiple databases, separate connections can be made and managed within a single R session. For convenience, the supplied `manage_connection` function will apply to the database and connection object defined in the setup files (see [Project Set Up](#project-set-up)). Enable a second connection alongside existing connections (e.g. the one created in the previous section) with `manage_connection(db = “new_database.sqlite”, conn_name = “con2”)` . There is no limit to the number of connections that can be made in this manner, and the WAL will be flushed each time this function is called if no other connections exist.
 
-### Using a Database Connection in an R Session
+### Using a Database Connection in an R Session {#using-a-database-connection-in-an-r-session .unnumbered}
 
 If `INIT_CONNECT = TRUE`, sourcing the compliance file will establish a connection to the database named in `DB_NAME` and make the connection available as an R session object with the name defined by `DB_CONN_NAME` (the default is "con"). Several convenience functions are available with those options set.
 
@@ -230,16 +230,16 @@ The connection object fully supports direct communication for SQL queries throug
 
 For users less familiar with SQL, a custom function is provided to support nearly all database operations. There may be edge cases where it fails. Results from the following function are equivalent to the `dbGetQuery` result but will construct the query programmatically, allowing for the passing of arguments and always returning a data frame:
 
-    build_db_action(
-      action = “select”,
-      table_name = “contributors”
-    )
+      build_db_action(
+        action = “select”,
+        table_name = “contributors”
+      )
 
 As this function performs argument verification and SQL interpolation to protect queries from unintended side effects, this is the recommended manner to directly interact with the database for anything other than basic queries. It supports typical database actions (including `SELECT`, `INSERT`, `UPDATE`, and `DELETE`, as well as a custom `GET_ID` action that returns an integer vector of the `id` column for all records matching the query), operations (`GROUP BY`, `ORDER BY`, `DISTINCT`, `LIMIT`). Search and filter options can be passed programmatically as a list and are parsed by the `match_criteria` function.
 
 Queries do not have to be executed; set the argument `execute = FALSE` to examine queries prior to execution or save common queries for reuse. See the full function reference with for advanced use of the `build_db_action` and `match_criteria` functions with `fn_help(fn)`.
 
-### Inspecting Database Properties
+### Inspecting Database Properties {#inspecting-database-properties .unnumbered}
 
 Code decoration conventions used in the SQL files enable reading table definitions and properties from SQLite into R with the function `pragma_table_info.` Supply the name of a database table or view to get information about that table; different connections can also be used for comparison if desired. This is the interactive version; a version in JSON format can be saved using `save_data_dictionary.` This saved file is loaded during the compliance script as object `db_dict` which is a named list of data frames; names correspond to database entities. This can be regenerated and brought back into the R session at any time (see `data_dictionary`) and should be updated if modifications are made to the underlying schema.
 
@@ -249,11 +249,11 @@ Code decoration conventions used in the SQL files enable reading table definitio
 
 Relationships between database entities can also be queried programmatically. Use the er_map function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as db_map to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.
 
-![Figure 2a. An example of the entity map list](assets/fig02-02a_db_map1.png "Figure 2a. An example of the entity map list"){#fig02-02a width="500"}
+![Figure 2a. An example of the R object structure of an entity map as a list.](assets/fig02-02a_db_map1.png "Figure 2a. An example of the entity map list"){#fig02-02a width="500"}
 
-![Figure 2b. Details of the "samples" table from the data entity map](assets/fig02-02b_db_map2.png "Figure 2b. Details of the 'samples' table from the data entity map"){#fig02-02b width="500"}
+![Figure 2b. Details of the "samples" table from the data entity map object in [Figure 2a](#fig02-02a).](assets/fig02-02b_db_map2.png "Figure 2b. Details of the 'samples' table from the data entity map"){#fig02-02b width="500"}
 
-### Using the Application Programming Interface (API)
+### Using the Application Programming Interface (API) {#using-the-api .unnumbered}
 
 Application Programming Interfaces (APIs) enable software components to communicate with each other. Most modern machine communication happens through APIs. In the context of this project, an API server is launched using the [`plumber`](https://www.rplumber.io) package to reduce computational load on R sessions or shiny applications and ensure consistent results across multiple sessions. It does not have to be used (set `USE_API = FALSE` in "env_glob.txt" to turn it off) but is encouraged and is a requirement for all shiny applications that ship with this project.
 
@@ -263,13 +263,11 @@ Endpoints for many predictable read and search interactions are available. Sessi
 
 The main interactivity with the API from an R session or shiny application is through the `api_endpoint` function. The first argument (i.e. `path`) should always be the endpoint being requested. Additional named parameters are then passed to the API server; the same example endpoint result in [Figure 3](#fig03-03) called from the console would be
 
-``` r
-  api_endpoint(
-    path = “compound_data”,
-    compound_id = 2627,
-    return_format = “data.frame”
-  )
-```
+      api_endpoint(
+        path = “compound_data”,
+        compound_id = 2627,
+        return_format = “data.frame”
+      )
 
 with an example of the results in [Figure 4](#fig02-04). Endpoints of most use to those using the service will vary according to needs and are detailed in the Plumber section in Technical Details. Call them with `api_endpoint(path = ??)` and any other arguments required by the endpoint. Paths listed here are likely of most use:
 
@@ -301,7 +299,7 @@ These and other endpoints can be easily defined, expanded, or refined as needed 
 
 ![Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.](assets/fig02-04_endpoint_example.png "Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session"){#fig02-04 width="500"}
 
-### Using rdkit
+### Using rdkit {#using-rdkit .unnumbered}
 
 For chemometrics integration, `rdkit` is made available as part of the project. This user guide does not provide details about `rdkit`; users are instead directed to the [documentation](https://www.rdkit.org/docs/index.html) for details. All functionality provided as part of `rdkit` is supported with some limitations through the [`reticulate`](https://rstudio.github.io/reticulate) package. In most cases the required environment should resolve during the compliance script. On certain systems it may be desirable to install the environment manually (instructions in the [Python](#python) section of [Technical Details](#technical-details)).
 
@@ -319,17 +317,17 @@ A few custom R functions are made available to assist with the process. The impl
 
 ![Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases("CN1C=NC2=C1C(=O)N(C(=O)N2C)C", get_aliases = NULL)`](assets/fig02-05_rdkit_molecular_aliases.png "Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases('CN1C=NC2=C1C(=O)N(C(=O)N2C)C', get_aliases = NULL)`"){#fig02-05 width="500"}
 
-### Logging
+### Logging {#logging .unnumbered}
 
 Logging messages for statuses, information, warnings and errors are provided throughout functions used in this project and is executed through the custom `log_it` function. This function builds on top of the [logger](https://daroczig.github.io/logger/articles/r_packages.html) package to construct, decorate, and write to file any logging messages necessary, and offers console messages in case logger is unavailable. If logging is enabled and the `logger` package available, logs may also be written to files in the "`logs`" directory and later retrieved with the utility functions `read_log` and `log_as_dataframe`, whose first parameter is the name of the file to read from the "`logs`" directory. Logs written to disk by default are separated by namespace (e.g. "log_db.txt" vs "log_api.txt") to facilitate support, but output files may be defined as any available .txt file path and will be appended to existing files. Logs may look odd if viewed directly as they include text decorations to display in the console.
 
 Settings are available for five namespaces by default (see [Logger](#logger) and [Project Set Up](#project-set-up) for more details) as established by the "config/env_logger.R" file; more can be enabled at any time using the `add_unknown_ns` and `clone_settings_from` parameters of `log_it.` Logs can then be generated from within any function using e.g.:
 
-    log_it(
-      log_level = “info”,
-      msg = “Log message text”,
-      log_ns = “global”
-    )
+      log_it(
+        log_level = “info”,
+        msg = “Log message text”,
+        log_ns = “global”
+      )
 
 where `log_level` is the category of message, `msg` is the message itself, and `log_ns` is the namespace. Settings defined in the `LOGGING` session variable determine how logs are processed. Each message produced with `log_it` includes the timestamp, namespace, status (i.e. `log_level`), function calling the message, and the message itself. While `log_it` will print to the console messages of any level, `log_level` should be one of the supported logging levels (trace, debug, info, success, warn, error, or fatal) to integrate with `logger`, which is required if the logging message is to be written to a log file.
 
@@ -337,9 +335,9 @@ Users developing on top of this infrastructure are encouraged to take advantage 
 
 ![Figure 6. Example uses of log_it to log messages.](assets/fig02-06_logging_example.png "Figure 6. Example uses of log_it to log messages."){#fig02-06 width="500"}
 
-### Using Shiny Applications
+### Using Shiny Applications {#using-shiny-applications .unnumbered}
 
-The [Shiny](https://shiny.rstudio.com) package enables web applications written using R, which often meaningfully make custom processing code like that written for this project available to broader audiences. Additionally, inputs can easily be type verified and restricted to preset expectations. When the compliance script is run, a named vector of available shiny apps will be available as `SHINY_APPS`. These can be started with the `start_app(app_name = **X**)` where `**X**` is the name of the application as found in `SHINY_APPS.` Shiny apps are fluid and responsive; will automatically arrange themselves to best fit your browser size and can be custom designed with any layout or functionality. By default all communication with the database is routed through the plumber API.
+The [Shiny](https://shiny.rstudio.com) package enables web applications written using R, which often meaningfully make custom processing code like that written for this project available to broader audiences. Additionally, inputs can easily be type verified and restricted to preset expectations. When the compliance script is run, a named vector of available shiny apps will be available as `SHINY_APPS`. These can be started with the `start_app(app_name = X)` where *`X`* is the name of the application as found in `SHINY_APPS.` Shiny apps are fluid and responsive; will automatically arrange themselves to best fit your browser size and can be custom designed with any layout or functionality. By default all communication with the database is routed through the plumber API.
 
 This allows environment resolution to launch applications directly from the console, without any need to run the compliance script. Launching an app is then possible directly from the console (or batch file shortcuts which could be included in later updates) using e.g.
 
@@ -357,7 +355,7 @@ Three shiny applications ship with this project as of the time this document was
 
 An application template is also included which should accelerate development of additional applications on top of the DIMSpec infrastructure to facilitate project needs.
 
-### Importing Data {#importing-data}
+### Importing Data {#importing-data .unnumbered}
 
 For now, data imports are only supported from the command line and those generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool) that "allows for the controlled ontology of method data reporting and the export of the data into a single concise, human-readable file, written in a standard JavaScript Object Notation (JSON)." Users fill out the workbook annotating features of interest and associated fragmentation identities. Generated method files are submitted alongside the mzML file (converted from instrumentation output using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software (Adusumilli and Mallick 2017). After quality control checks are performed, the resulting JSON object holds everything necessary to import data into the database.
 
@@ -367,45 +365,45 @@ The order of operations is controlled largely by the pipeline function `full_imp
 
 Alternatively, data can be imported when a database is built or rebuilt from comma-separated value (CSV) files. This process is not likely amenable to many projects as it requires data indices be prepopulated and accurately cross-linked across CSV files, with one CVS file for each database table being populated; this should be considered if data are already in a database-like format and can be easily cross-linked, in which case only the table and column mappings need be solved. Several such files are used to populate a "clean" database install with certain controlled vocabulary and reference tables (see files `“config/populate_common.sql”` and `“config/data/”`). Contact these authors for assistance with using the NTA MRT and msconvert process, or conversion of data into the DIMSpec schema if you feel a project's data would be amenable to the database structure described in this document.
 
-### Ending Your Session
+### Ending Your Session {#ending-your-session .unnumbered}
 
 Unclosed database connections can have unintended consequences. Generally, connections to the database during a session should be managed with `manage_connection` which allows for both disconnect and reconnect (to flush the WAL and establish a new connection). The API server will need to be spun down separately using `stop_api.` Alternatively, and to preserve any data frame objects that may have been created as external pointers (i.e. as `dplyr tbls`), when users finish with their connection needs they may use the convenience function `close_up_shop.` Connections may not flush completely in all cases. If users notice the -shm and -wal files are still open in the directory, the best way to flush them is to establish a new connection and then disconnect from it, using either `manage_connection` or `DBI::dbConnect/DBI::dbDisconnect`.
 
-### Updating the Schema
+### Updating the Schema {#updating-the-schema .unnumbered}
 
 At the time this ROA was written, the schema should be well defined for most use cases. Extensions can however be added at any time to suit project-specific needs. To avoid data loss, it is recommended that any table extensions be performed directly in SQL and those commands saved to an SQL script. Views can be added freely as required. If users of this database framework apply any schema extensions, the authors would be interested in learning about both the need and the implementation so it may be evaluated for inclusion in future versions.
 
 This concludes the User Guide for the Database Infrastructure for Mass Spectrometry. The following section contains technical details about the implementation and user customization.
 
-# Technical Details {#technical-details}
+# Technical Details {#technical-details .unnumbered}
 
 This section contains additional technical details that may be of interest to advanced users, and for future reference as DIMSpec schema and tools mature.
 
-## Database Schema {#database-schema}
+## Database Schema {#database-schema .unnumbered}
 
 The schema for the underlying database is defined by a series of SQL scripts in the `config` directory. Data are structured in a series of "nodes" and are detailed in this section. If the sqlite3 CLI is available, these are created by a script using a series of `.read` commands, one for each node defined. See the file at `“config/build.sql”` for the standard implementation.
 
 Schema files are used from within R as part of the database build routine (see `build_db`) using the `shell` (on Windows) or `system` (on Unix-likes) functions. If the sqlite3 CLI is not available, a fully qualified native SQL script (such as the one provided at `“config/build_full.sql”`) can be generated by `create_fallback_build` to build and populate in one step by parsing CLI commands in the SQL scripts to build underlying statements directly; this is less customizable and will take considerably longer but serves as a bridge for when CLI tools are not installed.
 
-### SQL Nodes {#sql-nodes}
+### SQL Nodes {#sql-nodes .unnumbered}
 
 Each node file defines the tables and views necessary to store and serve data for a set of conceptually related entities in the database. Code decorations are used to facilitate translatability to R. Entity definitions (e.g. CREATE TABLE commands) are separated by the defined text string `/*magicsplit*/`, which is used as string split points by database communication functions to return information about the database. Headers are defined as a long `/*=== ... ===*/` SQL comment with equal signs delineating beginning and ending. Table and column comments are defined as `/* ... */` SQL comments; one must be present for each entity (i.e. one for the table or view, and one for each column in that table or view). Comments are ignored by SQL and can be used to parse table definitions and return information to an R session. This is what allows R to parse the SQL files to for Inspecting Database Properties by reading a table definition:
 
-    /*magicsplit*/
-    CREATE TABLE IF NOT EXISTS annotated_fragments
-      /* Potential annotated fragment ions that are attributed to one or more mass spectra. */
-    (
-      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        /* primary key */
-      mz REAL NOT NULL,
-        /* m/z value for specific fragment, derived */
-      fragment_id INTEGER NOT NULL,
-        /* smiles structure of fragment ion, can be NULL, user submitted */
-      /* Check constraints */
-      /* Foreign key relationships */
-      FOREIGN KEY (fragment_id) REFERENCES
-        norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
-    );
+      /*magicsplit*/
+      CREATE TABLE IF NOT EXISTS annotated_fragments
+        /* Potential annotated fragment ions that are attributed to one or more mass spectra. */
+      (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          /* primary key */
+        mz REAL NOT NULL,
+          /* m/z value for specific fragment, derived */
+        fragment_id INTEGER NOT NULL,
+          /* smiles structure of fragment ion, can be NULL, user submitted */
+        /* Check constraints */
+        /* Foreign key relationships */
+        FOREIGN KEY (fragment_id) REFERENCES
+          norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
 
 to obtain entity properties [Figure 7a](#fig02-07a), pull column comments directly from the definition [Figure 7b](#fig02-07b), inspect mapping between entities ([Figure 7c](#fig02-07c); here `db_map` is an object created by `er_map(db_conn = con)`), or pull information together into a formalized data dictionary ([Figure 7d](#fig02-07d); here `db_dict` is read from a JSON object created by `save_data_dictionary()` and available for all database entities.
 
@@ -421,7 +419,7 @@ This allows for programmatic accessibility, as R sessions can now understand the
 
 ![Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.](assets/fig02-07e_mapping_dictionary_ref_map.png "Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships."){#fig02-07e width="500"}
 
-![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The table_explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with shiny::runApp(SHINY_APPS[['table_explorer']].](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The `table_explorer` shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`."){#fig02-08 width="500"}
+![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The table_explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with shiny::runApp(SHINY_APPS[['table_explorer']].](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The `table_explorer` shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`."){#fig02-08 width="750"}
 
 The following subsections contain summary information about each of the database nodes, its purpose, and the tables and views held within. Some of this information is subject to change as the database schema is refined and maintained. See the full database schema definition as a JSON object in the project directory as a file ending in `“_data_dictionary.json”`. Entities found in each node and snapshots of their structure from the [complete entity relationship diagram](#figA1-01) (ERD) are provided (right click and open a diagram in a new tab to see it larger); generally, node tables are in a color, automatic views are in grey, and functional views are in white.
 
@@ -431,7 +429,7 @@ Some views are automatically generated (see the flag `“[autogenerated by sqlit
 
 ![Figure 9b. Screenshot of the first four rows of the denormalized database table 'ms_methods'.](assets/fig02-09b_ms_methods_denormalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09b width="500"}
 
-#### The Analyte Node
+#### The Analyte Node {#the-analyte-node .unnumbered}
 
 This node contains information relevant to analytical targets. This node does not contain analytical data, but rather identifying information and views to compare that identifying information with measurements held in the "data" node and is also linked to the "contributors" node. It contains two sub-nodes. One describes compounds and one describes fragments. These are linked through the "compound_fragments" table (which includes a link outside this node to the "peaks" table of the [data node](#the-data-node) to allow for existence in either and flexible bidirectional linkages to be established for known links, without assuming presence in both. Both \*\_alias tables are normalized by `norm_analyte_alias_references`, and `fragment_sources` is normalized by `norm_generation_type` (described in the [data node](#the-data-node) but also generated here for modularity and not shown below).
 
@@ -487,7 +485,7 @@ This node contains information relevant to analytical targets. This node does no
 
 ![Figure 10. Analyte node of the entity relationship diagram (modified).](assets/fig02-10_erd_node_analyte.png "Figure 10. Analyte node of the entity relationship diagram (modified)"){#fig02-010 width="750"}
 
-#### The Contributors Node
+#### The Contributors Node {#the-contributors-node .unnumbered}
 
 This node contains information relevant to identifying data contributors, similar to a "users" table. It is used primarily to provide contribution statistics and tie data to data producers in the samples and analytes node, both of which are connected to the peaks node. When the database is built, a "sys" username with the affiliation "system" is automatically added as a default user.
 
@@ -507,7 +505,7 @@ This node contains information relevant to identifying data contributors, simila
 
 ![Figure 11. Contributors node of the entity relationship diagram (modified).](assets/fig02-11_erd_node_contributors.png "Figure 11. Contributors node of the entity relationship diagram (modified)"){#fig02-011 width="600"}
 
-#### The Data Node {#the-data-node}
+#### The Data Node {#the-data-node .unnumbered}
 
 This node contains mass spectral data, metadata about samples and the software used to generate it, identification confidence, and quality control measures, as well as views to consume it directly. It is linked to the analyte node through the "compound_fragments" table and to the contributors and methods nodes through the samples table. This node contains two sub-nodes and is the main location of analytical data. One describes samples and one describes peaks generated from those samples [Figure 12](#fig02-12).
 
@@ -559,11 +557,11 @@ This node contains mass spectral data, metadata about samples and the software u
 
 ![Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node.](assets/fig02-12_erd_node_data_all.png "Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node."){#fig02-012 width="600"}
 
-#### The Logging Node
+#### The Logging Node {#the-logging-node .unnumbered}
 
 This node is included for automatic logging within the database itself (a future development opportunity), with tables to store and normalize logs and store a database version history. It is not used by default, but rather serves as a placeholder in case logging should be enabled via triggers if required by the data management and quality control systems for a given project. As it is not in use and has not been tested, details are not included but can be queried like any other tables.
 
-#### The Methods Node
+#### The Methods Node {#the-methods-node .unnumbered}
 
 This node contains data describing experimental settings, both for the chromatographic separation and the mass spectrometer. It is the largest node, composed of four subnodes. The mass spectrometer ("mass spec") subnode contains information about the mass spectrometer settings used to collect data for an experiment and is closely related to the "descriptions" node which contains vendor descriptions for all instrumentation used in the experiment, allowing a single mass spectrometric method to describe multiple detectors and chromatographic separators. The quality control subnode describes the quality control procedures that were applied. Finally, the "mobile phase" subnode describe chromatographic conditions, allowing for multiple chromatographic components to be described, and multiple stages of mobile phase conditions.
 
@@ -679,7 +677,7 @@ This node contains data describing experimental settings, both for the chromatog
 
 ![Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified).](assets/fig02-13d_erd_node_methods4.png "Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified)."){#fig02-13d width="600"}
 
-#### The Reference Node
+#### The Reference Node {#the-reference-node .unnumbered}
 
 This node contains universally applicable reference information for chemical metrology. Data for elements, their exact masses, and their natural isotopic abundances are automatically added as part of the database build process. It also includes a configuration table that, when built, will contain the current datetime stamp and an 8-character HEX installation code that should assist with any later combinations or referencing across database installations. This node does not directly connect to any others but serves only for computational convenience.
 
@@ -703,7 +701,7 @@ This node contains universally applicable reference information for chemical met
 
 ![Figure 14. Reference node of the entity relationship diagram (modified)](assets/fig02-14_erd_node_reference.png "Figure 14. Reference node of the entity relationship diagram (modified)"){#fig02-14 width="436"}
 
-#### Script Generated Views and Triggers
+#### Script Generated Views and Triggers {#script-generated-views-and-triggers .unnumbered}
 
 Creation of "denormalization views" [Figure 9](#fig02-09a) and certain triggers can be accomplished in R with the `sqlite_auto_view` and `sqlite_auto_trigger` functions. These parse SQL definitions as demonstrated in [Figure 4](#fig02-04). For views, this results in a view of the table where foreign key indices are replaced by their human readable values where the linked normalization table is the simplest case of `id` and `value` columns.
 
@@ -711,11 +709,11 @@ Foreign key enforcement is provided for table columns linked to two-column norma
 
 To exclude automatic views and triggers, simply remove calls to those files in the `build.sql` file.
 
-## Populating Data at Build {#populating-data-at-build}
+## Populating Data at Build {#populating-data-at-build .unnumbered}
 
 Populating data can be accomplished automatically at build time from CSV or SQL files, allowing for rapid iteration and rebuild. Data population is defined by SQL scripts in the config directory. If the sqlite3 CLI is available (recommended) data are imported from CSV files using a series of `.import` commands, one for each table being populated. If the sqlite3 CLI is not available, instead use a fully qualified native SQL script such as the one provided at `“config/build_full.sql”` to build the schema and populate data in one step; this is less customizable but serves as a bridge for when CLI tools are not installed.
 
-## Compute Environments {#compute-environments}
+## Compute Environments {#compute-environments .unnumbered}
 
 Several environment resolution options are available in this project depending on which aspects are requested by the user. The default setting in the R/compliance.R file creates an R session that (1) connects to a database, (2) turns on the logging functionality, (3) turns on argument validation for certain R functions, (4) makes rdkit available to that session, and (5) spins up an API server in a background process can take a "considerable" amount of time (e.g. up to 3 minutes on slower systems; more typically this is around 90 seconds) but is still much slower than users may be accustomed to by loading packages. Environment values are set by configuration files, most of which are described in the Project Set Up section. To increase system compatibility, these are not set at the system level, but rather kept at the session level.
 
@@ -735,7 +733,7 @@ For developers, two convenience functions are available to jump to specific file
 
 To determine whether an environment has been established, boolean session variables are set when each file is sourced with the prefix `RENV_ESTABLISHED`, one for each aspect. Adding functionality during an active session will check for these and if they are required and do not exist, will automatically add necessary components to the current environment.
 
-## Shiny Applications
+## Shiny Applications {#shiny-applications .unnumbered}
 
 This user guide does not provide details on developing shiny applications. Shiny apps are enabled through the environment file at `inst/apps/env_shiny.R` and will load necessary packages (see [References](#references)). These are automatically installed if not present the first time the application is launched on any given system.
 
@@ -745,7 +743,7 @@ A skeleton application making use of project tooling is also provided. Simply co
 
 This section lists out the three applications that ship with the project and gives a brief description of them. Each are detailed in their own chapters.
 
-### Table Explorer
+### Table Explorer {#app-table-explorer .unnumbered}
 
 The table_explorer shiny app is simple example included with the project. It provides information about tables and views in an intuitive interface and details not only their contents but the entity definition and links to other entities in a human-readable format. Launch it after the compliance script has been run with `run_app(“table_explorer”)` or from the console or command line with `shiny::runApp(“inst/apps/table_explorer”)` which will solve the environment and launch the application. A developer mode is also available, allowing users to click the "Inspect" button to drop into an interactive R session to view (set `dev = TRUE` in `global.R` inside the app directory). The application includes only two screens, one ("Table Viewer") to preview data available there and to view structural information for an entity selected, and another to view a high-resolution picture of the entity relationship diagram that can be downloaded or examined in a separate browser tab with the right-click context menu option to open an image in a new tab.
 
@@ -753,11 +751,11 @@ This application served as proof-of-concept for environment resolution and API c
 
 ![Figure 15. Screenshot of the "table_explorer" shiny application showing database structural information available at a glance for the view_exact_masses database table.](assets/fig02-15_screenshot_table_explorer.png "Figure 15. Screenshot of the 'table_explorer' shiny application showing database structural information available at a glance for the view_exact_masses database table."){#fig02-15 width="500"}
 
-### Mass Spectral Match (MSMatch)
+### Mass Spectral Match (MSMatch) {#app-msmatch .unnumbered}
 
-### Mass Spectral Quality Control (MSQC)
+### Mass Spectral Quality Control (MSQC) {#app-mscq .unnumbered}
 
-## Logger {#logger}
+## Logger {#logger .unnumbered}
 
 Logging status and meaningful messages to both the console for interactive sessions and to disk allows for more efficient troubleshooting and debugging, as well as status reports on performance. Logging is enabled by default in the project and implemented by custom functions on top of the logger package. That package supports namespaced logging at various levels and prints nicely to the console if provided with a formatter function. This user guide does not go into detail about the logger package, but [documentation is readily available online](https://daroczig.github.io/logger/).
 
@@ -769,7 +767,7 @@ Users may then issue logging statements directly through `logger` using the `$ns
 
 Logs are not tracked in the git repository for the project as each installation should have isolated logs. The `logger` package supports rollover past a certain size. The log directory (or any directory, though that is not recommended except in the case of a directory of temporary files) can be flushed at any time with the included function `flush_dir(directory = “logs”, pattern = “.txt”)` where `directory` is the name of an available directory and `pattern` is a regular expression used to match files to remove. Matching files will be removed by default but can be archived with the current date suffixed to the file name by setting `archive = TRUE`.
 
-## Plumber {#plumber}
+## Plumber {#plumber .unnumbered}
 
 Communication with the underlying database is performed by default using a background process through the plumber package, which produces a RESTful API and offloads processing to a separate R process. It is recommended to communicate with the API using the `api_endpoint` function which takes as arguments mainly the endpoint path and any named criteria necessary to execute the endpoint, however, the plumber service can be used with any API query method (e.g. httpuv, httr, curl, etc.). The `api_endpoint` function accepts any server address and path (if the path includes the address it will ignore the `server_addr` argument), accepts any additional arguments needed to use the endpoint with the ellipsis (including advanced parameters for other APIs), will return the constructed call rather than executing it with `execute = FALSE`, will return values to the session (the default) or in a browser window with `open_in_browser = TRUE`, and can return results in a variety of formats. Plumber APIs communicate in JSON strings. Set the `return_type` and `return_format` appropriately for what you expect back from the server; the default is a vector.
 
@@ -832,7 +830,7 @@ The remaining twelve endpoints perform database queries or actions:
 
 More information about these endpoints is available using the Swagger documentation, which includes live testing for endpoints. New endpoints can be defined easily, and the server can be quickly relaunched at any time with `api_reload.`
 
-## Python {#python}
+## Python {#python .unnumbered}
 
 Python is an open-source general programming language with similar aspects to R. Packages are controlled by environment management programs, the most common of which is the "conda" package manager available through installing either Anaconda or Miniconda. Integrating R and Python requires the `reticulate` R package which allows for miniconda to be installed independently. If no installation can be identified, the compliance script of this project will install miniconda through R. Python environments are sets of packages tied to a python distribution and must be established prior to use; when using `reticulate` to integrate R and Python that environment must include the `r-reticulate` python library. Environment resolution should in most cases be left to the compliance script but is described below for both completeness and to support and inform non-standard installations of python and package management solutions. There are several settings in the `“inst/rdkit/env_py.R”` environment script that may be changed to comply with systems using advanced or non-standard python package management approaches.
 
@@ -882,7 +880,7 @@ or created directly from any directory with:
 
 Again, functions in the project should take care of the set up as part of the environment resolution but may fail on certain systems. Note that the environment name `"nist_hrms_db"` is only a recommended environment name and could be anything, but in either case must match that provided in the configuration file at `inst/rdkit/env_py.R` as variable `PYENV_NAME`. There is no need to activate this environment, but testing it is considered good practice. Once the compliance script is run and `rdkit` is available (typically as the R object `rdk`), all `rdkit` functionality can be used (e.g. create a mol file from the SMILES string for hexane using `rdkit$Chem$MolFromSMILES("CCCCCC")`.
 
-## Importing Data
+## Importing Data {#importing-data-td .unnumbered}
 
 For now, importing data is only supported at the command line using JSON mzML files generated by the NTA MRT tool. For other uses, import routines will need to be developed to translate source data into the database schema. Several import file examples are provided in the example directory. Import requirements are defined in the file `“config/NIST_import_requirements.json”` and each file is screened against this list. During the import process, files are parsed with the import map defined in `“config/map_NTA_MRT.csv”`
 
@@ -938,7 +936,7 @@ This verification check is run automatically as part of the `full_import` pipeli
     ignore_insert_conflicts        defaults to TRUE
     Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
 
-This user guide does not completely detail all of the parameters for the `full_import` function as most are schema specific and passed to underlying action functions. See the full function documentation if interested. The import pipeline resolves each of the SQL Nodes in order and makes liberal use of console feedback during the process when it cannot automatically resolve:
+This user guide does not completely detail all of the parameters for the `full_import` function as most are schema specific and passed to underlying action functions. See the full function documentation if interested. The import pipeline resolves each of the [SQL Nodes](#sql-nodes) in order and makes liberal use of console feedback during the process when it cannot automatically resolve:
 
 1.  **Contributors** are resolved under the expectation that this may be often repeated for a given set of import files; a temporary data frame is created that maps provided contributor identifiers to known contributors and, where resolution fails, prompts the user to either create a new contributor record or map that value to an existing contributor which is then maintained for the remainder of the import process.
 2.  **Methods** are resolved by examining the mass spectrometric method properties (i.e. ionization type, voltage, polarity, collision energy, etc.) and matching against known methods, allowing for deep linking of data that were generated using the same mass spectrometry method; additional instrument properties are also recorded in a linked table allowing for an unlimited number of records to be attached.
@@ -953,10 +951,10 @@ This user guide does not completely detail all of the parameters for the `full_i
 
 Each node is resolved using a specific function that is called during the `full_import` pipeline. Normalization resolution is accomplished using the `resolve_normalization_value` function which checks known values in a normalization table and, when encountering an unknown entry, prompts the user to either map it to a known value or to add a record to that table. This is leveraged heavily throughout and is the main reason the import process (for now) is only available for interactive console sessions. This is what allows the pipeline to maintain identifiers throughout the import process while populating individual data tables.
 
-## Future Development
+## Future Development {#future-development .unnumbered}
 
 Both the R/Shiny and python code are fully extensible and community stakeholder feedback will be important for the future success of this project. Future development may include deployment of and to a Shiny server to host shiny applications, extending the python code to analyze data of various formats from different instruments, and adding analysis features and functionality (e.g. high resolution plot generation and download, or supporting the full workflow from instrument through import and to report generation) requested by stakeholders.
 
-# Conclusions
+# Conclusions {#conclusions .unnumbered}
 
 The Database Infrastructure for Mass Spectrometry (DIMSpec) project provides a new way to rapidly create and iterate databases to combine data from mass spectrometry experiments and associated metadata about the analytical methods and samples used to generate those data. It is hoped that this tool set makes a standard schema easily accessible to both internal and external stakeholders and that it can potentially be reused for any projects within the Chemical Sciences Division that generate mass spectrometric data; by structuring such data in a common schema the Division will be one step closer to a shared data environment allowing for federated data management while supporting customized add on tools for data processing and display. For one example of how this structure can be used, we highlight the "NIST Mass Spectral Match (MSMatch) for Non-Targeted Analysis" application, which demonstrates how new data in mzML format can be used to interrogate a version of this database populated with high resolution non-targeted mass spectral data of per- and polyfluorinated alkyl substances to match both compounds and annotated fragments and accelerate NTA projects.
