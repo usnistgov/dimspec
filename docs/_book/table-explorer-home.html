@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>App - Table Explorer | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset</title>
+  <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="App - Table Explorer | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset" />
+  <meta property="og:type" content="book" />
+  <meta property="og:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="App - Table Explorer | A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset" />
+  
+  <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  <meta name="twitter:image" content="/assets/NIST-Logo-Brand-White.svg" />
+
+<meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
+
+
+<meta name="date" content="2022-09-15" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="conclusions.html"/>
+<link rel="next" href="msmatch-home.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg"></img></a>
+<p id="book-title">DIMSpec User Guide</p>
+
+<li class="divider"></li>
+<li><a href="index.html#preface">Preface<span></span></a></li>
+<li><a href="intro-start.html#intro-start">Introduction<span></span></a>
+<ul>
+<li><a href="intro-start.html#intro-contributors">Contributors<span></span></a></li>
+<li><a href="intro-start.html#intro-contributing">Contributing<span></span></a></li>
+<li><a href="intro-start.html#intro-about">About this Book<span></span></a></li>
+</ul></li>
+<li><a href="instructions.html#instructions">Instructions<span></span></a>
+<ul>
+<li><a href="instructions.html#installation">Installation<span></span></a>
+<ul>
+<li><a href="instructions.html#system-requirements">System Requirements<span></span></a></li>
+<li><a href="instructions.html#quick-start-guide">Quick Start Guide<span></span></a></li>
+</ul></li>
+<li><a href="instructions.html#project-directory">Project Directory<span></span></a></li>
+<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a>
+<ul>
+<li><a href="instructions.html#step-1---global-compute-environment-settings">Step 1 - Global compute environment settings<span></span></a></li>
+<li><a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file">Step 2 - Customizing R session settings in the “env_R.R” file<span></span></a></li>
+<li><a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file">Step 3 - Customizing logger settings in the “env_logger.R” file<span></span></a></li>
+</ul></li>
+<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a>
+<ul>
+<li><a href="instructions.html#database-connections">Database Connections<span></span></a></li>
+<li><a href="instructions.html#using-a-database-connection-in-an-r-session">Using a Database Connection in an R Session<span></span></a></li>
+<li><a href="instructions.html#inspecting-database-properties">Inspecting Database Properties<span></span></a></li>
+<li><a href="instructions.html#using-the-api">Using the Application Programming Interface (API)<span></span></a></li>
+<li><a href="instructions.html#using-rdkit">Using rdkit<span></span></a></li>
+<li><a href="instructions.html#logging">Logging<span></span></a></li>
+<li><a href="instructions.html#using-shiny-applications">Using Shiny Applications<span></span></a></li>
+<li><a href="instructions.html#importing-data">Importing Data<span></span></a></li>
+<li><a href="instructions.html#ending-your-session">Ending Your Session<span></span></a></li>
+<li><a href="instructions.html#updating-the-schema">Updating the Schema<span></span></a></li>
+</ul></li>
+</ul></li>
+<li><a href="technical-details.html#technical-details">Technical Details<span></span></a>
+<ul>
+<li><a href="technical-details.html#database-schema">Database Schema<span></span></a>
+<ul>
+<li><a href="technical-details.html#sql-nodes">SQL Nodes<span></span></a></li>
+</ul></li>
+<li><a href="technical-details.html#populating-data-at-build">Populating Data at Build<span></span></a></li>
+<li><a href="technical-details.html#compute-environments">Compute Environments<span></span></a></li>
+<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a>
+<ul>
+<li><a href="technical-details.html#app-table-explorer">Table Explorer<span></span></a></li>
+<li><a href="technical-details.html#app-msmatch">Mass Spectral Match (MSMatch)<span></span></a></li>
+<li><a href="technical-details.html#app-mscq">Mass Spectral Quality Control (MSQC)<span></span></a></li>
+</ul></li>
+<li><a href="technical-details.html#logger">Logger<span></span></a></li>
+<li><a href="technical-details.html#plumber">Plumber<span></span></a></li>
+<li><a href="technical-details.html#python">Python<span></span></a></li>
+<li><a href="technical-details.html#importing-data-td">Importing Data<span></span></a></li>
+<li><a href="technical-details.html#future-development">Future Development<span></span></a></li>
+</ul></li>
+<li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
+<li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
+<ul>
+<li><a href="table-explorer-home.html#table-viewer">Table Viewer<span></span></a></li>
+<li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-intro">Introduction<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-file-format">Input File Format Requirements<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-launching-msmatch">Launching MSMatch<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-using-msmatch">Using MSMatch<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-search-object">Mass Spectral Search Object<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-algorithms">Compound and Fragment Match Algorithms<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-application-settings">Application Settings<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-future">Future Development<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
+</ul></li>
+<li><a href="mass-spectral-quality-control-msqc-a-shiny-application.html#mass-spectral-quality-control-msqc-a-shiny-application">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
+<li><a href="references.html#references">References<span></span></a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="table-explorer-home" class="section level1 unnumbered hasAnchor">
+<h1>App - Table Explorer<a href="table-explorer-home.html#table-explorer-home" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>To facilitate visual exploration of the DIMSpec database schema, a web application was written in Shiny. It served as proof-of-concept for the database/API/shiny approach and was used as the basic skeleton of the template app that ships with the project.</p>
+<p>Table Explorer is a simple entity viewer for the attached database. Combining the comment decorations in DIMSpec and reading of entity definitions from the database (see <a href="instructions.html#inspecting-database-properties">Inspecting Database Properties</a>) allows for R to expose a wealth of information about the underlying schema and quickly change which entity is being viewed. See <a href="technical-details.html#shiny-applications">Shiny Applications</a> for details of how to launch this app, but the easiest method is after the <code>compliance.R</code> script has been executed, use <code>start_app("table_explorer")</code> to launch it in your preferred browser.</p>
+<div id="table-viewer" class="section level2 unnumbered hasAnchor">
+<h2>Table Viewer<a href="table-explorer-home.html#table-viewer" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>There is only one page for interactive content, named “Table Viewer” (<a href="table-explorer-home.html#fig03-01">Figure 1</a>). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box (<a href="#fig03-02_">Figure 2</a>) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box (<a href="#fig03-03">Figure 3</a>) and display the contents of that table (<a href="table-explorer-home.html#fig03-04">Figure 4</a>).</p>
+<hr />
+<div class="figure">
+<img src="assets/fig03-01_table_view_screen.png" title="Figure 1. The Table Explorer main page." id="fig03-01" alt="" />
+<p class="caption">Figure 1. The Table Explorer main page.</p>
+</div>
+<hr />
+<div class="figure">
+<img src="assets/fig03-02_entity_selector.png" title="Figure 2. Click the drop down box to change the entity being displayed." id="fig03-02" style="width:45.0%" alt="" />
+<p class="caption">Figure 2. Click the drop down box to change the entity being displayed.</p>
+</div>
+<div class="figure">
+<img src="assets/fig03-03_table_description.png" title="Figure 3. Information about the definintion of the selected entity." id="fig03-02" style="width:45.0%" alt="" />
+<p class="caption">Figure 3. Information about the definintion of the selected entity.</p>
+</div>
+<hr />
+<div class="figure">
+<img src="assets/fig03-04_table_display.png" title="Figure 4. Data held in the selected entity." id="fig03-04" style="width:100.0%" alt="" />
+<p class="caption">Figure 4. Data held in the selected entity.</p>
+</div>
+<hr />
+</div>
+<div id="entity-relationship-diagram" class="section level2 unnumbered hasAnchor">
+<h2>Entity Relationship Diagram<a href="table-explorer-home.html#entity-relationship-diagram" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A full graphical representation of the entity relationship diagram is also provided. Click the “Entity Relationship Diagram” in the navigation bar to view it. Right click the graphic and click “Open image in new tab” to view it in full resolution.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig03-05_erd.png" title="Figure 5. Entity Relationship Diagram" id="fig03-05" alt="" />
+<p class="caption">Figure 5. Entity Relationship Diagram</p>
+</div>
+<hr />
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="conclusions.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="msmatch-home.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["_main.pdf", "_main.epub"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

@@ -1468,7 +1468,17 @@ fn_guide <- function() {
   }
 }
 
+#' Launch the User Guide for DIMSpec
+#'
+#' @param path 
+#'
+#' @return None, opens the bookdown version of the DIMSpec User Guide in a browser
+#' @export
+#'
 user_guide <- function(path = "_book/index.html") {
-  stopifnot(file.exists(file.path(getwd(), path)))
+  if (!file.exists(file.path(getwd(), path))) {
+    path <- file.path("docs", path)
+  }
+  stopifnot(file.exists(path))
   browseURL(url = path)
 }

@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-14" />
+<meta name="date" content="2022-09-15" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -54,6 +54,70 @@
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
 
 
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
 
 
 <link rel="stylesheet" href="style.css" type="text/css" />
@@ -74,11 +138,11 @@
 
 <li class="divider"></li>
 <li><a href="index.html#preface">Preface<span></span></a></li>
-<li><a href="introduction.html#introduction">Introduction<span></span></a>
+<li><a href="intro-start.html#intro-start">Introduction<span></span></a>
 <ul>
-<li><a href="introduction.html#contributors">Contributors<span></span></a></li>
-<li><a href="introduction.html#contributing">Contributing<span></span></a></li>
-<li><a href="introduction.html#about-this-book">About this Book<span></span></a></li>
+<li><a href="intro-start.html#intro-contributors">Contributors<span></span></a></li>
+<li><a href="intro-start.html#intro-contributing">Contributing<span></span></a></li>
+<li><a href="intro-start.html#intro-about">About this Book<span></span></a></li>
 </ul></li>
 <li><a href="instructions.html#instructions">Instructions<span></span></a>
 <ul>
@@ -129,12 +193,29 @@
 <li><a href="technical-details.html#future-development">Future Development<span></span></a></li>
 </ul></li>
 <li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
-<li><a href="table-explorer.html#table-explorer">Table Explorer<span></span></a>
+<li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
 <ul>
-<li><a href="table-explorer.html#table-viewer">Table Viewer<span></span></a></li>
-<li><a href="table-explorer.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
+<li><a href="table-explorer-home.html#table-viewer">Table Viewer<span></span></a></li>
+<li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
 </ul></li>
-<li><a href="mass-spectral-match-msmatch-a-shiny-application.html#mass-spectral-match-msmatch-a-shiny-application">Mass Spectral Match (MSMatch, a Shiny application)<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-intro">Introduction<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-file-format">Input File Format Requirements<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-launching-msmatch">Launching MSMatch<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-using-msmatch">Using MSMatch<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-search-object">Mass Spectral Search Object<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-algorithms">Compound and Fragment Match Algorithms<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-application-settings">Application Settings<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-future">Future Development<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
+</ul></li>
 <li><a href="mass-spectral-quality-control-msqc-a-shiny-application.html#mass-spectral-quality-control-msqc-a-shiny-application">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
 <li><a href="references.html#references">References<span></span></a></li>
 <li class="divider"></li>
@@ -184,40 +265,50 @@
   );</code></pre>
 <p>to obtain entity properties <a href="technical-details.html#fig02-07a">Figure 7a</a>, pull column comments directly from the definition <a href="technical-details.html#fig02-07b">Figure 7b</a>, inspect mapping between entities (<a href="technical-details.html#fig02-07c">Figure 7c</a>; here <code>db_map</code> is an object created by <code>er_map(db_conn = con)</code>), or pull information together into a formalized data dictionary (<a href="technical-details.html#fig02-07d">Figure 7d</a>; here <code>db_dict</code> is read from a JSON object created by <code>save_data_dictionary()</code> and available for all database entities.</p>
 <p>This allows for programmatic accessibility, as R sessions can now understand the linkages between tables easily. One implementation example is checking for, resolving, and automatically adding new normalization values with <code>resolve_normalization_value</code> for import resolutions, but could be as simple as understanding that <code>“fragment_id”</code> here references the <code>“norm_fragments”</code> table <a href="technical-details.html#fig02-07e">Figure 7e</a>. In addition, once relationships are in a structured format, applications like the Table Explorer can be built to display to users in a more natural manner the structure of the underlying data tables <a href="technical-details.html#fig02-08">Figure 8</a>.</p>
+<hr />
 <div class="figure">
 <img src="assets/fig02-07a_mapping_dictionary_direct.png" title="Figure 7a. An example of using `pragma_table_info` to explore schema." id="fig02-07a" width="500" alt="" />
 <p class="caption">Figure 7a. An example of using pragma_table_info to explore table definitions.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-07b_mapping_dictionary_direct_comments.png" title="Figure 7b. Comments can be easily added to the definition." id="fig02-07b" width="500" alt="" />
 <p class="caption">Figure 7b. Comments can be easily added to the definition .</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-07c_mapping_dictionary_map.png" title="Figure 7c. Entity mapping can also be parsed from the SQL decoration convention." id="fig02-07c" width="500" alt="" />
 <p class="caption">Figure 7c. Entity mapping can also be parsed directly from the SQL decoration convention.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-07d_mapping_dictionary_map_json.png" title="Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention." id="fig02-07d" width="500" alt="" />
 <p class="caption">Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-07e_mapping_dictionary_ref_map.png" title="Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships." id="fig02-07e" width="500" alt="" />
 <p class="caption">Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.</p>
 </div>
+<hr />
 <div class="figure">
-<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The `table_explorer` shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[[&#39;table_explorer&#39;]]`." id="fig02-08" width="750" alt="" />
-<p class="caption">Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The table_explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with shiny::runApp(SHINY_APPS[[‘table_explorer’]].</p>
+<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[[&#39;table_explorer&#39;]]`." id="fig02-08" style="width:100.0%" alt="" />
+<p class="caption">Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The “Table Explorer” shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with <code>shiny::runApp(SHINY_APPS[['table_explorer']]</code>).</p>
 </div>
+<hr />
 <p>The following subsections contain summary information about each of the database nodes, its purpose, and the tables and views held within. Some of this information is subject to change as the database schema is refined and maintained. See the full database schema definition as a JSON object in the project directory as a file ending in <code>“_data_dictionary.json”</code>. Entities found in each node and snapshots of their structure from the <a href="#figA1-01">complete entity relationship diagram</a> (ERD) are provided (right click and open a diagram in a new tab to see it larger); generally, node tables are in a color, automatic views are in grey, and functional views are in white.</p>
 <p>Some views are automatically generated (see the flag <code>“[autogenerated by sqlite_auto_view()]”</code> in the description) to display human-meaningful values instead of the index linkages for normalized columns, e.g. the <code>“ms_methods”</code> table can then be viewed in a “denormalized” way using the <code>“view_ms_methods”</code> view to get display values for normalized fields <a href="technical-details.html#fig02-09a">Figure 9</a>.</p>
+<hr />
 <div class="figure">
 <img src="assets/fig02-09a_ms_methods_normalized.png" title="Figure 9a. Screenshot of the first four rows of the normalized database table &#39;ms_methods&#39;." id="fig02-09a" width="500" alt="" />
 <p class="caption">Figure 9a. Screenshot of the first four rows of the normalized database table ‘ms_methods’.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-09b_ms_methods_denormalized.png" title="Figure 9a. Screenshot of the first four rows of the normalized database table &#39;ms_methods&#39;." id="fig02-09b" width="500" alt="" />
 <p class="caption">Figure 9b. Screenshot of the first four rows of the denormalized database table ‘ms_methods’.</p>
 </div>
+<hr />
 <div id="the-analyte-node" class="section level4 unnumbered hasAnchor">
 <h4>The Analyte Node<a href="technical-details.html#the-analyte-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <p>This node contains information relevant to analytical targets. This node does not contain analytical data, but rather identifying information and views to compare that identifying information with measurements held in the “data” node and is also linked to the “contributors” node. It contains two sub-nodes. One describes compounds and one describes fragments. These are linked through the “compound_fragments” table (which includes a link outside this node to the “peaks” table of the <a href="technical-details.html#the-data-node">data node</a> to allow for existence in either and flexible bidirectional linkages to be established for known links, without assuming presence in both. Both *_alias tables are normalized by <code>norm_analyte_alias_references</code>, and <code>fragment_sources</code> is normalized by <code>norm_generation_type</code> (described in the <a href="technical-details.html#the-data-node">data node</a> but also generated here for modularity and not shown below).</p>
@@ -331,6 +422,7 @@
 <img src="assets/fig02-10_erd_node_analyte.png" title="Figure 10. Analyte node of the entity relationship diagram (modified)" id="fig02-010" width="750" alt="" />
 <p class="caption">Figure 10. Analyte node of the entity relationship diagram (modified).</p>
 </div>
+<hr />
 </div>
 <div id="the-contributors-node" class="section level4 unnumbered hasAnchor">
 <h4>The Contributors Node<a href="technical-details.html#the-contributors-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -369,10 +461,12 @@
 </tr>
 </tbody>
 </table>
+<hr />
 <div class="figure">
 <img src="assets/fig02-11_erd_node_contributors.png" title="Figure 11. Contributors node of the entity relationship diagram (modified)" id="fig02-011" width="600" alt="" />
 <p class="caption">Figure 11. Contributors node of the entity relationship diagram (modified).</p>
 </div>
+<hr />
 </div>
 <div id="the-data-node" class="section level4 unnumbered hasAnchor">
 <h4>The Data Node<a href="technical-details.html#the-data-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -479,6 +573,7 @@
 <img src="assets/fig02-12_erd_node_data_all.png" title="Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node." id="fig02-012" width="600" alt="" />
 <p class="caption">Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node.</p>
 </div>
+<hr />
 </div>
 <div id="the-logging-node" class="section level4 unnumbered hasAnchor">
 <h4>The Logging Node<a href="technical-details.html#the-logging-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -714,6 +809,7 @@
 <img src="assets/fig02-13d_erd_node_methods4.png" title="Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified)." id="fig02-13d" width="600" alt="" />
 <p class="caption">Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified).</p>
 </div>
+<hr />
 </div>
 <div id="the-reference-node" class="section level4 unnumbered hasAnchor">
 <h4>The Reference Node<a href="technical-details.html#the-reference-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -764,6 +860,7 @@
 <img src="assets/fig02-14_erd_node_reference.png" title="Figure 14. Reference node of the entity relationship diagram (modified)" id="fig02-14" width="436" alt="" />
 <p class="caption">Figure 14. Reference node of the entity relationship diagram (modified)</p>
 </div>
+<hr />
 </div>
 <div id="script-generated-views-and-triggers" class="section level4 unnumbered hasAnchor">
 <h4>Script Generated Views and Triggers<a href="technical-details.html#script-generated-views-and-triggers" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -799,15 +896,24 @@
 <p>This section lists out the three applications that ship with the project and gives a brief description of them. Each are detailed in their own chapters.</p>
 <div id="app-table-explorer" class="section level3 unnumbered hasAnchor">
 <h3>Table Explorer<a href="technical-details.html#app-table-explorer" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>The table_explorer shiny app is simple example included with the project. It provides information about tables and views in an intuitive interface and details not only their contents but the entity definition and links to other entities in a human-readable format. Launch it after the compliance script has been run with <code>run_app(“table_explorer”)</code> or from the console or command line with <code>shiny::runApp(“inst/apps/table_explorer”)</code> which will solve the environment and launch the application. A developer mode is also available, allowing users to click the “Inspect” button to drop into an interactive R session to view (set <code>dev = TRUE</code> in <code>global.R</code> inside the app directory). The application includes only two screens, one (“Table Viewer”) to preview data available there and to view structural information for an entity selected, and another to view a high-resolution picture of the entity relationship diagram that can be downloaded or examined in a separate browser tab with the right-click context menu option to open an image in a new tab.</p>
+<p>This Shiny application is simple example included with the project. It provides information about tables and views in an intuitive interface and details not only their contents but the entity definition and links to other entities in a human-readable format. Launch it after the compliance script has been run with <code>run_app(“table_explorer”)</code> or from the console or command line with <code>shiny::runApp(“inst/apps/table_explorer”)</code> which will solve the environment and launch the application. A developer mode is also available, allowing users to click the “Inspect” button to drop into an interactive R session to view (set <code>dev = TRUE</code> in <code>global.R</code> inside the app directory). The application includes only two screens, one (“Table Viewer”) to preview data available there and to view structural information for an entity selected, and another to view a high-resolution picture of the entity relationship diagram that can be downloaded or examined in a separate browser tab with the right-click context menu option to open an image in a new tab.</p>
 <p>This application served as proof-of-concept for environment resolution and API communication, and to provide DIMSpec users and developers a way to visualize connections between database entities.</p>
+<p>The Table Explorer application is detailed in its own <a href="table-explorer-home.html#table-explorer-home">section</a>.</p>
+<hr />
 <div class="figure">
-<img src="assets/fig02-15_screenshot_table_explorer.png" title="Figure 15. Screenshot of the &#39;table_explorer&#39; shiny application showing database structural information available at a glance for the view_exact_masses database table." id="fig02-15" width="500" alt="" />
-<p class="caption">Figure 15. Screenshot of the “table_explorer” shiny application showing database structural information available at a glance for the view_exact_masses database table.</p>
+<img src="assets/fig02-15_screenshot_table_explorer.png" title="Figure 15. Screenshot of the &#39;Table Explorer&#39; shiny application showing database structural information available at a glance for the view_exact_masses database table." id="fig02-15" width="500" alt="" />
+<p class="caption">Figure 15. Screenshot of the “Table Explorer” shiny application showing database structural information available at a glance for the view_exact_masses database table.</p>
 </div>
+<hr />
 </div>
 <div id="app-msmatch" class="section level3 unnumbered hasAnchor">
 <h3>Mass Spectral Match (MSMatch)<a href="technical-details.html#app-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>This Shiny application could easily be considered the entire reason behind the genesis of the DIMSpec project. It was built specifically to accelerate non-targeted analysis projects by searching experiment result data in <a href="https://www.psidev.info/mzML">mzML</a> format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec tool set. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program (<a href="https://serdp-estcp.org/">DOD-SERDP</a>), project number <a href="https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview">ER20-1056</a>.</p>
+<p>The MSMatch application is detailed in its own <a href="msmatch-home.html#msmatch-home">section</a>.</p>
+<div class="figure">
+<img src="assets/fig02-16_app_spectral_match_example.png" title="Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures." id="fig02-16" style="width:100.0%" alt="" />
+<p class="caption">Figure 16. Screenshot of the “Mass Spectral Match” application with user data showing matches to known mass spectral signatures.</p>
+</div>
 </div>
 <div id="app-mscq" class="section level3 unnumbered hasAnchor">
 <h3>Mass Spectral Quality Control (MSQC)<a href="technical-details.html#app-mscq" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -825,7 +931,7 @@
 <h2>Plumber<a href="technical-details.html#plumber" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Communication with the underlying database is performed by default using a background process through the plumber package, which produces a RESTful API and offloads processing to a separate R process. It is recommended to communicate with the API using the <code>api_endpoint</code> function which takes as arguments mainly the endpoint path and any named criteria necessary to execute the endpoint, however, the plumber service can be used with any API query method (e.g. httpuv, httr, curl, etc.). The <code>api_endpoint</code> function accepts any server address and path (if the path includes the address it will ignore the <code>server_addr</code> argument), accepts any additional arguments needed to use the endpoint with the ellipsis (including advanced parameters for other APIs), will return the constructed call rather than executing it with <code>execute = FALSE</code>, will return values to the session (the default) or in a browser window with <code>open_in_browser = TRUE</code>, and can return results in a variety of formats. Plumber APIs communicate in JSON strings. Set the <code>return_type</code> and <code>return_format</code> appropriately for what you expect back from the server; the default is a vector.</p>
 <p>The environment for the API is defined at <code>inst/plumber/env_plumb.R</code>; package requirements are resolved as part of the environment. When launched as a background process the name of the resulting object is drawn from the <code>env_plumb.R</code> file, by default <code>plumber_service</code>. During launch the server will add several R scripts from defined files in the project directory; more can be added by modifying the <code>r_scripts</code> variable. Logging is turned on by default for the API as no interactive session is available. Finally, <code>rdkit</code> integration is enabled and a connection is established with the project database as defined elsewhere. Any of these settings can be customized for use.</p>
-<p>Certain options which may also be changed are set at the project level in <code>"config/env_R.R"</code>, which is necessary to share values and keep sessions connected appropriately. Those options include the <code>PLUMBER_VERSION</code> (if you are iterating for development, testing, or deployment), <code>PLUMBER_HOST</code>, <code>PLUMBER_PORT</code>, and <code>PLUMBER_FILE.</code> These should generally not be changed, but certain network configurations may require alterations to the host and port. It is recommended in that case to set options (e.g. <code>getOption("plumber.host")</code> and <code>getOption("plumber.port")</code>) in the project or user <code>.Renviron</code> file or in the session prior to running the compliance script to set other values; the compliance script will honor those settings. The default listening port is <a href="http://127.0.0.1:8080" class="uri">http://127.0.0.1:8080</a>; Swagger documentation will be available at <a href="http://127.0.0.1:8080/__docs__" class="uri">http://127.0.0.1:8080/__docs__</a> until the server stops.</p>
+<p>Certain options which may also be changed are set at the project level in <code>"config/env_R.R"</code>, which is necessary to share values and keep sessions connected appropriately. Those options include the <code>PLUMBER_VERSION</code> (if you are iterating for development, testing, or deployment), <code>PLUMBER_HOST</code>, <code>PLUMBER_PORT</code>, and <code>PLUMBER_FILE.</code> These should generally not be changed, but certain network configurations may require alterations to the host and port. It is recommended in that case to set options (e.g. <code>getOption("plumber.host")</code> and <code>getOption("plumber.port")</code>) in the project or user <code>.Renviron</code> file or in the session prior to running the compliance script to set other values; the compliance script will honor those settings. The default listening port is <code>http://127.0.0.1:8080</code>; Swagger documentation will be available at <code>http://127.0.0.1:8080/__docs__</code> until the server stops.</p>
 <p>To restart the API server from an R session, use the <code>api_reload</code> function. This will close and relaunch the service in a background process and return control to your session. Call it with <code>background = FALSE</code> to launch it directly within the current session, which will automatically launch a browser pointing to the Swagger documentation. By default <code>api_reload</code> pulls its parameters from the current compute environment. To launch a second API server with different endpoints under a different name, use <code>api_reload</code> with different parameters, e.g.:</p>
 <pre><code>api_reload(
   pr = &quot;api_service2&quot;,
@@ -833,7 +939,7 @@
   on_host = &quot;127.0.0.1&quot;,
   on_port = 8085
 )</code></pre>
-<p>The background process is launched using <code>callr::r_bg</code> and the health of resulting object can be checked with the <code>api_service2$is_alive()</code> property for the example above. With the server running, call <code>api_open_doc</code> with the API URL (e.g. <a href="http://127.0.0.1:8085" class="uri">http://127.0.0.1:8085</a> for the example above) to launch a browser with the documentation.</p>
+<p>The background process is launched using <code>callr::r_bg</code> and the health of resulting object can be checked with the <code>api_service2$is_alive()</code> property for the example above. With the server running, call <code>api_open_doc</code> with the API URL (e.g. <code>http://127.0.0.1:8085</code> for the example above) to launch a browser with the documentation.</p>
 <p>Plumber endpoints are decorated R functions available to a routing server managing transactions for request and response. Endpoint specifications that ship with the project are defined in the <code>inst/plumber/plumber.R</code> file. Plumber uses the OpenAPI specification and provides interactive <a href="https://swagger.io/">Swagger</a> documentation once the server is active. Any R function can be turned into a plumber endpoint, or an endpoint can be defined that uses an existing R function if that function is available in the environment. The latter case is the one used most often in this project; a modified version of the function is created and then redirected as needed. This allows flexibility to be able to handle any preprocessing necessary (e.g. unpacking JSON or argument verification) before calling the underlying function while keeping that function available for interactive use. Several endpoints are provided in the project and are described in the following paragraphs.</p>
 <p>Two filters are defined that will ensure a database connection is alive and log incoming requests prior to forwarding to their destination path.</p>
 <p>Three health endpoints are defined:</p>
@@ -986,29 +1092,46 @@ cat(
   sprintf(&quot;Extra data are %spresent.\n&quot;,
           ifelse(any(obj_check$has_extra), &quot;&quot;, &quot;not &quot;))
 )</code></pre>
-<p>and examine the resulting <code>obj_check</code> session object, a data frame of verification checks which can be filtered and searched as normal <a href="technical-details.html#fig02-16">Figure 16</a>. The missing_requirements, missing_detail, and extra_cols columns in the resulting data frame are list columns detailing any number of verification failures and which elements were missing or not in the import mapping definition.</p>
+<p>and examine the resulting <code>obj_check</code> session object, a data frame of verification checks which can be filtered and searched as normal <a href="technical-details.html#fig02-17">Figure 17</a>. The missing_requirements, missing_detail, and extra_cols columns in the resulting data frame are list columns detailing any number of verification failures and which elements were missing or not in the import mapping definition.</p>
+<hr />
 <div class="figure">
-<img src="assets/fig02-16_import_compliance_checks.png" title="Figure 16. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations." id="fig02-16" width="500" alt="" />
-<p class="caption">Figure 16. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations.</p>
+<img src="assets/fig02-17_import_compliance_checks.png" title="Figure 17. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations." id="fig02-17" width="750" alt="" />
+<p class="caption">Figure 17. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations.</p>
 </div>
-<p>This verification check is run automatically as part of the <code>full_import</code> pipeline, with options to:</p>
-<pre><code>exclude_missing_required       defaults to FALSE
-Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements.
-
-stop_if_missing_required       defaults to TRUE
-Stops the import process if files do not include all requirements. This is forced to TRUE when exclude_missing_required is FALSE to ensure integrity.
-
-include_if_missing_recommended defaults to FALSE
-By default, files missing recommended information are skipped from the import process, under the assumption that data may be missing. Set to TRUE to include these.
-
-stop_if_missing_recommended    defaults to TRUE
-Stops the import process if files do not include all recommended data.
-
-ignore_extra                   defaults to TRUE
-Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
-
-ignore_insert_conflicts        defaults to TRUE
-Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements</code></pre>
+<hr />
+<p>This verification check is run automatically as part of the <code>full_import</code> pipeline, with the following parameterized options to determine behavior based on verification of individual components of the import object:</p>
+<ul>
+<li><em>exclude_missing_required</em>
+<ul>
+<li>defaults to FALSE</li>
+<li>Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements.</li>
+</ul></li>
+<li><em>stop_if_missing_required</em>
+<ul>
+<li>defaults to TRUE</li>
+<li>Stops the import process if files do not include all requirements. This is forced to TRUE when exclude_missing_required is FALSE to ensure integrity.</li>
+</ul></li>
+<li><em>include_if_missing_recommended</em>
+<ul>
+<li>defaults to FALSE</li>
+<li>By default, files missing recommended information are skipped from the import process, under the assumption that data may be missing. Set to TRUE to include these.</li>
+</ul></li>
+<li><em>stop_if_missing_recommended</em>
+<ul>
+<li>defaults to TRUE</li>
+<li>Stops the import process if files do not include all recommended data.</li>
+</ul></li>
+<li><em>ignore_extra</em>
+<ul>
+<li>defaults to TRUE</li>
+<li>Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements</li>
+</ul></li>
+<li><em>ignore_insert_conflicts</em>
+<ul>
+<li>defaults to TRUE</li>
+<li>Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements</li>
+</ul></li>
+</ul>
 <p>This user guide does not completely detail all of the parameters for the <code>full_import</code> function as most are schema specific and passed to underlying action functions. See the full function documentation if interested. The import pipeline resolves each of the <a href="technical-details.html#sql-nodes">SQL Nodes</a> in order and makes liberal use of console feedback during the process when it cannot automatically resolve:</p>
 <ol style="list-style-type: decimal">
 <li><strong>Contributors</strong> are resolved under the expectation that this may be often repeated for a given set of import files; a temporary data frame is created that maps provided contributor identifiers to known contributors and, where resolution fails, prompts the user to either create a new contributor record or map that value to an existing contributor which is then maintained for the remainder of the import process.</li>
@@ -1089,6 +1212,20 @@ gitbook.start({
 });
 </script>
 
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
 </body>
 
 </html>

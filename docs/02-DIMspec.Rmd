@@ -2,27 +2,21 @@
 
 ## Installation {#installation .unnumbered}
 
-At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^1] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^2] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
 
-[^1]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
+[^2]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
 ### System Requirements {#system-requirements .unnumbered}
 
-DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^2] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
+DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^3] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
 
-[^2]: This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:
-
-    apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev
-
-After following the R [installation instructions for Ubuntu](https://cran.r-project.org/bin/linux/ubuntu), reduce package installations within R using:
-
-    apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny
+[^3]: This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:<code>apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev</code>After following the R [installation instructions for Ubuntu](https://cran.r-project.org/bin/linux/ubuntu), ensure additional requirements using:<code>apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny</code>
 
 **[REQUIRED]** **R 4.1+** ([download](https://cran.r-project.org/)) and many packages are required (R Core Team, 2021; various); necessary packages will be installed when the compliance file is sourced, which may take some time when the project is first installed. The RStudio IDE ([download](https://www.rstudio.com/products/rstudio/download/#download); RStudio Team, 2015) is highly recommended for ease of use as this project is distributed as a R project.
 
 **[STRONGLY RECOMMENDED]** **SQLite3** ([download](https://www.sqlite.com/download.html)) and its command line interface (CLI; [download](https://www.sqlite.org/cli.html)) provide the database engine in structured query language (SQL) and are not technically required as the build can be accomplished purely through R, but it highly recommended to streamline the process and manipulate the database. A lightweight database interface such as [DBeaver Lite](https://dbeaver.com/download/lite/) is also suggested for interacting with the database in a classical sense. **Git** ([install instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)) is a repository manager which will make it much easier to install and update the project without downloads. The sqlite3 CLI and git executables must be available via PATH.
 
-**[RECOMMENDED]** For chemical informatics support, both **Python 3.9+** and the **rdkit** library are required for certain operations supporting display and calculations, primarily generation of machine-readable identifiers (e.g. InChI, InChIKey, SMILES, etc) but the full capabilities of rdkit are available (see <https://www.rdkit.org/docs/index.html> for details); these are turned on by default but are completely optional. An **anaconda** or **miniconda** installation is required. Python integration is not required for spinning up the basic database infrastructure. Users may need to add the conda executable to their PATH and, if conda is already installed, should pay close attention to the Python section of Technical Details. If these are not available, R will install miniconda (this requires user confirmation at the console) and create the necessary environment as part of automated setup during the compliance script. (Another option for chemical informatics is to use the Java-based R package rcdk instead; users will need to install the Java framework prior to installing rcdk (see [Windows](https://cimentadaj.github.io/blog/2018-05-25-installing-rjava-on-windows-10/installing-rjava-on-windows-10/); [Ubuntu](https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/)). This package is not well supported and rdkit is preferred.)
+**[RECOMMENDED]** For chemical informatics support, both **Python 3.9+** and the **rdkit** library are required for certain operations supporting display and calculations, primarily generation of machine-readable identifiers (e.g. InChI, InChIKey, SMILES, etc) but the full capabilities of rdkit are available (see the [RDKit documentation](https://www.rdkit.org/docs/index.html) for details); these are turned on by default but are completely optional. An **anaconda** or **miniconda** installation is required. Python integration is not required for spinning up the basic database infrastructure. Users may need to add the conda executable to their PATH and, if conda is already installed, should pay close attention to the Python section of Technical Details. If these are not available, R will install miniconda (this requires user confirmation at the console) and create the necessary environment as part of automated setup during the compliance script. (Another option for chemical informatics is to use the Java-based R package rcdk instead; users will need to install the Java framework prior to installing rcdk (see [Windows](https://cimentadaj.github.io/blog/2018-05-25-installing-rjava-on-windows-10/installing-rjava-on-windows-10/); [Ubuntu](https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/)). This package is not well supported and rdkit is preferred.)
 
 The following sections provide more detailed information on how to use the tools provided to interact with the database and customize it for other uses or go directly to the "Using DIMSpec" section and continue using the project.
 
@@ -243,21 +237,33 @@ Queries do not have to be executed; set the argument `execute = FALSE` to examin
 
 Code decoration conventions used in the SQL files enable reading table definitions and properties from SQLite into R with the function `pragma_table_info.` Supply the name of a database table or view to get information about that table; different connections can also be used for comparison if desired. This is the interactive version; a version in JSON format can be saved using `save_data_dictionary.` This saved file is loaded during the compliance script as object `db_dict` which is a named list of data frames; names correspond to database entities. This can be regenerated and brought back into the R session at any time (see `data_dictionary`) and should be updated if modifications are made to the underlying schema.
 
+------------------------------------------------------------------------
+
 ![Figure 1a. An example of the data dictionary object.](assets/fig02-01a_data_dict1.png "Figure 1a. An example of the data dictionary object."){#fig02-01a width="500"}
+
+------------------------------------------------------------------------
 
 ![Figure 1b. Details of the "samples" table from the data dictionary.](assets/fig02-01b_data_dict2.png "Figure 1b. Details of the 'samples' table from the data dictionary."){#fig02-01b width="500"}
 
+------------------------------------------------------------------------
+
 Relationships between database entities can also be queried programmatically. Use the er_map function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as db_map to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.
 
+------------------------------------------------------------------------
+
 ![Figure 2a. An example of the R object structure of an entity map as a list.](assets/fig02-02a_db_map1.png "Figure 2a. An example of the entity map list"){#fig02-02a width="500"}
+
+------------------------------------------------------------------------
 
 ![Figure 2b. Details of the "samples" table from the data entity map object in [Figure 2a](#fig02-02a).](assets/fig02-02b_db_map2.png "Figure 2b. Details of the 'samples' table from the data entity map"){#fig02-02b width="500"}
 
 ### Using the Application Programming Interface (API) {#using-the-api .unnumbered}
 
+------------------------------------------------------------------------
+
 Application Programming Interfaces (APIs) enable software components to communicate with each other. Most modern machine communication happens through APIs. In the context of this project, an API server is launched using the [`plumber`](https://www.rplumber.io) package to reduce computational load on R sessions or shiny applications and ensure consistent results across multiple sessions. It does not have to be used (set `USE_API = FALSE` in "env_glob.txt" to turn it off) but is encouraged and is a requirement for all shiny applications that ship with this project.
 
-The compliance script launches this in a background process by default at <http://127.0.0.1:8080>. Use `api_open_doc` to open the documentation page directly in a browser. To start the service manually from an interactive session and load the documentation immediately for exploration and testing, use `api_reload(background = FALSE)`; if it is already running in a background process and desirable to launch a second service (e.g. for testing new endpoints or changes to existing ones), set the `pr` parameter to a different name and the `on_port` parameter to an open port (it will fail if the port is already in use). Documentation is produced by [Swagger](https://swagger.io) and is interactive, allowing for users to enter values and get both the return and the URL necessary to execute that endpoint ([Figure 3](#fig03-03)). See the [Plumber](#plumber) section in [Technical Details](#technical-details) for more information. If the compliance script is run with `USE_API = FALSE` and `api_reload` is not available, it may be more intuitive to use `start_api`.
+The compliance script launches this in a background process by default at [http://localhost:8080](http://127.0.0.1:8080). Use `api_open_doc` to open the documentation page directly in a browser. To start the service manually from an interactive session and load the documentation immediately for exploration and testing, use `api_reload(background = FALSE)`; if it is already running in a background process and desirable to launch a second service (e.g. for testing new endpoints or changes to existing ones), set the `pr` parameter to a different name and the `on_port` parameter to an open port (it will fail if the port is already in use). Documentation is produced by [Swagger](https://swagger.io) and is interactive, allowing for users to enter values and get both the return and the URL necessary to execute that endpoint ([Figure 3](#fig03-03)). See the [Plumber](#plumber) section in [Technical Details](#technical-details) for more information. If the compliance script is run with `USE_API = FALSE` and `api_reload` is not available, it may be more intuitive to use `start_api`.
 
 Endpoints for many predictable read and search interactions are available. Session variables define the connections, and communication and control functions default to those expected values for streamlining (e.g. functions like `api_reload`, `api_open_doc`, and `api_endpoint` may be called without referring explicitly to a session object or URL for the current project).
 
@@ -295,9 +301,15 @@ with an example of the results in [Figure 4](#fig02-04). Endpoints of most use t
 
 These and other endpoints can be easily defined, expanded, or refined as needed to meet project requirements. Use `api_reload` to refresh the server when definitions change, or test interactively prior to deployment using Swagger by launching a separate server either by opening the plumber file and clicking the "Run API" button in RStudio, or using the `api_start` or `api_reload` functions as described above. To support eventual network deployment, any number of API servers may be launched manually on predefined ports to allow for load balancing.
 
+------------------------------------------------------------------------
+
 ![Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint `/compound_data`, available using `api_open_doc()`. Click the "Try It Out" button to activate the testing mode.](assets/fig02-03_swagger_example.png "Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the 'Try It Out' button to activate the testing mode."){#fig02-03 width="500"}
 
+------------------------------------------------------------------------
+
 ![Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.](assets/fig02-04_endpoint_example.png "Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session"){#fig02-04 width="500"}
+
+------------------------------------------------------------------------
 
 ### Using rdkit {#using-rdkit .unnumbered}
 
@@ -315,7 +327,11 @@ A few custom R functions are made available to assist with the process. The impl
 
 -   `rdkit_mol_aliases` generates machine-readable structural notation in a variety of formats (e.g. InChI and InChIKey) given a notation with a known format and can interchange between these to create molecular aliases; all formats supported by rdkit are attempted if `get_aliases = NULL` ([Figure 5](#fig02-05)) but generally these would be specific by project needs; results that fail or are blank are removed and the return is by default a data frame to support any number of identifiers with one pass.
 
+------------------------------------------------------------------------
+
 ![Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases("CN1C=NC2=C1C(=O)N(C(=O)N2C)C", get_aliases = NULL)`](assets/fig02-05_rdkit_molecular_aliases.png "Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases('CN1C=NC2=C1C(=O)N(C(=O)N2C)C', get_aliases = NULL)`"){#fig02-05 width="500"}
+
+------------------------------------------------------------------------
 
 ### Logging {#logging .unnumbered}
 
@@ -333,7 +349,11 @@ where `log_level` is the category of message, `msg` is the message itself, and `
 
 Users developing on top of this infrastructure are encouraged to take advantage of the logging functionality and make liberal use of the `log_it` function to ease debugging and maintenance.
 
-![Figure 6. Example uses of log_it to log messages.](assets/fig02-06_logging_example.png "Figure 6. Example uses of log_it to log messages."){#fig02-06 width="500"}
+------------------------------------------------------------------------
+
+![Figure 6. Example uses of `log_it` to create logging messages.](assets/fig02-06_logging_example.png "Figure 6. Example uses of log_it to create logging messages."){#fig02-06 width="500"}
+
+------------------------------------------------------------------------
 
 ### Using Shiny Applications {#using-shiny-applications .unnumbered}
 
@@ -409,25 +429,45 @@ to obtain entity properties [Figure 7a](#fig02-07a), pull column comments direct
 
 This allows for programmatic accessibility, as R sessions can now understand the linkages between tables easily. One implementation example is checking for, resolving, and automatically adding new normalization values with `resolve_normalization_value` for import resolutions, but could be as simple as understanding that `“fragment_id”` here references the `“norm_fragments”` table [Figure 7e](#fig02-07e). In addition, once relationships are in a structured format, applications like the Table Explorer can be built to display to users in a more natural manner the structure of the underlying data tables [Figure 8](#fig02-08).
 
+------------------------------------------------------------------------
+
 ![Figure 7a. An example of using pragma_table_info to explore table definitions.](assets/fig02-07a_mapping_dictionary_direct.png "Figure 7a. An example of using `pragma_table_info` to explore schema."){#fig02-07a width="500"}
+
+------------------------------------------------------------------------
 
 ![Figure 7b. Comments can be easily added to the definition .](assets/fig02-07b_mapping_dictionary_direct_comments.png "Figure 7b. Comments can be easily added to the definition."){#fig02-07b width="500"}
 
+------------------------------------------------------------------------
+
 ![Figure 7c. Entity mapping can also be parsed directly from the SQL decoration convention.](assets/fig02-07c_mapping_dictionary_map.png "Figure 7c. Entity mapping can also be parsed from the SQL decoration convention."){#fig02-07c width="500"}
+
+------------------------------------------------------------------------
 
 ![Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention.](assets/fig02-07d_mapping_dictionary_map_json.png "Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention."){#fig02-07d width="500"}
 
+------------------------------------------------------------------------
+
 ![Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.](assets/fig02-07e_mapping_dictionary_ref_map.png "Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships."){#fig02-07e width="500"}
 
-![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The table_explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with shiny::runApp(SHINY_APPS[['table_explorer']].](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The `table_explorer` shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`."){#fig02-08 width="750"}
+------------------------------------------------------------------------
+
+![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The "Table Explorer" shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`).](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`."){#fig02-08 width="100%"}
+
+------------------------------------------------------------------------
 
 The following subsections contain summary information about each of the database nodes, its purpose, and the tables and views held within. Some of this information is subject to change as the database schema is refined and maintained. See the full database schema definition as a JSON object in the project directory as a file ending in `“_data_dictionary.json”`. Entities found in each node and snapshots of their structure from the [complete entity relationship diagram](#figA1-01) (ERD) are provided (right click and open a diagram in a new tab to see it larger); generally, node tables are in a color, automatic views are in grey, and functional views are in white.
 
 Some views are automatically generated (see the flag `“[autogenerated by sqlite_auto_view()]”` in the description) to display human-meaningful values instead of the index linkages for normalized columns, e.g. the `“ms_methods”` table can then be viewed in a "denormalized" way using the `“view_ms_methods”` view to get display values for normalized fields [Figure 9](#fig02-09a).
 
+------------------------------------------------------------------------
+
 ![Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'.](assets/fig02-09a_ms_methods_normalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09a width="500"}
 
+------------------------------------------------------------------------
+
 ![Figure 9b. Screenshot of the first four rows of the denormalized database table 'ms_methods'.](assets/fig02-09b_ms_methods_denormalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09b width="500"}
+
+------------------------------------------------------------------------
 
 #### The Analyte Node {#the-analyte-node .unnumbered}
 
@@ -485,6 +525,8 @@ This node contains information relevant to analytical targets. This node does no
 
 ![Figure 10. Analyte node of the entity relationship diagram (modified).](assets/fig02-10_erd_node_analyte.png "Figure 10. Analyte node of the entity relationship diagram (modified)"){#fig02-010 width="750"}
 
+------------------------------------------------------------------------
+
 #### The Contributors Node {#the-contributors-node .unnumbered}
 
 This node contains information relevant to identifying data contributors, similar to a "users" table. It is used primarily to provide contribution statistics and tie data to data producers in the samples and analytes node, both of which are connected to the peaks node. When the database is built, a "sys" username with the affiliation "system" is automatically added as a default user.
@@ -503,7 +545,11 @@ This node contains information relevant to identifying data contributors, simila
 | view_contributors | Readable version of the contributors table that can be expanded with counts of contributions from various places. |
 +-------------------+-------------------------------------------------------------------------------------------------------------------+
 
+------------------------------------------------------------------------
+
 ![Figure 11. Contributors node of the entity relationship diagram (modified).](assets/fig02-11_erd_node_contributors.png "Figure 11. Contributors node of the entity relationship diagram (modified)"){#fig02-011 width="600"}
+
+------------------------------------------------------------------------
 
 #### The Data Node {#the-data-node .unnumbered}
 
@@ -556,6 +602,8 @@ This node contains mass spectral data, metadata about samples and the software u
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ![Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node.](assets/fig02-12_erd_node_data_all.png "Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node."){#fig02-012 width="600"}
+
+------------------------------------------------------------------------
 
 #### The Logging Node {#the-logging-node .unnumbered}
 
@@ -677,6 +725,8 @@ This node contains data describing experimental settings, both for the chromatog
 
 ![Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified).](assets/fig02-13d_erd_node_methods4.png "Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified)."){#fig02-13d width="600"}
 
+------------------------------------------------------------------------
+
 #### The Reference Node {#the-reference-node .unnumbered}
 
 This node contains universally applicable reference information for chemical metrology. Data for elements, their exact masses, and their natural isotopic abundances are automatically added as part of the database build process. It also includes a configuration table that, when built, will contain the current datetime stamp and an 8-character HEX installation code that should assist with any later combinations or referencing across database installations. This node does not directly connect to any others but serves only for computational convenience.
@@ -700,6 +750,8 @@ This node contains universally applicable reference information for chemical met
 +-----------------------+--------------------------------------------------------------------------------------------------------------------+
 
 ![Figure 14. Reference node of the entity relationship diagram (modified)](assets/fig02-14_erd_node_reference.png "Figure 14. Reference node of the entity relationship diagram (modified)"){#fig02-14 width="436"}
+
+------------------------------------------------------------------------
 
 #### Script Generated Views and Triggers {#script-generated-views-and-triggers .unnumbered}
 
@@ -745,13 +797,25 @@ This section lists out the three applications that ship with the project and giv
 
 ### Table Explorer {#app-table-explorer .unnumbered}
 
-The table_explorer shiny app is simple example included with the project. It provides information about tables and views in an intuitive interface and details not only their contents but the entity definition and links to other entities in a human-readable format. Launch it after the compliance script has been run with `run_app(“table_explorer”)` or from the console or command line with `shiny::runApp(“inst/apps/table_explorer”)` which will solve the environment and launch the application. A developer mode is also available, allowing users to click the "Inspect" button to drop into an interactive R session to view (set `dev = TRUE` in `global.R` inside the app directory). The application includes only two screens, one ("Table Viewer") to preview data available there and to view structural information for an entity selected, and another to view a high-resolution picture of the entity relationship diagram that can be downloaded or examined in a separate browser tab with the right-click context menu option to open an image in a new tab.
+This Shiny application is simple example included with the project. It provides information about tables and views in an intuitive interface and details not only their contents but the entity definition and links to other entities in a human-readable format. Launch it after the compliance script has been run with `run_app(“table_explorer”)` or from the console or command line with `shiny::runApp(“inst/apps/table_explorer”)` which will solve the environment and launch the application. A developer mode is also available, allowing users to click the "Inspect" button to drop into an interactive R session to view (set `dev = TRUE` in `global.R` inside the app directory). The application includes only two screens, one ("Table Viewer") to preview data available there and to view structural information for an entity selected, and another to view a high-resolution picture of the entity relationship diagram that can be downloaded or examined in a separate browser tab with the right-click context menu option to open an image in a new tab.
 
 This application served as proof-of-concept for environment resolution and API communication, and to provide DIMSpec users and developers a way to visualize connections between database entities.
 
-![Figure 15. Screenshot of the "table_explorer" shiny application showing database structural information available at a glance for the view_exact_masses database table.](assets/fig02-15_screenshot_table_explorer.png "Figure 15. Screenshot of the 'table_explorer' shiny application showing database structural information available at a glance for the view_exact_masses database table."){#fig02-15 width="500"}
+The Table Explorer application is detailed in its own [section](#table-explorer-home).
+
+------------------------------------------------------------------------
+
+![Figure 15. Screenshot of the "Table Explorer" shiny application showing database structural information available at a glance for the view_exact_masses database table.](assets/fig02-15_screenshot_table_explorer.png "Figure 15. Screenshot of the 'Table Explorer' shiny application showing database structural information available at a glance for the view_exact_masses database table."){#fig02-15 width="500"}
+
+------------------------------------------------------------------------
 
 ### Mass Spectral Match (MSMatch) {#app-msmatch .unnumbered}
+
+This Shiny application could easily be considered the entire reason behind the genesis of the DIMSpec project. It was built specifically to accelerate non-targeted analysis projects by searching experiment result data in [mzML](https://www.psidev.info/mzML) format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec tool set. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/)), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview).
+
+The MSMatch application is detailed in its own [section](#msmatch-home).
+
+![Figure 16. Screenshot of the "Mass Spectral Match" application with user data showing matches to known mass spectral signatures.](assets/fig02-16_app_spectral_match_example.png "Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures."){#fig02-16 width="100%"}
 
 ### Mass Spectral Quality Control (MSQC) {#app-mscq .unnumbered}
 
@@ -773,7 +837,7 @@ Communication with the underlying database is performed by default using a backg
 
 The environment for the API is defined at `inst/plumber/env_plumb.R`; package requirements are resolved as part of the environment. When launched as a background process the name of the resulting object is drawn from the `env_plumb.R` file, by default `plumber_service`. During launch the server will add several R scripts from defined files in the project directory; more can be added by modifying the `r_scripts` variable. Logging is turned on by default for the API as no interactive session is available. Finally, `rdkit` integration is enabled and a connection is established with the project database as defined elsewhere. Any of these settings can be customized for use.
 
-Certain options which may also be changed are set at the project level in `"config/env_R.R"`, which is necessary to share values and keep sessions connected appropriately. Those options include the `PLUMBER_VERSION` (if you are iterating for development, testing, or deployment), `PLUMBER_HOST`, `PLUMBER_PORT`, and `PLUMBER_FILE.` These should generally not be changed, but certain network configurations may require alterations to the host and port. It is recommended in that case to set options (e.g. `getOption("plumber.host")` and `getOption("plumber.port")`) in the project or user `.Renviron` file or in the session prior to running the compliance script to set other values; the compliance script will honor those settings. The default listening port is <http://127.0.0.1:8080>; Swagger documentation will be available at <http://127.0.0.1:8080/__docs__> until the server stops.
+Certain options which may also be changed are set at the project level in `"config/env_R.R"`, which is necessary to share values and keep sessions connected appropriately. Those options include the `PLUMBER_VERSION` (if you are iterating for development, testing, or deployment), `PLUMBER_HOST`, `PLUMBER_PORT`, and `PLUMBER_FILE.` These should generally not be changed, but certain network configurations may require alterations to the host and port. It is recommended in that case to set options (e.g. `getOption("plumber.host")` and `getOption("plumber.port")`) in the project or user `.Renviron` file or in the session prior to running the compliance script to set other values; the compliance script will honor those settings. The default listening port is `http://127.0.0.1:8080`; Swagger documentation will be available at `http://127.0.0.1:8080/__docs__` until the server stops.
 
 To restart the API server from an R session, use the `api_reload` function. This will close and relaunch the service in a background process and return control to your session. Call it with `background = FALSE` to launch it directly within the current session, which will automatically launch a browser pointing to the Swagger documentation. By default `api_reload` pulls its parameters from the current compute environment. To launch a second API server with different endpoints under a different name, use `api_reload` with different parameters, e.g.:
 
@@ -784,7 +848,7 @@ To restart the API server from an R session, use the `api_reload` function. This
       on_port = 8085
     )
 
-The background process is launched using `callr::r_bg` and the health of resulting object can be checked with the `api_service2$is_alive()` property for the example above. With the server running, call `api_open_doc` with the API URL (e.g. <http://127.0.0.1:8085> for the example above) to launch a browser with the documentation.
+The background process is launched using `callr::r_bg` and the health of resulting object can be checked with the `api_service2$is_alive()` property for the example above. With the server running, call `api_open_doc` with the API URL (e.g. `http://127.0.0.1:8085` for the example above) to launch a browser with the documentation.
 
 Plumber endpoints are decorated R functions available to a routing server managing transactions for request and response. Endpoint specifications that ship with the project are defined in the `inst/plumber/plumber.R` file. Plumber uses the OpenAPI specification and provides interactive [Swagger](https://swagger.io/) documentation once the server is active. Any R function can be turned into a plumber endpoint, or an endpoint can be defined that uses an existing R function if that function is available in the environment. The latter case is the one used most often in this project; a modified version of the function is created and then redirected as needed. This allows flexibility to be able to handle any preprocessing necessary (e.g. unpacking JSON or argument verification) before calling the underlying function while keeping that function available for interactive use. Several endpoints are provided in the project and are described in the following paragraphs.
 
@@ -912,29 +976,39 @@ verify these files meet import requirements and expectations:
               ifelse(any(obj_check$has_extra), "", "not "))
     )
 
-and examine the resulting `obj_check` session object, a data frame of verification checks which can be filtered and searched as normal [Figure 16](#fig02-16). The missing_requirements, missing_detail, and extra_cols columns in the resulting data frame are list columns detailing any number of verification failures and which elements were missing or not in the import mapping definition.
+and examine the resulting `obj_check` session object, a data frame of verification checks which can be filtered and searched as normal [Figure 17](#fig02-17). The missing_requirements, missing_detail, and extra_cols columns in the resulting data frame are list columns detailing any number of verification failures and which elements were missing or not in the import mapping definition.
 
-![Figure 16. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations.](assets/fig02-16_import_compliance_checks.png "Figure 16. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations."){#fig02-16 width="500"}
+------------------------------------------------------------------------
 
-This verification check is run automatically as part of the `full_import` pipeline, with options to:
+![Figure 17. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations.](assets/fig02-17_import_compliance_checks.png "Figure 17. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations."){#fig02-17 width="750"}
 
-    exclude_missing_required       defaults to FALSE
-    Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements.
+------------------------------------------------------------------------
 
-    stop_if_missing_required       defaults to TRUE
-    Stops the import process if files do not include all requirements. This is forced to TRUE when exclude_missing_required is FALSE to ensure integrity.
+This verification check is run automatically as part of the `full_import` pipeline, with the following parameterized options to determine behavior based on verification of individual components of the import object:
 
-    include_if_missing_recommended defaults to FALSE
-    By default, files missing recommended information are skipped from the import process, under the assumption that data may be missing. Set to TRUE to include these.
+-   *exclude_missing_required*
+    -   defaults to FALSE
+    -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements.
 
-    stop_if_missing_recommended    defaults to TRUE
-    Stops the import process if files do not include all recommended data.
+-   *stop_if_missing_required*
+    -   defaults to TRUE
+    -   Stops the import process if files do not include all requirements. This is forced to TRUE when exclude_missing_required is FALSE to ensure integrity.
 
-    ignore_extra                   defaults to TRUE
-    Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
+-   *include_if_missing_recommended*
+    -   defaults to FALSE
+    -   By default, files missing recommended information are skipped from the import process, under the assumption that data may be missing. Set to TRUE to include these.
 
-    ignore_insert_conflicts        defaults to TRUE
-    Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
+-   *stop_if_missing_recommended*
+    -   defaults to TRUE
+    -   Stops the import process if files do not include all recommended data.
+
+-   *ignore_extra*
+    -   defaults to TRUE
+    -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
+
+-   *ignore_insert_conflicts*
+    -   defaults to TRUE
+    -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
 
 This user guide does not completely detail all of the parameters for the `full_import` function as most are schema specific and passed to underlying action functions. See the full function documentation if interested. The import pipeline resolves each of the [SQL Nodes](#sql-nodes) in order and makes liberal use of console feedback during the process when it cannot automatically resolve:
 

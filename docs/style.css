@@ -1,43 +1,78 @@
 p.caption {
   color: #777;
   margin-top: 10px;
+  text-align: center;
+  padding: 0 10%;
 }
+
+table > caption {
+  font-weight: bold;
+  background-color: black;
+  color: white;
+  text-align: left;
+  padding-left: 15px;
+}
+
 p code {
   white-space: inherit;
 }
+
 pre {
   word-break: normal;
   word-wrap: normal;
 }
+
 pre code {
   white-space: inherit;
 }
+
 img {
   display: block;
   margin: auto;
 }
-p.caption {
-  text-align: center;
-}
+
 #nist-logo {
   width: 100%;
   filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
   padding: 15px 15px 0 15px;
 }
+
 #book-title {
   color: #364149;
   margin-left: 15px;
 }
 
-#contributors > ul > li > p > a > img {
+#intro-contributors > ul > li > p > a > img {
   display: inline;
-  padding-bottom: 5px;
+  width: 13px;
 }
-#contributors > ul > li > p {
+
+#intro-contributors > ul > li > p {
   margin-top: 0;
   margin-bottom: 0;
 }
 
 p {
   text-align: justify;
+}
+
+.footnotes > ol > li > p > code {
+  display: block;
+}
+
+.footnotes > ol {
+  background-color: #f7f7f7;
+  font-size: small;
+}
+
+#fig00-01, #fig00-02, #fig03-03 {
+  display: inline;
+  float: right;
+  margin-left: 25px;
+}
+
+#fig03-02 {
+  display: inline;
+  float: left;
+  margin-left: 25px;
 }

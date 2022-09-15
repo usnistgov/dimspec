@@ -23,14 +23,14 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-14" />
+<meta name="date" content="2022-09-15" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="introduction.html"/>
+<link rel="prev" href="intro-start.html"/>
 <link rel="next" href="technical-details.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
@@ -54,6 +54,70 @@
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
 
 
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
 
 
 <link rel="stylesheet" href="style.css" type="text/css" />
@@ -74,11 +138,11 @@
 
 <li class="divider"></li>
 <li><a href="index.html#preface">Preface<span></span></a></li>
-<li><a href="introduction.html#introduction">Introduction<span></span></a>
+<li><a href="intro-start.html#intro-start">Introduction<span></span></a>
 <ul>
-<li><a href="introduction.html#contributors">Contributors<span></span></a></li>
-<li><a href="introduction.html#contributing">Contributing<span></span></a></li>
-<li><a href="introduction.html#about-this-book">About this Book<span></span></a></li>
+<li><a href="intro-start.html#intro-contributors">Contributors<span></span></a></li>
+<li><a href="intro-start.html#intro-contributing">Contributing<span></span></a></li>
+<li><a href="intro-start.html#intro-about">About this Book<span></span></a></li>
 </ul></li>
 <li><a href="instructions.html#instructions">Instructions<span></span></a>
 <ul>
@@ -129,12 +193,29 @@
 <li><a href="technical-details.html#future-development">Future Development<span></span></a></li>
 </ul></li>
 <li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
-<li><a href="table-explorer.html#table-explorer">Table Explorer<span></span></a>
+<li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
 <ul>
-<li><a href="table-explorer.html#table-viewer">Table Viewer<span></span></a></li>
-<li><a href="table-explorer.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
+<li><a href="table-explorer-home.html#table-viewer">Table Viewer<span></span></a></li>
+<li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
 </ul></li>
-<li><a href="mass-spectral-match-msmatch-a-shiny-application.html#mass-spectral-match-msmatch-a-shiny-application">Mass Spectral Match (MSMatch, a Shiny application)<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-intro">Introduction<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-file-format">Input File Format Requirements<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-launching-msmatch">Launching MSMatch<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-using-msmatch">Using MSMatch<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a>
+<ul>
+<li><a href="msmatch-home.html#msmatch-search-object">Mass Spectral Search Object<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-algorithms">Compound and Fragment Match Algorithms<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-application-settings">Application Settings<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-future">Future Development<span></span></a></li>
+</ul></li>
+<li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
+</ul></li>
 <li><a href="mass-spectral-quality-control-msqc-a-shiny-application.html#mass-spectral-quality-control-msqc-a-shiny-application">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
 <li><a href="references.html#references">References<span></span></a></li>
 <li class="divider"></li>
@@ -165,11 +246,9 @@
 <div id="system-requirements" class="section level3 unnumbered hasAnchor">
 <h3>System Requirements<a href="instructions.html#system-requirements" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.</p>
-<p>After following the R <a href="https://cran.r-project.org/bin/linux/ubuntu">installation instructions for Ubuntu</a>, reduce package installations within R using:</p>
-<pre><code>apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny</code></pre>
 <p><strong>[REQUIRED]</strong> <strong>R 4.1+</strong> (<a href="https://cran.r-project.org/">download</a>) and many packages are required (R Core Team, 2021; various); necessary packages will be installed when the compliance file is sourced, which may take some time when the project is first installed. The RStudio IDE (<a href="https://www.rstudio.com/products/rstudio/download/#download">download</a>; RStudio Team, 2015) is highly recommended for ease of use as this project is distributed as a R project.</p>
 <p><strong>[STRONGLY RECOMMENDED]</strong> <strong>SQLite3</strong> (<a href="https://www.sqlite.com/download.html">download</a>) and its command line interface (CLI; <a href="https://www.sqlite.org/cli.html">download</a>) provide the database engine in structured query language (SQL) and are not technically required as the build can be accomplished purely through R, but it highly recommended to streamline the process and manipulate the database. A lightweight database interface such as <a href="https://dbeaver.com/download/lite/">DBeaver Lite</a> is also suggested for interacting with the database in a classical sense. <strong>Git</strong> (<a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">install instructions</a>) is a repository manager which will make it much easier to install and update the project without downloads. The sqlite3 CLI and git executables must be available via PATH.</p>
-<p><strong>[RECOMMENDED]</strong> For chemical informatics support, both <strong>Python 3.9+</strong> and the <strong>rdkit</strong> library are required for certain operations supporting display and calculations, primarily generation of machine-readable identifiers (e.g. InChI, InChIKey, SMILES, etc) but the full capabilities of rdkit are available (see <a href="https://www.rdkit.org/docs/index.html" class="uri">https://www.rdkit.org/docs/index.html</a> for details); these are turned on by default but are completely optional. An <strong>anaconda</strong> or <strong>miniconda</strong> installation is required. Python integration is not required for spinning up the basic database infrastructure. Users may need to add the conda executable to their PATH and, if conda is already installed, should pay close attention to the Python section of Technical Details. If these are not available, R will install miniconda (this requires user confirmation at the console) and create the necessary environment as part of automated setup during the compliance script. (Another option for chemical informatics is to use the Java-based R package rcdk instead; users will need to install the Java framework prior to installing rcdk (see <a href="https://cimentadaj.github.io/blog/2018-05-25-installing-rjava-on-windows-10/installing-rjava-on-windows-10/">Windows</a>; <a href="https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/">Ubuntu</a>). This package is not well supported and rdkit is preferred.)</p>
+<p><strong>[RECOMMENDED]</strong> For chemical informatics support, both <strong>Python 3.9+</strong> and the <strong>rdkit</strong> library are required for certain operations supporting display and calculations, primarily generation of machine-readable identifiers (e.g. InChI, InChIKey, SMILES, etc) but the full capabilities of rdkit are available (see the <a href="https://www.rdkit.org/docs/index.html">RDKit documentation</a> for details); these are turned on by default but are completely optional. An <strong>anaconda</strong> or <strong>miniconda</strong> installation is required. Python integration is not required for spinning up the basic database infrastructure. Users may need to add the conda executable to their PATH and, if conda is already installed, should pay close attention to the Python section of Technical Details. If these are not available, R will install miniconda (this requires user confirmation at the console) and create the necessary environment as part of automated setup during the compliance script. (Another option for chemical informatics is to use the Java-based R package rcdk instead; users will need to install the Java framework prior to installing rcdk (see <a href="https://cimentadaj.github.io/blog/2018-05-25-installing-rjava-on-windows-10/installing-rjava-on-windows-10/">Windows</a>; <a href="https://www.r-bloggers.com/2018/02/installing-rjava-on-ubuntu/">Ubuntu</a>). This package is not well supported and rdkit is preferred.)</p>
 <p>The following sections provide more detailed information on how to use the tools provided to interact with the database and customize it for other uses or go directly to the “Using DIMSpec” section and continue using the project.</p>
 <p><strong>[OPTIONAL]</strong> It is helpful to have some data on hand to populate and evaluate the database. Every effort has been made to simplify the process of building databases using this tool, and data can be populated from CSV files of a defined structure; examples are provided but the process of generating them can be somewhat onerous as key relationships must be defined to automatically populate in this manner. Future work may be able to simplify this process further, if necessary, but for now, interested researchers within 646 are encouraged to contact this ROA’s authors for guidance on how to transform data to fit this schema.</p>
 </div>
@@ -517,19 +596,24 @@
 <div id="inspecting-database-properties" class="section level3 unnumbered hasAnchor">
 <h3>Inspecting Database Properties<a href="instructions.html#inspecting-database-properties" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Code decoration conventions used in the SQL files enable reading table definitions and properties from SQLite into R with the function <code>pragma_table_info.</code> Supply the name of a database table or view to get information about that table; different connections can also be used for comparison if desired. This is the interactive version; a version in JSON format can be saved using <code>save_data_dictionary.</code> This saved file is loaded during the compliance script as object <code>db_dict</code> which is a named list of data frames; names correspond to database entities. This can be regenerated and brought back into the R session at any time (see <code>data_dictionary</code>) and should be updated if modifications are made to the underlying schema.</p>
+<hr />
 <div class="figure">
 <img src="assets/fig02-01a_data_dict1.png" title="Figure 1a. An example of the data dictionary object." id="fig02-01a" width="500" alt="" />
 <p class="caption">Figure 1a. An example of the data dictionary object.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-01b_data_dict2.png" title="Figure 1b. Details of the &#39;samples&#39; table from the data dictionary." id="fig02-01b" width="500" alt="" />
 <p class="caption">Figure 1b. Details of the “samples” table from the data dictionary.</p>
 </div>
+<hr />
 <p>Relationships between database entities can also be queried programmatically. Use the er_map function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as db_map to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.</p>
+<hr />
 <div class="figure">
 <img src="assets/fig02-02a_db_map1.png" title="Figure 2a. An example of the entity map list" id="fig02-02a" width="500" alt="" />
 <p class="caption">Figure 2a. An example of the R object structure of an entity map as a list.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-02b_db_map2.png" title="Figure 2b. Details of the &#39;samples&#39; table from the data entity map" id="fig02-02b" width="500" alt="" />
 <p class="caption">Figure 2b. Details of the “samples” table from the data entity map object in <a href="instructions.html#fig02-02a">Figure 2a</a>.</p>
@@ -537,8 +621,9 @@
 </div>
 <div id="using-the-api" class="section level3 unnumbered hasAnchor">
 <h3>Using the Application Programming Interface (API)<a href="instructions.html#using-the-api" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<hr />
 <p>Application Programming Interfaces (APIs) enable software components to communicate with each other. Most modern machine communication happens through APIs. In the context of this project, an API server is launched using the <a href="https://www.rplumber.io"><code>plumber</code></a> package to reduce computational load on R sessions or shiny applications and ensure consistent results across multiple sessions. It does not have to be used (set <code>USE_API = FALSE</code> in “env_glob.txt” to turn it off) but is encouraged and is a requirement for all shiny applications that ship with this project.</p>
-<p>The compliance script launches this in a background process by default at <a href="http://127.0.0.1:8080" class="uri">http://127.0.0.1:8080</a>. Use <code>api_open_doc</code> to open the documentation page directly in a browser. To start the service manually from an interactive session and load the documentation immediately for exploration and testing, use <code>api_reload(background = FALSE)</code>; if it is already running in a background process and desirable to launch a second service (e.g. for testing new endpoints or changes to existing ones), set the <code>pr</code> parameter to a different name and the <code>on_port</code> parameter to an open port (it will fail if the port is already in use). Documentation is produced by <a href="https://swagger.io">Swagger</a> and is interactive, allowing for users to enter values and get both the return and the URL necessary to execute that endpoint (<a href="#fig03-03">Figure 3</a>). See the <a href="technical-details.html#plumber">Plumber</a> section in <a href="technical-details.html#technical-details">Technical Details</a> for more information. If the compliance script is run with <code>USE_API = FALSE</code> and <code>api_reload</code> is not available, it may be more intuitive to use <code>start_api</code>.</p>
+<p>The compliance script launches this in a background process by default at <a href="http://127.0.0.1:8080">http://localhost:8080</a>. Use <code>api_open_doc</code> to open the documentation page directly in a browser. To start the service manually from an interactive session and load the documentation immediately for exploration and testing, use <code>api_reload(background = FALSE)</code>; if it is already running in a background process and desirable to launch a second service (e.g. for testing new endpoints or changes to existing ones), set the <code>pr</code> parameter to a different name and the <code>on_port</code> parameter to an open port (it will fail if the port is already in use). Documentation is produced by <a href="https://swagger.io">Swagger</a> and is interactive, allowing for users to enter values and get both the return and the URL necessary to execute that endpoint (<a href="#fig03-03">Figure 3</a>). See the <a href="technical-details.html#plumber">Plumber</a> section in <a href="technical-details.html#technical-details">Technical Details</a> for more information. If the compliance script is run with <code>USE_API = FALSE</code> and <code>api_reload</code> is not available, it may be more intuitive to use <code>start_api</code>.</p>
 <p>Endpoints for many predictable read and search interactions are available. Session variables define the connections, and communication and control functions default to those expected values for streamlining (e.g. functions like <code>api_reload</code>, <code>api_open_doc</code>, and <code>api_endpoint</code> may be called without referring explicitly to a session object or URL for the current project).</p>
 <p>The main interactivity with the API from an R session or shiny application is through the <code>api_endpoint</code> function. The first argument (i.e. <code>path</code>) should always be the endpoint being requested. Additional named parameters are then passed to the API server; the same example endpoint result in <a href="#fig03-03">Figure 3</a> called from the console would be</p>
 <pre><code>  api_endpoint(
@@ -565,14 +650,17 @@
 </ul></li>
 </ul>
 <p>These and other endpoints can be easily defined, expanded, or refined as needed to meet project requirements. Use <code>api_reload</code> to refresh the server when definitions change, or test interactively prior to deployment using Swagger by launching a separate server either by opening the plumber file and clicking the “Run API” button in RStudio, or using the <code>api_start</code> or <code>api_reload</code> functions as described above. To support eventual network deployment, any number of API servers may be launched manually on predefined ports to allow for load balancing.</p>
+<hr />
 <div class="figure">
 <img src="assets/fig02-03_swagger_example.png" title="Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the &#39;Try It Out&#39; button to activate the testing mode." id="fig02-03" width="500" alt="" />
 <p class="caption">Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint <code>/compound_data</code>, available using <code>api_open_doc()</code>. Click the “Try It Out” button to activate the testing mode.</p>
 </div>
+<hr />
 <div class="figure">
 <img src="assets/fig02-04_endpoint_example.png" title="Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session" id="fig02-04" width="500" alt="" />
 <p class="caption">Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.</p>
 </div>
+<hr />
 </div>
 <div id="using-rdkit" class="section level3 unnumbered hasAnchor">
 <h3>Using rdkit<a href="instructions.html#using-rdkit" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -585,10 +673,12 @@
 <li><p><code>molecule_picture</code> creates a graphic of a molecular model from structural notation and is an example of <code>rdkit</code> functionality; and</p></li>
 <li><p><code>rdkit_mol_aliases</code> generates machine-readable structural notation in a variety of formats (e.g. InChI and InChIKey) given a notation with a known format and can interchange between these to create molecular aliases; all formats supported by rdkit are attempted if <code>get_aliases = NULL</code> (<a href="instructions.html#fig02-05">Figure 5</a>) but generally these would be specific by project needs; results that fail or are blank are removed and the return is by default a data frame to support any number of identifiers with one pass.</p></li>
 </ul>
+<hr />
 <div class="figure">
 <img src="assets/fig02-05_rdkit_molecular_aliases.png" title="Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases(&#39;CN1C=NC2=C1C(=O)N(C(=O)N2C)C&#39;, get_aliases = NULL)`" id="fig02-05" width="500" alt="" />
 <p class="caption">Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to <code>rdkit_mol_aliases("CN1C=NC2=C1C(=O)N(C(=O)N2C)C", get_aliases = NULL)</code></p>
 </div>
+<hr />
 </div>
 <div id="logging" class="section level3 unnumbered hasAnchor">
 <h3>Logging<a href="instructions.html#logging" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -601,10 +691,12 @@
   )</code></pre>
 <p>where <code>log_level</code> is the category of message, <code>msg</code> is the message itself, and <code>log_ns</code> is the namespace. Settings defined in the <code>LOGGING</code> session variable determine how logs are processed. Each message produced with <code>log_it</code> includes the timestamp, namespace, status (i.e. <code>log_level</code>), function calling the message, and the message itself. While <code>log_it</code> will print to the console messages of any level, <code>log_level</code> should be one of the supported logging levels (trace, debug, info, success, warn, error, or fatal) to integrate with <code>logger</code>, which is required if the logging message is to be written to a log file.</p>
 <p>Users developing on top of this infrastructure are encouraged to take advantage of the logging functionality and make liberal use of the <code>log_it</code> function to ease debugging and maintenance.</p>
+<hr />
 <div class="figure">
-<img src="assets/fig02-06_logging_example.png" title="Figure 6. Example uses of log_it to log messages." id="fig02-06" width="500" alt="" />
-<p class="caption">Figure 6. Example uses of log_it to log messages.</p>
+<img src="assets/fig02-06_logging_example.png" title="Figure 6. Example uses of log_it to create logging messages." id="fig02-06" width="500" alt="" />
+<p class="caption">Figure 6. Example uses of <code>log_it</code> to create logging messages.</p>
 </div>
+<hr />
 </div>
 <div id="using-shiny-applications" class="section level3 unnumbered hasAnchor">
 <h3>Using Shiny Applications<a href="instructions.html#using-shiny-applications" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -642,8 +734,7 @@
 <hr />
 <ol start="2">
 <li id="fn2"><p>Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.<a href="instructions.html#fnref2" class="footnote-back">↩︎</a></p></li>
-<li id="fn3"><p>This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:</p>
-<p>apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev<a href="instructions.html#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:<code>apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev</code>After following the R <a href="https://cran.r-project.org/bin/linux/ubuntu">installation instructions for Ubuntu</a>, ensure additional requirements using:<code>apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny</code><a href="instructions.html#fnref3" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
             </section>
@@ -651,7 +742,7 @@
           </div>
         </div>
       </div>
-<a href="introduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="intro-start.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
 <a href="technical-details.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
@@ -706,6 +797,20 @@ gitbook.start({
 });
 </script>
 
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
 </body>
 
 </html>
