@@ -1470,11 +1470,14 @@ fn_guide <- function() {
 
 #' Launch the User Guide for DIMSpec
 #'
-#' @param path 
+#' Use this function to launch the bookdown version of the User Guide for the
+#' NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set
 #'
-#' @return None, opens the bookdown version of the DIMSpec User Guide in a browser
+#' @param path
+#'
+#' @return None, opens a browser to the index page of the User Guide
 #' @export
-#'
+#' 
 user_guide <- function(path = "_book/index.html") {
   if (!file.exists(file.path(getwd(), path))) {
     path <- file.path("docs", path)
