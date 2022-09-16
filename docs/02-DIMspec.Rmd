@@ -2,15 +2,15 @@
 
 ## Installation {#installation .unnumbered}
 
-At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^2] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/)[^1] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
 
-[^2]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
+[^1]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
 ### System Requirements {#system-requirements .unnumbered}
 
-DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^3] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
+DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^2] platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.
 
-[^3]: This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:<code>apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev</code>After following the R [installation instructions for Ubuntu](https://cran.r-project.org/bin/linux/ubuntu), ensure additional requirements using:<code>apt install -y –no-install-recommends r-cran-tidyverse r-cran-shiny</code>
+[^2]: This release was tested on a fresh VMWare build of Ubuntu 20.04 LTS which carries several additional system requirements. Prior to running DIMSpec, install or make sure the following are available using:<code>apt install -y build-essential libcurl4-openssl-dev libxml2-dev zlib1g-dev libssl-dev libsodium-dev ffmpeg libtiff-dev libpng-dev libblas-dev liblapack-dev libarpack2-dev gfortran libcairo2-dev libx11-dev libharfbuzz-dev libfribidi-dev libudunits2-dev libgeos-dev libgdal-dev libfftw3-3 libmagick++-dev</code>After following the R [installation instructions for Ubuntu](https://cran.r-project.org/bin/linux/ubuntu), ensure additional requirements using:<code>apt install -y --no-install-recommends r-cran-tidyverse r-cran-shiny</code>
 
 **[REQUIRED]** **R 4.1+** ([download](https://cran.r-project.org/)) and many packages are required (R Core Team, 2021; various); necessary packages will be installed when the compliance file is sourced, which may take some time when the project is first installed. The RStudio IDE ([download](https://www.rstudio.com/products/rstudio/download/#download); RStudio Team, 2015) is highly recommended for ease of use as this project is distributed as a R project.
 
@@ -148,7 +148,7 @@ More customization options that require R are available to set up the project sp
 
 ### Step 3 - Customizing logger settings in the "env_logger.R" file {#step-3---customizing-logger-settings-in-the-env_logger.r-file .unnumbered}
 
-To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function `log_it` which uses the `logger` package for additional functionality (see [Logger](#logger)). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.
+To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function [`log_it`](#fn_log_it){target="_blank"} which uses the `logger` package for additional functionality (see [Logger](#logger)). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.
 
 Three support functions are also provided in this file to update the logger settings during a session (`update_logger_settings`), read logs from a file back into the session (`read_log`), and convert a log file into a session data frame for deeper inspection (`log_as_dataframe`).
 
@@ -989,23 +989,18 @@ This verification check is run automatically as part of the `full_import` pipeli
 -   *exclude_missing_required*
     -   defaults to FALSE
     -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements.
-
 -   *stop_if_missing_required*
     -   defaults to TRUE
     -   Stops the import process if files do not include all requirements. This is forced to TRUE when exclude_missing_required is FALSE to ensure integrity.
-
 -   *include_if_missing_recommended*
     -   defaults to FALSE
     -   By default, files missing recommended information are skipped from the import process, under the assumption that data may be missing. Set to TRUE to include these.
-
 -   *stop_if_missing_recommended*
     -   defaults to TRUE
     -   Stops the import process if files do not include all recommended data.
-
 -   *ignore_extra*
     -   defaults to TRUE
     -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements
-
 -   *ignore_insert_conflicts*
     -   defaults to TRUE
     -   Rather than the import pipeline failing, set this to TRUE to ignore and exclude (and get a list of failures) files that do not meet import requirements

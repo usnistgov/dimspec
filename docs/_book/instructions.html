@@ -216,7 +216,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
 </ul></li>
-<li><a href="mass-spectral-quality-control-msqc-a-shiny-application.html#mass-spectral-quality-control-msqc-a-shiny-application">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
+<li><a href="msqc-home.html#msqc-home">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
 <li><a href="references.html#references">References<span></span></a></li>
 <li><a href="appendix-function-reference.html#appendix-function-reference">Appendix - Function Reference<span></span></a></li>
 <li class="divider"></li>
@@ -486,7 +486,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="step-3---customizing-logger-settings-in-the-env_logger.r-file" class="section level3 unnumbered hasAnchor">
 <h3>Step 3 - Customizing logger settings in the “env_logger.R” file<a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function <code>log_it</code> which uses the <code>logger</code> package for additional functionality (see <a href="technical-details.html#logger">Logger</a>). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.</p>
+<p>To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function <a href="appendix-function-reference.html#fn_log_it" target="_blank"><code>log_it</code></a> which uses the <code>logger</code> package for additional functionality (see <a href="technical-details.html#logger">Logger</a>). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.</p>
 <p>Three support functions are also provided in this file to update the logger settings during a session (<code>update_logger_settings</code>), read logs from a file back into the session (<code>read_log</code>), and convert a log file into a session data frame for deeper inspection (<code>log_as_dataframe</code>).</p>
 <p>Environment set up files that follow the same approach are also provided for rdkit integration, the plumber API server, and shiny web applications; these are not detailed here and should only be changed when necessary. See those sections in Technical Details for more information.</p>
 <table>
