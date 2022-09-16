@@ -65,7 +65,14 @@ p {
   font-size: small;
 }
 
-#fig00-01, #fig00-02, #fig03-03 {
+#fig00-01 {
+  display: inline;
+  float: right;
+  margin-left: 50px;
+  margin-right: 25px;
+}
+
+#fig00-02, #fig03-03 {
   display: inline;
   float: right;
   margin-left: 25px;
@@ -74,5 +81,5 @@ p {
 #fig03-02 {
   display: inline;
   float: left;
-  margin-left: 25px;
+  margin-right: 25px;
 }

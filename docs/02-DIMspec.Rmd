@@ -229,7 +229,7 @@ For users less familiar with SQL, a custom function is provided to support nearl
         table_name = “contributors”
       )
 
-As this function performs argument verification and SQL interpolation to protect queries from unintended side effects, this is the recommended manner to directly interact with the database for anything other than basic queries. It supports typical database actions (including `SELECT`, `INSERT`, `UPDATE`, and `DELETE`, as well as a custom `GET_ID` action that returns an integer vector of the `id` column for all records matching the query), operations (`GROUP BY`, `ORDER BY`, `DISTINCT`, `LIMIT`). Search and filter options can be passed programmatically as a list and are parsed by the `match_criteria` function.
+As this function performs argument verification and SQL interpolation to protect queries from unintended side effects, this is the recommended manner to directly interact with the database for anything other than basic queries. It supports typical database actions (including `SELECT`, `INSERT`, `UPDATE`, and `DELETE`, as well as a custom `GET_ID` action that returns an integer vector of the `id` column for all records matching the query) and operations (`GROUP BY`, `ORDER BY`, `DISTINCT`, `LIMIT`). Search and filter options can be passed programmatically as a list and are parsed by the `match_criteria` function.
 
 Queries do not have to be executed; set the argument `execute = FALSE` to examine queries prior to execution or save common queries for reuse. See the full function reference with for advanced use of the `build_db_action` and `match_criteria` functions with `fn_help(fn)`.
 

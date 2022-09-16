@@ -1,5 +1,5 @@
 ---
-title: "A User Guide for the NIST Database Infrastructure for Mass Spectrometry Toolset"
+title: "A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set"
 author: "Jared M. Ragland and Benjamin J. Place"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
@@ -19,7 +19,7 @@ link-citations: yes
 
 The use of mass spectral libraries is essential for the confident identification and reporting of analytical chemistry measureands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology provides a series of mass spectral libraries in use at analytical research, development, and contracting laboratories throughout the US. Contrasting with targeted methods, where analyte identities and their mass spectral properties are known *a priori* are non-targeted analysis (NTA) methods, where compound identity is unknown. Even when analytes are "known" (i.e. their mass spectral properties have been measured and reported in the literature) different extraction and measurement methods may show slight differences in mass spectral properties. The gold standard for matching mass spectra is through matching with a library of mass spectral standard, yet such standards are available only for a small fraction of "known" analytes.
 
-![](assets/fig00-01_chemical_space.png "The conceptual landscape of mass spectral standard availability."){#fig00-01 width="250"}
+![](assets/fig00-01_chemical_space.png "The conceptual landscape of mass spectral standard availability."){#fig00-01 width="250" }
 
 For analyte classes with decades of analytical study (e.g. polychlorinated biphenyls, vitamins, etc.), such "known" analytes are generally covered well by analytical standards. This is not the case for analyte classes of more recent interest (e.g. per- and polyfluorinated alkyl substances). Research needs generally run ahead of standards availability; new paradigms such as NTA are therefore necessary to assess analyte identity and properties by identifying mass spectral patterns of both the analyte itself and its fragmentation patterns. Analytes characterized in this fashion can then be published for identification in other methods and laboratories. As of 2022, the process of distributing such data still lags behind many research needs.
 

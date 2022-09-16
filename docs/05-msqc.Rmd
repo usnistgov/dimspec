@@ -1,1 +1,1 @@
-# Mass Spectral Quality Control (MSQC, a Shiny application) {-}
+# Mass Spectral Quality Control (MSQC, a Shiny application) {#msqc-home .unnumbered}
