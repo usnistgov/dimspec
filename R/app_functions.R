@@ -1402,7 +1402,7 @@ fn_help <- function(fn_name) {
     using_rstudio <- FALSE
   }
   rd_dir <- here::here("man")
-  html_dir <- here::here(rd_dir, "_html")
+  html_dir <- here::here(rd_dir, "html")
   fn_file <- sprintf("%s.Rd", fn_name)
   fn_file_rendered <- here::here(html_dir, gsub(".Rd", ".html", fn_file))
   fn_file <- here::here(rd_dir, fn_file)
@@ -1421,33 +1421,47 @@ fn_help <- function(fn_name) {
 }
 
 #' Rebuild the help files as HTML with an index
+#' 
+#' @param rebuild_book LGL scalar of whether or not to rebuild an associated bookdown document
+#' @param book Path to folder containing the bookdown document to rebuild
 #'
-#' @return None
-rebuild_help_htmls <- function() {
+#' @return URL to the requested book
+#' 
+rebuild_help_htmls <- function(rebuild_book = TRUE, book = "dimspec_user_guide") {
+  if (rebuild_book) stopifnot(dir.exists(here::here(book)))
   help_files <- list.files(here::here("man"), pattern = ".Rd$")
   html_dir <- here::here("man", "html")
   if (!dir.exists(html_dir)) dir.create(html_dir)
-  index <- '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>DIMSpec Help Index</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><link rel="stylesheet" type="text/css" href="R.css" /></head><body><table width="100%" summary="Help Index for DIMSpec Project"><tr><td><h2>DIMSpec Help Index</h2></td><td style="text-align: right;">R Documentation</td></tr></table><table id="function_list">'
+  index <- '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>DIMSpec Help Index</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><style type="text/css" href="R-help.css" /></head><body><table width="100%" summary="Help Index for DIMSpec Project"><tr><td><h2>DIMSpec Help Index</h2></td><td style="text-align: right;">R Documentation</td></tr></table><table id="function_list">'
   for (fname in help_files) {
     in_file <- here::here("man", fname)
     out_file <- gsub(".Rd", ".html", here::here(html_dir, fname))
     print(sprintf("(%d of %d) Knitting %s to %s", which(help_files == fname), length(help_files), basename(in_file), basename(out_file)))
-    tools::Rd2HTML(in_file, out_file)
+    tools::Rd2HTML(in_file, out_file, stylesheet = "R-help.css")
     contents <- readLines(in_file)
     title <- grep("^\\\\title", contents, value = TRUE)
     title <- gsub("\\\\|title|\\{|\\}", "", title)
     index <- paste0(
       index,
       sprintf(
-        '<tr><td><a href=%s>%s</a></td><td>%s</td></tr>',
-        out_file,
+        '<tr><td><a id="%s" href="%s" target="_blank">%s</a></td><td>%s</td></tr>',
+        sprintf("fn_%s", tools::file_path_sans_ext(basename(out_file))),
+        basename(out_file),
         tools::file_path_sans_ext(basename(out_file)),
         title
       )
     )
   }
+  invisible(file.copy(here::here("man", "R-help.css"), here::here("man", "html", "R-help.css")))
   index <- paste0(index, "</table></body></html>")
   readr::write_file(index, here::here(html_dir, "_index.html"))
+  if (rebuild_book) {
+    book_url <- bookdown::render_book("dimspec_user_guide")
+    invisible(file.copy(here::here("man", "R-help.css"), here::here("dimspec_user_guide", "man", "html", "R-help.css")))
+    return(book_url)
+  } else {
+    return("HTML help files rebuilt.")
+  }
 }
 
 #' View an index of help documentation in your browser
@@ -1473,6 +1487,9 @@ fn_guide <- function() {
 #' Use this function to launch the bookdown version of the User Guide for the
 #' NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set
 #'
+#' @note This works ONLY when DIMSpec is used as a project with the defined
+#'   directory structure
+#'
 #' @param path
 #'
 #' @return None, opens a browser to the index page of the User Guide
@@ -1480,7 +1497,7 @@ fn_guide <- function() {
 #' 
 user_guide <- function(path = "_book/index.html") {
   if (!file.exists(file.path(getwd(), path))) {
-    path <- file.path("docs", path)
+    path <- file.path("dimspec_user_guide", path)
   }
   stopifnot(file.exists(path))
   browseURL(url = path)

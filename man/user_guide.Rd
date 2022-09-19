@@ -6,6 +6,7 @@
 \usage{
 user_guide(path = "_book/index.html")
 }
+\note{This works ONLY when DIMSpec is used as a project with the defined directory structure.
 \arguments{
 \item{path}{}
 }
