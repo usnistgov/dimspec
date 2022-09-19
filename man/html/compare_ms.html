@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Calculate dot product match score</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for compare_ms"><tr><td>compare_ms</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Calculate dot product match score</h2>
+
+<h3>Description</h3>
+
+<p>Calculates a the match score (based on dot product) of the two uncertainty mass spectra.
+Note: this is a static match score and does not include associated uncertainties.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+compare_ms(
+  ms1,
+  ms2,
+  error = c(5, 5),
+  minerror = c(0.002, 0.002),
+  m = 1,
+  n = 0.5
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>ms1, ms2</code></td>
+<td>
+<p>the uncertainty mass spectra from function 'get_ums'</p>
+</td></tr>
+<tr valign="top"><td><code>error</code></td>
+<td>
+<p>a vector of the respective mass error (in ppm) for each mass spectrum or a single vector representing the mass error for all m/z values</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>a two component vector of the respective minimum mass error (in Da) for each mass spectrum or a single value representing the minimum mass error of all m/z values</p>
+</td></tr>
+<tr valign="top"><td><code>m, n</code></td>
+<td>
+<p>weighting values for mass (m) and intensity (n)</p>
+</td></tr>
+</table>
+
+
+</body></html>

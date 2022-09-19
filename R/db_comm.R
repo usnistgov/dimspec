@@ -24,7 +24,6 @@
 #' @return data.frame object representing the SQL PRAGMA expression
 #' @export
 #'
-#' @examples
 pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE) {
   if (exists("log_it")) {
     log_fn("start")

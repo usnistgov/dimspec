@@ -308,10 +308,11 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #' associated logic and enabling routing through other functions, or picking up
 #' arguments from within other function calls.
 #' 
+#' @inheritParams clause_where
+#' 
 #' @param action CHR scalar, of one "INSERT", "UPDATE", "SELECT", "GET_ID", or
 #'   "DELETE"
 #' @param table_name CHR scalar of the table name to which this query applies
-#' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
 #' @param column_names CHR vector of column names to include (default NULL)
 #' @param values LIST of CHR vectors with values to INSERT or UPDATE (default
 #'   NULL)
@@ -338,11 +339,15 @@ clause_where <- function(db_conn, table_names, match_criteria, case_sensitive = 
 #' @usage build_db_action("insert", "table", values = list(col1 = "a", col2 = 2,
 #'   col3 = "describe"), execute = FALSE) build_db_action("insert", "table",
 #'   values = list(col1 = "a", col2 = 2, col3 = "describe"))
+#'   
 #'   build_db_action("get_id", "table", match_criteria = list(id = 2))
+#'   
 #'   build_db_action("delete", "table", match_criteria = list(id = 2))
+#'   
 #'   build_db_action("select", "table", columns = c("col1", "col2", "col3"),
 #'   match_criteria = list(id = 2)) build_db_action("select", "table",
 #'   match_criteria = list(sample_name = "sample 123"))
+#'   
 #'   build_db_action("select", "table", match_criteria = list(sample_name =
 #'   list(value = "sample 123", exclude = TRUE)) build_db_action("select",
 #'   "table", match_criteria = list(sample_name = "sample 123",

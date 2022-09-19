@@ -25,8 +25,6 @@ data (default: "qc")}
 \item{qc_data_table}{CHR scalar name of the database table holding QC data
 (default: "qc_data")}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }

@@ -30,8 +30,6 @@ spectrometry information (default: "massspectrometry")}
 \item{chrom_spec_in}{CHR scalar name of the element in `obj` holding
 chromatographic information (default: "chromatography")}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }

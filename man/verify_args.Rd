@@ -4,14 +4,25 @@
 \alias{verify_args}
 \title{Verify arguments for a function}
 \usage{
-\preformatted{ verify_args(args = list(character_length_2 = c("a",
-"b")), conditions = list(character_length_2 = list(c("mode", "character"),
-c("length", 3)) ) verify_args(args = list(boolean = c(TRUE, FALSE, TRUE)),
-conditions = list(list(c("mode", "logical"), c("length", 1))) )
-verify_args(args = list(foo = c(letters[1:3]), bar = 1:10), conditions =
-list(foo = list(c("mode", "numeric"), c("n>", 5)), bar = list(c("mode",
-"logical"), c("length", 5), c(">", 10), c("between", list(100, 200)),
-c("choices", list("a", "b"))))) }
+\preformatted{
+verify_args(args = list(character_length_2 = c("a", "b")),
+            conditions = list(character_length_2 = list(c("mode", "character"),
+                                                        c("length", 3))
+)
+verify_args(args = list(boolean = c(TRUE, FALSE, TRUE)),
+            conditions = list(list(c("mode", "logical"),
+                                   c("length", 1)))
+)
+verify_args(args = list(foo = c(letters[1:3]),
+                        bar = 1:10),
+            conditions = list(foo = list(c("mode", "numeric"),
+                                         c("n>", 5)),
+                              bar = list(c("mode", "logical"),
+                                         c("length", 5),
+                                         c(">", 10),
+                                         c("between", list(100, 200)),
+                                         c("choices", list("a", "b")))))
+}
 }
 \arguments{
 \item{args}{LIST of named arguments and their values, typically passed

@@ -40,7 +40,8 @@ will parse those for foreign key relationships.
 Primarily, this requires a list object referring to tables that contains in
 each element a child element with the name provided in `references_in`. The
 pre-pass parsing function [get_fkpk_relationships] is used to pull references
-from the full map is used.
+from
+the full map is used.
 }
 \note{
 Tables in `db_map` that do not contain foreign key relationships will

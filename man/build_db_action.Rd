@@ -7,11 +7,15 @@
 build_db_action("insert", "table", values = list(col1 = "a", col2 = 2,
   col3 = "describe"), execute = FALSE) build_db_action("insert", "table",
   values = list(col1 = "a", col2 = 2, col3 = "describe"))
+  
   build_db_action("get_id", "table", match_criteria = list(id = 2))
+  
   build_db_action("delete", "table", match_criteria = list(id = 2))
+  
   build_db_action("select", "table", columns = c("col1", "col2", "col3"),
   match_criteria = list(id = 2)) build_db_action("select", "table",
   match_criteria = list(sample_name = "sample 123"))
+  
   build_db_action("select", "table", match_criteria = list(sample_name =
   list(value = "sample 123", exclude = TRUE)) build_db_action("select",
   "table", match_criteria = list(sample_name = "sample 123",
@@ -23,12 +27,34 @@ build_db_action("insert", "table", values = list(col1 = "a", col2 = 2,
 
 \item{table_name}{CHR scalar of the table name to which this query applies}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{column_names}{CHR vector of column names to include (default NULL)}
 
 \item{values}{LIST of CHR vectors with values to INSERT or UPDATE (default
 NULL)}
+
+\item{match_criteria}{LIST of matching criteria with names matching columns
+against which to apply. In the simplest case, a direct value is given to
+the name (e.g. `list(last_name = "Smith")`) for single matches. All match
+criteria must be their own list item. Values can also be provided as a
+nested list for more complicated WHERE clauses with names `values`,
+`exclude`, and `like` that will be recognized. `values` should be the
+actual search criteria, and if a vector of length greater than one is
+specified, the WHERE clause becomes an IN clause. `exclude` (LGL scalar)
+determines whether to apply the NOT operator. `like` (LGL scalar)
+determines whether this is an equality, list, or similarity. To reverse the
+example above by issuing a NOT statement, use `list(last_name = list(values
+= "Smith", exclude = TRUE))`, or to look for all records LIKE (or NOT LIKE)
+"Smith", set this as `list(last_name = list(values = "Smith", exclude =
+FALSE, like = TRUE))`}
+
+\item{case_sensitive}{LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches}
+
+\item{and_or}{LGL scalar of whether to use "AND" or "OR" for multiple
+criteria, which will be used to combine them all. More complicated WHERE
+clauses (including a mixture of AND and OR usage) should be built directly.
+(default: "OR")}
 
 \item{limit}{INT scalar of the maximum number of rows to return  (default
 NULL)}

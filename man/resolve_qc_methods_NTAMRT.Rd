@@ -52,8 +52,6 @@ information (default: "samples")}
 \item{ignore}{LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
 constraints; default: FALSE)}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }

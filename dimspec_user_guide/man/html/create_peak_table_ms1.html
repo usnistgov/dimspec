@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create peak table for MS1 data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for create_peak_table_ms1"><tr><td>create_peak_table_ms1</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create peak table for MS1 data</h2>
+
+<h3>Description</h3>
+
+<p>Takes a nested peak list and creates a peak table for easier determination of 
+uncertainty of the measurement for MS1 data.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+create_peak_table_ms1(peak, mass, masserror = 5, minerror = 0.002, int0 = NA)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>mass</code></td>
+<td>
+<p>the exact mass of the compound of interest</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>the mass accuracy (in ppm) of the instrument data</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>the minimum mass error (in Da) of the instrument data</p>
+</td></tr>
+<tr valign="top"><td><code>int0</code></td>
+<td>
+<p>the default setting for intensity values for missing m/z values</p>
+</td></tr>
+<tr valign="top"><td><code>peaklist</code></td>
+<td>
+<p>result of the 'create_peak_list' function</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>nested list of dataframes containing all MS2 data for the peak
+</p>
+
+
+</body></html>

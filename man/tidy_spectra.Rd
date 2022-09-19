@@ -9,7 +9,7 @@ tidy_spectra(
   is_file = FALSE,
   is_format = c("separated", "zipped"),
   spectra_set = "msdata",
-  ms_col_sep = c("mz", "intensity"),
+  ms_col_sep = c("measured_mz", "measured_intensity"),
   ms_col_zip = "data",
   is_JSON = FALSE
 )

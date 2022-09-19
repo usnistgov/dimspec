@@ -115,7 +115,6 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
 #' @return data.frame with column of exact masses appended to it
 #' @export
 #'
-#' @examples
 
 monoisotope.list <- function(df, column, exactmasses, remove.elements = c(), adduct = "neutral") {
   if (is.character(column)) {
@@ -174,8 +173,6 @@ adduct_formula <- function(elementalformula, adduct = "+H") {
 #' @return logical
 #' @export 
 #'
-#' @examples
-
 is_elemental_match <- function(testformula, trueformula) {
   test_list <- extract.elements(testformula, remove.elements = c())
   true_list <- extract.elements(trueformula, remove.elements = c())

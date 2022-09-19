@@ -13,7 +13,6 @@
 #' @return
 #' @export
 #'
-#' @examples
 optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson") {
   if (ncol(peaktable$peaktable_mass) < min_n_peaks) {min_n_peaks <- 1}
   opt_ums <- try(get_ums(peaktable, correl = max_correl, ph = max_ph, freq = max_freq, cormethod = cormethod), silent = TRUE)
@@ -51,7 +50,6 @@ optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph 
 #' @return
 #' @export
 #'
-#' @examples
 get_opt_params <- function(con, peak_ids) {
   output <- DBI::dbGetQuery(conn = con, 
                   paste0(

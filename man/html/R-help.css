@@ -1,0 +1,8 @@
+table > tbody > tr > td:nth-child(1) {
+  padding-top: 0.5em;
+  padding-right: 1em;
+}
+
+table > tbody > tr > td > p {
+  margin-block: 0.5em;
+}

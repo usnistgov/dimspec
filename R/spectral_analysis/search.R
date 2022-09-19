@@ -1,19 +1,21 @@
 
 #' Create data.frame containing parameters for extraction and searching
 #'
-#' @param filename 
-#' @param precursormz 
-#' @param rt 
-#' @param rt_start 
-#' @param rt_end 
-#' @param masserror 
-#' @param minerror 
+#' Use this to create an intermediate data frame object used as part of the search routine.
 #'
-#' @return
+#' @param filename CHR scalar path to the mzml file
+#' @param precursormz NUM scalar for the mass-to-charge ratio to examine
+#' @param rt NUM scalar for the retention time centroid to examine
+#' @param rt_start NUM scalar for the retention time start point of the feature
+#' @param rt_end NUM scalar for the retention time end point of the feature
+#' @param masserror NUM scalar of the instrument mass error value in parts per million
+#' @param minerror NUM scalar of the minimum mass error value to use in absolute terms
+#' @param ms2exp NUM scalar type of the fragmentation experiment (e.g. MS1 or MS2)
+#' @param isowidth NUM scalar mass isolation width to use
+#'
+#' @return data.frame object collating provided values
 #' @export
 #'
-#' @examples
-
 create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masserror, minerror, ms2exp, isowidth) {
   data.frame(filename = filename,
              precursormz = precursormz,
@@ -26,17 +28,16 @@ create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masser
              isowidth = isowidth)
 }
 
-
 #' Brings raw data file into environment
+#'
 #' If filename is not extension .mzML, then converts the raw file
 #'
-#' @param search_df 
+#' @param search_df data.frame output of [create_search_df] or file name of a raw file to be converted
+#' @param CONVERT LGL scalar of whether or not to convert the search_df filename (default FALSE)
+#' @param CHECKCONVERT LGL scalar of whether or not to verify the conversion format (default TRUE)
 #'
 #' @return
-#' @export
 #'
-#' @examples
-
 getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE) {
   ext <-  gsub(pattern = "[[:print:]]*\\.(.*)$", replacement = "\\1", basename(search_df$filename))
   mzmlfile = search_df$filename
@@ -71,7 +72,6 @@ getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE) {
 #' @return
 #' @export
 #'
-#' @examples
 check_mzML_convert <- function(mzml) {
   msconvertdata <- do.call(c, get_msconvert_data(mzml))
   result <- c(TRUE, TRUE, TRUE)
@@ -99,8 +99,6 @@ check_mzML_convert <- function(mzml) {
 #' @return
 #' @export
 #'
-#' @examples
-
 get_search_object <- function(searchmzml, zoom = c(1,4)) {
   scans <- which(names(searchmzml$mzML$run$spectrumList) == "spectrum")
   times <- sapply(scans, gettime, mzml=searchmzml)
@@ -163,8 +161,6 @@ get_search_object <- function(searchmzml, zoom = c(1,4)) {
 #' @return list object containing the ms1 uncertainty mass spectrum `ums1`, ms2 uncertainty mass spectrum `ums2` and respective uncertainty mass spectrum parameters `ms1params` and `ms2params`
 #' @export
 #'
-#' @examples
-
 create_search_ms <- function(searchobj, correl = NULL, ph = NULL, freq = NULL, normfn = "sum", cormethod = "pearson") {
   ms1 <- NULL
   ms2 <- NULL
@@ -194,8 +190,6 @@ create_search_ms <- function(searchobj, correl = NULL, ph = NULL, freq = NULL, n
 #' @return data.frame of mass spectral data
 #' @export
 #'
-#' @examples
-
 get_msdata_precursors <- function(con, precursorion, masserror, minerror) {
   DBI::dbGetQuery(
     conn = con,
@@ -218,7 +212,8 @@ get_msdata_precursors <- function(con, precursorion, masserror, minerror) {
 #' @return data.frame of mass spectral data
 #' @export
 #'
-#' @examples
+#' @usage
+#' get_msdata_compound(con, 15)
 
 get_msdata_compound <- function(con, compoundid) {
   DBI::dbGetQuery(
@@ -240,7 +235,8 @@ get_msdata_compound <- function(con, compoundid) {
 #' @return data.frame of mass spectral data
 #' @export
 #'
-#' @examples
+#' @usage
+#' get_msdata_peakid(con, 15)
 
 get_msdata_peakid <- function(con, peakid) {
   DBI::dbGetQuery(
@@ -262,8 +258,6 @@ get_msdata_peakid <- function(con, peakid) {
 #' @return data.frame of mass spectral data
 #' @export
 #'
-#' @examples
-
 get_annotated_fragments <- function(con, fragmentions, masserror, minerror) {
   do.call(rbind, lapply(fragmentions, function(ion) 
     DBI::dbGetQuery(
@@ -289,8 +283,6 @@ get_annotated_fragments <- function(con, fragmentions, masserror, minerror) {
 #' @return
 #' @export
 #'
-#' @examples
-#
 get_compound_fragments <- function(con, fragmentions, masserror, minerror) {
   do.call(rbind, lapply(fragmentions, function(ion) 
     DBI::dbGetQuery(
@@ -314,8 +306,6 @@ get_compound_fragments <- function(con, fragmentions, masserror, minerror) {
 #' @return data.frame of mass spectral data
 #' @export
 #'
-#' @examples
-
 get_msdata <- function(con) {
   DBI::dbGetQuery(
     conn = con,
@@ -333,8 +323,6 @@ get_msdata <- function(con) {
 #' @return numeric value of precursor ion m/z value
 #' @export
 #'
-#' @examples
-#
 get_peak_precursor <- function(con, peakid) {
   DBI::dbGetQuery(
     conn = con,
@@ -355,9 +343,6 @@ get_peak_precursor <- function(con, peakid) {
 #' @return data.frame of annotated fragments
 #' @export
 #'
-#' @examples
-#' 
-
 get_peak_fragments <- function(con, peakid) {
   DBI::dbGetQuery(
     conn = con,
@@ -384,7 +369,6 @@ get_peak_fragments <- function(con, peakid) {
 #' @return table of fragments and TRUE/FALSE for if the fragment is within the unknown mass spectrum
 #' @export
 #'
-#' @examples
 check_fragments <- function(con, ums, peakid, masserror = 5, minerror = 0.001) {
   peak_fragments <- get_peak_fragments(con, peakid)
   results <- rep(FALSE, nrow(peak_fragments))
@@ -404,7 +388,6 @@ check_fragments <- function(con, ums, peakid, masserror = 5, minerror = 0.001) {
 #' @return table summary of check_fragments function
 #' @export
 #'
-#' @examples
 summarize_check_fragments <- function(fragments_checked) {
   summarized <- data.frame(total_ann_fragments = rep(0, length(unique(fragments_checked$peak_id))),
                            total_ann_structures = rep(0, length(unique(fragments_checked$peak_id))),
@@ -419,9 +402,7 @@ summarize_check_fragments <- function(fragments_checked) {
   summarized
 }
 
-
-
-#'  Get the sample class information for specific peaks
+#' Get sample class information for specific peaks
 #'
 #' @param con SQLite database connection 
 #' @param peakid integer vector of primary keys for peaks table
@@ -429,7 +410,6 @@ summarize_check_fragments <- function(fragments_checked) {
 #' @return
 #' @export
 #'
-#' @examples
 get_sample_class <- function(con, peakid) {
   DBI::dbGetQuery(conn = con, 
                   paste0(
@@ -450,7 +430,6 @@ get_sample_class <- function(con, peakid) {
 #' @return table of compound IDs and names
 #' @export
 #'
-#' @examples
 get_compoundid <- function(con, peakid) {
   DBI::dbGetQuery(conn = con, 
                   paste0(
@@ -482,8 +461,6 @@ get_errorinfo <- function(con, peakid) {
 #' @return table of match statistics for the compound of interest
 #' @export
 #'
-#' @examples
-
 search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata_precursors(con, searchms$search_df$precursormz, searchms$search_df$masserror, searchms$search_df$minerror)
   peak_ids <- unique(msdata$peak_id)
@@ -554,11 +531,9 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
 #' @param con SQLite database connection 
 #' @param searchms object generated from `create_search_ms` function 
 #'
-#' @return
+#' @return LIST of search results
 #' @export
 #'
-#' @examples
-
 search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", optimized_params = TRUE) {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)

@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Convert SMILES string to Formula and other information</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for smilestoformula"><tr><td>smilestoformula</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Convert SMILES string to Formula and other information</h2>
+
+<h3>Description</h3>
+
+<p>The function converts SMILES strings into a data frame containing the molecular
+formula (FORMULA), fixed mass of the formula (FIXED MASS), and the net charge (NETCHARGE).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+smilestoformula(SMILES)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>SMILES</code></td>
+<td>
+<p>vector of SMILES strings</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data frame
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+smilestoformula(c("CCCC", "C(F)(F)F"))
+
+smilestoformula("CCCC")
+</pre>
+
+
+</body></html>

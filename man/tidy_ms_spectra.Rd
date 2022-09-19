@@ -13,7 +13,7 @@ tidy_ms_spectra(df = packed_data)
 data.frame object containing tidy spectra
 }
 \description{
-A convenience function to take outputs from `ms_spectra_separated` and
-`ms_spectra_zipped` and return them as a tidy data frame by unpacking the
+A convenience function to take outputs from [ms_spectra_separated] and
+[ms_spectra_zipped] and return them as a tidy data frame by unpacking the
 list column "spectra".
 }

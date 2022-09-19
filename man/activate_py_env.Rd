@@ -18,7 +18,7 @@ NULL, will look for an environment variable named `PYENV_NAME`}
 
 \item{required_libraries}{CHR vector of python libraries to include in the
 environment, if building a new environment. Ignored if `env_name` is an
-existing environment. The defaul, NULL, will look for an environment
+existing environment. The default, NULL, will look for an environment
 variable named `PYENV_LIBRARIES`.}
 
 \item{required_modules}{CHR vector of modules to be checked for availability

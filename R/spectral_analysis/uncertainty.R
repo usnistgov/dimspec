@@ -10,8 +10,6 @@
 #' @return nested list of all data
 #' @export
 #'
-#' @examples
-
 create_peak_list <- function(ms_data) {
   lapply(1:nrow(ms_data), function(x) list(
     masses =  as.numeric(unlist(strsplit(ms_data$measured_mz[x]," "))), 
@@ -38,8 +36,6 @@ create_peak_list <- function(ms_data) {
 #' @return nested list of dataframes containing all MS2 data for the peak
 #' @export
 #'
-#' @examples
-#' 
 create_peak_table_ms2 <- function(peak, mass, masserror = 5, minerror = 0.002, int0 = NA) {
   #creates MS2 data tables from a peak object including the mass and intensity (separate tables) into a peak table object
   scans <- 1:length(peak)
@@ -77,9 +73,6 @@ create_peak_table_ms2 <- function(peak, mass, masserror = 5, minerror = 0.002, i
 #' @return nested list of dataframes containing all MS2 data for the peak
 #' @export
 #'
-#' @examples
-#' 
-
 create_peak_table_ms1 <- function(peak, mass, masserror = 5, minerror = 0.002, int0 = NA) {
   #creates MS1 data tables from a peak object including the mass and intensity (separate tables) into a peak table object
   scans <- 1:length(peak)
@@ -184,9 +177,6 @@ getmergedind <- function(masses, addms, masserror, minerror) {
 #' @return nested list of dataframes containing all MS1 and MS2 data for the peak
 #' @export
 #'
-#' @examples
-#'
-
 get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "sum", cormethod = "pearson") {
   
   if (attr(peaktable, "mslevel") == 2) {eic_cor <- eic <- peaktable$EIC$intensity[sapply(peaktable$ms2scans, function(x) which.min(abs(x - peaktable$ms1scans)))]}
@@ -244,9 +234,6 @@ get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "
 #' @return nested list of dataframes containing all MS1 and MS2 data for the peak
 #' @export
 #'
-#' @examples
-#'
-
 plot_ms <- function(ms, xlim = NULL, ylim = NULL, main = "Mass Spectrum", color = "black", size = 1, removal = 0) {
   require(ggplot2)
   ms <- ms[which(ms$int >= removal),]

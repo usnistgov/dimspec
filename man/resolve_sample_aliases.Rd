@@ -31,8 +31,6 @@ sample is drawn) to that alias}
 \item{db_table}{CHR scalar name of the database table containing sample
 aliases (default: "sample_aliases")}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }

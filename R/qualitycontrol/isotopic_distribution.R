@@ -12,8 +12,6 @@
 #' @return
 #' @export
 #'
-#' @examples
-
 isotopic_distribution <- function(elementalformula, exactmasschart, remove.elements = c(), max.dist = 3, min.int = 0.001, charge = "neutral") {
   elementlist <- extract.elements(elementalformula, remove.elements)
   abund <- lapply(elementlist$elements, function(x) {
@@ -73,8 +71,6 @@ isotopic_distribution <- function(elementalformula, exactmasschart, remove.eleme
 #' @return
 #' @export
 #'
-#' @examples
-
 check_isotopedist <- function(ms, elementalformula, exactmasschart, error, minerror = 0.002, remove.elements = c(), max.dist = 3, min.int = 0.001, charge = "neutral", m = 1, n = 0.5) {
   ms_sim <- isotopic_distribution(elementalformula, exactmasschart, remove.elements, max.dist, min.int, charge)
   compare_ms(ms, ms_sim, error, minerror, m, n)

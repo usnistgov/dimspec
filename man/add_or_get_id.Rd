@@ -18,7 +18,7 @@ add_or_get_id(
 \item{db_table}{CHR scalar name of the database table being modified}
 
 \item{values}{named vector of the values being added, passed to
-\code{\link{build_db_action}}}
+[build_db_action]}
 
 \item{db_conn}{connection object (default: con)}
 
@@ -45,11 +45,11 @@ vector of the values to add. No data coercion is performed, relying almost
 entirely on the database schema or preprocessing to ensure data integrity.
 }
 \details{
-Provided values are checked against required columns in the table using
-\code{\link{verify_import_columns}}.
+Provided values are checked agaisnt required columns in the table using
+[verify_import_columns].
 
 Operations to add the record and get the resulting ID are both performed with
-\code{\link{build_db_action}} and are performed virtually back to back with the
+[build_db_action] and are performed virtually back to back with the
 latest-added ID being given preference in cases where added values may match
 multiple extant records.
 }

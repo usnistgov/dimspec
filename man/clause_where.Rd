@@ -9,8 +9,6 @@ clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
 clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
 }
 \arguments{
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{table_names}{CHR vector of tables to search}
 
 \item{match_criteria}{LIST of matching criteria with names matching columns

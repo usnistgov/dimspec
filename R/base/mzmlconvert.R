@@ -6,8 +6,6 @@
 #' @param outdir directory path for the converted mzML file.
 #'
 #'
-#' @examples
-
 mzMLconvert <- function(rawfile, msconvert = NULL, config = NULL, outdir = getwd()) {
   rawfile <- paste0("\"", rawfile, "\"")
   if (is.null(msconvert)) {msconvert = readLines("config/msconvert_location.txt", warn = FALSE)}
