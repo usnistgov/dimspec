@@ -30,11 +30,12 @@ This book describes a tool set produced by the NIST Chemical Sciences Division t
 We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the [FAIR](https://www.go-fair.org) principles.
 
 Sincerely,\
-Jared and Ben\
-Research Chemists\
+Jared<sup><small>1</small></sup> and Ben<sup><small>2</small></sup>\
 National Institute of Standards and Technology\
 Material Measurement Laboratory\
-Chemical Sciences Division
+Chemical Sciences Division\
+<sup><small>1</small></sup>Research Biologist, Chemical Informatics Group\
+<sup><small>2</small></sup>Research Chemist, Organic Chemical Metrology Group
 
 ```{r include=FALSE}
 # automatically create a bib database for R packages

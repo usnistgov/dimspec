@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-19" />
+<meta name="date" content="2022-09-20" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -133,7 +133,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <nav role="navigation">
 
 <ul class="summary">
-<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg"></img></a>
+<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
 <h2 id="book-title">DIMSpec User Guide</h2>
 
 <li class="divider"></li>
@@ -146,46 +146,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li><a href="instructions.html#instructions">Instructions<span></span></a>
 <ul>
-<li><a href="instructions.html#installation">Installation<span></span></a>
-<ul>
-<li><a href="instructions.html#system-requirements">System Requirements<span></span></a></li>
-<li><a href="instructions.html#quick-start-guide">Quick Start Guide<span></span></a></li>
-</ul></li>
+<li><a href="instructions.html#installation">Installation<span></span></a></li>
 <li><a href="instructions.html#project-directory">Project Directory<span></span></a></li>
-<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a>
-<ul>
-<li><a href="instructions.html#step-1---global-compute-environment-settings">Step 1 - Global compute environment settings<span></span></a></li>
-<li><a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file">Step 2 - Customizing R session settings in the “env_R.R” file<span></span></a></li>
-<li><a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file">Step 3 - Customizing logger settings in the “env_logger.R” file<span></span></a></li>
-</ul></li>
-<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a>
-<ul>
-<li><a href="instructions.html#database-connections">Database Connections<span></span></a></li>
-<li><a href="instructions.html#using-a-database-connection-in-an-r-session">Using a Database Connection in an R Session<span></span></a></li>
-<li><a href="instructions.html#inspecting-database-properties">Inspecting Database Properties<span></span></a></li>
-<li><a href="instructions.html#using-the-api">Using the Application Programming Interface (API)<span></span></a></li>
-<li><a href="instructions.html#using-rdkit">Using rdkit<span></span></a></li>
-<li><a href="instructions.html#logging">Logging<span></span></a></li>
-<li><a href="instructions.html#using-shiny-applications">Using Shiny Applications<span></span></a></li>
-<li><a href="instructions.html#importing-data">Importing Data<span></span></a></li>
-<li><a href="instructions.html#ending-your-session">Ending Your Session<span></span></a></li>
-<li><a href="instructions.html#updating-the-schema">Updating the Schema<span></span></a></li>
-</ul></li>
+<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a></li>
+<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a></li>
 </ul></li>
 <li><a href="technical-details.html#technical-details">Technical Details<span></span></a>
 <ul>
-<li><a href="technical-details.html#database-schema">Database Schema<span></span></a>
-<ul>
-<li><a href="technical-details.html#sql-nodes">SQL Nodes<span></span></a></li>
-</ul></li>
+<li><a href="technical-details.html#database-schema">Database Schema<span></span></a></li>
 <li><a href="technical-details.html#populating-data-at-build">Populating Data at Build<span></span></a></li>
 <li><a href="technical-details.html#compute-environments">Compute Environments<span></span></a></li>
-<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a>
-<ul>
-<li><a href="technical-details.html#app-table-explorer">Table Explorer<span></span></a></li>
-<li><a href="technical-details.html#app-msmatch">Mass Spectral Match (MSMatch)<span></span></a></li>
-<li><a href="technical-details.html#app-mscq">Mass Spectral Quality Control (MSQC)<span></span></a></li>
-</ul></li>
+<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a></li>
 <li><a href="technical-details.html#logger">Logger<span></span></a></li>
 <li><a href="technical-details.html#plumber">Plumber<span></span></a></li>
 <li><a href="technical-details.html#python">Python<span></span></a></li>
@@ -195,28 +166,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
 <li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
 <ul>
-<li><a href="table-explorer-home.html#table-viewer">Table Viewer<span></span></a></li>
+<li><a href="table-explorer-home.html#table-explorer-table-viewer">Table Viewer<span></span></a></li>
 <li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
 </ul></li>
 <li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
 <ul>
 <li><a href="msmatch-home.html#msmatch-intro">Introduction<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a>
-<ul>
-<li><a href="msmatch-home.html#msmatch-file-format">Input File Format Requirements<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-launching-msmatch">Launching MSMatch<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-using-msmatch">Using MSMatch<span></span></a></li>
-</ul></li>
-<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a>
-<ul>
-<li><a href="msmatch-home.html#msmatch-search-object">Mass Spectral Search Object<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-algorithms">Compound and Fragment Match Algorithms<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-application-settings">Application Settings<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-future">Future Development<span></span></a></li>
-</ul></li>
+<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a></li>
 <li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
 </ul></li>
-<li><a href="msqc-home.html#msqc-home">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
+<li><a href="msqc-home.html#msqc-home">App - Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a>
+<ul>
+<li><a href="msqc-home.html#msqc-intro">Introduction<span></span></a></li>
+<li><a href="msqc-home.html#msqc-instructions">Instructions<span></span></a></li>
+<li><a href="msqc-home.html#msqc-technical-details">Technical Details<span></span></a></li>
+<li><a href="msqc-home.html#msqc-conclusions">Conclusions<span></span></a></li>
+<li><a href="msqc-home.html#msqc-appendices">Appendices<span></span></a></li>
+</ul></li>
 <li><a href="references.html#references">References<span></span></a></li>
 <li><a href="appendix-function-reference.html#appendix-function-reference">Appendix - Function Reference<span></span></a></li>
 <li class="divider"></li>
@@ -797,7 +764,7 @@ gitbook.start({
 "options": null
 },
 "toc": {
-"collapse": "subsection"
+"collapse": "section"
 }
 });
 });

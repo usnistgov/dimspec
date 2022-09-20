@@ -17,6 +17,10 @@ p code {
   white-space: inherit;
 }
 
+sup {
+  padding: 0 3px;
+}
+
 pre {
   word-break: normal;
   word-wrap: normal;

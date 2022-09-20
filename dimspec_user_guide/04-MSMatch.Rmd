@@ -8,7 +8,11 @@ This section serves as a user guide for using the MSMatch application.
 
 ## Instructions {#msmatch-instructions .unnumbered}
 
-The MSMatch application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server to avoid the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in [RStudio](https://www.rstudio.com/) which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+The MSMatch application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server to avoid the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in [RStudio](https://www.rstudio.com/)[^4] which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+
+[^4]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
+
+Refer to the [System Requirements](#system-requirements) section for installation details.
 
 ### Input File Format Requirements {#msmatch-file-format .unnumbered}
 
@@ -28,7 +32,9 @@ A more detailed user guide for converting the files is provided as a [vignette](
 
 Launch this tool similarly to other "shiny"-based tools provided as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio (RStudio Team 2015). The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package (Chang et al 2018) and other necessary R packages will be installed if it not already available by running the script at `R/compliance.R`, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.
 
-*Terminal*
+*Terminal*[^5]
+
+[^5]: Requires R.exe is available in your system PATH
 
 > R.exe "shiny::runApp('inst/apps/spectral_match')"
 
@@ -217,12 +223,12 @@ Two options are available for more contextual information regarding compounds an
 
 #### Step 5. Closing Down {#msmatch-step5 .unnumbered}
 
-When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a "stop sign" button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to spin down the API server.
+When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a "stop sign" button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to shut down the API server.
 
--   Loading the entire project from the compliance script (i.e. MSMatch was launched using start_app("spectral_match")) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function close_up_shop with the argument back_up_connected_tbls set to TRUE to preserve these, or the default FALSE to simply close all connections including the API server).
--   If launching the app directly and using the default settings there will be a session object named "plumber_service" connected to that server. To stop it, use the api_stop function from the console or stop the service directly using plumber_service\$kill(); it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.
--   After closing all connections, a hanging connection may be indicated by the presence of "-shm" and "-wal" files in the project directory (see graphic to the right). Flushing these hanging connections is not required but is recommended.
-    -   If launching MSMatch with the compliance script, run close_up_shop() again.
+-   Loading the entire project from the compliance script (i.e. MSMatch was launched using `start_app("spectral_match")`) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function [`close_up_shop()`](#fn_close_up_shop) with the argument `back_up_connected_tbls` set to `TRUE` to preserve these, or the default FALSE to simply close all connections including the API server).
+-   If launching the app directly and using the default settings there will be a session object named `plumber_service` connected to that server. To stop it, use the [`api_stop`](#fn_api_stop) function from the console or stop the service directly using `plumber_service\$kill()`; it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.
+-   After closing all connections, a hanging connection may be indicated by the presence of "-shm" and "-wal" files in the project directory. Flushing these hanging connections is not required but is recommended.
+    -   If launching MSMatch with the compliance script, run [`close_up_shop()`] again.
 
     -   Otherwise flush those connections by directly connecting and disconnecting with the DBI package:
 
@@ -232,6 +238,8 @@ When finished using the application, typing the escape key at the R console is t
         ```
 
 Feature requests, suggestions, and bug reports are most conveniently submitted as issues via GitLab but may also be submitted by contacting the authors of this ROA. New functionality suggestions are encouraged as the project tooling develops. Likewise, if the functionality demonstrated here is of interest to projects outside of PFAS, this is only one example implementation of the underlying technology stack (i.e. DIMSpec); contact the authors to see if your mass spectrometry data would be amenable to that framework as other implementation suggestions are encouraged and a larger goal of the project to cohesively manage mass spectrometry data for non-targeted analysis within the Chemical Sciences Division.
+
+This concludes the User Guide for the Mass Spectral Match (MSMatch) web application. The following section contains technical details about the implementation and user customization of this digital assistant.
 
 ## Technical Details {#msmatch-technical-details .unnumbered}
 

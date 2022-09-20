@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-19" />
+<meta name="date" content="2022-09-20" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -133,7 +133,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <nav role="navigation">
 
 <ul class="summary">
-<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg"></img></a>
+<a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
 <h2 id="book-title">DIMSpec User Guide</h2>
 
 <li class="divider"></li>
@@ -146,46 +146,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li><a href="instructions.html#instructions">Instructions<span></span></a>
 <ul>
-<li><a href="instructions.html#installation">Installation<span></span></a>
-<ul>
-<li><a href="instructions.html#system-requirements">System Requirements<span></span></a></li>
-<li><a href="instructions.html#quick-start-guide">Quick Start Guide<span></span></a></li>
-</ul></li>
+<li><a href="instructions.html#installation">Installation<span></span></a></li>
 <li><a href="instructions.html#project-directory">Project Directory<span></span></a></li>
-<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a>
-<ul>
-<li><a href="instructions.html#step-1---global-compute-environment-settings">Step 1 - Global compute environment settings<span></span></a></li>
-<li><a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file">Step 2 - Customizing R session settings in the “env_R.R” file<span></span></a></li>
-<li><a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file">Step 3 - Customizing logger settings in the “env_logger.R” file<span></span></a></li>
-</ul></li>
-<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a>
-<ul>
-<li><a href="instructions.html#database-connections">Database Connections<span></span></a></li>
-<li><a href="instructions.html#using-a-database-connection-in-an-r-session">Using a Database Connection in an R Session<span></span></a></li>
-<li><a href="instructions.html#inspecting-database-properties">Inspecting Database Properties<span></span></a></li>
-<li><a href="instructions.html#using-the-api">Using the Application Programming Interface (API)<span></span></a></li>
-<li><a href="instructions.html#using-rdkit">Using rdkit<span></span></a></li>
-<li><a href="instructions.html#logging">Logging<span></span></a></li>
-<li><a href="instructions.html#using-shiny-applications">Using Shiny Applications<span></span></a></li>
-<li><a href="instructions.html#importing-data">Importing Data<span></span></a></li>
-<li><a href="instructions.html#ending-your-session">Ending Your Session<span></span></a></li>
-<li><a href="instructions.html#updating-the-schema">Updating the Schema<span></span></a></li>
-</ul></li>
+<li><a href="instructions.html#project-set-up">Project Set Up<span></span></a></li>
+<li><a href="instructions.html#using-dimspec">Using DIMSpec<span></span></a></li>
 </ul></li>
 <li><a href="technical-details.html#technical-details">Technical Details<span></span></a>
 <ul>
-<li><a href="technical-details.html#database-schema">Database Schema<span></span></a>
-<ul>
-<li><a href="technical-details.html#sql-nodes">SQL Nodes<span></span></a></li>
-</ul></li>
+<li><a href="technical-details.html#database-schema">Database Schema<span></span></a></li>
 <li><a href="technical-details.html#populating-data-at-build">Populating Data at Build<span></span></a></li>
 <li><a href="technical-details.html#compute-environments">Compute Environments<span></span></a></li>
-<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a>
-<ul>
-<li><a href="technical-details.html#app-table-explorer">Table Explorer<span></span></a></li>
-<li><a href="technical-details.html#app-msmatch">Mass Spectral Match (MSMatch)<span></span></a></li>
-<li><a href="technical-details.html#app-mscq">Mass Spectral Quality Control (MSQC)<span></span></a></li>
-</ul></li>
+<li><a href="technical-details.html#shiny-applications">Shiny Applications<span></span></a></li>
 <li><a href="technical-details.html#logger">Logger<span></span></a></li>
 <li><a href="technical-details.html#plumber">Plumber<span></span></a></li>
 <li><a href="technical-details.html#python">Python<span></span></a></li>
@@ -195,28 +166,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="conclusions.html#conclusions">Conclusions<span></span></a></li>
 <li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
 <ul>
-<li><a href="table-explorer-home.html#table-viewer">Table Viewer<span></span></a></li>
+<li><a href="table-explorer-home.html#table-explorer-table-viewer">Table Viewer<span></span></a></li>
 <li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
 </ul></li>
 <li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
 <ul>
 <li><a href="msmatch-home.html#msmatch-intro">Introduction<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a>
-<ul>
-<li><a href="msmatch-home.html#msmatch-file-format">Input File Format Requirements<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-launching-msmatch">Launching MSMatch<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-using-msmatch">Using MSMatch<span></span></a></li>
-</ul></li>
-<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a>
-<ul>
-<li><a href="msmatch-home.html#msmatch-search-object">Mass Spectral Search Object<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-algorithms">Compound and Fragment Match Algorithms<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-application-settings">Application Settings<span></span></a></li>
-<li><a href="msmatch-home.html#msmatch-future">Future Development<span></span></a></li>
-</ul></li>
+<li><a href="msmatch-home.html#msmatch-instructions">Instructions<span></span></a></li>
+<li><a href="msmatch-home.html#msmatch-technical-details">Technical Details<span></span></a></li>
 <li><a href="msmatch-home.html#msmatch-conclusions">Conclusions<span></span></a></li>
 </ul></li>
-<li><a href="msqc-home.html#msqc-home">Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a></li>
+<li><a href="msqc-home.html#msqc-home">App - Mass Spectral Quality Control (MSQC, a Shiny application)<span></span></a>
+<ul>
+<li><a href="msqc-home.html#msqc-intro">Introduction<span></span></a></li>
+<li><a href="msqc-home.html#msqc-instructions">Instructions<span></span></a></li>
+<li><a href="msqc-home.html#msqc-technical-details">Technical Details<span></span></a></li>
+<li><a href="msqc-home.html#msqc-conclusions">Conclusions<span></span></a></li>
+<li><a href="msqc-home.html#msqc-appendices">Appendices<span></span></a></li>
+</ul></li>
 <li><a href="references.html#references">References<span></span></a></li>
 <li><a href="appendix-function-reference.html#appendix-function-reference">Appendix - Function Reference<span></span></a></li>
 <li class="divider"></li>
@@ -248,7 +215,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="msmatch-instructions" class="section level2 unnumbered hasAnchor">
 <h2>Instructions<a href="msmatch-home.html#msmatch-instructions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The MSMatch application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server to avoid the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in <a href="https://www.rstudio.com/">RStudio</a> which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
+<p>The MSMatch application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server to avoid the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in <a href="https://www.rstudio.com/">RStudio</a><a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
+<p>Refer to the <a href="instructions.html#system-requirements">System Requirements</a> section for installation details.</p>
 <div id="msmatch-file-format" class="section level3 unnumbered hasAnchor">
 <h3>Input File Format Requirements<a href="msmatch-home.html#msmatch-file-format" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>To use MSMatch, raw data files produced by a mass spectrometer must be converted into mzML format (Deutsch 2010) using <a href="https://proteowizard.sourceforge.io/">Proteowizard’s</a> msConvert software (Adusumilli and Mallick 2017). There are specific parameters that must be used during conversion.</p>
@@ -263,8 +231,8 @@ MS levels: 1-2</code></pre>
 </div>
 <div id="msmatch-launching-msmatch" class="section level3 unnumbered hasAnchor">
 <h3>Launching MSMatch<a href="msmatch-home.html#msmatch-launching-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>Launch this tool similarly to other “shiny”-based tools in the Data Tool Development ROA Series. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio (RStudio Team 2015). The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package (Chang et al 2018) and other necessary R packages will be installed if it not already available by running the script at <code>R/compliance.R</code>, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.</p>
-<p><em>Terminal</em></p>
+<p>Launch this tool similarly to other “shiny”-based tools provided as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio (RStudio Team 2015). The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package (Chang et al 2018) and other necessary R packages will be installed if it not already available by running the script at <code>R/compliance.R</code>, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.</p>
+<p><em>Terminal</em><a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
 <blockquote>
 <p>R.exe “shiny::runApp(‘inst/apps/spectral_match’)”</p>
 </blockquote>
@@ -276,6 +244,7 @@ MS levels: 1-2</code></pre>
 <blockquote>
 <p>Open the “.Rproj” project file in RStudio, navigate to the “inst/apps/spectral_match” directory, open one of the “global.R,” “server.R,” or “ui.R” files, and click the “Run App” button. Files open in an RStudio project will remain open by default when RStudio is closed, allowing users to quickly relaunch by simply loading the project. For best performance, ensure “Run External” is selected from the menu “carrot” on the right to launch the application in your system’s default web browser. This application has been tested on Chrome, Edge, and Firefox.</p>
 </blockquote>
+<p>Alternatively, once the compliance script has been executed MSMatch can be launched using <code>start_app("spectral_match")</code>.</p>
 <p>Once launched the API server will remain active until stopped, allowing users to freely launch, close, and relaunch any shiny apps dependent upon it much more quickly. The application is fluid and will dynamically resize to fit the dimensions of a browser window. By default, the server does not stop when the browser is closed. This means that, once started, it is available by navigating a web browser back to the URL where it launched until the server is shut down.</p>
 <p>If anything is needed from the user, interactive feedback will occur in the console from which it was launched. Install any packages required if prompted by the application. Once the package environment requirements have been satisfied and the server has spun up, which may take a moment, the tool will launch (Figure 1) either in the RStudio viewer or the browser.</p>
 </div>
@@ -442,19 +411,20 @@ MS levels: 1-2</code></pre>
 </div>
 <div id="msmatch-step5" class="section level4 unnumbered hasAnchor">
 <h4>Step 5. Closing Down<a href="msmatch-home.html#msmatch-step5" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a “stop sign” button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to spin down the API server.</p>
+<p>When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a “stop sign” button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to shut down the API server.</p>
 <ul>
-<li>Loading the entire project from the compliance script (i.e. MSMatch was launched using start_app(“spectral_match”)) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function close_up_shop with the argument back_up_connected_tbls set to TRUE to preserve these, or the default FALSE to simply close all connections including the API server).</li>
-<li>If launching the app directly and using the default settings there will be a session object named “plumber_service” connected to that server. To stop it, use the api_stop function from the console or stop the service directly using plumber_service$kill(); it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.</li>
-<li>After closing all connections, a hanging connection may be indicated by the presence of “-shm” and “-wal” files in the project directory (see graphic to the right). Flushing these hanging connections is not required but is recommended.
+<li>Loading the entire project from the compliance script (i.e. MSMatch was launched using <code>start_app("spectral_match")</code>) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function <a href="appendix-function-reference.html#fn_close_up_shop"><code>close_up_shop()</code></a> with the argument <code>back_up_connected_tbls</code> set to <code>TRUE</code> to preserve these, or the default FALSE to simply close all connections including the API server).</li>
+<li>If launching the app directly and using the default settings there will be a session object named <code>plumber_service</code> connected to that server. To stop it, use the <a href="appendix-function-reference.html#fn_api_stop"><code>api_stop</code></a> function from the console or stop the service directly using <code>plumber_service\$kill()</code>; it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.</li>
+<li>After closing all connections, a hanging connection may be indicated by the presence of “-shm” and “-wal” files in the project directory. Flushing these hanging connections is not required but is recommended.
 <ul>
-<li><p>If launching MSMatch with the compliance script, run close_up_shop() again.</p></li>
+<li><p>If launching MSMatch with the compliance script, run [<code>close_up_shop()</code>] again.</p></li>
 <li><p>Otherwise flush those connections by directly connecting and disconnecting with the DBI package:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="msmatch-home.html#cb12-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(<span class="fu">RSQLite</span>()<span class="sc">::</span>SQLite, <span class="st">&quot;nist_pfas_nta_dev.sqlite&quot;</span>)</span>
 <span id="cb12-2"><a href="msmatch-home.html#cb12-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con)</span></code></pre></div></li>
 </ul></li>
 </ul>
 <p>Feature requests, suggestions, and bug reports are most conveniently submitted as issues via GitLab but may also be submitted by contacting the authors of this ROA. New functionality suggestions are encouraged as the project tooling develops. Likewise, if the functionality demonstrated here is of interest to projects outside of PFAS, this is only one example implementation of the underlying technology stack (i.e. DIMSpec); contact the authors to see if your mass spectrometry data would be amenable to that framework as other implementation suggestions are encouraged and a larger goal of the project to cohesively manage mass spectrometry data for non-targeted analysis within the Chemical Sciences Division.</p>
+<p>This concludes the User Guide for the Mass Spectral Match (MSMatch) web application. The following section contains technical details about the implementation and user customization of this digital assistant.</p>
 </div>
 </div>
 </div>
@@ -591,6 +561,13 @@ Where m<sub>p</sub> is the precursor ion <em>m/z</em> of the unknown compound, <
 
 </div>
 </div>
+<div class="footnotes">
+<hr />
+<ol start="4">
+<li id="fn4"><p>Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.<a href="msmatch-home.html#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>Requires R.exe is available in your system PATH<a href="msmatch-home.html#fnref5" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
             </section>
 
           </div>
@@ -645,7 +622,7 @@ gitbook.start({
 "options": null
 },
 "toc": {
-"collapse": "subsection"
+"collapse": "section"
 }
 });
 });
