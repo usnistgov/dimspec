@@ -1428,7 +1428,11 @@ fn_help <- function(fn_name) {
 #' @return URL to the requested book
 #' 
 rebuild_help_htmls <- function(rebuild_book = TRUE, book = "dimspec_user_guide") {
-  if (rebuild_book) stopifnot(dir.exists(here::here(book)))
+  if (rebuild_book) {
+    if (!"bookdown" %in% installed.packages()) warning("The bookdown package is required to build the user guide.")
+    rebuild_book <- FALSE
+    stopifnot(dir.exists(here::here(book)))
+  }
   help_files <- list.files(here::here("man"), pattern = ".Rd$")
   html_dir <- here::here("man", "html")
   if (!dir.exists(html_dir)) dir.create(html_dir)
