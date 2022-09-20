@@ -26,7 +26,7 @@ A more detailed user guide for converting the files is provided as a [vignette](
 
 ### Launching MSMatch {#msmatch-launching-msmatch .unnumbered}
 
-Launch this tool similarly to other "shiny"-based tools in the Data Tool Development ROA Series. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio (RStudio Team 2015). The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package (Chang et al 2018) and other necessary R packages will be installed if it not already available by running the script at `R/compliance.R`, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.
+Launch this tool similarly to other "shiny"-based tools provided as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio (RStudio Team 2015). The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package (Chang et al 2018) and other necessary R packages will be installed if it not already available by running the script at `R/compliance.R`, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.
 
 *Terminal*
 
@@ -39,6 +39,8 @@ Launch this tool similarly to other "shiny"-based tools in the Data Tool Develop
 *RStudio*
 
 > Open the ".Rproj" project file in RStudio, navigate to the "inst/apps/spectral_match" directory, open one of the "global.R," "server.R," or "ui.R" files, and click the "Run App" button. Files open in an RStudio project will remain open by default when RStudio is closed, allowing users to quickly relaunch by simply loading the project. For best performance, ensure "Run External" is selected from the menu "carrot" on the right to launch the application in your system's default web browser. This application has been tested on Chrome, Edge, and Firefox.
+
+Alternatively, once the compliance script has been executed MSMatch can be launched using `start_app("spectral_match")`.
 
 Once launched the API server will remain active until stopped, allowing users to freely launch, close, and relaunch any shiny apps dependent upon it much more quickly. The application is fluid and will dynamically resize to fit the dimensions of a browser window. By default, the server does not stop when the browser is closed. This means that, once started, it is available by navigating a web browser back to the URL where it launched until the server is shut down.
 
