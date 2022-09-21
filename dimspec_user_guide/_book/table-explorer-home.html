@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-20" />
+<meta name="date" content="2022-09-21" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -32,15 +32,15 @@
   
 <link rel="prev" href="conclusions.html"/>
 <link rel="next" href="msmatch-home.html"/>
-<script src="assets/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
-<link href="assets/gitbook-2.6.7/css/style.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
-<link href="assets/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -49,9 +49,9 @@
 
 
 
-<link href="assets/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
-<link href="assets/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
-<script src="assets/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
 
 
 <style type="text/css">
@@ -167,7 +167,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="table-explorer-home.html#table-explorer-home">App - Table Explorer<span></span></a>
 <ul>
 <li><a href="table-explorer-home.html#table-explorer-table-viewer">Table Viewer<span></span></a></li>
-<li><a href="table-explorer-home.html#entity-relationship-diagram">Entity Relationship Diagram<span></span></a></li>
+<li><a href="table-explorer-home.html#table-explorer-erd">Entity Relationship Diagram<span></span></a></li>
 </ul></li>
 <li><a href="msmatch-home.html#msmatch-home">App - Mass Spectral Match (MSMatch)<span></span></a>
 <ul>
@@ -212,35 +212,32 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Table Explorer is a simple entity viewer for the attached database. Combining the comment decorations in DIMSpec and reading of entity definitions from the database (see <a href="instructions.html#inspecting-database-properties">Inspecting Database Properties</a>) allows for R to expose a wealth of information about the underlying schema and quickly change which entity is being viewed. See <a href="technical-details.html#shiny-applications">Shiny Applications</a> for details of how to launch this app, but the easiest method is after the <code>compliance.R</code> script has been executed, use <code>start_app("table_explorer")</code> to launch it in your preferred browser.</p>
 <div id="table-explorer-table-viewer" class="section level2 unnumbered hasAnchor">
 <h2>Table Viewer<a href="table-explorer-home.html#table-explorer-table-viewer" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>There is only one page for interactive content, named “Table Viewer” (<a href="table-explorer-home.html#fig03-01">Figure 1</a>). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box (<a href="#fig03-02_">Figure 2</a>) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box (<a href="#fig03-03">Figure 3</a>) and display the contents of that table (<a href="table-explorer-home.html#fig03-04">Figure 4</a>).</p>
+<p>There is only one page for interactive content, named “Table Viewer” (<a href="table-explorer-home.html#fig03-01">Figure 1</a>). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box (<a href="table-explorer-home.html#fig03-02-left">Figure 2 - left</a>) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box (<a href="table-explorer-home.html#fig03-02-right">Figure 2 - right</a>) and display the contents of that table (<a href="table-explorer-home.html#fig03-03">Figure 3</a>).</p>
 <hr />
 <div class="figure">
 <img src="assets/fig03-01_table_view_screen.png" title="Figure 1. The Table Explorer main page." id="fig03-01" alt="" />
 <p class="caption">Figure 1. The Table Explorer main page.</p>
 </div>
 <hr />
-<div class="figure">
-<img src="assets/fig03-02_entity_selector.png" title="Figure 2. Click the drop down box to change the entity being displayed." id="fig03-02" style="width:45.0%" alt="" />
-<p class="caption">Figure 2. Click the drop down box to change the entity being displayed.</p>
-</div>
-<div class="figure">
-<img src="assets/fig03-03_table_description.png" title="Figure 3. Information about the definintion of the selected entity." id="fig03-02" style="width:45.0%" alt="" />
-<p class="caption">Figure 3. Information about the definintion of the selected entity.</p>
-</div>
+<p><img src="assets/fig03-02-left_entity_selector.png" title="Figure 2 (left). Chose a database entity from the selection list to view its definition and data." id="fig03-02-left" style="width:45.0%" /></p>
+<p><img src="assets/fig03-02-right_table_description.png" title="Figure 2 (right). Definition information for the entity chosen from the selection list in Figure 2 (left)." id="fig03-02-right" style="width:45.0%" /></p>
+<p class="caption">
+Figure 2. Choose a database entity (left) for information about its definintion (right).
+</p>
 <hr />
 <div class="figure">
-<img src="assets/fig03-04_table_display.png" title="Figure 4. Data held in the selected entity." id="fig03-04" style="width:100.0%" alt="" />
-<p class="caption">Figure 4. Data held in the selected entity.</p>
+<img src="assets/fig03-03_table_display.png" title="Figure 3. Data held in the selected entity." id="fig03-03" style="width:100.0%" alt="" />
+<p class="caption">Figure 3. Data held in the selected entity.</p>
 </div>
 <hr />
 </div>
-<div id="entity-relationship-diagram" class="section level2 unnumbered hasAnchor">
-<h2>Entity Relationship Diagram<a href="table-explorer-home.html#entity-relationship-diagram" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="table-explorer-erd" class="section level2 unnumbered hasAnchor">
+<h2>Entity Relationship Diagram<a href="table-explorer-home.html#table-explorer-erd" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>A full graphical representation of the entity relationship diagram is also provided. Click the “Entity Relationship Diagram” in the navigation bar to view it. Right click the graphic and click “Open image in new tab” to view it in full resolution.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig03-05_erd.png" title="Figure 5. Entity Relationship Diagram" id="fig03-05" alt="" />
-<p class="caption">Figure 5. Entity Relationship Diagram</p>
+<img src="assets/fig03-04_erd.png" title="Figure 4. Entity Relationship Diagram" id="fig03-04" alt="" />
+<p class="caption">Figure 4. Entity Relationship Diagram</p>
 </div>
 <hr />
 
@@ -255,14 +252,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <a href="msmatch-home.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
-<script src="assets/gitbook-2.6.7/js/app.min.js"></script>
-<script src="assets/gitbook-2.6.7/js/clipboard.min.js"></script>
-<script src="assets/gitbook-2.6.7/js/plugin-search.js"></script>
-<script src="assets/gitbook-2.6.7/js/plugin-sharing.js"></script>
-<script src="assets/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
-<script src="assets/gitbook-2.6.7/js/plugin-bookdown.js"></script>
-<script src="assets/gitbook-2.6.7/js/jquery.highlight.js"></script>
-<script src="assets/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({

@@ -5,6 +5,31 @@ p.caption {
   padding: 0 10%;
 }
 
+.level1 > h1 {
+  border-top: 1px solid black;
+  border-left: 15px solid black;
+  background: whitesmoke;
+  padding-left: 10px;
+}
+
+.level2 > h2 {
+  background: whitesmoke;
+  padding-left: 15px;
+  border-left: 10px solid black
+}
+
+.level3 > h3 {
+  background: whitesmoke;
+  padding-left: 20px;
+  border-left: 5px solid black
+}
+
+.level4 > h4 {
+  background: whitesmoke;
+  padding-left: 23px;
+  border-left: 2px solid black
+}
+
 table > caption {
   font-weight: bold;
   background-color: black;
@@ -72,18 +97,31 @@ p {
 #fig00-01 {
   display: inline;
   float: right;
-  margin-left: 50px;
-  margin-right: 25px;
+  margin: 0 5%;
+  width: 40%;
 }
 
-#fig00-02, #fig03-03 {
+#fig00-02 {
   display: inline;
   float: right;
-  margin-left: 25px;
+  margin: 0 5%;
+  width: 40%;
 }
 
-#fig03-02 {
+#fig03-02-right {
+  display: inline;
+  float: right;
+  margin-left: 5%;
+}
+
+#fig03-02-left {
   display: inline;
   float: left;
-  margin-right: 25px;
+  margin-right: 5%;
 }
+
+.signature-block { padding-left: 10px; }
+.signature-block > span { display: block; }
+.signature-block > .names { padding: 0.5em; margin-bottom: 0 !important;}
+.signature-block > * > sup { font-size: xx-small !important; }
+.signature-block > .affiliation { font-size: small; }

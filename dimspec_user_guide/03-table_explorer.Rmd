@@ -6,7 +6,7 @@ Table Explorer is a simple entity viewer for the attached database. Combining th
 
 ## Table Viewer {#table-explorer-table-viewer .unnumbered}
 
-There is only one page for interactive content, named "Table Viewer" ([Figure 1](#fig03-01)). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box ([Figure 2](#fig03-02_)) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box ([Figure 3](#fig03-03)) and display the contents of that table ([Figure 4](#fig03-04)).
+There is only one page for interactive content, named "Table Viewer" ([Figure 1](#fig03-01)). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box ([Figure 2 - left](#fig03-02-left)) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box ([Figure 2 - right](#fig03-02-right)) and display the contents of that table ([Figure 3](#fig03-03)).
 
 ------------------------------------------------------------------------
 
@@ -15,23 +15,27 @@ There is only one page for interactive content, named "Table Viewer" ([Figure 1]
 ------------------------------------------------------------------------
 
 
-![Figure 2. Click the drop down box to change the entity being displayed.](assets/fig03-02_entity_selector.png "Figure 2. Click the drop down box to change the entity being displayed."){#fig03-02 width="45%"}
+![](assets/fig03-02-left_entity_selector.png "Figure 2 (left). Chose a database entity from the selection list to view its definition and data."){#fig03-02-left width="45%"}
 
-![Figure 3. Information about the definintion of the selected entity.](assets/fig03-03_table_description.png "Figure 3. Information about the definintion of the selected entity."){#fig03-02 width="45%"}
+![](assets/fig03-02-right_table_description.png "Figure 2 (right). Definition information for the entity chosen from the selection list in Figure 2 (left)."){#fig03-02-right width="45%"}
+
+<p class="caption">Figure 2. Choose a database entity (left) for information about its definintion  (right).</p>
+
+
 
 ------------------------------------------------------------------------
 
 
-![Figure 4. Data held in the selected entity.](assets/fig03-04_table_display.png "Figure 4. Data held in the selected entity."){#fig03-04 width="100%"}
+![Figure 3. Data held in the selected entity.](assets/fig03-03_table_display.png "Figure 3. Data held in the selected entity."){#fig03-03 width="100%"}
 
 ------------------------------------------------------------------------
 
-## Entity Relationship Diagram {-}
+## Entity Relationship Diagram {#table-explorer-erd .unnumbered}
 
 A full graphical representation of the entity relationship diagram is also provided. Click the "Entity Relationship Diagram" in the navigation bar to view it. Right click the graphic and click "Open image in new tab" to view it in full resolution.
 
 ------------------------------------------------------------------------
 
-![Figure 5. Entity Relationship Diagram](assets/fig03-05_erd.png "Figure 5. Entity Relationship Diagram"){#fig03-05 width="100%}
+![Figure 4. Entity Relationship Diagram](assets/fig03-04_erd.png "Figure 4. Entity Relationship Diagram"){#fig03-04 width="100%}
 
 ------------------------------------------------------------------------

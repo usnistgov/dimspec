@@ -1,6 +1,5 @@
 bookdown::gitbook:
   css: style.css
-  lib_dir: assets
   toc_depth: 2
   config:
     toc:
