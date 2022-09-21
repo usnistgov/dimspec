@@ -2,12 +2,12 @@
 
 #' Generate isotopic distribution mass spectrum of elemental formula
 #'
-#' @param elementalformula 
-#' @param exactmasschart 
-#' @param remove.elements 
-#' @param max.dist 
-#' @param min.int 
-#' @param charge 
+#' @param elementalformula character string of elemental formula to simulate isotopic pattern
+#' @param exactmasschart exact mass chart generated from function create_exactmasschart
+#' @param remove.elements character vector of elements to remove from elemental formula
+#' @param max.dist numeric maximum mass distance (in Da) from exact mass to include in simulated isotopic pattern
+#' @param min.int numeric minimum relative intensity (maximum = 1, minimum = 0) to include in simulated isotopic pattern
+#' @param charge character string for the charge state of the simulated isotopic pattern, options are `neutral`, `positive`, and `negative`
 #'
 #' @return
 #' @export
