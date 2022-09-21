@@ -6,22 +6,15 @@ Table Explorer is a simple entity viewer for the attached database. Combining th
 
 ## Table Viewer {#table-explorer-table-viewer .unnumbered}
 
-There is only one page for interactive content, named "Table Viewer" ([Figure 1](#fig03-01)). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box ([Figure 2 - left](#fig03-02-left)) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box ([Figure 2 - right](#fig03-02-right)) and display the contents of that table ([Figure 3](#fig03-03)).
+There is only one page for interactive content, named "Table Viewer" ([Figure 1](#fig03-01)). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box ([Figure 2 - left](#fig03-02)) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box ([Figure 2 - right](#fig03-02)) and display the contents of that table ([Figure 3](#fig03-03)).
 
 ------------------------------------------------------------------------
 
-![Figure 1. The Table Explorer main page.](assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page."){#fig03-01 width="100%}
+![Figure 1. The Table Explorer main page.](assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page."){#fig03-01}
 
 ------------------------------------------------------------------------
 
-
-![](assets/fig03-02-left_entity_selector.png "Figure 2 (left). Chose a database entity from the selection list to view its definition and data."){#fig03-02-left width="45%"}
-
-![](assets/fig03-02-right_table_description.png "Figure 2 (right). Definition information for the entity chosen from the selection list in Figure 2 (left)."){#fig03-02-right width="45%"}
-
-<p class="caption">Figure 2. Choose a database entity (left) for information about its definintion  (right).</p>
-
-
+![Figure 2. Choose a database entity (left) for information about its definition  (right).](assets/fig03-02-entity_selector_and_definition.png "Figure 2. Choose a database entity (left) for information about its definition  (right)."){#fig03-02}
 
 ------------------------------------------------------------------------
 

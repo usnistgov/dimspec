@@ -212,18 +212,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Table Explorer is a simple entity viewer for the attached database. Combining the comment decorations in DIMSpec and reading of entity definitions from the database (see <a href="instructions.html#inspecting-database-properties">Inspecting Database Properties</a>) allows for R to expose a wealth of information about the underlying schema and quickly change which entity is being viewed. See <a href="technical-details.html#shiny-applications">Shiny Applications</a> for details of how to launch this app, but the easiest method is after the <code>compliance.R</code> script has been executed, use <code>start_app("table_explorer")</code> to launch it in your preferred browser.</p>
 <div id="table-explorer-table-viewer" class="section level2 unnumbered hasAnchor">
 <h2>Table Viewer<a href="table-explorer-home.html#table-explorer-table-viewer" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>There is only one page for interactive content, named “Table Viewer” (<a href="table-explorer-home.html#fig03-01">Figure 1</a>). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box (<a href="table-explorer-home.html#fig03-02-left">Figure 2 - left</a>) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box (<a href="table-explorer-home.html#fig03-02-right">Figure 2 - right</a>) and display the contents of that table (<a href="table-explorer-home.html#fig03-03">Figure 3</a>).</p>
+<p>There is only one page for interactive content, named “Table Viewer” (<a href="table-explorer-home.html#fig03-01">Figure 1</a>). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box (<a href="table-explorer-home.html#fig03-02">Figure 2 - left</a>) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box (<a href="table-explorer-home.html#fig03-02">Figure 2 - right</a>) and display the contents of that table (<a href="table-explorer-home.html#fig03-03">Figure 3</a>).</p>
 <hr />
 <div class="figure">
 <img src="assets/fig03-01_table_view_screen.png" title="Figure 1. The Table Explorer main page." id="fig03-01" alt="" />
 <p class="caption">Figure 1. The Table Explorer main page.</p>
 </div>
 <hr />
-<p><img src="assets/fig03-02-left_entity_selector.png" title="Figure 2 (left). Chose a database entity from the selection list to view its definition and data." id="fig03-02-left" style="width:45.0%" /></p>
-<p><img src="assets/fig03-02-right_table_description.png" title="Figure 2 (right). Definition information for the entity chosen from the selection list in Figure 2 (left)." id="fig03-02-right" style="width:45.0%" /></p>
-<p class="caption">
-Figure 2. Choose a database entity (left) for information about its definintion (right).
-</p>
+<div class="figure">
+<img src="assets/fig03-02-entity_selector_and_definition.png" title="Figure 2. Choose a database entity (left) for information about its definition (right)." id="fig03-02" alt="" />
+<p class="caption">Figure 2. Choose a database entity (left) for information about its definition (right).</p>
+</div>
 <hr />
 <div class="figure">
 <img src="assets/fig03-03_table_display.png" title="Figure 3. Data held in the selected entity." id="fig03-03" style="width:100.0%" alt="" />
