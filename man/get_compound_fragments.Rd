@@ -16,7 +16,7 @@ get_compound_fragments(con, fragmentions, masserror, minerror)
 \item{minerror}{numeric minimum mass error (Da)}
 }
 \value{
-
+data.frame object describing known fragments in the database with known compound and peak references attached
 }
 \description{
 Get all fragments associated with compounds

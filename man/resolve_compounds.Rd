@@ -65,5 +65,5 @@ INT scalar if successful, result of the call to [add_or_get_id]
 Call this function as part of an import routine to resolve the compounds node.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

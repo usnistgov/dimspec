@@ -278,7 +278,6 @@ tidy_spectra <- function(target,
 #'   traces.
 #' @note Implicitly missing values are not interpolated, but lines are drawn
 #'   through to the next point.
-#'
 #' @note `peak_type` can will accept abbreviations of its accepted values (e.g.
 #'   "l" for "line")
 #'
@@ -300,11 +299,11 @@ tidy_spectra <- function(target,
 #'   resolution)
 #' @param peak_drop_ratio NUM scalar threshold of the maximum intensity below
 #'   which traces will be dropped (default: 1e-2 means any trace with a maximum
-#'   intensity less than 1% of the maximum intensity in the plot will be
+#'   intensity less than 1\% of the maximum intensity in the plot will be
 #'   dropped); if > 1 the inversion will be used (1e5 -> 1e-5)
 #' @param peak_text_offset NUM scalar y-axis offset as a fraction of the maximum
 #'   intensity for trace annotation (default: 0.02 offsets labels in the
-#'   positive direction by 2% of the maximum intensity)
+#'   positive direction by 2\% of the maximum intensity)
 #' @param db_conn database connection (default: con) which must be live to pull
 #'   sample and compound identification information
 #'
@@ -557,7 +556,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, include_method,
 #'   value (as base_ion), and scan time (as scantime) - (default: 3)
 #' @param spectra_drop_ratio NUM scalar threshold of the maximum intensity below
 #'   which traces will be dropped (default: 1e-2 means any trace with a maximum
-#'   intensity less than 1% of the maximum intensity in the plot will be
+#'   intensity less than 1\% of the maximum intensity in the plot will be
 #'   dropped); if > 1 the inversion will be used (1e5 -> 1e-5)
 #' @param spectra_repel_labels LGL scalar on whether to use the [ggrepel]
 #'   package to space out m/z labels in the plot (default: TRUE). If [ggrepel]
@@ -569,7 +568,7 @@ ms_plot_titles <- function(plot_data, mz_resolution, drop_ratio, include_method,
 #'   single color is supported; default: "grey50")
 #' @param spectra_nudge_y_factor NUM scalar y-axis offset as a fraction of the
 #'   maximum intensity for trace annotation (default: 0.03 offsets labels in the
-#'   positive direction by 3% of the maximum intensity)
+#'   positive direction by 3\% of the maximum intensity)
 #' @param spectra_log_y LGL scalar of whether or not to apply a log10 scaling
 #'   factor to the y-axis (default: FALSE)
 #' @param spectra_is_file LGL scalar of whether data are coming from a file

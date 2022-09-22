@@ -7,9 +7,18 @@
 gather_qc(
   gather_peak,
   exactmasses,
+  exactmasschart,
   ms1range = c(0.5, 3),
   ms1isomatchlimit = 0.5,
-  minerror = 0.002
+  minerror = 0.002,
+  max_correl = 0.8,
+  correl_bin = 0.1,
+  max_ph = 10,
+  ph_bin = 1,
+  max_freq = 10,
+  freq_bin = 1,
+  min_n_peaks = 3,
+  cormethod = "pearson"
 )
 }
 \arguments{
@@ -22,6 +31,22 @@ gather_qc(
 \item{ms1isomatchlimit}{the reverse dot product minimum score for the isotopic pattern match}
 
 \item{minerror}{the minimum mass error (in Da) allowable for the instrument}
+
+\item{max_correl}{[TODO PLACEHOLDER]}
+
+\item{correl_bin}{[TODO PLACEHOLDER]}
+
+\item{max_ph}{[TODO PLACEHOLDER]}
+
+\item{ph_bin}{[TODO PLACEHOLDER]}
+
+\item{max_freq}{[TODO PLACEHOLDER]}
+
+\item{freq_bin}{[TODO PLACEHOLDER]}
+
+\item{min_n_peaks}{[TODO PLACEHOLDER]}
+
+\item{cormethod}{[TODO PLACEHOLDER]}
 }
 \value{
 nested list of quality control check results

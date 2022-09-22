@@ -7,23 +7,24 @@
 get_component(obj, obj_component, silence = TRUE, log_ns = "global", ...)
 }
 \arguments{
-\item{obj}{LIST or NAMED vector in which to find `obj_component`}
+\item{obj}{LIST or NAMED vector in which to find \code{obj_component}}
 
-\item{obj_component}{CHR vector of named elements to find in `obj`}
+\item{obj_component}{CHR vector of named elements to find in \code{obj}}
 
 \item{silence}{LGL scalar indicating whether to silence recursive messages,
-which may be the same for each element of `obj` (default: TRUE)}
+which may be the same for each element of \code{obj} (default: TRUE)}
 
 \item{log_ns}{CHR scalar of the logging namespace to use (default: "db")}
 
-\item{...}{Optional additional arguments to [tack_on] to the resulting list}
+\item{...}{Additional arguments passed to/from the ellipsis parameter of
+calling functions. If named, names are preserved.}
 }
 \value{
-LIST object containing the elements of `obj`
+LIST object containing the elements of \code{obj}
 }
 \description{
-Call this to pull a component named `obj_component` from a list or named
-vector provided as `obj` and optionally use [tack_on] to append to it. This
+Call this to pull a component named \code{obj_component} from a list or named
+vector provided as \code{obj} and optionally use [tack_on] to append to it. This
 is intended to ease the process of pulling specific components from a list
 for further treatment in the import process by isolating that component.
 }

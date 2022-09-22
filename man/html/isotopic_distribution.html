@@ -34,23 +34,35 @@ isotopic_distribution(
 <table summary="R argblock">
 <tr valign="top"><td><code>elementalformula</code></td>
 <td>
+<p>character string of elemental formula to simulate isotopic pattern</p>
 </td></tr>
 <tr valign="top"><td><code>exactmasschart</code></td>
 <td>
+<p>exact mass chart generated from function create_exactmasschart</p>
 </td></tr>
 <tr valign="top"><td><code>remove.elements</code></td>
 <td>
+<p>character vector of elements to remove from elemental formula</p>
 </td></tr>
 <tr valign="top"><td><code>max.dist</code></td>
 <td>
+<p>numeric maximum mass distance (in Da) from exact mass to include in simulated isotopic pattern</p>
 </td></tr>
 <tr valign="top"><td><code>min.int</code></td>
 <td>
+<p>numeric minimum relative intensity (maximum = 1, minimum = 0) to include in simulated isotopic pattern</p>
 </td></tr>
 <tr valign="top"><td><code>charge</code></td>
 <td>
+<p>character string for the charge state of the simulated isotopic pattern, options are 'neutral', 'positive', and 'negative'</p>
 </td></tr>
 </table>
+
+
+<h3>Value</h3>
+
+<p>data frame containing mz and int values of mass spectrum
+</p>
 
 
 </body></html>

@@ -51,13 +51,13 @@ If using the [logger] package, must match one of [logger:::log_levels]</p>
 <tr valign="top"><td><code>reset_logger_settings</code></td>
 <td>
 <p>LGL scalar indicating whether or not to refresh
-the logger settings using the file identified in 'logger_settings'
+the logger settings using the file identified in <code>logger_settings</code>
 (default: FALSE)</p>
 </td></tr>
 <tr valign="top"><td><code>reload_all</code></td>
 <td>
 <p>LGL scalar indicating whether to, during
-'reset_logger_settings', to reload the R environment configuration file</p>
+<code>reset_logger_settings</code>, to reload the R environment configuration file</p>
 </td></tr>
 <tr valign="top"><td><code>logger_settings</code></td>
 <td>
@@ -67,7 +67,7 @@ the logger settings using the file identified in 'logger_settings'
 <tr valign="top"><td><code>add_unknown_ns</code></td>
 <td>
 <p>LGL scalar indicating whether or not to add a new
-namespace if 'log_ns' is not defined in 'logger_settings' (default: FALSE)</p>
+namespace if <code>log_ns</code> is not defined in <code>logger_settings</code> (default: FALSE)</p>
 </td></tr>
 <tr valign="top"><td><code>clone_settings_from</code></td>
 <td>
@@ -79,10 +79,10 @@ namespace if 'log_ns' is not defined in 'logger_settings' (default: FALSE)</p>
 <h3>Details</h3>
 
 <p>When using [logger], create settings for each namespace in file
-'config/env_logger.R' as a list (see examples there) and make sure it is
+<code>config/env_logger.R</code> as a list (see examples there) and make sure it is
 sourced. If using with [logger] and &quot;file&quot; or &quot;both&quot; is selected for the
-namespace 'LOGGING[[log_ns]]$to' parameter in 'env_logger.R' logs will be
-written to disk at the file defined in 'LOGGING[[log_ns]]$file' as well as
+namespace <code>LOGGING[[log_ns]]$to</code> parameter in <code>env_logger.R</code> logs will be
+written to disk at the file defined in <code>LOGGING[[log_ns]]$file</code> as well as
 the console.
 </p>
 

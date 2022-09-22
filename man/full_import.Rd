@@ -37,9 +37,9 @@ full_import(
   carrier_mix_names = NULL,
   id_mix_by = "^mp*[0-9]+",
   mix_collection_table = "carrier_mix_collections",
-  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases",
-    props = c(flow = "flow", flow_units = "flowunits", duration = "duration",
-    duration_units = "durationunits")),
+  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
+    = c(flow = "flow", flow_units = "flowunits", duration = "duration", duration_units =
+    "durationunits")),
   carrier_props = list(db_table = "carrier_mixes", norm_by =
     ref_table_from_map("carrier_mixes", "component"), alias_in = "carrier_aliases", props
     = c(id_by = "solvent", fraction_by = "fraction")),

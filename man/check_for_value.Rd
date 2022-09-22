@@ -4,14 +4,12 @@
 \alias{check_for_value}
 \title{Check for a value in a database table}
 \usage{
-check_for_value(
-  values,
-  db_table,
-  db_column,
-  case_sensitive = TRUE,
-  db_conn = con,
-  fuzzy = FALSE
-)
+con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
+dplyr::copy_to(con, alphabet)
+check_for_value("A", "alphabet", "upper", con)
+check_for_value("A", "alphabet", "lower", con)
+check_for_value(letters[1:10], "alphabet", "lower", con)
 }
 \arguments{
 \item{values}{CHR vector of the values to search}
@@ -43,15 +41,4 @@ serialize it in other code to check multiple columns. It leverages the
 flexibility of [build_db_action] to do the searching. The `values` parameter
 will be fed directly and can accept the nested list structure defined in
 [clause_where] for exclusions and like clauses.
-}
-\examples{
-\dontrun{
-con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
-dplyr::copy_to(con, alphabet)
-check_for_value("A", "alphabet", "upper", con)
-check_for_value("A", "alphabet", "lower", con)
-check_for_value(letters[1:10], "alphabet", "lower", con)
-}
-## End(Not run)
 }

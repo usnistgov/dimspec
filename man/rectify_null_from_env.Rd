@@ -10,24 +10,25 @@ rectify_null_from_env(test, test, "test")
 \item{parameter}{the object being evaluated}
 
 \item{env_parameter}{the name or object of a value to use from the
-environment if `parameter` is NULL}
+environment if \code{parameter} is NULL}
 
-\item{default}{the fallback value to use if `parameter` is NULL and
-`env_parameter` does not exist}
+\item{default}{the fallback value to use if \code{parameter} is NULL and
+\code{env_parameter} does not exist}
 
 \item{log_ns}{the namespace to use with [log_it] if available}
 }
 \value{
-
+The requested value, either as-is, rectified from the environment, or 
+  the default
 }
 \description{
 To support redirection of sensible parameter reads from an environment,
 either Global or System, functions in this package may include NULL as their
-default value. This returns values in precedence of `parameter`,
-`env_parameter` and `default`.
+default value. This returns values in precedence of \code{parameter},
+\code{env_parameter} and \code{default}.
 }
 \note{
-`log_ns` is only applicable if logging is set up in this project (see
+\code{log_ns} is only applicable if logging is set up in this project (see
   project settings in env_glob.txt, env_R.R, and env_logger.R for details).
 
 Both [base::.GlobalEnv] and [base::Sys.getenv] are checked, and can be

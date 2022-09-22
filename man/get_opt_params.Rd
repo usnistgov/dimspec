@@ -12,7 +12,7 @@ get_opt_params(con, peak_ids)
 \item{peak_ids}{integer vector of primary keys for peaks table}
 }
 \value{
-
+data.frame object of available optimized search parameters
 }
 \description{
 Get optimized uncertainty mass spectra parameters for a peak

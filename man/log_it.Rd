@@ -25,17 +25,17 @@ If using the [logger] package, must match one of [logger:::log_levels]}
 (default: NULL prints to the global logging namespace)}
 
 \item{reset_logger_settings}{LGL scalar indicating whether or not to refresh
-the logger settings using the file identified in `logger_settings`
+the logger settings using the file identified in \code{logger_settings}
 (default: FALSE)}
 
 \item{reload_all}{LGL scalar indicating whether to, during
-`reset_logger_settings`, to reload the R environment configuration file}
+\code{reset_logger_settings}, to reload the R environment configuration file}
 
 \item{logger_settings}{CHR file path to the file containing logger settings
 (default: file.path("config", "env_logger.R"))}
 
 \item{add_unknown_ns}{LGL scalar indicating whether or not to add a new
-namespace if `log_ns` is not defined in `logger_settings` (default: FALSE)}
+namespace if \code{log_ns} is not defined in \code{logger_settings} (default: FALSE)}
 
 \item{clone_settings_from}{CHR scalar indicating}
 }
@@ -50,10 +50,10 @@ package [logger] may not be available or custom log levels are desired.
 }
 \details{
 When using [logger], create settings for each namespace in file
-`config/env_logger.R` as a list (see examples there) and make sure it is
+\code{config/env_logger.R} as a list (see examples there) and make sure it is
 sourced. If using with [logger] and "file" or "both" is selected for the
-namespace `LOGGING[[log_ns]]$to` parameter in `env_logger.R` logs will be
-written to disk at the file defined in `LOGGING[[log_ns]]$file` as well as
+namespace \code{LOGGING[[log_ns]]$to} parameter in \code{env_logger.R} logs will be
+written to disk at the file defined in \code{LOGGING[[log_ns]]$file} as well as
 the console.
 }
 \examples{

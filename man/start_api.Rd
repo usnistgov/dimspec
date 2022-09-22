@@ -8,7 +8,7 @@ start_api()
 }
 \arguments{
 \item{plumber_file}{CHR scalar name of the plumber definition file, which
-should be in `src_dir` (default: NULL)}
+should be in \code{src_dir} (default: NULL)}
 
 \item{plumber_host}{CHR scalar of the host server address (default: NULL)}
 

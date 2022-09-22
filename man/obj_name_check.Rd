@@ -4,26 +4,24 @@
 \alias{obj_name_check}
 \title{Sanity check for environment object names}
 \usage{
-\dontrun {\preformatted {
-  if (exists("log_it")) {
+if (exists("log_it")) {
     obj_name_check("test", "test")
     test <- letters
     obj_name_check(test)
   }
-}}
 }
 \arguments{
 \item{obj}{R object or CHR scalar in question to be resolved in the namespace}
 
-\item{default_name}{CHR scalar name to use for `obj` if it does not exist
+\item{default_name}{CHR scalar name to use for \code{obj} if it does not exist
 (default: NULL).}
 }
 \value{
-CHR scalar of the resolved name
+CHR scalar of the resolved object name
 }
 \description{
 Provides a sanity check on whether or not a name reference exists and return
-its name if so. If not, return the default name defined from `default_name`.
+its name if so. If not, return the default name defined from \code{default_name}.
 This largely is used to prevent naming conflicts as part of managing the
 plumber service but can be used for any item in the current namespace.
 }

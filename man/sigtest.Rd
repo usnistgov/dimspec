@@ -13,7 +13,7 @@ sigtest(x1, x2, s1, s2, n1, n2, sig = 0.95)
 
 \item{n1, n2}{number of observations of the respective values}
 
-\item{sig}{significance level to test (0.95 = 95 %)}
+\item{sig}{significance level to test (0.95 = 95\%)}
 }
 \description{
 Internal function: enables significance testing between two values

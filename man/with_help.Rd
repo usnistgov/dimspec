@@ -2,9 +2,12 @@
 % Please edit documentation in R/shiny_helpers.R
 \name{with_help}
 \alias{with_help}
-\title{Convenience application of `add_help` using pipes directly in UI.R}
+\title{Convenience application of \code{add_help} using pipes directly in \code{UI.R}}
 \usage{
-with_help(widget, tooltip, ...)
+actionButton("example", "With Help") %>%
+  with_help("Now with a question mark icon hosting a tooltip")
+actionButton("example", "With Help") %>%
+  with_help("Large and green", size = "xl", class = "success")
 }
 \arguments{
 \item{widget}{shiny.tag widget}
@@ -14,16 +17,12 @@ with_help(widget, tooltip, ...)
 \item{...}{Other named arguments to be passed to `add_help`}
 }
 \value{
-
+The \code{widget} provided with a hover tooltip icon appended to it.
 }
 \description{
 This may not work for certain widgets with heavily nested HTML. Note that
 classes may be CSS dependent.
 }
-\examples{
-actionButton("example", "With Help") \%>\%
-  with_help("Now with a question mark icon hosting a tooltip")
-actionButton("example", "With Help") \%>\%
-  with_help("Large and green", size = "xl", class = "success")
-
+\note{
+Most standard Shiny widgets are supported, but maybe not all.
 }

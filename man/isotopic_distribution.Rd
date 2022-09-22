@@ -15,20 +15,20 @@ isotopic_distribution(
 )
 }
 \arguments{
-\item{elementalformula}{}
+\item{elementalformula}{character string of elemental formula to simulate isotopic pattern}
 
-\item{exactmasschart}{}
+\item{exactmasschart}{exact mass chart generated from function create_exactmasschart}
 
-\item{remove.elements}{}
+\item{remove.elements}{character vector of elements to remove from elemental formula}
 
-\item{max.dist}{}
+\item{max.dist}{numeric maximum mass distance (in Da) from exact mass to include in simulated isotopic pattern}
 
-\item{min.int}{}
+\item{min.int}{numeric minimum relative intensity (maximum = 1, minimum = 0) to include in simulated isotopic pattern}
 
-\item{charge}{}
+\item{charge}{character string for the charge state of the simulated isotopic pattern, options are `neutral`, `positive`, and `negative`}
 }
 \value{
-
+data frame containing mz and int values of mass spectrum
 }
 \description{
 Isotopic distribution functions

@@ -10,12 +10,12 @@ make_acronym(text)
 \item{text}{CHR vector of the text to acronym-ize}
 }
 \value{
-CHR vector of length equal to that of `text` with the acronym
+CHR vector of length equal to that of \code{text} with the acronym
 }
 \description{
 At times it is useful for display purposes to generate acronyms for longer
 bits of text. This naively generates those by extracting the first letter as
-upper case from each word in `text` elements.
+upper case from each word in \code{text} elements.
 }
 \examples{
 make_acronym("test me")

@@ -82,5 +82,5 @@ conversion software linkage id from tables "conversion_software_settings" and
 "conversion_software_linkage" if appropriate.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

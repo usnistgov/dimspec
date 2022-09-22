@@ -19,7 +19,7 @@ queries <- list(
 #' @param db_conn connection object (e.g. of class "SQLiteConnection")
 #' @param table_names CHR vector name of tables to ensure are present
 #'
-#' @return
+#' @return Failure if the table doesn't exist, none if it does.
 #' @export
 #'
 #' @usage validate_tables(con, "peaks")

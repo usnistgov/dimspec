@@ -6,9 +6,6 @@
 #' @return generates reporting PDF
 #' @export
 #'
-#' @examples
-#' 
-
 report_qc <- function(jsonfile = file.choose(),outputfile = gsub('.json', '.pdf', jsonfile, ignore.case = TRUE)) {
   rmarkdown::render(
     file.path(

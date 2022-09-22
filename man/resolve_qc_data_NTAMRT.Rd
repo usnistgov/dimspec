@@ -37,5 +37,5 @@ list of multiple quality control checks) from the NIST Non-Targeted Analysis
 Method Reporting Tool (NTA MRT).
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

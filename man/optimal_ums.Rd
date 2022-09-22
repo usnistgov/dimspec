@@ -23,20 +23,20 @@ optimal_ums(
 
 \item{correl_bin}{numeric sequence bin width from max_correl..0}
 
-\item{max_ph}{numeric maximum acceptable peak height (%)}
+\item{max_ph}{numeric maximum acceptable peak height (\%)}
 
 \item{ph_bin}{numeric sequence bin width from max_ph..0}
 
-\item{max_freq}{numeric maximum acceptable observational frequency (%)}
+\item{max_freq}{numeric maximum acceptable observational frequency (\%)}
 
 \item{freq_bin}{numeric sequence bin width from max_freq..0}
 
 \item{min_n_peaks}{integer ideal minimum number of scans for mass spectrum}
 
-\item{cormethod}{string indicating correlation function to use (see [cor] for description)}
+\item{cormethod}{string indicating correlation function to use (see [cor()] for description)}
 }
 \value{
-
+data.frame object containing optimized search parameters
 }
 \description{
 Get the optimal uncertainty mass spectrum parameters for data

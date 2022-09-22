@@ -20,7 +20,9 @@ function is primarily called in [create_fallback_build].
 <h3>Usage</h3>
 
 <pre>
-sqlite_parse_import(build_statements)
+if (file.exists("./config/data/elements.csv")) {
+  sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
+}
 </pre>
 
 
@@ -38,15 +40,6 @@ sqlite_parse_import(build_statements)
 
 <p>LIST of parsed .import statements as full &quot;INSERT&quot; statements.
 </p>
-
-
-<h3>Examples</h3>
-
-<pre>
-if (file.exists("./config/data/elements.csv")) {
-  sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
-}
-</pre>
 
 
 </body></html>

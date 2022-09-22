@@ -21,11 +21,11 @@ existing file whose name matches that determined from `output_file`
 this is FALSE and a file with matching name exists.}
 }
 \value{
-
+None, saves a file to the current working directory
 }
 \description{
-Use [data_dictionary] and save the output to a local file. If `output_format`
+Executes [data_dictionary()] and saves the output to a local file. If \code{output_format}
 is one of "data.frame" or "list", the resulting file will be saved as an RDS.
-Parameter `output_file` will be used during the save process; relative paths
-are fine and will be identified by the current working directory.
+Parameter \code{output_file} will be used during the save process; relative paths
+will be identified by the current working directory.
 }

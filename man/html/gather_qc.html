@@ -19,9 +19,18 @@
 gather_qc(
   gather_peak,
   exactmasses,
+  exactmasschart,
   ms1range = c(0.5, 3),
   ms1isomatchlimit = 0.5,
-  minerror = 0.002
+  minerror = 0.002,
+  max_correl = 0.8,
+  correl_bin = 0.1,
+  max_ph = 10,
+  ph_bin = 1,
+  max_freq = 10,
+  freq_bin = 1,
+  min_n_peaks = 3,
+  cormethod = "pearson"
 )
 </pre>
 
@@ -48,6 +57,38 @@ gather_qc(
 <tr valign="top"><td><code>minerror</code></td>
 <td>
 <p>the minimum mass error (in Da) allowable for the instrument</p>
+</td></tr>
+<tr valign="top"><td><code>max_correl</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>correl_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>max_ph</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>ph_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>max_freq</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>freq_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>min_n_peaks</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
 </td></tr>
 </table>
 

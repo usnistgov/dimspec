@@ -18,7 +18,7 @@ CHR vector of length one
 \description{
 Given a vector of arbitrary length that coerces properly to a human-readable
 character string, return it formatted as one of: "one", "one and two", or
-"one, two, ..., and three" using `glue::glue`. This is functionally the same
+"one, two, ..., and three" using \code{glue::glue}. This is functionally the same
 as a static version of [glue::glue_collapse] with parameters sep = ", ",
 width = Inf, and last = ", and ".
 }

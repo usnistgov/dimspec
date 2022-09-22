@@ -10,7 +10,7 @@ check_mzML_convert(mzml)
 \item{mzml}{list of msdata from `mzMLtoR` function}
 }
 \value{
-
+data.frame object of conversion veracity checks
 }
 \description{
 Check mzML file for specific MSConvert parameters

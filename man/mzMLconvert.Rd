@@ -15,6 +15,9 @@ mzMLconvert(rawfile, msconvert = NULL, config = NULL, outdir = getwd())
 
 \item{outdir}{directory path for the converted mzML file.}
 }
+\value{
+CHR scalar path to the created file
+}
 \description{
 Converts a raw file into an mzML
 }

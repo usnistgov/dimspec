@@ -15,6 +15,3 @@ list containing mzML data with unzipped masses and intensity information
 \description{
 Opens file of type mzML into R environment
 }
-\examples{
-
-}

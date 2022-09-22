@@ -39,15 +39,15 @@ dt_formatted(
 
 \item{narrow_cols}{CHR vector of column names to make `narrow_col_width` wide}
 
-\item{narrow_col_width}{CHR scalar defining column width (default: "5%")}
+\item{narrow_col_width}{CHR scalar defining column width (default: "5\%")}
 
 \item{medium_cols}{CHR vector of column names to make `medium_col_width` wide}
 
-\item{medium_col_width}{CHR scalar defining column width (default: "10%")}
+\item{medium_col_width}{CHR scalar defining column width (default: "10\%")}
 
 \item{large_cols}{CHR vector of column names to make `large_col_width` wide}
 
-\item{large_col_width}{CHR scalar defining column width (default: "15%")}
+\item{large_col_width}{CHR scalar defining column width (default: "15\%")}
 
 \item{truncate_cols}{CHR vector of column names to truncate}
 
@@ -55,7 +55,7 @@ dt_formatted(
 
 \item{date_cols}{CHR vector of column names identifying dates}
 
-\item{date_col_width}{CHR scalar defining column width (default: "10%")}
+\item{date_col_width}{CHR scalar defining column width (default: "10\%")}
 
 \item{selection_mode}{CHR scalar of the DT selection mode (default: "single")}
 
@@ -96,7 +96,4 @@ Column name formatting relies on being able to parse `names_to` as a
 To apply a custom format, define these parameters as a list (e.g.
   "dt_format_options") and pass it, along with your dataframe, as
   do.call("dt_formatted", c(dataframe = df, dt_format_options))
-}
-\examples{
-
 }

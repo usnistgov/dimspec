@@ -14,11 +14,11 @@ resolve_mobile_phase_NTAMRT(
   sample_table = "samples",
   db_conn = con,
   mix_collection_table = "carrier_mix_collections",
-  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases",
-    props = c(flow = "flow", flow_units = "flowunits", duration = "duration",
-    duration_units = "durationunits")),
-  carrier_props = list(db_table = "carrier_mixes", norm_by = "norm_carriers", alias_in
-    = "carrier_aliases", props = c(id_by = "solvent", fraction_by = "fraction")),
+  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
+    = c(flow = "flow", flow_units = "flowunits", duration = "duration", duration_units =
+    "durationunits")),
+  carrier_props = list(db_table = "carrier_mixes", norm_by = "norm_carriers", alias_in =
+    "carrier_aliases", props = c(id_by = "solvent", fraction_by = "fraction")),
   additive_props = list(db_table = "carrier_additives", norm_by = "norm_additives",
     alias_in = "additive_aliases", props = c(id_by = "add$", amount_by = "_amount",
     units_by = "_units")),
@@ -143,5 +143,5 @@ Database insertions are done in real time, so failures may result in
   entries from `mix_collection_table` and relying on delete cascades built
   into the database. Additional names are provided here to match the schema.
 
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

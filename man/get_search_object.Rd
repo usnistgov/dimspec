@@ -12,7 +12,7 @@ get_search_object(searchmzml, zoom = c(1, 4))
 \item{zoom}{vector length of 2 containing +/- the area around the MS1 precursor ion to collect data.}
 }
 \value{
-
+LIST object of data.frames include MS1 and MS2 analytical data, and the search parameters used to generate them
 }
 \description{
 Generate msdata object from input peak data

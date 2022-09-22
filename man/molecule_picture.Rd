@@ -38,6 +38,4 @@ files produced will be in portable network graphics (.png) format.
 Supported `mol` expressions include FASTA, HELM, Inchi, Mol2Block,
   Mol2File, MolBlock, MolFile, PDBBlock, PDBFile, PNGFile, PNGString,
   RDKitSVG, Sequence, Smarts, Smiles, TPLBlock, and TPLFile
-
-
 }

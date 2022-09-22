@@ -20,6 +20,3 @@ generates reporting PDF
 \description{
 Export QC result JSONfile into PDF
 }
-\examples{
-
-}

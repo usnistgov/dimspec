@@ -4,7 +4,9 @@
 \alias{sqlite_parse_import}
 \title{Parse SQL import statements}
 \usage{
-sqlite_parse_import(build_statements)
+if (file.exists("./config/data/elements.csv")) {
+  sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
+}
 }
 \arguments{
 \item{build_statements}{CHR vector of SQL build statements from an SQL file.}
@@ -18,9 +20,4 @@ process needs a full set of SQL statements to execute directly rather than
 CLI dot commands. This utility function parses formatted SQL statements
 containing CLI ".import" commands to create SQL INSERT statements. This
 function is primarily called in [create_fallback_build].
-}
-\examples{
-if (file.exists("./config/data/elements.csv")) {
-  sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
-}
 }

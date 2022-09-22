@@ -92,19 +92,21 @@ add_help <- function(id, tooltip, icon_name = "question", size = "xs", icon_clas
   return(tagList(help_icon, bsTT))
 }
 
-#' Convenience application of `add_help` using pipes directly in UI.R
+#' Convenience application of \code{add_help} using pipes directly in \code{UI.R}
 #'
 #' This may not work for certain widgets with heavily nested HTML. Note that
 #' classes may be CSS dependent.
+
+#' @note Most standard Shiny widgets are supported, but maybe not all.
 #'
 #' @param widget shiny.tag widget
 #' @param tooltip CHR scalar of the tooltip text
 #' @param ... Other named arguments to be passed to `add_help`
 #'
-#' @return
+#' @return The \code{widget} provided with a hover tooltip icon appended to it.
 #' @export
 #'
-#' @examples
+#' @usage
 #' actionButton("example", "With Help") %>%
 #'   with_help("Now with a question mark icon hosting a tooltip")
 #' actionButton("example", "With Help") %>%
@@ -172,15 +174,15 @@ dt_color_by <- function(table_names, look_for) {
 #' @param hide_cols CHR vector of column names to hide
 #' @param center_cols CHR vector of column names to center
 #' @param narrow_cols CHR vector of column names to make `narrow_col_width` wide
-#' @param narrow_col_width CHR scalar defining column width (default: "5%")
+#' @param narrow_col_width CHR scalar defining column width (default: "5\%")
 #' @param medium_cols CHR vector of column names to make `medium_col_width` wide
-#' @param medium_col_width CHR scalar defining column width (default: "10%")
+#' @param medium_col_width CHR scalar defining column width (default: "10\%")
 #' @param large_cols CHR vector of column names to make `large_col_width` wide
-#' @param large_col_width CHR scalar defining column width (default: "15%")
+#' @param large_col_width CHR scalar defining column width (default: "15\%")
 #' @param truncate_cols CHR vector of column names to truncate
 #' @param truncate_width INT scalar of the position at which to truncate
 #' @param date_cols CHR vector of column names identifying dates
-#' @param date_col_width CHR scalar defining column width (default: "10%")
+#' @param date_col_width CHR scalar defining column width (default: "10\%")
 #' @param selection_mode CHR scalar of the DT selection mode (default: "single")
 #' @param callback JS custom callback to apply to the datatable widget
 #' @param color_by_column CHR scalar of the column name by which to color rows
@@ -195,8 +197,6 @@ dt_color_by <- function(table_names, look_for) {
 #'
 #' @return DT::datatable object formatted as requested
 #' @export
-#'
-#' @examples
 #'
 #' @note Truncation applies a JS function to retain the underlying information
 #'   as a hover tooltip and truncates using ellipses.

@@ -12,7 +12,7 @@ get_sample_class(con, peakid)
 \item{peakid}{integer vector of primary keys for peaks table}
 }
 \value{
-
+data.frame object of sample classes associated with a given peak
 }
 \description{
 Get sample class information for specific peaks

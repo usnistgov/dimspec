@@ -49,7 +49,7 @@ multiple separation columns, etc.). Tables targeted by this function are
 method.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 This function is brittle; built specifically for the NIST NTA MRT
   import format. If using a different import format, customize to your needs

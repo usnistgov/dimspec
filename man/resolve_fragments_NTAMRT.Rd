@@ -137,7 +137,7 @@ annotated_fragments, norm_fragments, fragment_inspections, fragment_aliases,
 and fragment_sources.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 If components named in `citation_info_in` and `inspection_info_in` do
   not exist, that information will not be appended to the resulting database

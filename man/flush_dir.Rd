@@ -16,7 +16,7 @@ flush_dir(directory = "logs")
 \value{
 None, executes directory actions
 
-
+None, removes files from a directory
 }
 \description{
 Clear a directory and archive those files if desired in any directory

@@ -5,7 +5,7 @@
 
 <table width="100%" summary="page for with_help"><tr><td>with_help</td><td style="text-align: right;">R Documentation</td></tr></table>
 
-<h2>Convenience application of 'add_help' using pipes directly in UI.R</h2>
+<h2>Convenience application of <code>add_help</code> using pipes directly in <code>UI.R</code></h2>
 
 <h3>Description</h3>
 
@@ -17,7 +17,10 @@ classes may be CSS dependent.
 <h3>Usage</h3>
 
 <pre>
-with_help(widget, tooltip, ...)
+actionButton("example", "With Help") 
+  with_help("Now with a question mark icon hosting a tooltip")
+actionButton("example", "With Help") 
+  with_help("Large and green", size = "xl", class = "success")
 </pre>
 
 
@@ -39,15 +42,16 @@ with_help(widget, tooltip, ...)
 </table>
 
 
-<h3>Examples</h3>
+<h3>Value</h3>
 
-<pre>
-actionButton("example", "With Help") %&gt;%
-  with_help("Now with a question mark icon hosting a tooltip")
-actionButton("example", "With Help") %&gt;%
-  with_help("Large and green", size = "xl", class = "success")
+<p>The <code>widget</code> provided with a hover tooltip icon appended to it.
+</p>
 
-</pre>
+
+<h3>Note</h3>
+
+<p>Most standard Shiny widgets are supported, but maybe not all.
+</p>
 
 
 </body></html>

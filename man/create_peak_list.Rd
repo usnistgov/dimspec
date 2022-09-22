@@ -2,8 +2,7 @@
 % Please edit documentation in R/uncertainty.R
 \name{create_peak_list}
 \alias{create_peak_list}
-\title{Spectral Uncertainty Functions ----------------------------------------------------------
-Create peak list from SQL ms_data table}
+\title{Create peak list from SQL ms_data table}
 \usage{
 create_peak_list(ms_data)
 }

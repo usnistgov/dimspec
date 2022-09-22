@@ -134,7 +134,7 @@ activate_py_env <- function(env_name = NULL, required_libraries = NULL, required
 #'   conda tools (default: NULL is translated first to the environment variable
 #'   CONDA_CLI and then to "conda")
 #'
-#' @return
+#' @return None, directly updates the referenced python environment
 #' @export
 #'
 #' @usage update_env_from_file("nist_hrms_db")
@@ -341,7 +341,6 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
 #' @note Supported `mol` expressions include FASTA, HELM, Inchi, Mol2Block,
 #'   Mol2File, MolBlock, MolFile, PDBBlock, PDBFile, PNGFile, PNGString,
 #'   RDKitSVG, Sequence, Smarts, Smiles, TPLBlock, and TPLFile
-#' @note
 #'
 #' @param mol CHR scalar expression of molecular structure
 #' @param mol_type CHR scalar indicating the expression type of `mol` (default:
@@ -430,7 +429,8 @@ molecule_picture <- function(mol,
 #'
 #' @param required_modules CHR vector of required modules
 #'
-#' @return
+#' @return LGL scalar of whether or not all modules are available. Check console
+#'   for further details.
 #' @export
 #'
 #' @usage py_modules_available("rdkit")

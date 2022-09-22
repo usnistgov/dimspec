@@ -14,7 +14,7 @@ getmzML(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE)
 \item{CHECKCONVERT}{LGL scalar of whether or not to verify the conversion format (default TRUE)}
 }
 \value{
-
+LIST value of the trimmed mzML file matching search criteria
 }
 \description{
 If filename is not extension .mzML, then converts the raw file

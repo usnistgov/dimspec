@@ -43,7 +43,7 @@ database. This can be done either through the import object with a name
 reference or directly by assigning additional values.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 One of `values` or both of `obj` and `aliases_in` must be provided to
   add new sample aliases.

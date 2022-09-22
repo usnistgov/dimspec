@@ -34,7 +34,7 @@ return data frame (default: FALSE)}
 criteria as a vector return value  (default: FALSE)}
 }
 \value{
-
+data.frame object describing the database entity
 }
 \description{
 Add functionality to `pragma_table_def` by filtering on column properties

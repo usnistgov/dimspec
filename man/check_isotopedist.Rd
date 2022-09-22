@@ -42,7 +42,7 @@ check_isotopedist(
 \item{n}{numeric dot product intensity weighting}
 }
 \value{
-
+numeric vector of match scores between the empirical and calculated isotopic distribution.
 }
 \description{
 calculates the isotopic distribution of the stated elemental formula and compares against the empirical ms
