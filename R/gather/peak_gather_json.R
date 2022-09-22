@@ -36,7 +36,7 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     out[[i]]$massspectrometry <- methodjson$massspectrometry
     out[[i]]$qcmethod <- methodjson$qcmethod
     out[[i]]$peak <- data.frame(methodjson$peaks[[i]])
-    out[[i]]$compounddata <- compoundtable[which(as.integer(compoundtable$ID) == as.integer(out[[i]]$peak$identifier)),]
+    out[[i]]$compounddata <- compoundtable[which(as.integer(compoundtable$id) == as.integer(out[[i]]$peak$identifier)),]
     ind <- which(annotated_cmpds == methodjson$peaks[[i]]$name)
     if (length(ind) > 0) {
       out[[i]]$annotation <- do.call(rbind, lapply(which(names(methodjson$annotation[[ind]]) == "fragment"), function(x) data.frame(methodjson$annotation[[ind]][[x]])))
