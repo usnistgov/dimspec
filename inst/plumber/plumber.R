@@ -329,6 +329,9 @@ function(type = "notation",
          compound_id = 1L,
          fragment_id = 1L,
          notation_type = "smiles") {
+  if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT || !rdkit_active()) {
+    return("RDKit is not available.")
+  }
   notation_type <- tolower(notation_type)
   type <- match.arg(arg = tolower(type), choices = c("notation", "compound", "fragment"))
   notation_type <- match.arg(arg = notation_type, choices = c("smiles", "inchi"))

@@ -620,31 +620,29 @@ dashboardPage(
                               column(12,
                                      h4("Select a row in the left-hand table to view additional information for that annotated fragment."),
                                      fluidRow(
-                                       column(width = ifelse(rdkit_available, 4, 6),
+                                       column(width = 4,
                                               DTOutput(outputId = "search_fragments_dt",
                                                        width = "100%") %>%
                                                 withSpinner()
                                        ),
-                                       column(width = ifelse(rdkit_available, 4, 0),
-                                              if (rdkit_available) {
-                                                tagList(
-                                                  htmlOutput(outputId = "search_fragments_ballstick_caption"),
-                                                  span(class = "centered-image",
-                                                       imageOutput(outputId = "search_fragments_ballstick",
-                                                                   height = "200px"),
-                                                       actionLink(inputId = "search_fragments_fragment_info",
-                                                                  label = "More Fragment Information",
-                                                                  icon = icon("search", verify_fa = FALSE)
-                                                       ) %>%
-                                                         with_help(tooltip = tooltip_text[["search_fragments_fragment_info"]],
-                                                                   placement = "top")
-                                                  )
-                                                )
-                                              } else {
-                                                NULL
-                                              }
+                                       column(width = 4,
+                                              htmlOutput(outputId = "search_fragments_ballstick_caption"),
+                                              span(class = "centered-image",
+                                                   imageOutput(outputId = "search_fragments_ballstick",
+                                                               height = "200px"),
+                                                   if (rdkit_available) {
+                                                     actionLink(inputId = "search_fragments_fragment_info",
+                                                                label = "More Fragment Information",
+                                                                icon = icon("search", verify_fa = FALSE)
+                                                     ) %>%
+                                                       with_help(tooltip = tooltip_text[["search_fragments_fragment_info"]],
+                                                                 placement = "top")
+                                                   } else {
+                                                     NULL
+                                                   }
+                                              )
                                        ),
-                                       column(width = ifelse(rdkit_available, 4, 6),
+                                       column(width = 4,
                                               h4("This fragment has been annotated in the following"),
                                               tabsetPanel(
                                                 type = "tabs",

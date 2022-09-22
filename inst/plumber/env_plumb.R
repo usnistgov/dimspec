@@ -56,9 +56,11 @@ rm(logger_settings)
 update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
 
 # Enable RDKit -----------------------------------------------------------------
-# Comment out to NOT use RDKIT, but it is required for certain endpoints.
-if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("inst", "rdkit", "env_py.R"))
-rdkit_active(make_if_not = TRUE, log_ns = "api")
+# RDKIT is required for certain endpoints.
+if (INFORMATICS && USE_RDKIT) {
+  if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("inst", "rdkit", "env_py.R"))
+  rdkit_active(make_if_not = TRUE, log_ns = "api")
+}
 
 # Initialize connection --------------------------------------------------------
 manage_connection(db = DB_NAME, conn_name = "con", log_ns = "api")
