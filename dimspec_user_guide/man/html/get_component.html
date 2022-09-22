@@ -9,8 +9,8 @@
 
 <h3>Description</h3>
 
-<p>Call this to pull a component named 'obj_component' from a list or named
-vector provided as 'obj' and optionally use [tack_on] to append to it. This
+<p>Call this to pull a component named <code>obj_component</code> from a list or named
+vector provided as <code>obj</code> and optionally use [tack_on] to append to it. This
 is intended to ease the process of pulling specific components from a list
 for further treatment in the import process by isolating that component.
 </p>
@@ -28,16 +28,16 @@ get_component(obj, obj_component, silence = TRUE, log_ns = "global", ...)
 <table summary="R argblock">
 <tr valign="top"><td><code>obj</code></td>
 <td>
-<p>LIST or NAMED vector in which to find 'obj_component'</p>
+<p>LIST or NAMED vector in which to find <code>obj_component</code></p>
 </td></tr>
 <tr valign="top"><td><code>obj_component</code></td>
 <td>
-<p>CHR vector of named elements to find in 'obj'</p>
+<p>CHR vector of named elements to find in <code>obj</code></p>
 </td></tr>
 <tr valign="top"><td><code>silence</code></td>
 <td>
 <p>LGL scalar indicating whether to silence recursive messages,
-which may be the same for each element of 'obj' (default: TRUE)</p>
+which may be the same for each element of <code>obj</code> (default: TRUE)</p>
 </td></tr>
 <tr valign="top"><td><code>log_ns</code></td>
 <td>
@@ -45,7 +45,8 @@ which may be the same for each element of 'obj' (default: TRUE)</p>
 </td></tr>
 <tr valign="top"><td><code>...</code></td>
 <td>
-<p>Optional additional arguments to [tack_on] to the resulting list</p>
+<p>Additional arguments passed to/from the ellipsis parameter of
+calling functions. If named, names are preserved.</p>
 </td></tr>
 </table>
 
@@ -61,7 +62,7 @@ elements.
 
 <h3>Value</h3>
 
-<p>LIST object containing the elements of 'obj'
+<p>LIST object containing the elements of <code>obj</code>
 </p>
 
 

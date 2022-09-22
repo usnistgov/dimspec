@@ -4,11 +4,11 @@
 
 One goal of the Data Infrastructure for Mass Spectrometry (DIMSpec) project is to provide a database that can be easily retasked to support individual projects within the Chemical Sciences Division to manage data coherently and accelerate analyte identification, screening, and annotation processes for non-targeted analysis projects. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. A DIMSpec mass spectral database incorporates empirical mass spectral data from analytical standards and complex mixtures with relevant analytical method metadata and mass spectral annotation. Algorithms have been developed in R to validate the quality of new experimental data.
 
-For ease of use, the Mass Spectral Quality Control (MSQC) application was developed that incorporates the R functions into a R/Shiny application. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/)), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview).
+For ease of use, the Mass Spectral Quality Control (MSQC) application was developed that incorporates the R functions into a R/Shiny application. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/){target="_blank"}), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview){target="_blank"}.
 
 ## Instructions {#msqc-instructions .unnumbered}
 
-The MSQC application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server for use by those connected to the NIST network without the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in [RStudio](https://www.rstudio.com/)[^6] which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+The MSQC application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server for use by those connected to the NIST network without the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in [RStudio](https://www.rstudio.com/){target="_blank"}[^6] which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.
 
 [^6]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
@@ -16,7 +16,7 @@ Refer to the [System Requirements](#system-requirements) section for installatio
 
 ### Input File Format Requirements {#msqc-input-format .unnumbered}
 
-To use MSQC, raw data files produced by a mass spectrometer must be converted into mzML format (Deutsch 2010) using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software (Adusumilli and Mallick 2017). There are specific parameters that must be used during conversion.
+To use MSQC, raw data files produced by a mass spectrometer must be converted into mzML format (Deutsch 2010) using [Proteowizard's](https://proteowizard.sourceforge.io/){target="_blank"} msConvert software (Adusumilli and Mallick 2017). There are specific parameters that must be used during conversion.
 
     Filter: Threshold peak filter
     Threshold type: absolute
@@ -30,7 +30,7 @@ A more detailed user guide for converting the files is provided as a [vignette](
 
 ### Non-Targeted Analysis Method Reporting Tool {#msqc-ntamrt .unnumbered}
 
-A macro-enabled Microsoft Excel workbook, called the Non-Targeted Analysis Method Reporting Tool (NTA-MRT), is used for the systematic collection of sample, method, and compound information related to chemicals identified in a sample. The most up-to-date version of NTA-MRT is publicly available at [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool).
+A macro-enabled Microsoft Excel workbook, called the Non-Targeted Analysis Method Reporting Tool (NTA-MRT), is used for the systematic collection of sample, method, and compound information related to chemicals identified in a sample. The most up-to-date version of NTA-MRT is publicly available at [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool){target="_blank"}.
 
 The instructions for completing the NTA-MRT are contained within the tool itself. In order to use the MSQC application, a `sample.JSON` file must be generated using the “Export to JSON file output” button on the first tab of the NTA-MRT.
 

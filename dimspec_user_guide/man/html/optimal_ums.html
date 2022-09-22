@@ -7,6 +7,12 @@
 
 <h2>Get the optimal uncertainty mass spectrum parameters for data</h2>
 
+<h3>Description</h3>
+
+<p>Get the optimal uncertainty mass spectrum parameters for data
+</p>
+
+
 <h3>Usage</h3>
 
 <pre>
@@ -41,26 +47,35 @@ optimal_ums(
 </td></tr>
 <tr valign="top"><td><code>max_ph</code></td>
 <td>
-<p>numeric maximum acceptable peak height (
-</p>
-\item<p>ph_binnumeric sequence bin width from max_ph..0
-</p>
-\item<p>max_freqnumeric maximum acceptable observational frequency (
-</p>
-\item<p>freq_binnumeric sequence bin width from max_freq..0
-</p>
-\item<p>min_n_peaksinteger ideal minimum number of scans for mass spectrum
-</p>
-\item<p>cormethodstring indicating correlation function to use (see [cor] for description)
+<p>numeric maximum acceptable peak height (%)</p>
+</td></tr>
+<tr valign="top"><td><code>ph_bin</code></td>
+<td>
+<p>numeric sequence bin width from max_ph..0</p>
+</td></tr>
+<tr valign="top"><td><code>max_freq</code></td>
+<td>
+<p>numeric maximum acceptable observational frequency (%)</p>
+</td></tr>
+<tr valign="top"><td><code>freq_bin</code></td>
+<td>
+<p>numeric sequence bin width from max_freq..0</p>
+</td></tr>
+<tr valign="top"><td><code>min_n_peaks</code></td>
+<td>
+<p>integer ideal minimum number of scans for mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>string indicating correlation function to use (see [cor()] for description)</p>
+</td></tr>
+</table>
 
 
+<h3>Value</h3>
+
+<p>data.frame object containing optimized search parameters
 </p>
-
-
-<p>Get the optimal uncertainty mass spectrum parameters for data
-
-</p>
-</td></tr></table>
 
 
 </body></html>

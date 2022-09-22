@@ -25,7 +25,7 @@ There is only one page for interactive content, named "Table Viewer" ([Figure 1]
 
 ## Entity Relationship Diagram {#table-explorer-erd .unnumbered}
 
-A full graphical representation of the entity relationship diagram is also provided. Click the "Entity Relationship Diagram" in the navigation bar to view it. Right click the graphic and click "Open image in new tab" to view it in full resolution.
+A full graphical representation of the entity relationship diagram is also provided. Click the "Entity Relationship Diagram" in the navigation bar to view it. Click [here](assets/ERD.png){target="_blank"} to open this this graphic in full resolution.
 
 ------------------------------------------------------------------------
 

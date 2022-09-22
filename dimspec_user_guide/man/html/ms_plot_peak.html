@@ -7,6 +7,14 @@
 
 <h2>Plot a peak from database mass spectral data</h2>
 
+<h3>Description</h3>
+
+<p>Plots the intensity of ion traces over the scan period and annotates them
+with the mass to charge value. Several flexible plotting aspects are provided
+as data may become complicated.
+</p>
+
+
 <h3>Usage</h3>
 
 <pre>
@@ -56,7 +64,7 @@ resolution)</p>
 <td>
 <p>NUM scalar threshold of the maximum intensity below
 which traces will be dropped (default: 1e-2 means any trace with a maximum
-intensity less than 1
+intensity less than 1% of the maximum intensity in the plot will be
 dropped); if &gt; 1 the inversion will be used (1e5 -&gt; 1e-5)</p>
 </td></tr>
 <tr valign="top"><td><code>peak_repel_labels</code></td>
@@ -79,23 +87,19 @@ aesthetic (only a single color is supported; default: &quot;grey70&quot;)</p>
 <td>
 <p>NUM scalar y-axis offset as a fraction of the maximum
 intensity for trace annotation (default: 0.02 offsets labels in the
-positive direction by 2
-</p>
-\item<p>db_conndatabase connection (default: con) which must be live to pull
-sample and compound identification information
-</p>
+positive direction by 2% of the maximum intensity)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection (default: con) which must be live to pull
+sample and compound identification information</p>
 </td></tr>
 </table>
 
-<p>ggplot object
 
+<h3>Details</h3>
 
-Plots the intensity of ion traces over the scan period and annotates them
-with the mass to charge value. Several flexible plotting aspects are provided
-as data may become complicated.
-
-
-The basic default plot will group all mass-to-charge ratio values by unit
+<p>The basic default plot will group all mass-to-charge ratio values by unit
 resolution (increase resolution with 'peak_mz_resolution') and plot them as
 an area trace over the scanning period. Traces are annotated with the
 grouping value. Values of 'peak_mz_resolution' greater than available data
@@ -108,9 +112,18 @@ way, not individual data points within a retained trace. Set this as the
 fraction of the base peak (the peak of maximum intensity) to use to filter
 out low-intensity traces. The calculated intensity threshold will be printed
 to the caption.
+</p>
 
 
-Increasing 'peak_mz_resolution' will likely result in multiple separate
+<h3>Value</h3>
+
+<p>ggplot object
+</p>
+
+
+<h3>Note</h3>
+
+<p>Increasing 'peak_mz_resolution' will likely result in multiple separate
 traces.
 </p>
 <p>Implicitly missing values are not interpolated, but lines are drawn
@@ -118,7 +131,6 @@ through to the next point.
 </p>
 <p>'peak_type' can will accept abbreviations of its accepted values (e.g.
 &quot;l&quot; for &quot;line&quot;)
-
 </p>
 
 

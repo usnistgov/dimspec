@@ -26,8 +26,8 @@ automated setup are included. For this initial release, DIMSpec is
 distributed with data populated for per- and polyfluorinated alkyl
 substances (PFAS); that effort has been primarily supported by the
 Department of Defense Strategic Environmental Research and Development
-Program ([DOD-SERDP](https://serdp-estcp.org/)), project number
-[ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview).
+Program ([DOD-SERDP](https://serdp-estcp.org/){target="_blank"}), project number
+[ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview){target="_blank"}.
 
 This section serves as a user guide for using the MSMatch application.
 
@@ -41,13 +41,13 @@ launching or maintaining it locally. For now, this application is
 distributed for demonstration and evaluation with an implementation of
 NIST DIMSpec containing high resolution accurate mass spectrometry data
 for per- and polyfluorinated alkyl substances (PFAS). The R project can
-be opened in [RStudio](https://www.rstudio.com/)[^1] which may be
+be opened in [RStudio](https://www.rstudio.com/){target="_blank"}[^4] which may be
 downloaded and installed free of charge if not already installed.
 Initial set up does require an internet connection to install
 dependencies; on a system which does not contain any software components
 this can take a considerable amount of time.
 
-[^1]: Any mention of commercial products within NIST web pages is for
+[^4]: Any mention of commercial products within NIST web pages is for
     information only; it does not imply recommendation or endorsement by
     NIST.
 
@@ -58,7 +58,7 @@ installation details.
 
 To use MSMatch, raw data files produced by a mass spectrometer must be
 converted into mzML format (Deutsch 2010) using
-[Proteowizard's](https://proteowizard.sourceforge.io/) msConvert
+[Proteowizard's](https://proteowizard.sourceforge.io/){target="_blank"} msConvert
 software (Adusumilli and Mallick 2017). There are specific parameters
 that must be used during conversion.
 
@@ -87,9 +87,9 @@ application. When first run, it may take a moment to install necessary
 dependencies and launch the application programming interface (API)
 server.
 
-*Terminal*[^2]
+*Terminal*[^5]
 
-[^2]: Requires R.exe is available in your system PATH
+[^5]: Requires R.exe is available in your system PATH
 
 > R.exe "shiny::runApp('inst/apps/spectral_match')"
 

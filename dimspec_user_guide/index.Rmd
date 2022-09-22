@@ -10,7 +10,7 @@ cover-image: assets/NIST-Logo-Brand-White.svg
 description: |
   This is the User Guide distributed alongside the R Project containing the toolset supporting the "Database Infrastructure for Mass Spectrometry (DIMSpec)" project.
 link-citations: yes
-# github-repo: rstudio/bookdown-demo
+# github-repo: usnistgov/NISTPFAS/tree/main/dimspec
 ---
 
 ------------------------------------------------------------------------
@@ -25,9 +25,9 @@ For analyte classes with decades of analytical study (e.g. polychlorinated biphe
 
 ![](assets/fig00-02_dimspec_conceptual_graphic.png "A conceptual diagram of the DIMSpec project."){#fig00-02}
 
-This book describes a tool set produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass spectrometric experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) allows for the creation of portable databases that tie such data with sample and methodological metadata. DIMSpec uses [SQLite](https://sqlite.org), a common portable database engine, for data storage and a collected set of data management and NTA tools written in the [R](https://www.r-project.org) language. This includes the ability to rapidly iterate and launch new databases to hold data for a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated tools, researchers can leverage NTA tools in active use at NIST for quality assurance, identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.
+This book describes a tool set produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass spectrometric experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) allows for the creation of portable databases that tie such data with sample and methodological metadata. DIMSpec uses [SQLite](https://sqlite.org){target="_blank"}, a common portable database engine, for data storage and a collected set of data management and NTA tools written in the [R](https://www.r-project.org){target="_blank"} language. This includes the ability to rapidly iterate and launch new databases to hold data for a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated tools, researchers can leverage NTA tools in active use at NIST for quality assurance, identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.
 
-We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the [FAIR](https://www.go-fair.org) principles.
+We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the [FAIR](https://www.go-fair.org){target="_blank"} principles.
 
 <div class="signature-block">
 <span class="signoff">Sincerely,</span>

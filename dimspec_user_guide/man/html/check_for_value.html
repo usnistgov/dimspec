@@ -21,14 +21,12 @@ will be fed directly and can accept the nested list structure defined in
 <h3>Usage</h3>
 
 <pre>
-check_for_value(
-  values,
-  db_table,
-  db_column,
-  case_sensitive = TRUE,
-  db_conn = con,
-  fuzzy = FALSE
-)
+con &lt;- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+alphabet &lt;- dplyr::tibble(lower = letters, upper = LETTERS)
+dplyr::copy_to(con, alphabet)
+check_for_value("A", "alphabet", "upper", con)
+check_for_value("A", "alphabet", "lower", con)
+check_for_value(letters[1:10], "alphabet", "lower", con)
 </pre>
 
 
@@ -73,22 +71,6 @@ the values were found, and &quot;values&quot; containing the result of the datab
 call, a data.frame object containing matching rows or NULL if exists ==
 FALSE.
 </p>
-
-
-<h3>Examples</h3>
-
-<pre>
-## Not run: 
-con &lt;- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-alphabet &lt;- dplyr::tibble(lower = letters, upper = LETTERS)
-dplyr::copy_to(con, alphabet)
-check_for_value("A", "alphabet", "upper", con)
-check_for_value("A", "alphabet", "lower", con)
-check_for_value(letters[1:10], "alphabet", "lower", con)
-
-## End(Not run)
-## End(Not run)
-</pre>
 
 
 </body></html>

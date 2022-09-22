@@ -10,7 +10,7 @@
 <h3>Description</h3>
 
 <p>Provides a sanity check on whether or not a name reference exists and return
-its name if so. If not, return the default name defined from 'default_name'.
+its name if so. If not, return the default name defined from <code>default_name</code>.
 This largely is used to prevent naming conflicts as part of managing the
 plumber service but can be used for any item in the current namespace.
 </p>
@@ -19,13 +19,12 @@ plumber service but can be used for any item in the current namespace.
 <h3>Usage</h3>
 
 <pre>
- {\preformatted {
-  if (exists("log_it")) {
+if (exists("log_it")) {
     obj_name_check("test", "test")
     test &lt;- letters
     obj_name_check(test)
   }
-}</pre>
+</pre>
 
 
 <h3>Arguments</h3>
@@ -37,7 +36,7 @@ plumber service but can be used for any item in the current namespace.
 </td></tr>
 <tr valign="top"><td><code>default_name</code></td>
 <td>
-<p>CHR scalar name to use for 'obj' if it does not exist
+<p>CHR scalar name to use for <code>obj</code> if it does not exist
 (default: NULL).</p>
 </td></tr>
 </table>
@@ -45,7 +44,7 @@ plumber service but can be used for any item in the current namespace.
 
 <h3>Value</h3>
 
-<p>CHR scalar of the resolved name
+<p>CHR scalar of the resolved object name
 </p>
 
 

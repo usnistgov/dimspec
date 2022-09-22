@@ -7,6 +7,15 @@
 
 <h2>Import software settings</h2>
 
+<h3>Description</h3>
+
+<p>Part of the standard import pipeline, adding rows to the
+'conversion_software_settings' table with a given sample id. Some argument
+names are shared with other import functions, specifically 'obj' but are
+formed differently to resolve the node complexity correctly.
+</p>
+
+
 <h3>Usage</h3>
 
 <pre>
@@ -38,7 +47,7 @@ column names in table conversion_software_settings.</p>
 <p>CHR scalar of the sample timestamp (e.g.
 sample$starttime) to use for linking software conversion settings with peak
 data, with a call back to the originating sample. If NULL (the default),
-the current system timestamp in UTC will be used from [lubridate::now].</p>
+the current system timestamp in UTC will be used from [lubridate::now()].</p>
 </td></tr>
 <tr valign="top"><td><code>db_conn</code></td>
 <td>
@@ -64,33 +73,37 @@ linkage between peaks and their software settings (default:
 <tr valign="top"><td><code>as_date_format</code></td>
 <td>
 <p>CHR scalar the format to use when storing timestamps
-that matches database column expectations (default: &quot;
-</p>
-\item<p>format_checksCHR vector of the [lubridate::parse_date_time] format
+that matches database column expectations (default: &quot;%Y-%m-%d %H:%M:%S&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>format_checks</code></td>
+<td>
+<p>CHR vector of the [lubridate::parse_date_time()] format
 checks to execute in order of priority; these must match a lubridate
 function of the same name (default: c(&quot;ymd_HMS&quot;, &quot;ydm_HMS&quot;, &quot;mdy_HMS&quot;,
-&quot;dmy_HMS&quot;))
-</p>
-\item<p>min_datetimeCHR scalar of the minimum reasonable timestamp used as a
-sanity check (default: &quot;2000-01-01 00:00:00&quot;)
-</p>
-\item<p>log_nsCHR scalar of the logging namespace to use (default: &quot;db&quot;)
-</p>
+&quot;dmy_HMS&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>min_datetime</code></td>
+<td>
+<p>CHR scalar of the minimum reasonable timestamp used as a
+sanity check (default: &quot;2000-01-01 00:00:00&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
 </td></tr>
 </table>
 
+
+<h3>Value</h3>
+
 <p>NULL on errors, INT scalar of the inserted software linkage id if
 successful
+</p>
 
 
-Part of the standard import pipeline, adding rows to the
-'conversion_software_settings' table with a given sample id. Some argument
-names are shared with other import functions, specifically 'obj' but are
-formed differently to resolve the node complexity correctly.
+<h3>Note</h3>
 
-
-This function is called as part of [full_import]
-
+<p>This function is called as part of [full_import()]
 </p>
 
 

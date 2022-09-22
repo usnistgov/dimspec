@@ -40,14 +40,6 @@ warnings (default: TRUE)</p>
 </table>
 
 
-<h3>Details</h3>
-
-<p>Note the calling stack for auto logging of warnings and errors does not work
-with background processes. These settings call [logger::log_warnings] and
-[logger::log_errors].
-</p>
-
-
 <h3>Value</h3>
 
 <p>None
@@ -56,6 +48,10 @@ with background processes. These settings call [logger::log_warnings] and
 
 <h3>Note</h3>
 
+<p>The calling stack for auto logging of warnings and errors does not work
+with background processes. These settings call [logger::log_warnings()] and
+[logger::log_errors()].
+</p>
 <p>This function is used only for its side effects.
 </p>
 
