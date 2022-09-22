@@ -24,9 +24,6 @@ unzip <- function(x, type = "gzip") {
 #' @return list containing mzML data with unzipped masses and intensity information
 #' @export
 #'
-#' @examples
-#' 
-
 mzMLtoR <- function(mzmlfile = file.choose()) {
   require(XML)
   require(base64enc)

@@ -1,9 +1,7 @@
-#' Import File Data Extraction
-
 #' Extract peak data and metadata
 #' 
 #' gathers metadata from methodjson and extracts the MS1 and MS2 data from the mzml
-#'
+#' 
 #' @param methodjson list of JSON generated from `parse_method_json` function
 #' @param mzml list of msdata from `mzMLtoR` function
 #' @param compoundtable data.frame containing compound identities [should be extractable from SQL later]
@@ -13,8 +11,6 @@
 #' @return list of peak objects
 #' @export
 #'
-#' @examples
-
 peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), minerror = 0.002) {
   
   out <- list()
@@ -75,8 +71,6 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
 #' @return list of msconvert parameters
 #' @export
 #'
-#' @examples
-
 get_msconvert_data <- function(mzml) {
   output <- list()
   if ("dataProcessingList" %in% names(mzml$mzML)) {
@@ -117,8 +111,6 @@ get_msconvert_data <- function(mzml) {
 #' @return data.frame containing MS data
 #' @export
 #'
-#' @examples
-
 table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerror = NA) {
   if (length(scans) == 0) return(NULL)
   out <- NULL
@@ -161,8 +153,6 @@ table_msdata <- function(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerr
 #' @return vector with all NaN replaced with `repl`
 #' @export
 #'
-#' @examples
-
 repl_nan <- function(x, repl = NULL) {
   if (is.nan(x)) {return(repl)}
   if (!is.nan(x)) {return(x)}
