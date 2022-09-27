@@ -21,7 +21,9 @@ unzip <- function(x, type = "gzip") {
 
 #' Opens file of type mzML into R environment
 #'
-#' @param mzmlfile the name of the mzML file which the data are to be read from.
+#' @param mzmlfile the file path of the mzML file which the data are to be read from.
+#' @param lockmass m/z value of the lockmass to remove (Waters instruments only)
+#' @param correct logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)
 #'
 #' @return list containing mzML data with unzipped masses and intensity information
 #' @export
@@ -29,10 +31,17 @@ unzip <- function(x, type = "gzip") {
 #' @examples
 #' 
 
-mzMLtoR <- function(mzmlfile = file.choose()) {
+mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
   require(XML)
   require(base64enc)
   mzml <- xmlToList(mzmlfile)
+  # Waters lockmass logic
+  if (!is.null(lockmass) & "MassLynx" %in% unlist(mzml$mzML$softwareList)) {
+    if (!is.double(lockmass)) stop("bad lockmass for Waters data")
+    if (!is.double(lockmass)) stop("bad lockmass width for Waters data")
+    if (!is.logical(correct)) stop("bad correction TRUE/FALSE for Waters data")
+    mzml <- lockmass_remove(mzml, lockmass, lockmasswidth, correct)
+  }
   scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
   compression <- "none"
   if ("zlib compression" %in% unlist(mzml$mzML$run$spectrumList[[1]]$binaryDataArrayList[["binaryDataArray"]])) {compression = "gzip"}
@@ -42,6 +51,34 @@ mzMLtoR <- function(mzmlfile = file.choose()) {
     mzml$mzML$run$spectrumList[[scans[x]]]$masses <- output[[x]]$masses
     mzml$mzML$run$spectrumList[[scans[x]]]$intensities <- output[[x]]$intensities
   }
+  mzml
+}
+
+#' Remove lockmass scan from mzml object
+#' 
+#' For Waters instruments only, identifies the scans that are due to a lock mass scan
+#' and removes them for easier processing.
+#'
+#' @param mzml mzML object generated from mzMLtoR() function
+#' @param lockmass m/z value of the lockmass to remove
+#' @param lockmasswidth m/z value for the half-window of the lockmass scan
+#' @param correct logical if the subsequent spectra should be corrected
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
+lockmass_remove <- function(mzml, lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
+  scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
+  baseions <- sapply(scans, getbaseion, mzml = mzml)
+  lockmass_scans <- which(baseions >= (lockmass - lockmasswidth) & baseions <= (lockmass + lockmasswidth))
+  lockmasserror <- 1E6*(mean(baseions[lockmass_scans]) - lockmass)/lockmass
+  if (correct) {
+    # placeholder for correct function
+  }
+  mzml$mzML$run$spectrumList <- mzml$mzML$run$spectrumList[-lockmass_scans]
+  mzml$lockmass <- list(lockmass = lockmass, lockmasswidth = lockmasswidth, correct = correct, lockmasserror = lockmasserror)
   mzml
 }
 
@@ -55,6 +92,10 @@ getTIC <- function(mzml, i) {
 
 getBIC <- function(mzml, i) {
   as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]) == "cvParam"), function(x) {if(!"base peak intensity" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]][[x]][which(names(mzml$mzML$run$spectrumList[[i]][[x]]) == "value")]})))
+}
+
+getbaseion <- function(mzml, i) {
+  as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]) == "cvParam"), function(x) {if(!"base peak m/z" %in% mzml$mzML$run$spectrumList[[i]][[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]][[x]][which(names(mzml$mzML$run$spectrumList[[i]][[x]]) == "value")]})))
 }
 
 #' Get time of a ms scan within mzML object
