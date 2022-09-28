@@ -208,7 +208,7 @@ dashboardPage(
                                           ) %>%
                                             with_help(tooltip = glue::glue(tooltip_text[["data_input_waters_lockmass_width"]])),
                                           checkboxInput(inputId = "data_input_waters_lockmass_correct",
-                                                        label = "Correct measurements",
+                                                        label = "Measurements are lock mass corrected",
                                                         value = data_input_waters_lockmass_correct
                                           ) %>%
                                             with_help(tooltip = glue::glue(tooltip_text[["data_input_waters_lockmass_correct"]]))
