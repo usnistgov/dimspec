@@ -22,15 +22,13 @@ unzip <- function(x, type = "gzip") {
 #' Opens file of type mzML into R environment
 #'
 #' @param mzmlfile the file path of the mzML file which the data are to be read from.
-#' @param lockmass m/z value of the lockmass to remove (Waters instruments only)
+#' @param lockmass NUM scalar m/z value of the lockmass to remove (Waters instruments only) (default: NULL)
+#' @param lockmasswidth NUM scalar instrumental uncertainty associated with `lockmass` (default: NULL)
 #' @param correct logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)
 #'
 #' @return list containing mzML data with unzipped masses and intensity information
 #' @export
 #'
-#' @examples
-#' 
-
 mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
   require(XML)
   require(base64enc)

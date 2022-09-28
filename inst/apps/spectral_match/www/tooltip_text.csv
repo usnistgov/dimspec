@@ -22,6 +22,10 @@ FALSE,TRUE,index,data_input_dt_peak_list_remove_row,Click to remove a feature of
 FALSE,TRUE,index,data_input_process_btn,Click here to begin processing the data file provided and extract data matching the features of interest defined in the list above. More options will be available once data have been processed.
 FALSE,TRUE,index,data_input_go_compound,Data have been processed. Click here to go to the compound match page and search for compounds matching your defined features of interest. This is most useful for a broad search or if you suspect an identity already.
 FALSE,TRUE,index,data_input_go_fragment,Data have been processed. Click here to go to the fragment match page and search for fragments matching your defined features of interest. This is most useful for examining which fragments within your feature of interest are shared by other compounds.
+FALSE,FALSE,index,data_input_is_waters,Click this box to indicate you are using data that includes a lock mass to reveal those settings.
+FALSE,FALSE,index,data_input_waters_lockmass,Enter the lock mass value in Daltons for these data.
+FALSE,FALSE,index,data_input_waters_lockmass_width,Enter the lock mass instrumental uncertainty value in Daltons for these data.
+FALSE,FALSE,index,data_input_waters_lockmass_correct,Click this box to indicate whether measured data have already been corrected for the lock mass value.
 FALSE,TRUE,search_compounds,search_compounds_search_type,Select the type of search to perform. Precursor search limits itself to matching precursor mass-to-charge ratios between the error limits defined earlier. Search all attempts to find every possible match within the database and will take considerably longer.
 TRUE,FALSE,search_compounds,search_compounds_mzrt,"Select the feature of interest to use in the search. These were provided on the data input page. If you need to change them, go back to the data input page, alter the feature list, and process your data again."
 TRUE,FALSE,search_compounds,search_compounds_additional_title,Alter advanced parameters for compound matching here. Click the plus icon to the right to expand this box.

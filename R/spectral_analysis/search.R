@@ -37,7 +37,7 @@ create_search_df <- function(filename, precursormz, rt, rt_start, rt_end, masser
 #'
 #' @examples
 
-getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE) {
+getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE, is_waters = FALSE, lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
   ext <-  gsub(pattern = "[[:print:]]*\\.(.*)$", replacement = "\\1", basename(search_df$filename))
   mzmlfile = search_df$filename
   if (ext != "mzML") {
@@ -52,7 +52,11 @@ getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE) {
       stop("The raw file is not an mzML file, please use Proteowizard MSConvert to convert the file to mzML. \n See Documentation for more information.")
     }
   }
-  outmzml <- try(mzMLtoR(mzmlfile), silent = TRUE)
+  if (is_waters) {
+    outmzml <- try(mzMLtoR(mzmlfile = mzmlfile, lockmass = lockmass, lockmasswidth = lockmasswidth, correct = correct))
+  } else {
+    outmzml <- try(mzMLtoR(mzmlfile), silent = TRUE)
+  }
   if (class(outmzml) == "try-error") {stop("The raw file has not be properly converted to an mzML file, please use Proteowizard MSConvert to convert the file to mzML. \n See Documentation for more information.")}
   if (CHECKCONVERT == TRUE) {
     check <- check_mzML_convert(outmzml)
