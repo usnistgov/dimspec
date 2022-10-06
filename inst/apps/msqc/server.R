@@ -106,6 +106,7 @@ shinyServer(function(input, output) {
     toggleElement(id = "process_data_btn", condition = !is.null(import_results$file_dt))
     toggleElement(id = "peak_qc_selector", condition = !is.null(input$sample_qc_rows_selected))
     toggleElement(id = "qc_results_span", condition = !is.null(import_results$processed_data))
+    toggleElement(id = "lockmass_settings", condition = input$has_lockmass)
   })
   hideElement("results_rendered")
   hideElement("data_import_overlay")
@@ -160,7 +161,25 @@ shinyServer(function(input, output) {
         if (import_results$file_dt$Valid[i] == TRUE) {
           if (!check_name == import_results$file_dt$RawFile[i]) {
             runjs("$('#data_import_overlay_text').text('Reading mzML file...');")
-            mzml <- mzMLtoR(input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])])
+            mzml_file <- input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])]
+            if (input$has_lockmass) {
+              if (is.na(input$lockmass)) {
+                nist_shinyalert("Missing Settings", text = "Please provide a numeric value for the lock mass in Daltons.")
+              }
+              if (is.na(input$lockmass_width)) {
+                nist_shinyalert("Missing Settings", text = "Please provide a numeric value for the lock mass width in Daltons.")
+              }
+              mzml <- mzMLtoR(
+                mzmlfile = mzml_file,
+                lockmass = input$lockmass,
+                lockmasswidth = input$lockmass_width,
+                correct = input$lockmass_correct
+              )
+            } else {
+              mzml <- mzMLtoR(
+                mzmlfile = mzml_file
+              )
+            }
           }
           samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
           import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)

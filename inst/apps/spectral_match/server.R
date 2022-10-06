@@ -3,7 +3,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$browser, browser())
   
   # Validation rules ----
-  exclude_auto_validation <- c("search_compounds_search_zoom")
+  exclude_auto_validation <- c("search_compounds_search_zoom", "data_input_waters_lockmass", "data_input_waters_lockmass_width")
   validator <- InputValidator$new()
   sapply(names(app_settings),
          function(x) {
@@ -212,6 +212,7 @@ shinyServer(function(input, output, session) {
     toggleElement("nav_download_all", condition = !is.null(user_data()))
     toggleElement("data_input_process_btn", condition = !is.null(input$data_input_filename) && nrow(data_input_search_parameters()) > 0 && is.null(user_data()))
     toggleElement("data_input_dt_peak_list", condition = nrow(data_input_search_parameters()) > 0)
+    toggleElement("data_input_waters_settings", condition = input$data_input_is_waters)
     toggleElement("search_compounds_results_span", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) > 0)
     toggleElement("search_compounds_no_results", condition = !is.null(search_compounds_results()) && nrow(search_compounds_results()$result) == 0)
     toggleElement("search_fragments_results_span", condition = !is.null(search_fragments_results()))
@@ -624,6 +625,9 @@ shinyServer(function(input, output, session) {
       nrow(data_input_search_parameters() > 0)
     )
     required <- grep("data_input", names(input), value = TRUE)
+    if (!input$data_input_is_waters) {
+      required <- required[-grep("waters", required)]
+    }
     required <- required[-grep("dt_peak_list|import_search|filename|_process|^mod_data|_go_", required)]
     valid <- complete_form_entry(input, required)
     if (valid) {
@@ -635,7 +639,13 @@ shinyServer(function(input, output, session) {
     showElement(selector = "#data_input_overlay")
     log_it("info", sprintf("Processing user data from file %s...", input$data_input_filename$name), app_ns)
     mzml <- try(
-      getmzML(data.frame(filename = input$data_input_filename$datapath))
+      getmzML(
+        search_df = data.frame(filename = input$data_input_filename$datapath),
+        is_waters = input$data_input_is_waters,
+        lockmass = input$data_input_waters_lockmass,
+        lockmasswidth = input$data_input_waters_lockmass_width,
+        correct = input$data_input_waters_lockmass_correct
+      )
     )
     if (inherits(mzml, "try-error")) {
       nist_shinyalert(

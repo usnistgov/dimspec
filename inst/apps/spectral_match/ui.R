@@ -186,6 +186,33 @@ dashboardPage(
                                            ) %>%
                                              with_help(tooltip = glue::glue(tooltip_text[["data_input_isolation_width"]]))
                                       )
+                                  ),
+                                  div(class = "form-grouping",
+                                      checkboxInput(inputId = "data_input_is_waters",
+                                                    label = "Data were collected with an instrumental lock mass",
+                                                    value = FALSE,
+                                                    width = "100%"
+                                      ) %>%
+                                        with_help(tooltip = glue::glue(tooltip_text[["data_input_is_waters"]])),
+                                      div(id = "data_input_waters_settings",
+                                          numericInput(inputId = "data_input_waters_lockmass",
+                                                       label = "Lock mass (Da)",
+                                                       value = data_input_waters_lockmass,
+                                                       width = "100%"
+                                          ) %>%
+                                            with_help(tooltip = glue::glue(tooltip_text[["data_input_waters_lockmass"]])),
+                                          numericInput(inputId = "data_input_waters_lockmass_width",
+                                                       label = "Lock mass width (Da)",
+                                                       value = data_input_waters_lockmass_width,
+                                                       width = "100%"
+                                          ) %>%
+                                            with_help(tooltip = glue::glue(tooltip_text[["data_input_waters_lockmass_width"]])),
+                                          checkboxInput(inputId = "data_input_waters_lockmass_correct",
+                                                        label = "Measurements are lock mass corrected",
+                                                        value = data_input_waters_lockmass_correct
+                                          ) %>%
+                                            with_help(tooltip = glue::glue(tooltip_text[["data_input_waters_lockmass_correct"]]))
+                                      )
                                   )
                                 )
                            )
@@ -212,13 +239,13 @@ dashboardPage(
                         actionButton(inputId = "data_input_dt_peak_list_edit_row",
                                      label = "Edit",
                                      width = "100%",
-                                     icon = icon("pencil-alt")
+                                     icon = icon("pencil-alt", verify_fa = FALSE)
                         ) %>%
                           with_help(tooltip = tooltip_text[["data_input_dt_peak_list_edit_row"]]),
                         actionButton(inputId = "data_input_dt_peak_list_remove_row",
                                      label = "Remove",
                                      width = "100%",
-                                     icon = icon("times")
+                                     icon = icon("times", verify_fa = FALSE)
                         ) %>%
                           with_help(tooltip = tooltip_text[["data_input_dt_peak_list_remove_row"]])
                     ),

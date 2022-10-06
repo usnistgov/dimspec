@@ -74,6 +74,31 @@ dashboardPage(
                                  buttonLabel = "Load",
                                  placeholder = "Select a raw data file to begin"
                        ),
+                       checkboxInput(inputId = "has_lockmass",
+                                     label = "These data were collected with a lock mass",
+                                     value = FALSE,
+                                     width = "100%"
+                       ),
+                       div(id = "lockmass_settings",
+                           checkboxInput(inputId = "lockmass_correct",
+                                         label = "Measurements are lock mass corrected",
+                                         value = FALSE
+                           ),
+                           column(6,
+                                  numericInput(inputId = "lockmass",
+                                               label = "Lock mass (Da)",
+                                               value = NA,
+                                               width = "100%"
+                                  )
+                           ),
+                           column(6,
+                                  numericInput(inputId = "lockmass_width",
+                                               label = "Lock mass width (Da)",
+                                               value = NA,
+                                               width = "100%"
+                                  )
+                           )
+                       ),
                        fileInput(inputId = "sampleJSON_filename",
                                  label = "2) Load Sample JSON file(s)",
                                  width = "100%",
