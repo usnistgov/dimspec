@@ -1,0 +1,127 @@
+p.caption {
+  color: #777;
+  margin-top: 10px;
+  text-align: center;
+  padding: 0 10%;
+}
+
+.level1 > h1 {
+  border-top: 1px solid black;
+  border-left: 15px solid black;
+  background: whitesmoke;
+  padding-left: 10px;
+}
+
+.level2 > h2 {
+  background: whitesmoke;
+  padding-left: 15px;
+  border-left: 10px solid black
+}
+
+.level3 > h3 {
+  background: whitesmoke;
+  padding-left: 20px;
+  border-left: 5px solid black
+}
+
+.level4 > h4 {
+  background: whitesmoke;
+  padding-left: 23px;
+  border-left: 2px solid black
+}
+
+table > caption {
+  font-weight: bold;
+  background-color: black;
+  color: white;
+  text-align: left;
+  padding-left: 15px;
+}
+
+p code {
+  white-space: inherit;
+}
+
+sup {
+  padding: 0 3px;
+}
+
+pre {
+  word-break: normal;
+  word-wrap: normal;
+}
+
+pre code {
+  white-space: inherit;
+}
+
+img {
+  display: block;
+  margin: auto;
+}
+
+#nist-logo {
+  width: 100%;
+  filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
+  padding: 15px 15px 0 15px;
+}
+
+#book-title {
+  color: #364149;
+  margin-left: 15px;
+}
+
+#intro-contributors > ul > li > p > a > img {
+  display: inline;
+  width: 13px;
+}
+
+#intro-contributors > ul > li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+p {
+  text-align: justify;
+}
+
+.footnotes > ol > li > p > code {
+  display: block;
+}
+
+.footnotes > ol {
+  background-color: #f7f7f7;
+  font-size: small;
+}
+
+#fig00-01 {
+  display: inline;
+  float: right;
+  margin: 0 5%;
+  width: 40%;
+}
+
+#fig00-02 {
+  display: inline;
+  float: right;
+  margin: 0 5%;
+  width: 40%;
+}
+
+#fig03-02-right {
+  display: inline;
+  float: right;
+  margin-left: 5%;
+}
+
+#fig03-02-left {
+  display: inline;
+  float: left;
+  margin-right: 5%;
+}
+
+.signature-block { padding-left: 10px; }
+.signature-block > span { display: block; }
+.signature-block > .names { padding: 0.5em; margin-bottom: 0 !important;}
+.signature-block > * > sup { font-size: xx-small !important; }
+.signature-block > .affiliation { font-size: small; }

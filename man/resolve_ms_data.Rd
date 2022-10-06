@@ -66,6 +66,6 @@ if unpack_spectra = TRUE. Mass spectral data are stored in either one
 ("zipped")
 }
 \note{
-This function is called as part of [full_import] during the call to
+This function is called as part of [full_import()] during the call to
   [resolve_peaks]
 }

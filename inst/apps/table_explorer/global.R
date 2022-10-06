@@ -43,3 +43,4 @@ if (!exists("db_dict")) {
     jsonlite::read_json() %>%
     lapply(bind_rows)
 }
+DB_TITLE <- api_endpoint("support_info", return_format = "list")$DB_SETTINGS$DB_TITLE

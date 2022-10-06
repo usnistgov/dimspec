@@ -4,13 +4,11 @@
 \alias{sqlite_parse_build}
 \title{Parse SQL build statements}
 \usage{
-sqlite_parse_build(
-  sql_statements,
-  magicsplit = "/\\\\*magicsplit\\\\*/",
-  header = "/\\\\*\\\\=+\\\\r*\\\\n[[:print:][:cntrl:]]+\\\\r*\\\\n\\\\=+\\\\*/",
-  section = "/\\\\* -* [[:print:][:cntrl:]]+ -* \\\\*/",
-  comment = "/\\\\* [[:alnum:][:punct:] -,\\\\.]+ \\\\*/"
-)
+example_file <- "./config/sql_nodes/reference.sql"
+if (file.exists(example_file)) {
+  build_commands <- readr::read_file(example_file)
+  sqlite_parse_build(build_commands)
+}
 }
 \arguments{
 \item{sql_statements}{CHR scalar of SQL build statements from an SQL file.}
@@ -38,11 +36,4 @@ human-readable SQL statements, `sql_statements` must be of length 1.
 All arguments `magicsplit`, `header`, and `section` provide flexibility in
 the comment structure of the SQL file and accept regex for character matching
 purposes.
-}
-\examples{
-example_file <- "./config/sql_nodes/reference.sql"
-if (file.exists(example_file)) {
-  build_commands <- readr::read_file(example_file)
-  sqlite_parse_build(build_commands)
-}
 }

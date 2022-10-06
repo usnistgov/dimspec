@@ -228,9 +228,9 @@ read_log <- function(file = NULL, last_n = Inf, as_object = FALSE) {
 #' namespace is added or changed) this function should be run to update routing
 #' and formatting to be in line with the current settings.
 #'
-#' Note the calling stack for auto logging of warnings and errors does not work
-#' with background processes. These settings call [logger::log_warnings] and
-#' [logger::log_errors].
+#' @note The calling stack for auto logging of warnings and errors does not work
+#' with background processes. These settings call [logger::log_warnings()] and
+#' [logger::log_errors()].
 #'
 #' @note This function is used only for its side effects.
 #'

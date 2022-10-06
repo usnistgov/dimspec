@@ -1,0 +1,15 @@
+bookdown::gitbook:
+  css: style.css
+  toc_depth: 2
+  config:
+    toc:
+      collapse: section
+      before: |
+        <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
+        <h2 id="book-title">DIMSpec User Guide</h2>
+      after: |
+        <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+    download: ["pdf", "epub"]
+bookdown::pdf_book:
+  keep_tex: yes
+bookdown::epub_book: default

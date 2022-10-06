@@ -24,7 +24,7 @@ column names in table conversion_software_settings.}
 \item{software_timestamp}{CHR scalar of the sample timestamp (e.g.
 sample$starttime) to use for linking software conversion settings with peak
 data, with a call back to the originating sample. If NULL (the default),
-the current system timestamp in UTC will be used from [lubridate::now].}
+the current system timestamp in UTC will be used from [lubridate::now()].}
 
 \item{db_conn}{connection object (default: con)}
 
@@ -40,9 +40,9 @@ linkage between peaks and their software settings (default:
 "conversion_software_peaks_linkage")}
 
 \item{as_date_format}{CHR scalar the format to use when storing timestamps
-that matches database column expectations (default: "%Y-%m-%d %H:%M:%S")}
+that matches database column expectations (default: "\%Y-\%m-\%d \%H:\%M:\%S")}
 
-\item{format_checks}{CHR vector of the [lubridate::parse_date_time] format
+\item{format_checks}{CHR vector of the [lubridate::parse_date_time()] format
 checks to execute in order of priority; these must match a lubridate
 function of the same name (default: c("ymd_HMS", "ydm_HMS", "mdy_HMS",
 "dmy_HMS"))}
@@ -63,5 +63,5 @@ names are shared with other import functions, specifically `obj` but are
 formed differently to resolve the node complexity correctly.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

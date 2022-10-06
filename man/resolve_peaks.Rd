@@ -67,7 +67,7 @@ the database including software conversion settings (via
 relies on the import object being formatted appropriately.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 This function relies on an import map
 }

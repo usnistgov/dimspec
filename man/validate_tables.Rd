@@ -12,7 +12,7 @@ validate_tables(con, "peaks")
 \item{table_names}{CHR vector name of tables to ensure are present}
 }
 \value{
-
+Failure if the table doesn't exist, none if it does.
 }
 \description{
 When working with SQL databases, this convenience function validates any

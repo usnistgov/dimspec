@@ -2,14 +2,14 @@
 % Please edit documentation in R/app_functions.R
 \name{start_app}
 \alias{start_app}
-\title{{WIP} Launch an analysis shiny application}
+\title{{WIP} Launch a shiny application}
 \usage{
 start_app("table_explorer")
 }
 \arguments{
 \item{app_name}{CHR scalar name of the shiny app to run, this should be the
 name of a directory containing a shiny app that is located within the
-directory defined by `app_dir` or the name of an app as defined in your
+directory defined by \code{app_dir} or the name of an app as defined in your
 environment SHINY_APPS variable}
 
 \item{app_dir}{file path to a directory containing shiny apps (default:
@@ -21,12 +21,12 @@ background process (default: FALSE)}
 \item{...}{Other named parameters to be passed to [shiny::runApp]}
 }
 \value{
-
+None, launches a browser with the requested shiny application
 }
 \description{
 Call this function to launch an app either directly or in a background
 process. The name must be present in the app directory or as a named
-element of `SHINY_APPS` in the current environment.
+element of \code{SHINY_APPS} in the current environment.
 }
 \note{
 Background launching of shiny apps is not yet supported.

@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Quality Control Check of Import Data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for gather_qc"><tr><td>gather_qc</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Quality Control Check of Import Data</h2>
+
+<h3>Description</h3>
+
+<p>Performs the quality control check on the imported data from the peak gather function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+gather_qc(
+  gather_peak,
+  exactmasses,
+  exactmasschart,
+  ms1range = c(0.5, 3),
+  ms1isomatchlimit = 0.5,
+  minerror = 0.002,
+  max_correl = 0.8,
+  correl_bin = 0.1,
+  max_ph = 10,
+  ph_bin = 1,
+  max_freq = 10,
+  freq_bin = 1,
+  min_n_peaks = 3,
+  cormethod = "pearson"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>gather_peak</code></td>
+<td>
+<p>peak object generated from 'peak_gather_json' function</p>
+</td></tr>
+<tr valign="top"><td><code>exactmasses</code></td>
+<td>
+<p>exactmasses list</p>
+</td></tr>
+<tr valign="top"><td><code>ms1range</code></td>
+<td>
+<p>2-component vector containing stating the range to evaluate the isotopic pattern of the precursor ion, from mass - ms1range[1] to mass + ms1range[2]</p>
+</td></tr>
+<tr valign="top"><td><code>ms1isomatchlimit</code></td>
+<td>
+<p>the reverse dot product minimum score for the isotopic pattern match</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>the minimum mass error (in Da) allowable for the instrument</p>
+</td></tr>
+<tr valign="top"><td><code>max_correl</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>correl_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>max_ph</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>ph_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>max_freq</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>freq_bin</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>min_n_peaks</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>[TODO PLACEHOLDER]</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>nested list of quality control check results
+</p>
+
+
+</body></html>

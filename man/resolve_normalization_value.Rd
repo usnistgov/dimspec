@@ -37,7 +37,7 @@ the `case_sensitive` setting if TRUE (default: FALSE).}
 match the table schema}
 }
 \value{
-
+The database primary key (typically INT) of the normalized value
 }
 \description{
 Normalized SQL databases often need to resolve primary keys. This function

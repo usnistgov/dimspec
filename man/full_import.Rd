@@ -37,9 +37,9 @@ full_import(
   carrier_mix_names = NULL,
   id_mix_by = "^mp*[0-9]+",
   mix_collection_table = "carrier_mix_collections",
-  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases",
-    props = c(flow = "flow", flow_units = "flowunits", duration = "duration",
-    duration_units = "durationunits")),
+  mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
+    = c(flow = "flow", flow_units = "flowunits", duration = "duration", duration_units =
+    "durationunits")),
   carrier_props = list(db_table = "carrier_mixes", norm_by =
     ref_table_from_map("carrier_mixes", "component"), alias_in = "carrier_aliases", props
     = c(id_by = "solvent", fraction_by = "fraction")),
@@ -328,15 +328,15 @@ normalized compound categories (default: "compound_categories")}
 
 \item{compound_aliases_in}{CHR scalar name of where compound aliases are
 located within the import (default: "compound_aliases"), passed to
-\link{resolve_compounds} as "norm_alias_table"}
+[resolve_compounds] as "norm_alias_table"}
 
 \item{compound_aliases_table}{CHR scalar name of the alias reference table to
 use when assigning compound aliases (default: "compound_aliases") passed to
-\link{resolve_compounds} as "compounds_table"}
+[resolve_compounds] as "compounds_table"}
 
 \item{compound_alias_type_norm_table}{CHR scalar name of the alias reference
 normalization table, by default the return of
-\code{\link{ref_table_from_map}(compound_aliases_table, "alias_type")}}
+\code{ref_table_from_map(compound_aliases_table, "alias_type")}}
 
 \item{fuzzy}{LGL scalar of whether to do a "fuzzy" match in the sense that
 values provided are wrapped in an SQL "LIKE '%value%'" clause; overrides

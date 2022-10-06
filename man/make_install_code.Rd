@@ -16,7 +16,7 @@ make_install_code(db_conn = con, new_name = NULL, log_ns = "db")
 (default: "db")}
 }
 \value{
-none
+None
 }
 \description{
 Convenience function to set a new installation code

@@ -710,7 +710,7 @@ add_or_get_id <- function(db_table,
 #' 
 #' Call this function as part of an import routine to resolve the compounds node.
 #' 
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams add_or_get_id
 #' @inheritParams map_import
@@ -1224,7 +1224,7 @@ resolve_compound_fragments <- function(values = NULL,
 #' annotated_fragments, norm_fragments, fragment_inspections, fragment_aliases,
 #' and fragment_sources.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #' @note If components named in `citation_info_in` and `inspection_info_in` do
 #'   not exist, that information will not be appended to the resulting database
 #'   records.
@@ -1668,7 +1668,7 @@ resolve_fragments_NTAMRT <- function(obj,
 #' names are shared with other import functions, specifically `obj` but are
 #' formed differently to resolve the node complexity correctly.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams add_or_get_id
 #' @inheritParams build_db_action
@@ -1678,7 +1678,7 @@ resolve_fragments_NTAMRT <- function(obj,
 #' @param software_timestamp CHR scalar of the sample timestamp (e.g.
 #'   sample$starttime) to use for linking software conversion settings with peak
 #'   data, with a call back to the originating sample. If NULL (the default),
-#'   the current system timestamp in UTC will be used from [lubridate::now].
+#'   the current system timestamp in UTC will be used from [lubridate::now()].
 #' @param software_settings_in CHR scalar name of the component in `obj`
 #'   containing software settings (default: "msconvertsettings")
 #' @param settings_table CHR scalar name of the database table containing the
@@ -1688,8 +1688,8 @@ resolve_fragments_NTAMRT <- function(obj,
 #'   linkage between peaks and their software settings (default:
 #'   "conversion_software_peaks_linkage")
 #' @param as_date_format CHR scalar the format to use when storing timestamps
-#'   that matches database column expectations (default: "%Y-%m-%d %H:%M:%S")
-#' @param format_checks CHR vector of the [lubridate::parse_date_time] format
+#'   that matches database column expectations (default: "\%Y-\%m-\%d \%H:\%M:\%S")
+#' @param format_checks CHR vector of the [lubridate::parse_date_time()] format
 #'   checks to execute in order of priority; these must match a lubridate
 #'   function of the same name (default: c("ymd_HMS", "ydm_HMS", "mdy_HMS",
 #'   "dmy_HMS"))
@@ -1822,7 +1822,7 @@ resolve_software_settings_NTAMRT <- function(obj,
 #' conversion software linkage id from tables "conversion_software_settings" and
 #' "conversion_software_linkage" if appropriate.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams add_or_get_id
 #' @inheritParams map_import
@@ -1946,7 +1946,7 @@ resolve_sample <- function(obj,
 #' database. This can be done either through the import object with a name
 #' reference or directly by assigning additional values.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #' @note One of `values` or both of `obj` and `aliases_in` must be provided to
 #'   add new sample aliases.
 #'
@@ -2014,7 +2014,7 @@ resolve_sample_aliases <- function(sample_id,
 #' the values provided in the JSON import template. Makes extensive uses of
 #' [resolve_normalization_value] to parse foreign key relationships.
 #' 
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #' 
 #' @inheritParams add_or_get_id
 #' @inheritParams qc_result
@@ -2143,7 +2143,7 @@ resolve_method <- function(obj,
 #' "long" tables that may well have `n` records for each mass spectrometric
 #' method.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #' @note This function is brittle; built specifically for the NIST NTA MRT
 #'   import format. If using a different import format, customize to your needs
 #'   using this function as a guide.
@@ -2328,7 +2328,7 @@ resolve_description_NTAMRT <- function(obj,
 #'   hanging or orphaned records. Turn on `clean_up` to roll back by removing
 #'   entries from `mix_collection_table` and relying on delete cascades built
 #'   into the database. Additional names are provided here to match the schema.
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams build_db_action
 #' @inheritParams resolve_normalization_value
@@ -2792,7 +2792,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
 #' if unpack_spectra = TRUE. Mass spectral data are stored in either one
 #' ("zipped")
 #'
-#' @note This function is called as part of [full_import] during the call to
+#' @note This function is called as part of [full_import()] during the call to
 #'   [resolve_peaks]
 #'
 #' @inheritParams map_import
@@ -3048,7 +3048,7 @@ resolve_ms_spectra <- function(peak_id,
 #' [resolve_ms_data] and, optionally, [resolve_ms_spectra]). This function
 #' relies on the import object being formatted appropriately.
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @note This function relies on an import map
 #'
@@ -3223,7 +3223,7 @@ resolve_peak_ums_params <- function(obj,
 #' (i.e. a data frame of multiple quality control checks) from the NIST
 #' Non-Targeted Analysis Method Reporting Tool (NTA MRT).
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams build_db_action
 #'
@@ -3332,7 +3332,7 @@ resolve_qc_methods_NTAMRT <- function(obj,
 #' list of multiple quality control checks) from the NIST Non-Targeted Analysis
 #' Method Reporting Tool (NTA MRT).
 #'
-#' @note This function is called as part of [full_import]
+#' @note This function is called as part of [full_import()]
 #'
 #' @inheritParams build_db_action
 #'

@@ -30,8 +30,6 @@ spectrometry information (default: "massspectrometry")}
 \item{chrom_spec_in}{CHR scalar name of the element in `obj` holding
 chromatographic information (default: "chromatography")}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }
@@ -51,7 +49,7 @@ multiple separation columns, etc.). Tables targeted by this function are
 method.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 This function is brittle; built specifically for the NIST NTA MRT
   import format. If using a different import format, customize to your needs

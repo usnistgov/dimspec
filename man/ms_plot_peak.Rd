@@ -36,7 +36,7 @@ resolution)}
 
 \item{peak_drop_ratio}{NUM scalar threshold of the maximum intensity below
 which traces will be dropped (default: 1e-2 means any trace with a maximum
-intensity less than 1% of the maximum intensity in the plot will be
+intensity less than 1\% of the maximum intensity in the plot will be
 dropped); if > 1 the inversion will be used (1e5 -> 1e-5)}
 
 \item{peak_repel_labels}{LGL scalar on whether to use the [ggrepel] package
@@ -51,7 +51,7 @@ aesthetic (only a single color is supported; default: "grey70")}
 
 \item{peak_text_offset}{NUM scalar y-axis offset as a fraction of the maximum
 intensity for trace annotation (default: 0.02 offsets labels in the
-positive direction by 2% of the maximum intensity)}
+positive direction by 2\% of the maximum intensity)}
 
 \item{db_conn}{database connection (default: con) which must be live to pull
 sample and compound identification information}

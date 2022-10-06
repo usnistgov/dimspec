@@ -80,5 +80,5 @@ the values provided in the JSON import template. Makes extensive uses of
 [resolve_normalization_value] to parse foreign key relationships.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 }

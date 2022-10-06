@@ -10,7 +10,8 @@ py_modules_available("rdkit")
 \item{required_modules}{CHR vector of required modules}
 }
 \value{
-
+LGL scalar of whether or not all modules are available. Check console
+  for further details.
 }
 \description{
 Checks that all defined modules are available in the currently active python

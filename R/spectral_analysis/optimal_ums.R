@@ -3,17 +3,17 @@
 #' @param peaktable list generated from `create_peak_table_ms1` or `create_peak_table_ms2`
 #' @param max_correl numeric maximum acceptable correlation
 #' @param correl_bin numeric sequence bin width from max_correl..0
-#' @param max_ph numeric maximum acceptable peak height (%)
+#' @param max_ph numeric maximum acceptable peak height (\%)
 #' @param ph_bin numeric sequence bin width from max_ph..0
-#' @param max_freq numeric maximum acceptable observational frequency (%)
+#' @param max_freq numeric maximum acceptable observational frequency (\%)
 #' @param freq_bin numeric sequence bin width from max_freq..0
 #' @param min_n_peaks integer ideal minimum number of scans for mass spectrum
-#' @param cormethod string indicating correlation function to use (see [cor] for description)
+#' @param cormethod string indicating correlation function to use (see [cor()] for description)
 #'
-#' @return
+#' @return data.frame object containing optimized search parameters
+#' 
 #' @export
 #'
-#' @examples
 optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson") {
   if (ncol(peaktable$peaktable_mass) < min_n_peaks) {min_n_peaks <- 1}
   opt_ums <- try(get_ums(peaktable, correl = max_correl, ph = max_ph, freq = max_freq, cormethod = cormethod), silent = TRUE)
@@ -48,10 +48,9 @@ optimal_ums <- function(peaktable, max_correl = 0.75, correl_bin = 0.05, max_ph 
 #' @param con SQLite database connection
 #' @param peak_ids integer vector of primary keys for peaks table
 #'
-#' @return
+#' @return data.frame object of available optimized search parameters
 #' @export
 #'
-#' @examples
 get_opt_params <- function(con, peak_ids) {
   output <- DBI::dbGetQuery(conn = con, 
                   paste0(

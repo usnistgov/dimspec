@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Validate a CAS RN</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for validate_casrns"><tr><td>validate_casrns</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Validate a CAS RN</h2>
+
+<h3>Description</h3>
+
+<p>Chemical Abstract Service (CAS) Registry Numbers (RNs) follow a standard
+creation format. From
+[https://www.cas.org/support/documentation/chemical-substances/faqs], a CAS
+RN is a &quot;numeric identifier that can contain up to 10 digits, divided by
+hyphens into three parts. The right-most digit is a check digit used to
+verify the validity and uniqueness of the entire number. For example, 58-08-2
+is the CAS Registry Number for caffeine.&quot;
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+validate_casrns(casrn_vec, strip_bad_cas = TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>casrn_vec</code></td>
+<td>
+<p>CHR vector of what CAS RNs to validate</p>
+</td></tr>
+<tr valign="top"><td><code>strip_bad_cas</code></td>
+<td>
+<p>LGL scalar of whether to strip out invalid CAS RNs
+(default: TRUE)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Provided CAS RNs in 'casrn_vec' are validated for format and their checksum
+digit. Those failing will be printed to the console by default, and users
+have the option of stripping unverified entries from the return vector.
+</p>
+<p>This only validates that a CAS RN is properly constructed; it does not
+indicate that the registry number exists in the CAS Registry.
+</p>
+<p>See [repair_xl_casrn_forced_to_date] as one possible pre-processing step.
+</p>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of length equal to that of 'casrn_vec'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+validate_casrns(c("64324-08-9", "64324-08-5", "12332"))
+validate_casrns(c("64324-08-9", "64324-08-5", "12332"), strip_bad_cas = FALSE)
+</pre>
+
+
+</body></html>

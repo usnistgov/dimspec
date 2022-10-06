@@ -163,93 +163,89 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #' Verify arguments for a function
 #'
 #' This helper function checks arguments against a list of expectations. This
-#' was in part inspired by the excellent \code{testthis} package and shares
-#' concepts with the \code{Checkmate} package. However, this function performs
-#' many of the common checks without additional package dependencies, and can be
-#' inserted into other functions for a project easily with:
-#'
-#' \preformatted{ arg_check <- verify_args( args       = as.list(environment()),
-#' conditions = list( list(c("mode", "logical"), c("length", 1)), list( ... )))
-#' }
-#'
+#' was in part inspired by the excellent [testthat](https://testthat.r-lib.org/)
+#' package and shares concepts with the [Checkmate](https://mllg.github.io/checkmate/)
+#' package. However, this function performs many of the common checks without
+#' additional package dependencies, and can be inserted into other functions 
+#' for a project easily with:
+#' \preformatted{  arg_check <- verify_args(args = as.list(environment()),
+#'   conditions = list(param1 = c("mode", "logical"), param2 = c("length", 1))}
 #' and check the return with
-#'
-#' \preformatted{ if (!arg_check$valid) cat(paste0(arg_check$messages, "\n"))}
-#'
+#' \preformatted{  if (!arg_check$valid) cat(paste0(arg_check$messages, "\n"))}
 #' where argument \code{conditions} describes the tests. This comes at the price
-#' of readability as the list items in `\code{conditions} do not have to be
+#' of readability as the list items in \code{conditions} do not have to be
 #' named, but can be to improve clarity. See more details below for argument
 #' \code{conditions} to view which expectations are currently supported.
-#'
 #' As this is a nested list condition check, it can also originate from any
 #' source coercible to a list (e.g. JSON, XML, etc.) and this feature, along
 #' with the return of human-meaningful evaluation strings, is particularly
 #' useful for development of shiny applications. Values from other sources MUST
 #' be coercible to a full list (e.g. if being parsed from JSON, use
-#' \code{jsonlite::fromJSON(simplifyMatrix = FALSE))}
+#' \code{jsonlite::fromJSON(simplifyMatrix = FALSE)})
 #'
-#' If logger is enabled, also provides some additional meaningful feedback.
+#' @note If logger is enabled, also provides some additional meaningful feedback.
 #'
-#' At least one condition check is required for every element passed to `args`.
+#' @note At least one condition check is required for every element passed to \code{args}.
 #'
 #' @param args LIST of named arguments and their values, typically passed
 #'   directly from a function definition in the form \code{args = list(foo =
 #'   1:2, bar = c("a", "b", "c"))} or directly by passing \code{environment()}
+#'
 #' @param conditions Nested LIST of conditions and values to check, with one
-#'   list item for each element in \code{args}. \itemize{ \item The first
-#'   element of each list should be a character scalar in the supported list.
-#'   \item The second element of each list should be the check values themselves
-#'   and may be of any type. } Multiple expectation conditions can be set for
-#'   each element of \code{args} in the form \itemize{ \item \code{conditions =
+#'   list item for each element in \code{args}. \itemize{\item{The first
+#'   element of each list should be a character scalar in the supported list.} 
+#'   \item{The second element of each list should be the check values themselves
+#'   and may be of any type.}} Multiple expectation conditions can be set for
+#'   each element of \code{args} in the form \itemize{\item{\code{conditions =
 #'   list(foo = list(c("mode", "numeric"), c("length", 2)), bar = list(c("mode",
-#'   "character"), c("n<", 5)))} } Currently supported expectations are:
-#'   \describe{ \item {"class"},{checks strict class expectation by direct
+#'   "character"), c("n<", 5)))}}} Currently supported expectations are:
+#'   \describe{\itemize{\item{\code{class}: {checks strict class expectation by direct
 #'   comparison with \code{class} to support object classes not supported with
 #'   the \code{is.x} or \code{is_x} family of functions; much stricter than a
 #'   "mode" check in that the requested check must be present in the return from
 #'   a call to \code{class} e.g. "list" will fail if a "data.frame" object is
-#'   passed} \item {"mode"},{checks class expectation by applying the
+#'   passed}} \item{\code{mode}: {checks class expectation by applying the
 #'   \code{is.X} or the \code{is_X} family of functions either directly or
 #'   flexibly depending on the value provided to \code{conditions} (e.g.
-#'   c("mode", "character") and c("mode", "is.character") and c("mode",
-#'   "is_character") all work equally well) and will default to the version you
+#'   \code{c("mode", "character")} and \code{c("mode", "is.character")} and \code{c("mode",
+#'   "is_character")} all work equally well) and will default to the version you
 #'   provide explicitly (e.g. if you wish to prioritize "is_character" over
 #'   "is.character" simply provide "is_character" as the condition. Only those
 #'   modes able to be checked by this family of functions are supported. Run
 #'   function \code{mode_checks()} for a complete sorted list for your current
-#'   configuration.} \item {"length"},{length of values matches a pre-determined
-#'   exact length, typically a single value expectation (e.g. c("length",#'
-#'   1))} \item {"no_na"},{no NA values are present} \item {"n>"},{length of
+#'   configuration.}} \item{\code{length}: {length of values matches a pre-determined
+#'   exact length, typically a single value expectation (e.g. \code{c("length",#'
+#'   1)})}} \item{\code{no_na}: {no \code{NA} values are present}} \item{\code{n>}: {length of
 #'   values is greater than a given value - "n<" length of values is lesser than
-#'   a given value} \item {"n>="},{length of values is greater than or equal to
-#'   a given value} \item {"n<="},{length of values is lesser than or equal to a
-#'   given value} \item {">"},{numeric or date value is greater than a given
-#'   value} \item {"<" numeric or date value is greater than a given value}
-#'   \item {">="},{numeric or date value is greater than or equal to a given
-#'   value} \item {"<="},{ numeric or date value is lesser than or equal to a
-#'   given value} \item {"between"},{numeric or date values are bound within an
-#'   INCLUSIVE range (e.g. c("range", 1:5))} \item {"choices"},{provided values
+#'   a given value}} \item{\code{n>=}: {length of values is greater than or equal to
+#'   a given value}} \item{\code{n<=}: {length of values is lesser than or equal to a
+#'   given value}} \item{\code{>}: {numeric or date value is greater than a given
+#'   value}} \item{\code{<}: {numeric or date value is greater than a given value}}
+#'   \item{\code{>=}: {numeric or date value is greater than or equal to a given
+#'   value}} \item{\code{<=}: {numeric or date value is lesser than or equal to a
+#'   given value}} \item{\code{between}: {numeric or date values are bound within an
+#'   INCLUSIVE range (e.g. \code{c("range", 1:5)})}} \item{\code{choices}: {provided values
 #'   are part of a selected list of expectations (e.g. \code{c("choices",
-#'   list(letters[1:3]))})} \item {"FUN"},{apply a function to the value and
+#'   list(letters[1:3]))})}} \item{\code{FUN}: {apply a function to the value and
 #'   check that the result is valid or that the function can be executed without
-#'   error; this evaluates the check condition using \code{tryCatch} via
-#'   \code{do.call} and so can also accept a full named list of arg values. This
+#'   error; this evaluates the check condition using [tryCatch()] via
+#'   [do.call()] and so can also accept a full named list of arg values. This
 #'   is a strict check in the sense that a warning will also result in a failed
 #'   result, passing the warning (or error if the function fails) message back
-#'   to the user, but does not halt checks} }
+#'   to the user, but does not halt checks}}}}
 #' @param from_fn CHR scalar of the function from which this is called, used if
 #'   logger is enabled and ignored if not; by default it will pull the calling
 #'   function's name from the call stack, but can be overwritten by a manual
-#'   entry here for better tracing. (default NULL)
+#'   entry here for better tracing. (default \code{NULL})
 #' @param silent LGL scalar of whether to silence warnings for individual
-#'   failiures, leaving them only as part of the output. (default: FALSE)
+#'   failiures, leaving them only as part of the output. (default: \code{FALSE})
 #'
-#' @return LIST of the resulting values and checks, primarily useful for
-#'   $message
+#' @return LIST of the resulting values and checks, primarily useful for its
+#'   \code{$valid} (\code{TRUE} if all checks pass or \code{FALSE} if any fail)
+#'   and \code{$message} values.
 #' @export
 #'
 #' @usage
-#' \preformatted{
 #' verify_args(args = list(character_length_2 = c("a", "b")),
 #'             conditions = list(character_length_2 = list(c("mode", "character"),
 #'                                                         c("length", 3))
@@ -266,8 +262,9 @@ mode_checks <- function(prefix = "is", use_deprecated = FALSE) {
 #'                                          c("length", 5),
 #'                                          c(">", 10),
 #'                                          c("between", list(100, 200)),
-#'                                          c("choices", list("a", "b")))))
-#' }
+#'                                          c("choices", list("a", "b"))))
+#' )
+#' 
 verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
   log_fn("start")
   if (exists("VERIFY_ARGUMENTS")) {
@@ -507,7 +504,7 @@ verify_args <- function(args, conditions, from_fn = NULL, silent = FALSE) {
 #'
 #' Given a vector of arbitrary length that coerces properly to a human-readable
 #' character string, return it formatted as one of: "one", "one and two", or
-#' "one, two, ..., and three" using `glue::glue`. This is functionally the same
+#' "one, two, ..., and three" using \code{glue::glue}. This is functionally the same
 #' as a static version of [glue::glue_collapse] with parameters sep = ", ",
 #' width = Inf, and last = ", and ".
 #'
@@ -554,10 +551,10 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' package [logger] may not be available or custom log levels are desired.
 #'
 #' When using [logger], create settings for each namespace in file
-#' `config/env_logger.R` as a list (see examples there) and make sure it is
+#' \code{config/env_logger.R} as a list (see examples there) and make sure it is
 #' sourced. If using with [logger] and "file" or "both" is selected for the
-#' namespace `LOGGING[[log_ns]]$to` parameter in `env_logger.R` logs will be
-#' written to disk at the file defined in `LOGGING[[log_ns]]$file` as well as
+#' namespace \code{LOGGING[[log_ns]]$to} parameter in \code{env_logger.R} logs will be
+#' written to disk at the file defined in \code{LOGGING[[log_ns]]$file} as well as
 #' the console.
 #'
 #' @param log_level CHR scalar of the level at which to log a given statement.
@@ -566,14 +563,14 @@ format_list_of_names <- function(namelist, add_quotes = FALSE) {
 #' @param log_ns CHR scalar of the logging namespace to use during execution
 #'   (default: NULL prints to the global logging namespace)
 #' @param reset_logger_settings LGL scalar indicating whether or not to refresh
-#'   the logger settings using the file identified in `logger_settings`
+#'   the logger settings using the file identified in \code{logger_settings}
 #'   (default: FALSE)
 #' @param reload_all LGL scalar indicating whether to, during
-#'   `reset_logger_settings`, to reload the R environment configuration file
+#'   \code{reset_logger_settings}, to reload the R environment configuration file
 #' @param logger_settings CHR file path to the file containing logger settings
 #'   (default: file.path("config", "env_logger.R"))
 #' @param add_unknown_ns LGL scalar indicating whether or not to add a new
-#'   namespace if `log_ns` is not defined in `logger_settings` (default: FALSE)
+#'   namespace if \code{log_ns} is not defined in \code{logger_settings} (default: FALSE)
 #' @param clone_settings_from CHR scalar indicating
 #'
 #' @return Adds to the logger file (if enabled) and/or prints to the console if
@@ -745,11 +742,11 @@ log_it <- function(log_level,
 #'
 #' At times it is useful for display purposes to generate acronyms for longer
 #' bits of text. This naively generates those by extracting the first letter as
-#' upper case from each word in `text` elements.
+#' upper case from each word in \code{text} elements.
 #'
 #' @param text CHR vector of the text to acronym-ize
 #'
-#' @return CHR vector of length equal to that of `text` with the acronym
+#' @return CHR vector of length equal to that of \code{text} with the acronym
 #' @export
 #'
 #' @examples
@@ -781,7 +778,7 @@ make_acronym <- function(text) {
 #' @param x Object to be checked
 #' @param logging LGL scalar of whether or not to make log messages (default: TRUE)
 #'
-#' @return LGL scalar of whether `x` is empty
+#' @return LGL scalar of whether \code{x} is empty
 #' @export
 #'
 #' @examples
@@ -925,10 +922,10 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #'
 #' To support redirection of sensible parameter reads from an environment,
 #' either Global or System, functions in this package may include NULL as their
-#' default value. This returns values in precedence of `parameter`,
-#' `env_parameter` and `default`.
+#' default value. This returns values in precedence of \code{parameter},
+#' \code{env_parameter} and \code{default}.
 #'
-#' @note `log_ns` is only applicable if logging is set up in this project (see
+#' @note \code{log_ns} is only applicable if logging is set up in this project (see
 #'   project settings in env_glob.txt, env_R.R, and env_logger.R for details).
 #'
 #' @note Both [base::.GlobalEnv] and [base::Sys.getenv] are checked, and can be
@@ -936,12 +933,13 @@ flush_dir <- function(directory, pattern, archive = FALSE) {
 #'
 #' @param parameter the object being evaluated
 #' @param env_parameter the name or object of a value to use from the
-#'   environment if `parameter` is NULL
-#' @param default the fallback value to use if `parameter` is NULL and
-#'   `env_parameter` does not exist
+#'   environment if \code{parameter} is NULL
+#' @param default the fallback value to use if \code{parameter} is NULL and
+#'   \code{env_parameter} does not exist
 #' @param log_ns the namespace to use with [log_it] if available
 #'
-#' @return
+#' @return The requested value, either as-is, rectified from the environment, or 
+#'   the default
 #' @export
 #'
 #' @usage rectify_null_from_env(test, test, "test")
@@ -1023,10 +1021,10 @@ rectify_null_from_env <- function(parameter = NULL, env_parameter, default, log_
 #' This is a simple action wrapper to update any settings that may have been
 #' changed with regard to logger. If, for instance, something is not logging the
 #' way you expect it to, change the relevant setting and then run
-#' `update_logger_settings()` to reflect the current environment.
+#' \code{update_logger_settings()} to reflect the current environment.
 #'
 #' @param reload LGL scalar indicating (if TRUE) whether or not to refresh from
-#'   `env_R.R` or (if FALSE) to use the current environment settings (e.g. for
+#'   \code{env_R.R} or (if FALSE) to use the current environment settings (e.g. for
 #'   testing purposes) (default: FALSE)
 #'
 #' @return None
@@ -1055,7 +1053,7 @@ reset_logger_settings <- function(reload = FALSE) {
 #' @param archive LGL scalar on whether to archive current logs
 #' @param directory CHR scalar path to the directory to flush
 #'
-#' @return
+#' @return None, removes files from a directory
 #' @export
 #'
 #' @usage flush_dir(directory = "logs")
@@ -1106,25 +1104,24 @@ flush_dir <- function(archive = FALSE, directory, pattern) {
 #' Sanity check for environment object names
 #'
 #' Provides a sanity check on whether or not a name reference exists and return
-#' its name if so. If not, return the default name defined from `default_name`.
+#' its name if so. If not, return the default name defined from \code{default_name}.
 #' This largely is used to prevent naming conflicts as part of managing the
 #' plumber service but can be used for any item in the current namespace.
 #'
 #' @param obj R object or CHR scalar in question to be resolved in the namespace
-#' @param default_name CHR scalar name to use for `obj` if it does not exist
+#' @param default_name CHR scalar name to use for \code{obj} if it does not exist
 #'   (default: NULL).
 #'
-#' @return CHR scalar of the resolved name
+#' @return CHR scalar of the resolved object name
 #'
 #' @export
 #' @usage
-#' \dontrun {\preformatted {
 #'   if (exists("log_it")) {
 #'     obj_name_check("test", "test")
 #'     test <- letters
 #'     obj_name_check(test)
 #'   }
-#' }}
+#'
 obj_name_check <- function(obj, default_name = NULL) {
   require(stringr)
   if (exists("log_it")) log_it("debug", "Run obj_name_check().", "api")
@@ -1209,7 +1206,7 @@ start_rdkit <- function(src_dir = here::here("inst", "rdkit"), log_ns = "rdkit")
 #'   identifying the plumber file, host, and port.
 #'
 #' @param plumber_file CHR scalar name of the plumber definition file, which
-#'   should be in `src_dir` (default: NULL)
+#'   should be in \code{src_dir} (default: NULL)
 #' @param plumber_host CHR scalar of the host server address (default: NULL)
 #' @param plumber_port INT scalar of the listening port on the host server
 #'   (default: NULL)
@@ -1243,17 +1240,17 @@ start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = N
   PLUMBER_URL <<- running_on
 }
 
-#' {WIP} Launch an analysis shiny application
+#' {WIP} Launch a shiny application
 #'
 #' Call this function to launch an app either directly or in a background
 #' process. The name must be present in the app directory or as a named
-#' element of `SHINY_APPS` in the current environment.
+#' element of \code{SHINY_APPS} in the current environment.
 #'
 #' @note Background launching of shiny apps is not yet supported.
 #'
 #' @param app_name CHR scalar name of the shiny app to run, this should be the
 #'   name of a directory containing a shiny app that is located within the
-#'   directory defined by `app_dir` or the name of an app as defined in your
+#'   directory defined by \code{app_dir} or the name of an app as defined in your
 #'   environment SHINY_APPS variable
 #' @param app_dir file path to a directory containing shiny apps (default:
 #'   here::here("inst", "apps"))
@@ -1261,7 +1258,7 @@ start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = N
 #'   background process (default: FALSE)
 #' @param ... Other named parameters to be passed to [shiny::runApp]
 #'
-#' @return
+#' @return None, launches a browser with the requested shiny application
 #' @export
 #'
 #' @usage start_app("table_explorer")
@@ -1311,19 +1308,19 @@ start_app <- function(app_name, app_dir = here::here("inst", "apps"), background
 #' additional property assignment during the import process for future
 #' development and refinement. Call this as part of any function with additional
 #' arguments. This may result in failures or ignoring unrecognized named
-#' parameters. If no additional arguments are passed `obj` is returned as
+#' parameters. If no additional arguments are passed \code{obj} is returned as
 #' provided.
 #'
-#' @note If duplicate names exists in `obj` and those provided as ellipsis
+#' @note If duplicate names exists in \code{obj} and those provided as ellipsis
 #'   arguments, those provided as part of the ellipsis will replace those in
-#'   `obj`.
+#'   \code{obj}.
 #'
 #' @param obj LIST of any length to be appended to
 #' @param ... Additional arguments passed to/from the ellipsis parameter of
 #'   calling functions. If named, names are preserved.
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
-#' @return LIST object of length equal to `obj` plus additional named arguments
+#' @return LIST object of length equal to \code{obj} plus additional named arguments
 #' @export
 #'
 #' @examples
@@ -1345,8 +1342,8 @@ tack_on <- function(obj, ..., log_ns = "db") {
 
 #' Resolve components from a list or named vector
 #'
-#' Call this to pull a component named `obj_component` from a list or named
-#' vector provided as `obj` and optionally use [tack_on] to append to it. This
+#' Call this to pull a component named \code{obj_component} from a list or named
+#' vector provided as \code{obj} and optionally use [tack_on] to append to it. This
 #' is intended to ease the process of pulling specific components from a list
 #' for further treatment in the import process by isolating that component.
 #'
@@ -1364,14 +1361,13 @@ tack_on <- function(obj, ..., log_ns = "db") {
 #'
 #' @inheritParams tack_on
 #'
-#' @param obj LIST or NAMED vector in which to find `obj_component`
-#' @param obj_component CHR vector of named elements to find in `obj`
+#' @param obj LIST or NAMED vector in which to find \code{obj_component}
+#' @param obj_component CHR vector of named elements to find in \code{obj}
 #' @param silence LGL scalar indicating whether to silence recursive messages,
-#'   which may be the same for each element of `obj` (default: TRUE)
+#'   which may be the same for each element of \code{obj} (default: TRUE)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
-#' @param ... Optional additional arguments to [tack_on] to the resulting list
 #'
-#' @return LIST object containing the elements of `obj`
+#' @return LIST object containing the elements of \code{obj}
 #' @export
 #' 
 #' @examples
@@ -1441,7 +1437,7 @@ fn_help <- function(fn_name) {
     using_rstudio <- FALSE
   }
   rd_dir <- here::here("man")
-  html_dir <- here::here(rd_dir, "_html")
+  html_dir <- here::here(rd_dir, "html")
   fn_file <- sprintf("%s.Rd", fn_name)
   fn_file_rendered <- here::here(html_dir, gsub(".Rd", ".html", fn_file))
   fn_file <- here::here(rd_dir, fn_file)
@@ -1460,33 +1456,51 @@ fn_help <- function(fn_name) {
 }
 
 #' Rebuild the help files as HTML with an index
+#' 
+#' @param rebuild_book LGL scalar of whether or not to rebuild an associated bookdown document
+#' @param book Path to folder containing the bookdown document to rebuild
 #'
-#' @return None
-rebuild_help_htmls <- function() {
+#' @return URL to the requested book
+#' 
+rebuild_help_htmls <- function(rebuild_book = TRUE, book = "dimspec_user_guide") {
+  if (rebuild_book) {
+    if (!"bookdown" %in% installed.packages()) warning("The bookdown package is required to build the user guide.")
+    rebuild_book <- FALSE
+    stopifnot(dir.exists(here::here(book)))
+  }
   help_files <- list.files(here::here("man"), pattern = ".Rd$")
   html_dir <- here::here("man", "html")
   if (!dir.exists(html_dir)) dir.create(html_dir)
-  index <- '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>DIMSpec Help Index</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><link rel="stylesheet" type="text/css" href="R.css" /></head><body><table width="100%" summary="Help Index for DIMSpec Project"><tr><td><h2>DIMSpec Help Index</h2></td><td style="text-align: right;">R Documentation</td></tr></table><table id="function_list">'
+  index <- '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>DIMSpec Help Index</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta><link rel="stylesheet" type="text/css" href="R-help.css"></head><body><table width="100%" summary="Help Index for DIMSpec Project"><tr><td><h2>DIMSpec Help Index</h2></td><td style="text-align: right;">R Documentation</td></tr></table><table id="function_list">'
   for (fname in help_files) {
     in_file <- here::here("man", fname)
     out_file <- gsub(".Rd", ".html", here::here(html_dir, fname))
     print(sprintf("(%d of %d) Knitting %s to %s", which(help_files == fname), length(help_files), basename(in_file), basename(out_file)))
-    tools::Rd2HTML(in_file, out_file)
+    tools::Rd2HTML(in_file, out_file, stylesheet = "R-help.css")
     contents <- readLines(in_file)
     title <- grep("^\\\\title", contents, value = TRUE)
     title <- gsub("\\\\|title|\\{|\\}", "", title)
     index <- paste0(
       index,
       sprintf(
-        '<tr><td><a href=%s>%s</a></td><td>%s</td></tr>',
-        out_file,
+        '<tr><td><a id="%s" class="fn_link" href="%s" target="_blank">%s</a></td><td>%s</td></tr>',
+        sprintf("fn_%s", tools::file_path_sans_ext(basename(out_file))),
+        basename(out_file),
         tools::file_path_sans_ext(basename(out_file)),
         title
       )
     )
   }
+  invisible(file.copy(here::here("man", "R-help.css"), here::here("man", "html", "R-help.css")))
   index <- paste0(index, "</table></body></html>")
   readr::write_file(index, here::here(html_dir, "_index.html"))
+  if (rebuild_book) {
+    book_url <- bookdown::render_book("dimspec_user_guide")
+    invisible(file.copy(here::here("man", "R-help.css"), here::here("dimspec_user_guide", "man", "html", "R-help.css")))
+    return(book_url)
+  } else {
+    return("HTML help files rebuilt.")
+  }
 }
 
 #' View an index of help documentation in your browser
@@ -1505,4 +1519,25 @@ fn_guide <- function() {
   } else {
     utils::browseURL(index_file)
   }
+}
+
+#' Launch the User Guide for DIMSpec
+#'
+#' Use this function to launch the bookdown version of the User Guide for the
+#' NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set
+#'
+#' @note This works ONLY when DIMSpec is used as a project with the defined
+#'   directory structure
+#'
+#' @param path
+#'
+#' @return None, opens a browser to the index page of the User Guide
+#' @export
+#' 
+user_guide <- function(path = "_book/index.html") {
+  if (!file.exists(file.path(getwd(), path))) {
+    path <- file.path("dimspec_user_guide", path)
+  }
+  stopifnot(file.exists(path))
+  browseURL(url = path)
 }

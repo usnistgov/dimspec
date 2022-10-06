@@ -1,7 +1,7 @@
 # Define UI for application that draws a histogram
 dashboardPage(
     skin = "blue",
-    title = paste0(APP_TITLE, " - ", DB_TITLE),
+    title = APP_TITLE,
     header = dashboardHeader(
       title = a(
         img(src = "NIST-Logo-Brand-White.svg"),

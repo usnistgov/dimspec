@@ -9,12 +9,18 @@
 #' @param ms1range 2-component vector containing stating the range to evaluate the isotopic pattern of the precursor ion, from mass - ms1range[1] to mass + ms1range[2]
 #' @param ms1isomatchlimit the reverse dot product minimum score for the isotopic pattern match
 #' @param minerror the minimum mass error (in Da) allowable for the instrument
+#' @param max_correl [TODO PLACEHOLDER]
+#' @param correl_bin [TODO PLACEHOLDER]
+#' @param max_ph [TODO PLACEHOLDER]
+#' @param ph_bin [TODO PLACEHOLDER]
+#' @param max_freq [TODO PLACEHOLDER]
+#' @param freq_bin [TODO PLACEHOLDER]
+#' @param min_n_peaks [TODO PLACEHOLDER]
+#' @param cormethod [TODO PLACEHOLDER]
 #'
 #' @return nested list of quality control check results
 #' @export
 #'
-#' @examples
-
 gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson") {
   #performs quality check on the submitted data and adds 'check' list item
   check <- list()
@@ -117,9 +123,9 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   
   #added 06142022, get optimal ums settings
   ms1empirical <- create_peak_table_ms1(peaklist, mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
-  opt_ums1_params <- optimal_ums(ms1empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = "pearson")
+  opt_ums1_params <- optimal_ums(ms1empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = cormethod)
   ms2empirical <- create_peak_table_ms2(peaklist,mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
-  opt_ums2_params <- optimal_ums(ms2empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = "pearson")
+  opt_ums2_params <- optimal_ums(ms2empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = cormethod)
   check[[length(check) + 1]] <- data.frame(parameter = "optimized_ums_parameters", mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
 
   #return results

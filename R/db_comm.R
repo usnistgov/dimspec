@@ -24,7 +24,6 @@
 #' @return data.frame object representing the SQL PRAGMA expression
 #' @export
 #'
-#' @examples
 pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE) {
   if (exists("log_it")) {
     log_fn("start")
@@ -131,7 +130,7 @@ pragma_table_def <- function(db_table, db_conn = con, get_sql = FALSE, pretty = 
 #' @param names_only LGL scalar of whether to include names meeting defined
 #'   criteria as a vector return value  (default: FALSE)
 #'
-#' @return
+#' @return data.frame object describing the database entity
 #' @export
 #'
 #' @usage pragma_table_info("compounds")
@@ -607,10 +606,10 @@ tidy_comments <- function(obj) {
 
 #' Save the current data dictionary to disk
 #'
-#' Use [data_dictionary] and save the output to a local file. If `output_format`
+#' Executes [data_dictionary()] and saves the output to a local file. If \code{output_format}
 #' is one of "data.frame" or "list", the resulting file will be saved as an RDS.
-#' Parameter `output_file` will be used during the save process; relative paths
-#' are fine and will be identified by the current working directory.
+#' Parameter \code{output_file} will be used during the save process; relative paths
+#' will be identified by the current working directory.
 #'
 #' @param db_conn connection object (default: con)
 #' @param output_format CHR scalar, one of (capitalization insensitive) "json",
@@ -622,7 +621,7 @@ tidy_comments <- function(obj) {
 #'   (default: TRUE); file names will be appended with "(x)" sequentially if
 #'   this is FALSE and a file with matching name exists.
 #'
-#' @return
+#' @return None, saves a file to the current working directory
 #' @export
 #'
 #' @usage save_data_dictionary(db_conn = con)
@@ -737,13 +736,13 @@ save_data_dictionary <- function(db_conn            = con,
 #' shortcut when ER Diagrams are unavailable, or for quick reference within a
 #' project, similarly to a dictionary relationship reference.
 #'
-#' SQL is generated from [pragma_table_def] with argument `get_sql` = TRUE and
+#' SQL is generated from [pragma_table_def()] with argument `get_sql` = TRUE and
 #' ignores entities whose names start with "sqlite".
 #'
 #' @param db_conn connection object, specifically of class "SQLiteConnection" but
 #'   not strictly enforced
 #'
-#' @return nested LIST object
+#' @return nested LIST object describing the database entity connections
 #' @export
 #'
 #' @usage er_map(db_conn = con)
@@ -1036,7 +1035,7 @@ manage_connection <- function(db          = DB_NAME,
 #'   line.
 #' @export
 #'
-#' @examples
+#' @usage
 #' example_file <- "./config/sql_nodes/reference.sql"
 #' if (file.exists(example_file)) {
 #'   build_commands <- readr::read_file(example_file)
@@ -1100,7 +1099,7 @@ sqlite_parse_build <- function(sql_statements,
 #' @return LIST of parsed .import statements as full "INSERT" statements.
 #' @export
 #'
-#' @examples
+#' @usage
 #' if (file.exists("./config/data/elements.csv")) {
 #'   sqlite_parse_import(".import --csv --skip 1 ./config/data/elements.csv elements")
 #' }
@@ -1965,16 +1964,13 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #'   FALSE.
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @usage
 #' con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #' alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
 #' dplyr::copy_to(con, alphabet)
 #' check_for_value("A", "alphabet", "upper", con)
 #' check_for_value("A", "alphabet", "lower", con)
 #' check_for_value(letters[1:10], "alphabet", "lower", con)
-#' }
-#' ## End(Not run)
 check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con, fuzzy = FALSE) {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args
@@ -2117,9 +2113,8 @@ resolve_multiple_values <- function(values, search_value, as_regex = FALSE, db_t
 #' @param ... other values to add to the normalization table, where names must
 #'   match the table schema
 #'
-#' @return
+#' @return The database primary key (typically INT) of the normalized value
 #' @export
-#' 
 resolve_normalization_value <- function(this_value,
                                         db_table,
                                         id_column = "id",
@@ -2339,7 +2334,7 @@ associated_scan <- function(df, scan_time) {
 #' @param log_ns CHR scalar of the logging namespace to use during execution
 #'   (default: "db")
 #'
-#' @return none
+#' @return None
 #' @export
 #'
 make_install_code <- function(db_conn = con, new_name = NULL, log_ns = "db") {

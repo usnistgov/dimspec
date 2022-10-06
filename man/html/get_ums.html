@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Generate consensus mass spectrum</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for get_ums"><tr><td>get_ums</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Generate consensus mass spectrum</h2>
+
+<h3>Description</h3>
+
+<p>The function calculates the uncertainty mass spectrum for a single peak table based
+on specific settings described in https://doi.org/10.1021/jasms.0c00423
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+get_ums(
+  peaktable,
+  correl = NULL,
+  ph = NULL,
+  freq = NULL,
+  normfn = "sum",
+  cormethod = "pearson"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>peaktable</code></td>
+<td>
+<p>result of the 'create_peak_table_ms1' or  'create_peak_table_ms1' function</p>
+</td></tr>
+<tr valign="top"><td><code>correl</code></td>
+<td>
+<p>Minimum correlation coefficient between the target ions and the base ion intensity of the targeted m/z to be included in the mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>ph</code></td>
+<td>
+<p>Minimum chromatographic peak height from which to extract MS2 data for the mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>freq</code></td>
+<td>
+<p>minimum observational frequency of the target ions to be included in the mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>normfn</code></td>
+<td>
+<p>the normalization function typically &quot;mean&quot; or &quot;sum&quot; for normalizing the intensity values</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>the correlation method used for calculating the correlation, see 'cor' function for methods</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>nested list of dataframes containing all MS1 and MS2 data for the peak
+</p>
+
+
+</body></html>

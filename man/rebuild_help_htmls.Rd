@@ -4,10 +4,15 @@
 \alias{rebuild_help_htmls}
 \title{Rebuild the help files as HTML with an index}
 \usage{
-rebuild_help_htmls()
+rebuild_help_htmls(rebuild_book = TRUE, book = "dimspec_user_guide")
+}
+\arguments{
+\item{rebuild_book}{LGL scalar of whether or not to rebuild an associated bookdown document}
+
+\item{book}{Path to folder containing the bookdown document to rebuild}
 }
 \value{
-None
+URL to the requested book
 }
 \description{
 Rebuild the help files as HTML with an index

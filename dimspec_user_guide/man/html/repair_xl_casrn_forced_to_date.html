@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Repair CAS RNs forced to a date numeric by MSXL</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for repair_xl_casrn_forced_to_date"><tr><td>repair_xl_casrn_forced_to_date</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Repair CAS RNs forced to a date numeric by MSXL</h2>
+
+<h3>Description</h3>
+
+<p>If a file is opened in Microsoft Excel(R), Chemical Abstract Service (CAS)
+Registry Numbers (RNs) can occasionally be read as a pseudodate (e.g.
+&quot;1903-02-8&quot;). Without tight controls over column formatting, this can result
+in CAS RNs that are not real entering a processing pipeline. This convenience
+function attempts to undo that automatic formatting by forcing vector members
+whose values when coerced to numeric are equal to those provided to a
+properly formatted date with an origin depending on operating system platform
+(as read by '.Platform$OS.type'); Windows operating systems use the Windows
+MSXL origin date of &quot;1899-12-30&quot; while others use &quot;1904-01-01&quot;. Text entries
+of &quot;NA&quot; are coerced to NA.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+repair_xl_casrn_forced_to_date(casrn_vec, output_format = "%Y-%m-%d")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>casrn_vec</code></td>
+<td>
+<p>CHR or NUM vector of what should be valid CAS RNs</p>
+</td></tr>
+<tr valign="top"><td><code>output_format</code></td>
+<td>
+<p>CHR scalar of the output format, which</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of length equal to that of 'casrn_vec' where numeric
+entries have been coerced to the assumed date
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+repair_xl_casrn_forced_to_date(c("64324-08-3", "12332"))
+</pre>
+
+
+</body></html>

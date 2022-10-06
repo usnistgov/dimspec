@@ -42,7 +42,7 @@ pair_ums <- function(ums1, ums2, error = 5, minerror = 0.002) {
 #' @param x1,x2 mean values to be compared
 #' @param s1,s2 standard deviation of their respective values
 #' @param n1,n2 number of observations of the respective values
-#' @param sig significance level to test (0.95 = 95 %)
+#' @param sig significance level to test (0.95 = 95\%)
 #'
 
 sigtest <- function(x1, x2, s1, s2, n1, n2, sig = 0.95) {

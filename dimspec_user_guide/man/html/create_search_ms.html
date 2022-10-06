@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Generate uncertainty mass spectrum for MS1 and MS2 data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for create_search_ms"><tr><td>create_search_ms</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Generate uncertainty mass spectrum for MS1 and MS2 data</h2>
+
+<h3>Description</h3>
+
+<p>Generate uncertainty mass spectrum for MS1 and MS2 data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+create_search_ms(
+  searchobj,
+  correl = NULL,
+  ph = NULL,
+  freq = NULL,
+  normfn = "sum",
+  cormethod = "pearson"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>searchobj</code></td>
+<td>
+<p>list object generated from 'get_search-object'</p>
+</td></tr>
+<tr valign="top"><td><code>correl</code></td>
+<td>
+<p>correlation limit for ions to MS1</p>
+</td></tr>
+<tr valign="top"><td><code>ph</code></td>
+<td>
+<p>peak height to select scans for generating mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>freq</code></td>
+<td>
+<p>observational frequency minimum for ions to use for generating mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>normfn</code></td>
+<td>
+<p>normalization function, options are &quot;sum&quot; or &quot;mean&quot;</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>correlation function, default is &quot;pearson&quot;</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>list object containing the ms1 uncertainty mass spectrum 'ums1', ms2 uncertainty mass spectrum 'ums2' and respective uncertainty mass spectrum parameters 'ms1params' and 'ms2params'
+</p>
+
+
+</body></html>

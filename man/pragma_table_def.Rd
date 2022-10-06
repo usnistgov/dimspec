@@ -4,7 +4,7 @@
 \alias{pragma_table_def}
 \title{Get table definition from SQLite}
 \usage{
-pragma_table_def("compounds")
+pragma_table_def(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE)
 }
 \arguments{
 \item{db_table}{CHR vector name of the table(s) to inspect}

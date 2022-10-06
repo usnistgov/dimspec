@@ -1,0 +1,20 @@
+# Appendix - Function Reference {#appendix-function-reference .unnumbered}
+
+```{r appendix_fn, include=FALSE}
+fname <- here::here("man", "html", "_index.html")
+index_page <- suppressWarnings(readLines(fname))
+index_page <- stringr::str_split(index_page, "</*body>")[[1]][2]
+# modify links to correct files
+index_page <- stringr::str_replace_all(index_page, 'href="', 'href="../man/html/')
+tmp_fname <- gsub("index.html", "index_tmp.html", fname)
+readr::write_file(index_page, tmp_fname)
+# htmltools::includeHTML(tmp_fname)
+```
+
+```{r appendix_print, child="..\\man\\html\\_index_tmp.html", eval=TRUE}
+```
+
+
+```{r appendix_fn_remove, include=FALSE}
+file.remove(tmp_fname)
+```

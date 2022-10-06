@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Elemental Formula Functions Extract elements from formula</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for extract.elements"><tr><td>extract.elements</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Elemental Formula Functions
+Extract elements from formula</h2>
+
+<h3>Description</h3>
+
+<p>Converts elemental formula into list of 'elements' and 'counts' corresponding to the composition
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+extract.elements(composition.str, remove.elements = c())
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>composition.str</code></td>
+<td>
+<p>character string elemental formula</p>
+</td></tr>
+<tr valign="top"><td><code>remove.elements</code></td>
+<td>
+<p>character vector containing elements to remove from</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>list with 'elements' and 'counts'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+extract.elements("C2H5O")
+
+extract.elements("C2H5ONa", remove.elements = c("Na", "Cl"))
+</pre>
+
+
+</body></html>

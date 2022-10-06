@@ -8,7 +8,7 @@ reset_logger_settings()
 }
 \arguments{
 \item{reload}{LGL scalar indicating (if TRUE) whether or not to refresh from
-`env_R.R` or (if FALSE) to use the current environment settings (e.g. for
+\code{env_R.R} or (if FALSE) to use the current environment settings (e.g. for
 testing purposes) (default: FALSE)}
 }
 \value{
@@ -18,5 +18,5 @@ None
 This is a simple action wrapper to update any settings that may have been
 changed with regard to logger. If, for instance, something is not logging the
 way you expect it to, change the relevant setting and then run
-`update_logger_settings()` to reflect the current environment.
+\code{update_logger_settings()} to reflect the current environment.
 }

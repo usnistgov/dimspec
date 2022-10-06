@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Compare Isotopic Pattern to simulated pattern</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for check_isotopedist"><tr><td>check_isotopedist</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Compare Isotopic Pattern to simulated pattern</h2>
+
+<h3>Description</h3>
+
+<p>calculates the isotopic distribution of the stated elemental formula and compares against the empirical ms
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+check_isotopedist(
+  ms,
+  elementalformula,
+  exactmasschart,
+  error,
+  minerror = 0.002,
+  remove.elements = c(),
+  max.dist = 3,
+  min.int = 0.001,
+  charge = "neutral",
+  m = 1,
+  n = 0.5
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>ms</code></td>
+<td>
+<p>data.frame mass spectrum containing pair-wise m/z and intensity values of empirical isotopic pattern</p>
+</td></tr>
+<tr valign="top"><td><code>elementalformula</code></td>
+<td>
+<p>character string of elemental formula to simulate isotopic pattern</p>
+</td></tr>
+<tr valign="top"><td><code>exactmasschart</code></td>
+<td>
+<p>exact mass chart</p>
+</td></tr>
+<tr valign="top"><td><code>error</code></td>
+<td>
+<p>numeric relative mass error (in ppm) of mass spectrometer</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>numeric minimum mass error (in Da) of mass spectrometer</p>
+</td></tr>
+<tr valign="top"><td><code>remove.elements</code></td>
+<td>
+<p>character vector of elements to remove from elemental formula</p>
+</td></tr>
+<tr valign="top"><td><code>max.dist</code></td>
+<td>
+<p>numeric maximum mass distance (in Da) from exact mass to include in simulated isotopic pattern</p>
+</td></tr>
+<tr valign="top"><td><code>min.int</code></td>
+<td>
+<p>numeric minimum relative intensity (maximum = 1, minimum = 0) to include in simulated isotopic pattern</p>
+</td></tr>
+<tr valign="top"><td><code>charge</code></td>
+<td>
+<p>character string for the charge state of the simulated isotopic pattern, options are 'neutral', 'positive', and 'negative'</p>
+</td></tr>
+<tr valign="top"><td><code>m</code></td>
+<td>
+<p>numeric dot product mass weighting</p>
+</td></tr>
+<tr valign="top"><td><code>n</code></td>
+<td>
+<p>numeric dot product intensity weighting</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>numeric vector of match scores between the empirical and calculated isotopic distribution.
+</p>
+
+
+</body></html>

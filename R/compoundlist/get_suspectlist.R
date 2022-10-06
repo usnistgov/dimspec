@@ -703,9 +703,8 @@ validate_casrns <- function(casrn_vec, strip_bad_cas = TRUE) {
 #' @param SQLITE_CLI CHR scalar system reference to your installation of the
 #'   sqlite command line interface
 #'
-#' @return
+#' @return None, copies database information to the local file system
 #'
-#' @examples
 update_data_sources <- function(project,
                                 data_dir = file.path("config", "data"),
                                 create_backups = TRUE,

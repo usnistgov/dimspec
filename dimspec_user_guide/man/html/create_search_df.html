@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create data.frame containing parameters for extraction and...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for create_search_df"><tr><td>create_search_df</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create data.frame containing parameters for extraction and searching</h2>
+
+<h3>Description</h3>
+
+<p>Use this to create an intermediate data frame object used as part of the search routine.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+create_search_df(
+  filename,
+  precursormz,
+  rt,
+  rt_start,
+  rt_end,
+  masserror,
+  minerror,
+  ms2exp,
+  isowidth
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>filename</code></td>
+<td>
+<p>CHR scalar path to the mzml file</p>
+</td></tr>
+<tr valign="top"><td><code>precursormz</code></td>
+<td>
+<p>NUM scalar for the mass-to-charge ratio to examine</p>
+</td></tr>
+<tr valign="top"><td><code>rt</code></td>
+<td>
+<p>NUM scalar for the retention time centroid to examine</p>
+</td></tr>
+<tr valign="top"><td><code>rt_start</code></td>
+<td>
+<p>NUM scalar for the retention time start point of the feature</p>
+</td></tr>
+<tr valign="top"><td><code>rt_end</code></td>
+<td>
+<p>NUM scalar for the retention time end point of the feature</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>NUM scalar of the instrument mass error value in parts per million</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>NUM scalar of the minimum mass error value to use in absolute terms</p>
+</td></tr>
+<tr valign="top"><td><code>ms2exp</code></td>
+<td>
+<p>NUM scalar type of the fragmentation experiment (e.g. MS1 or MS2)</p>
+</td></tr>
+<tr valign="top"><td><code>isowidth</code></td>
+<td>
+<p>NUM scalar mass isolation width to use</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object collating provided values
+</p>
+
+
+</body></html>

@@ -31,8 +31,6 @@ sample is drawn) to that alias}
 \item{db_table}{CHR scalar name of the database table containing sample
 aliases (default: "sample_aliases")}
 
-\item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
-
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}
 }
@@ -45,7 +43,7 @@ database. This can be done either through the import object with a name
 reference or directly by assigning additional values.
 }
 \note{
-This function is called as part of [full_import]
+This function is called as part of [full_import()]
 
 One of `values` or both of `obj` and `aliases_in` must be provided to
   add new sample aliases.

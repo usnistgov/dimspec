@@ -17,7 +17,7 @@ conda tools (default: NULL is translated first to the environment variable
 CONDA_CLI and then to "conda")}
 }
 \value{
-
+None, directly updates the referenced python environment
 }
 \description{
 The `requirements_file` can be any formatted file that contains a definition

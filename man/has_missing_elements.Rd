@@ -12,7 +12,7 @@ has_missing_elements(x, logging = TRUE)
 \item{logging}{LGL scalar of whether or not to make log messages (default: TRUE)}
 }
 \value{
-LGL scalar of whether `x` is empty
+LGL scalar of whether \code{x} is empty
 }
 \description{
 Checks for empty vectors, a blank character string, NULL, and NA values. If

@@ -11,7 +11,7 @@ er_map(db_conn = con)
 not strictly enforced}
 }
 \value{
-nested LIST object
+nested LIST object describing the database entity connections
 }
 \description{
 This will poll the database connection and create an entity relationship map
@@ -24,6 +24,6 @@ shortcut when ER Diagrams are unavailable, or for quick reference within a
 project, similarly to a dictionary relationship reference.
 }
 \details{
-SQL is generated from [pragma_table_def] with argument `get_sql` = TRUE and
+SQL is generated from [pragma_table_def()] with argument `get_sql` = TRUE and
 ignores entities whose names start with "sqlite".
 }

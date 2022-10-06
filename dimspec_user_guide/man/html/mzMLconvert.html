@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Converts a raw file into an mzML</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for mzMLconvert"><tr><td>mzMLconvert</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Converts a raw file into an mzML</h2>
+
+<h3>Description</h3>
+
+<p>Converts a raw file into an mzML
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+mzMLconvert(rawfile, msconvert = NULL, config = NULL, outdir = getwd())
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>rawfile</code></td>
+<td>
+<p>file path of the MS raw file to be converted</p>
+</td></tr>
+<tr valign="top"><td><code>msconvert</code></td>
+<td>
+<p>file path of the msconvert.exe file, if NULL retrieves information from config directory</p>
+</td></tr>
+<tr valign="top"><td><code>config</code></td>
+<td>
+<p>configuration settings file for msconvert conversion to mzML, if NULL retrives information from config directory</p>
+</td></tr>
+<tr valign="top"><td><code>outdir</code></td>
+<td>
+<p>directory path for the converted mzML file.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar path to the created file
+</p>
+
+
+</body></html>
