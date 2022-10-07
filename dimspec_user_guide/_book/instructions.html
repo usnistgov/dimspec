@@ -245,26 +245,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><p><code>/config</code> Files pertaining to the build, description, and population of the underlying database, as well as certain compute environment settings and import settings. This serves for rapid rebuilding and reuse of the underlying database structure. Also included are environment establishment files for the project (“env_glob.txt”), the R session (“env_R.R”) and the optional logging (“env_logger.R”) functionality.</p>
 <ul>
-<li><p><code>/sql_nodes</code> Files containing the sql scripts defining the database schema, as run by the “build.sql” script. Files are separated into database “nodes” with the hope that many can be repurposed or used a la carte in future projects. A graphical representation of the database schema, the <a href="table-explorer-home.html#table-explorer-erd">entity-relationship diagram (ERD)</a> is also available.</p></li>
+<li><p><code>/sql_nodes</code> Files containing the sql scripts defining the database schema, as run by the “build.sql” script. Files are separated into database “nodes” with the hope that many can be repurposed or used a la carte in future projects. A graphical representation of the database schema, the <a href="assets/ERD.png" target="_blank">entity-relationship diagram (ERD)</a> is also available.</p></li>
 <li><p><code>/data</code> Comma-separated-value (CSV) files which can be used to populate tables defined by their SQL nodes and which will be populated according to the chosen population script. This directory contains common data which should be applicable to all database produced by this tool (i.e. normalization tables, elements and isotopes, etc.) and subdirectories containing project-specific CSV files.</p></li>
 </ul></li>
 <li><p><code>/example</code> Files providing examples of (mainly) import files in JavaScript Object Notation (JSON) format. These are the files used to populate empirical data and were produced by the <a href="https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool" target="_blank">NIST Non-Targeted Analysis Method Reporting Tool</a>.</p></li>
-<li><p><code>/images</code> If molecular models are produced by rdkit, they will be housed here, named by the molecule’s known structure identifier (e.g. SMILES, InChI, etc.). Other images may be produced during routine work and should also be placed in this directory, though user-produced images and graphics can be saved anywhere.</p></li>
-<li><p><code>/inst</code> Files for rdkit integration (/rdkit), the API service (/plumber), and Shiny applications (/apps).</p>
+<li><p><code>/images</code> If images of molecular models are produced using rdkit through this toolset, they will be housed here, named by the molecule’s known structure identifier (e.g. SMILES, InChI, etc.). Other images may be produced during routine work and should also be placed in this directory, though user-produced images and graphics can be saved anywhere.</p></li>
+<li><p><code>/inst</code> Files for rdkit integration (<code>/rdkit</code>), the API service (<code>/plumber</code>), and Shiny applications (<code>/apps</code>).</p>
 <ul>
 <li><p><code>/rdkit</code> Environment establishment and rdkit functions are located here. These will determine how R connects to the python environment to integrate rdkit into an R session as well as the files necessary to build the environment (e.g. “environment.yml”). Functions in the “py_setup.R” file should suffice for most use cases.</p></li>
 <li><p><code>/plumber</code> Environment establishment and API definition functions are located here. These will determine how requests to the API are routed and functionality are provided through http protocols in a RESTful manner. It comes complete with Swagger documentation available when the server is running.</p></li>
 <li><p><code>/apps</code> Environment establishment, general resources, and shiny application files are located here. Each application is contained within its own directory.</p></li>
 </ul></li>
-<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. “logs/log_db.txt”).</p></li>
+<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the "db" namespace will be written to “logs/log_db.txt”).</p></li>
 <li><p><code>/R</code> directory; most general R functions are housed here or in one of the subdirectories.</p></li>
 </ul>
 </div>
 <div id="project-set-up" class="section level2 unnumbered hasAnchor">
 <h2>Project Set Up<a href="instructions.html#project-set-up" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Running the compliance script at <code>"R/compliance.R"</code> will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the <a href="technical-details.html#compute-environments">Compute Environments</a> section. To accept the default settings, source the compliance file and move on to the <a href="instructions.html#using-dimspec">Using DIMSpec</a> section. This may take a while to resolve package dependencies. To customize your implementation, read on.</p>
+<p>Running the compliance script at <code>"R/compliance.R"</code> will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the <a href="technical-details.html#compute-environments">Compute Environments</a> section. To accept the default settings, source the compliance file and move on to the <a href="instructions.html#using-dimspec">Using DIMSpec</a> section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.</p>
 <div id="step-1---global-compute-environment-settings" class="section level3 unnumbered hasAnchor">
-<h3>Step 1 - Global compute environment settings<a href="instructions.html#step-1---global-compute-environment-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<h3>Step 1 - Customize global environment settings<a href="instructions.html#step-1---global-compute-environment-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Several options are available to customize the use of DIMSpec to any given project component; settings are in the file “/config/env_glob.txt”. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.</p>
 <table>
 <caption>Table 1: Customizing global settings in the “/config/env_glob.txt” file</caption>
@@ -329,7 +329,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <tr class="even">
 <td>LOGGING_ON</td>
 <td>Logical</td>
-<td>Whether or not to establish an environment to perform action logging, which will carry additional information about what the tool is doing (see <a href="technical-details.html#logger">Logger</a>).</td>
+<td>Whether or not to establish an environment to perform action logging, which will carry additional information about what functions in the DIMSpec tool set are doing (see <a href="technical-details.html#logger">Logger</a>).</td>
 </tr>
 <tr class="odd">
 <td>USE_API</td>
@@ -363,7 +363,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3>Step 2 - Customizing R session settings in the “env_R.R” file<a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>More customization options that require R are available to set up the project specifically for your application. Open the file “config/env_R.R” to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.</p>
 <table>
-<caption>Table 2: Customizing settings specific to the R environment</caption>
+<caption>Table 2: Customize settings specific to the R environment</caption>
 <colgroup>
 <col width="2%" />
 <col width="2%" />
@@ -410,7 +410,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <tr class="odd">
 <td>DB_CONN_NAME</td>
 <td>String</td>
-<td>The name to be used for the R object database connection (e.g. <code>con</code> in most cases here); this defaults to a session variable named <code>DB_CONN</code> which can be set independently to manage multiple connections.</td>
+<td>The name to be used for the R object database connection (e.g. <code>con</code> in most cases here); this defaults to a session variable named <code>DB_CONN_NAME</code> if it exists to facilitate independent management of multiple connections.</td>
 </tr>
 <tr class="even">
 <td>DEPENDS_ON</td>
@@ -450,13 +450,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <tr class="odd">
 <td>USE_SHINY</td>
 <td>Logical</td>
-<td>Defaults to the global setting of <code>USE_SHINY.</code> If <code>TRUE</code>, a list of installed shiny applications will be available to your session under the named character variable <code>SHINY_APPS</code> which contains absolute paths to the application directories. These are launchable (and should resolve their environment) at any time during a session from the console using <code>shiny::runApp(SHINY_APPS[[*app_name*]])</code> where <em><code>app_name</code></em> is the name of a shiny app in the variable. See the <a href="msmatch-home.html#msmatch-home">Mass Spectral Match for Non-Targeted Analysis (MSMatch)</a> application that ships with this project as an example to match user supplied mass spectral data against the library.</td>
+<td>Defaults to the global setting of <code>USE_SHINY.</code> If <code>TRUE</code>, a list of installed shiny applications will be available to your session under the named character variable <code>SHINY_APPS</code> which contains absolute paths to the application directories. These are launchable (and should resolve their environment) at any time during a session from the console using <code>shiny::runApp(SHINY_APPS[["app_name"]])</code> where <code>"app_name"</code> is the name of a shiny app in the variable. See the <a href="msmatch-home.html#msmatch-home">Mass Spectral Match for Non-Targeted Analysis (MSMatch)</a> application that ships with this project as an example to match user supplied mass spectral data against the library.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div id="step-3---customizing-logger-settings-in-the-env_logger.r-file" class="section level3 unnumbered hasAnchor">
-<h3>Step 3 - Customizing logger settings in the “env_logger.R” file<a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<h3>Step 3 - Customize logger settings in the “env_logger.R” file<a href="instructions.html#step-3---customizing-logger-settings-in-the-env_logger.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>To provide support information about performance and support troubleshooting, a logging utility is provided with the project. Logs are managed by namespace and generated with the function <a href="appendix-function-reference.html#fn_log_it" target="_blank"><code>log_it</code></a> which uses the <code>logger</code> package for additional functionality (see <a href="technical-details.html#logger">Logger</a>). Customization options for the format of these logging messages are provided, though under most circumstances should be left as-is to support reading logs back into a session. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the sections above, which will be applied automatically if they are not already set.</p>
 <p>Three support functions are also provided in this file to update the logger settings during a session (<code>update_logger_settings</code>), read logs from a file back into the session (<code>read_log</code>), and convert a log file into a session data frame for deeper inspection (<code>log_as_dataframe</code>).</p>
 <p>Environment set up files that follow the same approach are also provided for rdkit integration, the plumber API server, and shiny web applications; these are not detailed here and should only be changed when necessary. See those sections in Technical Details for more information.</p>
@@ -529,7 +529,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="using-dimspec" class="section level2 unnumbered hasAnchor">
 <h2>Using DIMSpec<a href="instructions.html#using-dimspec" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>There are several R packages required for this project, so initial set up may take some time. To streamline this process once set up is complete, a compliance script is available that will install and load required packages; run <code>source("R/compliance.R")</code> in the console to establish the runtime environment. See <a href="references.html#references">References</a> for the complete list of library dependencies. Based on project settings, components can be turned on or off as desired for lighter weight applications. In many cases helper functions are available to turn these components back on during an active session without interrupting the current environment. The following sections assume the compliance script has run and that all functions are available. At any time, use <a href="appendix-function-reference.html#fn_fn_guide" target="_blank"><code>fn_guide()</code></a> or <a href="appendix-function-reference.html#fn_fn_help" target="_blank"><code>fn_help(fn)</code></a> where <em><code>fn</code></em> is the name of a function to view function documentation.</p>
+<p>There are several R packages required for this project, so initial set up may take some time. To streamline this process once set up is complete, a compliance script is available that will install and load required packages; run <code>source("R/compliance.R")</code> in the console to establish the runtime environment. See <a href="references.html#references">References</a> for the complete list of library dependencies. Based on project settings, components can be turned on or off as desired for lighter weight applications. In many cases helper functions are available to turn these components back on during an active session without interrupting the current environment. The following sections assume the compliance script has run and that all functions are available. At any time, use <a href="appendix-function-reference.html#fn_fn_guide" target="_blank"><code>fn_guide()</code></a> or <a href="appendix-function-reference.html#fn_fn_help" target="_blank"><code>fn_help("fn")</code></a> where <code>"fn"</code> is the name of a function (quoted or unquoted) to view function documentation from within R.</p>
 <div id="database-connections" class="section level3 unnumbered hasAnchor">
 <h3>Database Connections<a href="instructions.html#database-connections" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div id="connecting-to-an-existing-database" class="section level4 unnumbered hasAnchor">
