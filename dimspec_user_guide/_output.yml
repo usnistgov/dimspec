@@ -9,7 +9,8 @@ bookdown::gitbook:
         <h2 id="book-title">DIMSpec User Guide</h2>
       after: |
         <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
-    download: ["pdf", "epub"]
+    download: false
+    fontsettings: null
 bookdown::pdf_book:
   keep_tex: yes
 bookdown::epub_book: default
