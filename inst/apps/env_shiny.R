@@ -32,8 +32,7 @@ packs <- c("dplyr",
            "plotly",
            "httr",
            "readr",
-           "readxl",
-           "rcdk")
+           "readxl")
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
