@@ -222,9 +222,9 @@
 	CREATE TABLE IF NOT EXISTS fragment_inspections
 		/* Fragment inspections by users for ions that are attributed to one or more mass spectra. */
 	(
-	  annotated_fragment_id
-	    INTEGER,
-	    /* foreign key to annotated_fragments table */
+		annotated_fragment_id
+			INTEGER,
+			/* foreign key to annotated_fragments table */
 		user_note
 			TEXT,
 			/* user-supplied description of the fragment */
@@ -242,17 +242,17 @@
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_fragments
-	  /* Normalization list of annotated fragments */
+		/* Normalization list of annotated fragments */
 	(
-	  id
-	    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		id
+			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 			/* primary key */
 		fixedmass
-		  REAL,
-		  /* fixed molecular formula, generally generated from either rcdk or RDKit */
+			REAL,
+			/* fixed molecular formula, generally generated from either rcdk or RDKit */
 		netcharge
-		  INTEGER,
-		  /* net ionic charge for this fragment */
+			INTEGER,
+			/* net ionic charge for this fragment */
 		formula
 			TEXT NOT NULL,
 			/* elemental formula for specific fragment, user submitted */
@@ -309,29 +309,29 @@
 	/*magicsplit*/
 /* Views */
 	/*magicsplit*/
-  CREATE VIEW IF NOT EXISTS compound_data AS
-  	/* View raw data from all peaks associated with compounds. */
-  	SELECT DISTINCT
-  		cf.compound_id,
-  			/* internal compound id */
-  		cf.peak_id,
-  			/* internal peak id */
-  		pd.ms_n,
-  			/* mass spectral layer, e.g. MS1, MS2, ... MSn */
-  		pd.precursor_mz,
-  			/* peak precursor ion */
-  		pd.base_int,
-  			/* measured mass of precursor_mz */
-  		pd.scantime,
-  			/* ms scantime for this spectrum */
-  		pd.measured_mz,
-  			/* mass to charge ratios */
-  		pd.measured_intensity
-  			/* measured signal intensities */
-  	FROM compound_fragments cf
-  	LEFT JOIN peak_data pd
-  	ON cf.peak_id = pd.peak_id
-  	WHERE NOT cf.peak_id IS NULL;
+	CREATE VIEW IF NOT EXISTS compound_data AS
+		/* View raw data from all peaks associated with compounds. */
+		SELECT DISTINCT
+			cf.compound_id,
+				/* internal compound id */
+			cf.peak_id,
+				/* internal peak id */
+			pd.ms_n,
+				/* mass spectral layer, e.g. MS1, MS2, ... MSn */
+			pd.precursor_mz,
+				/* peak precursor ion */
+			pd.base_int,
+				/* measured mass of precursor_mz */
+			pd.scantime,
+				/* ms scantime for this spectrum */
+			pd.measured_mz,
+				/* mass to charge ratios */
+			pd.measured_intensity
+				/* measured signal intensities */
+		FROM compound_fragments cf
+		LEFT JOIN peak_data pd
+		ON cf.peak_id = pd.peak_id
+		WHERE NOT cf.peak_id IS NULL;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments AS
 		/* Fragments associated with compounds. */
@@ -351,7 +351,7 @@
 		ORDER BY mz ASC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_compound_fragments_stats AS 
-	  /* Summarization view of statistics associated with compound fragments, including the number of times they have recorded, their measured masses, and ppm error as compared with nominal exact masses. */
+		/* Summarization view of statistics associated with compound fragments, including the number of times they have recorded, their measured masses, and ppm error as compared with nominal exact masses. */
 		SELECT
 			c.id as compound_id,
 				/* compounds.id field */
@@ -360,29 +360,29 @@
 			nf.formula AS fragment,
 				/* normalized fragments formula field */
 			COUNT(nf.formula) AS measured_n_times,
-			  /* number of times a given fragment has been reported as measured */
+				/* number of times a given fragment has been reported as measured */
 			vaf.smiles,
-			  /* SMILES notation of the fragment */
+				/* SMILES notation of the fragment */
 			vaf.radical,
-			  /* whether ot not this fragment represents a radical */
+				/* whether ot not this fragment represents a radical */
 			vaf.fixedmass, 
-			  /* fixed molecular mass of the fragment */
+				/* fixed molecular mass of the fragment */
 			AVG(vaf.mz) AS measured_mz_mean,
-			  /* Mean mass to charge value at which the fragment has been measured */
+				/* Mean mass to charge value at which the fragment has been measured */
 			MIN(vaf.mz) AS measured_mz_min,
-			  /* Minimum mass to charge value at which the fragment has been measured */
+				/* Minimum mass to charge value at which the fragment has been measured */
 			MAX(vaf.mz) AS measured_mz_max,
-			  /* Maximum mass to charge value at which the fragment has been measured */
+				/* Maximum mass to charge value at which the fragment has been measured */
 			SQRT(SUM(POWER(af.mz - vfms.mz_mean, 2))/(COUNT(af.fragment_id) - 1)) AS measured_mz_stdev,
-			  /* Sample standard deviation of the mass to charge values at which the fragment has been measured */
+				/* Sample standard deviation of the mass to charge values at which the fragment has been measured */
 			AVG(vaf.ppm_error) AS ppm_error_mean,
-			  /* Mean part per million error value at which the fragment has been measured */ 
+				/* Mean part per million error value at which the fragment has been measured */ 
 			MIN(vaf.ppm_error) AS ppm_error_min, 
-			  /* Minimum part per million error value at which the fragment has been measured */ 
+				/* Minimum part per million error value at which the fragment has been measured */ 
 			MAX(vaf.ppm_error) AS ppm_error_max,
-			  /* Maximum part per million error value at which the fragment has been measured */ 
+				/* Maximum part per million error value at which the fragment has been measured */ 
 			SQRT(SUM(POWER(vaf.ppm_error - vfms.ppm_error_mean, 2))/(COUNT(af.fragment_id) - 1)) AS ppm_error_stdev
-			  /* Sample standard deviation of the part per million error values at which the fragment has been measured */ 
+				/* Sample standard deviation of the part per million error values at which the fragment has been measured */ 
 		FROM compounds c
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
 		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
@@ -409,38 +409,38 @@
 		ORDER BY n_fragments DESC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_annotated_fragments AS
-	  /* Measured fragments as compared with fixed masses */
-	  SELECT
-      nf.id, 
-        /* normalized fragment identifier */
-      nf.formula, 
-        /* normalized fragment formula */
-      nf.smiles,
-        /* normalized fragment smiles notation */
-      nf.radical,
-        /* whether or not this fragment was measured as a radical */
-      nf.fixedmass, 
-        /* fixed or ideal mass of the fragment as determined by elemental composition */
-      af.mz, 
-        /* mass at which the annotated fragment was measured */
-      1e6 * (af.mz - nf.fixedmass)/nf.fixedmass AS ppm_error
-        /* mass accuracy of the measurement in parts per million */
-    FROM 
-      annotated_fragments af 
-      INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
-  /*magicsplit*/
-  CREATE VIEW IF NOT EXISTS view_fragment_mz_stats AS 
-    /* Mean measures of measured_mz values - a supplementary calculation table. */
-    SELECT
-      af.fragment_id,
-        /* Annotated fragment id */
-      AVG(af.mz) AS mz_mean,
-        /* Mean mass-to-charge ratio at which a given fragment id has been measured. */
-      AVG(vaf.ppm_error) AS ppm_error_mean
-       /* Mean part per million error of measured fragments compared with idealized fixed mass */
-    FROM annotated_fragments af
-    LEFT JOIN view_annotated_fragments vaf ON af.fragment_id = vaf.id 
-    GROUP BY af.fragment_id;
+		/* Measured fragments as compared with fixed masses */
+		SELECT
+			nf.id, 
+				/* normalized fragment identifier */
+			nf.formula, 
+				/* normalized fragment formula */
+			nf.smiles,
+				/* normalized fragment smiles notation */
+			nf.radical,
+				/* whether or not this fragment was measured as a radical */
+			nf.fixedmass, 
+				/* fixed or ideal mass of the fragment as determined by elemental composition */
+			af.mz, 
+				/* mass at which the annotated fragment was measured */
+			1e6 * (af.mz - nf.fixedmass)/nf.fixedmass AS ppm_error
+				/* mass accuracy of the measurement in parts per million */
+		FROM 
+			annotated_fragments af 
+			INNER JOIN norm_fragments nf ON af.fragment_id = nf.id;
+	/*magicsplit*/
+	CREATE VIEW IF NOT EXISTS view_fragment_mz_stats AS 
+		/* Mean measures of measured_mz values - a supplementary calculation table. */
+		SELECT
+			af.fragment_id,
+				/* Annotated fragment id */
+			AVG(af.mz) AS mz_mean,
+				/* Mean mass-to-charge ratio at which a given fragment id has been measured. */
+			AVG(vaf.ppm_error) AS ppm_error_mean
+			 /* Mean part per million error of measured fragments compared with idealized fixed mass */
+		FROM annotated_fragments af
+		LEFT JOIN view_annotated_fragments vaf ON af.fragment_id = vaf.id 
+		GROUP BY af.fragment_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */
