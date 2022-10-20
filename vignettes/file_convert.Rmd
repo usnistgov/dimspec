@@ -56,7 +56,7 @@ To use the data analysis tool the following filters *must* be used, after select
 
 * **Algorithm**: Vendor or CWT
 
-|   **Note**: Vendor filter does not work for Waters files
+|   **Note**: Vendor filter does not work for Waters files, you must use CWT
 
 * **MS Levels**: 1 - 
 
@@ -83,7 +83,19 @@ Parameters should look as follows
 
 Press the **Add** Button
 
-|   **Note**: The TitleMaker filter shows up upon opening MSConvert every time, this can be included and will not affect the data analysis.
+#### If the raw data is from a **Waters Corporation** mass spectrometer, you must use the *Lockmass Refiner*
+
+
+* **Reference m/z**: use the m/z of the lockmass, for Leucine-Enkephalin (most common), the negative ionization *m/z* is 554.2615 and the positive ionization *m/z* is 556.2771.
+* **m/z Tolerance**: 0.1
+
+The parameters should look as follows:
+
+![Lockmass refiner parameters](images/msconvert_lockmass.png)
+
+Press the **Add** Button
+
+|   **Note**: The TitleMaker filter shows up upon opening MSConvert every time, this can be included and will not affect the data analysis. But peakPicking must still be the first line in the filters.
 
 \newpage
 
@@ -92,6 +104,8 @@ Press the **Add** Button
 This will convert all added files to \*.mzML format and put them in the assigned Output directory.
 
 ![MSConvert Start button](images/msconvert_start.png)
+
+|   **Note**: Waters Corporation instruments should have the lockmass refiner filter in the as well.
 
 ## 6) Save the settings as a preset using the *Save Preset* dropdown menu (optional)
 
