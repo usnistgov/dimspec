@@ -1,3 +1,6 @@
-`r if (knitr::is_html_output()) '
-# References {-}
-'`
+---
+bibliography: ["references.bib", "packages.bib"]
+nocite: '@*'
+---
+
+`r if (knitr::is_html_output()) '# Package References {#used_packages .unnumbered}'`

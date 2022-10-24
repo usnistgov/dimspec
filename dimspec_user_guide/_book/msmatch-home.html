@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-09-22" />
+<meta name="date" content="2022-10-24" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -119,6 +119,28 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
 
 <link rel="stylesheet" href="style.css" type="text/css" />
 </head>
@@ -184,7 +206,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="chapter" data-level="" data-path="used_packages.html"><a href="used_packages.html"><i class="fa fa-check"></i>Package References</a></li>
 <li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Appendix - Function Reference</a></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -252,9 +274,9 @@ installation details.</p>
 <div id="msmatch-file-format" class="section level3 unnumbered hasAnchor">
 <h3>Input File Format Requirements<a href="msmatch-home.html#msmatch-file-format" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>To use MSMatch, raw data files produced by a mass spectrometer must be
-converted into mzML format (Deutsch 2010) using
+converted into mzML format <span class="citation">(<a href="#ref-deutsch_mass_2010" role="doc-biblioref">Deutsch 2010</a>)</span> using
 <a href="https://proteowizard.sourceforge.io/" target="_blank">Proteowizard’s</a> msConvert
-software (Adusumilli and Mallick 2017). There are specific parameters
+software <span class="citation">(<a href="#ref-chambers_cross-platform_2012" role="doc-biblioref">Chambers et al. 2012</a>)</span>. There are specific parameters
 that must be used during conversion.</p>
 <pre><code>Filter: Threshold peak filter
 Threshold type: absolute
@@ -270,10 +292,10 @@ MS levels: 1-2</code></pre>
 <h3>Launching MSMatch<a href="msmatch-home.html#msmatch-launching-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Launch this tool similarly to other “shiny”-based tools provided as part
 of DIMSpec. In brief, this can be done from a terminal or the R console,
-though the preferred method is to use RStudio (RStudio Team 2015). The
+though the preferred method is to use RStudio <span class="citation">(<a href="#ref-RStudio" role="doc-biblioref">RStudio Team 2020</a>)</span>. The
 following commands are typical given an existing installation of R or
 RStudio and should always be run from the project directory. The shiny
-package (Chang et al 2018) and other necessary R packages will be
+package <span class="citation">(<a href="#ref-R-shiny" role="doc-biblioref">Chang et al. 2022</a>)</span> and other necessary R packages will be
 installed if it not already available by running the script at
 <code>R/compliance.R</code>, but shiny is the only package required to start the
 application. When first run, it may take a moment to install necessary
@@ -519,7 +541,7 @@ iterations to use and click “Calculate Uncertainty” to run the
 estimation again. Click the “Close” button to return to the compound
 match screen and change the match being evaluated. The calculation of
 mass spectral uncertainty and estimation of the distribution of the
-match scores is described in Place 2020.</p>
+match scores is described in <span class="citation">Place, Benjamin J. (<a href="#ref-place_development_2021" role="doc-biblioref">2021a</a>)</span>.</p>
 <hr />
 <div class="figure">
 <img src="assets/fig04-09_match_uncertainty.png" title="Figure 9. Estimation of match score uncertainty for any selected match candidate." id="fig04-09" style="width:50.0%" alt="" />
@@ -766,8 +788,7 @@ respective mass errors and minimum mass errors of the unknown mass
 spectra and reference mass spectra. To determine the uncertainty
 distribution of the match score, the
 <a href="appendix-function-reference.html#fn_bootstrap_compare_ms" target="_blank"><code>bootstrap_compare_ms</code></a>
-function is used. The application of this function is described in Place
-2021.</p>
+function is used. The application of this function is described in <span class="citation">Place, Benjamin J. (<a href="#ref-place_development_2021" role="doc-biblioref">2021a</a>)</span>.</p>
 <p>For the fragment search tool, the function
 <a href="appendix-function-reference.html#fn_get_annotated_fragments" target="_blank"><code>get_annotated_fragments</code></a>
 is used, where all <em>m/z</em> values in the MS2 mass spectrum of the unknown
@@ -970,6 +991,24 @@ chemicals or project of interest using mass spectrometry data.</p>
 
 </div>
 </div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-chambers_cross-platform_2012" class="csl-entry">
+Chambers, Matthew C., Brendan Maclean, Robert Burke, Dario Amodei, Daniel L. Ruderman, Steffen Neumann, Laurent Gatto, et al. 2012. <span>“A Cross-Platform Toolkit for Mass Spectrometry and Proteomics.”</span> <em>Nature Biotechnology</em> 30 (10): 918–20. <a href="https://doi.org/10.1038/nbt.2377">https://doi.org/10.1038/nbt.2377</a>.
+</div>
+<div id="ref-R-shiny" class="csl-entry">
+Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2022. <em>Shiny: Web Application Framework for r</em>. <a href="https://CRAN.R-project.org/package=shiny">https://CRAN.R-project.org/package=shiny</a>.
+</div>
+<div id="ref-deutsch_mass_2010" class="csl-entry">
+Deutsch, Eric W. 2010. <span>“Mass <span>Spectrometer</span> <span>Output</span> <span>File</span> <span>Format</span> <span class="nocase">mzML</span>.”</span> In <em>Proteome <span>Bioinformatics</span></em>, edited by Simon J. Hubbard and Andrew R. Jones, 319–31. Methods in <span>Molecular</span> <span>Biology</span>™. Totowa, NJ: Humana Press. <a href="https://doi.org/10.1007/978-1-60761-444-9_22">https://doi.org/10.1007/978-1-60761-444-9_22</a>.
+</div>
+<div id="ref-place_development_2021" class="csl-entry">
+Place, Benjamin J. 2021a. <span>“Development of a <span>Data</span> <span>Analysis</span> <span>Tool</span> to <span>Determine</span> the <span>Measurement</span> <span>Variability</span> of <span>Consensus</span> <span>Mass</span> <span>Spectra</span>.”</span> <em>Journal of the American Society for Mass Spectrometry</em> 32 (3): 707–15. <a href="https://doi.org/10.1021/jasms.0c00423">https://doi.org/10.1021/jasms.0c00423</a>.
+</div>
+<div id="ref-RStudio" class="csl-entry">
+RStudio Team. 2020. <em>RStudio: Integrated Development Environment for r</em>. Boston, MA: RStudio, PBC. <a href="http://www.rstudio.com/">http://www.rstudio.com/</a>.
+</div>
+</div>
 <div class="footnotes">
 <hr />
 <ol start="4">
@@ -1010,11 +1049,7 @@ gitbook.start({
 "whatsapp": false,
 "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
 },
-"fontsettings": {
-"theme": "white",
-"family": "sans",
-"size": 2
-},
+"fontsettings": null,
 "edit": {
 "link": null,
 "text": null
@@ -1027,7 +1062,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": ["_main.pdf", "_main.epub"],
+"download": null,
 "search": {
 "engine": "fuse",
 "options": null

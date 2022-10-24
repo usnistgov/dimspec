@@ -125,3 +125,9 @@ p {
 .signature-block > .names { padding: 0.5em; margin-bottom: 0 !important;}
 .signature-block > * > sup { font-size: xx-small !important; }
 .signature-block > .affiliation { font-size: small; }
+
+div.csl-entry {
+  padding-bottom: 0.5em;
+  text-indent: -1.5em;
+  padding-left: 1.5em;
+}

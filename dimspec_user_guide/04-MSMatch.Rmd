@@ -2,6 +2,7 @@
 editor_options: 
   markdown: 
     wrap: 72
+bibliography: packages.bib
 ---
 
 # App - Mass Spectral Match (MSMatch) {#msmatch-home .unnumbered}
@@ -57,9 +58,9 @@ installation details.
 ### Input File Format Requirements {#msmatch-file-format .unnumbered}
 
 To use MSMatch, raw data files produced by a mass spectrometer must be
-converted into mzML format (Deutsch 2010) using
+converted into mzML format [@deutsch_mass_2010] using
 [Proteowizard's](https://proteowizard.sourceforge.io/){target="_blank"} msConvert
-software (Adusumilli and Mallick 2017). There are specific parameters
+software [@chambers_cross-platform_2012]. There are specific parameters
 that must be used during conversion.
 
     Filter: Threshold peak filter
@@ -77,10 +78,10 @@ A more detailed user guide for converting the files is provided as a
 
 Launch this tool similarly to other "shiny"-based tools provided as part
 of DIMSpec. In brief, this can be done from a terminal or the R console,
-though the preferred method is to use RStudio (RStudio Team 2015). The
+though the preferred method is to use RStudio [@RStudio]. The
 following commands are typical given an existing installation of R or
 RStudio and should always be run from the project directory. The shiny
-package (Chang et al 2018) and other necessary R packages will be
+package [@R-shiny] and other necessary R packages will be
 installed if it not already available by running the script at
 `R/compliance.R`, but shiny is the only package required to start the
 application. When first run, it may take a moment to install necessary
@@ -342,7 +343,7 @@ iterations to use and click "Calculate Uncertainty" to run the
 estimation again. Click the "Close" button to return to the compound
 match screen and change the match being evaluated. The calculation of
 mass spectral uncertainty and estimation of the distribution of the
-match scores is described in Place 2020.
+match scores is described in @place_development_2021.
 
 ------------------------------------------------------------------------
 
@@ -609,8 +610,7 @@ respective mass errors and minimum mass errors of the unknown mass
 spectra and reference mass spectra. To determine the uncertainty
 distribution of the match score, the
 [`bootstrap_compare_ms`](#fn_bootstrap_compare_ms){target="_blank"}
-function is used. The application of this function is described in Place
-2021.
+function is used. The application of this function is described in @place_development_2021.
 
 For the fragment search tool, the function
 [`get_annotated_fragments`](#fn_get_annotated_fragments){target="_blank"}
