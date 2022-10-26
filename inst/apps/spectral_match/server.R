@@ -1278,7 +1278,7 @@ shinyServer(function(input, output, session) {
   output$search_fragments_peak_list <- renderDT(
     server = FALSE,
     DT::datatable(
-      data = req(search_fragments_compounds_data()),
+      data = req(search_fragments_peaks_data()),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
