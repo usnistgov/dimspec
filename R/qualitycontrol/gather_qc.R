@@ -25,6 +25,11 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   #performs quality check on the submitted data and adds 'check' list item
   check <- list()
   
+  #check for minimum error setting within gather_peak
+  if (!is.null(gather_peak$massspectrometry$msminerror)) {
+    minerror <- as.numeric(gather_peak$massspectrometry$msminerror)
+  }
+  
   #check 1: is the compound identified accurate to the measured m/z
   true_compound <- gather_peak$compounddata
   true_compound_form <- true_compound$formula
@@ -124,8 +129,10 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   #added 06142022, get optimal ums settings
   ms1empirical <- create_peak_table_ms1(peaklist, mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
   opt_ums1_params <- optimal_ums(ms1empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = cormethod)
+  opt_ums1_params <- c(opt_ums1_params, masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror)
   ms2empirical <- create_peak_table_ms2(peaklist,mass = as.numeric(gather_peak$peak$mz), masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror, int0 = NA)
   opt_ums2_params <- optimal_ums(ms2empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = cormethod)
+  opt_ums2_params <- c(opt_ums2_params, masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror)
   check[[length(check) + 1]] <- data.frame(parameter = "optimized_ums_parameters", mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
 
   #return results
