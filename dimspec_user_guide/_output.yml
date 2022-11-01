@@ -1,9 +1,3 @@
-bookdown::epub_book:
-  fig_width: 3
-  fig_height: 3
-  stylesheet: style.css
-  number_sections: false
-  toc_depth: 2
 bookdown::gitbook:
   css: style.css
   toc_depth: 2
@@ -19,6 +13,12 @@ bookdown::gitbook:
   bibliography: ["book.bib", "packages.bib", "references.bib"]
   link-citations: true
   biblio-style: analytical-chemistry.csl
+bookdown::epub_book:
+  fig_width: 3
+  fig_height: 3
+  stylesheet: style.css
+  number_sections: false
+  toc_depth: 2
 bookdown::pdf_book:
   keep_tex: yes
   bibliography: ["book.bib", "packages.bib", "references.bib"]
@@ -27,10 +27,9 @@ bookdown::pdf_book:
   title: |
     ![](assets/NIST-Logo-Brand-Black.png)  
     A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Project 
-  classoption:
-    - onecolumn
-    - landscape
   papersize: a5
   linestretch: 1.5
   fontsize: 12pt
   links-as-notes: true
+  stylesheet: style.css
+

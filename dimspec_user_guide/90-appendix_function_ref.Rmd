@@ -5,7 +5,7 @@
 This appendix contains links to all documented functions included as part of the DIMSpec tool set. As is common in R packages, not all functions are documented, but most are. Functions referenced in the rest of this user guide are linked directly to their entry on this page. Click any function in this table of contents to open its documentation.
 
 ```{r appendix_fn, include=FALSE}
-book_dir <- here::here(dirname(rstudioapi::getSourceEditorContext()$path))
+book_dir <- here::here("dimspec_user_guide")
 tmp_fname <- file.path(book_dir, "fn_reference.html")
 if (!file.exists(tmp_fname)) {
   help_dir <- here::here("man", "html")
@@ -47,7 +47,7 @@ if (!file.exists(tmp_fname)) {
         internal_link_exists <- stringr::str_detect(index_page, sprintf('id="fn_%s', to_link))
         if (is_package_reference) {
           pkg_link <- citation(to_link)
-          if (is.character(pkg_link$url) && nchar(pkg_link$url) > 0 && str_detect(pkg_link$url, "https:")) {
+          if (is.character(pkg_link$url) && nchar(pkg_link$url) > 0 && stringr::str_detect(pkg_link$url, "https:")) {
             fn_help <- stringr::str_replace_all(
               fn_help,
               sprintf("\\[%s\\]", to_link),
