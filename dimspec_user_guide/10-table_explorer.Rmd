@@ -1,0 +1,36 @@
+# (PART\*) Shiny Web Applications {-}
+
+# Table Explorer  {#table-explorer-home .unnumbered}
+
+To facilitate visual exploration of the DIMSpec database schema, a web application was written in Shiny. It served as proof-of-concept for the database/API/shiny approach and was used as the basic skeleton of the template app that ships with the project.
+
+Table Explorer is a simple entity viewer for the attached database. Combining the comment decorations in DIMSpec and reading of entity definitions from the database (see [Inspecting Database Properties](#inspecting-database-properties)) allows for R to expose a wealth of information about the underlying schema and quickly change which entity is being viewed. See [Shiny Applications](#shiny-applications) for details of how to launch this app, but the easiest method is after the `compliance.R` script has been executed, use `start_app("table_explorer")` to launch it in your preferred browser.
+
+## Table Viewer {#table-explorer-table-viewer .unnumbered}
+
+There is only one page for interactive content, named "Table Viewer" ([Figure 1](#fig03-01)). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box ([Figure 2 - left](#fig03-02)) to change the database table or view being displayed. This will update the definition narrative immediately below the selection box ([Figure 2 - right](#fig03-02)) and display the contents of that table ([Figure 3](#fig03-03)).
+
+------------------------------------------------------------------------
+
+![Figure 1. The Table Explorer main page.](assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page."){#fig03-01}
+
+------------------------------------------------------------------------
+
+![Figure 2. Choose a database entity (left) for information about its definition  (right).](assets/fig03-02-entity_selector_and_definition.png "Figure 2. Choose a database entity (left) for information about its definition  (right)."){#fig03-02}
+
+------------------------------------------------------------------------
+
+
+![Figure 3. Data held in the selected entity.](assets/fig03-03_table_display.png "Figure 3. Data held in the selected entity."){#fig03-03}
+
+------------------------------------------------------------------------
+
+## Entity Relationship Diagram {#table-explorer-erd .unnumbered}
+
+A full graphical representation of the entity relationship diagram is also provided. Click [here](assets/ERD.png){target="_blank"} to open this graphic in full resolution in a new tab.
+
+------------------------------------------------------------------------
+
+![Figure 4. Entity Relationship Diagram](assets/fig03-04_erd.png "Figure 4. Entity Relationship Diagram"){#fig03-04 width="100%}
+
+------------------------------------------------------------------------

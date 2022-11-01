@@ -4,34 +4,34 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>App - Mass Spectral Quality Control (MSQC, a Shiny application) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</title>
+  <title>Mass Spectral Quality Control (MSQC) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</title>
   <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   <meta name="generator" content="bookdown 0.29 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="App - Mass Spectral Quality Control (MSQC, a Shiny application) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  <meta property="og:title" content="Mass Spectral Quality Control (MSQC) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
   <meta property="og:type" content="book" />
-  <meta property="og:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta property="og:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
   <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="App - Mass Spectral Quality Control (MSQC, a Shiny application) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  <meta name="twitter:title" content="Mass Spectral Quality Control (MSQC) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
   
   <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
-  <meta name="twitter:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta name="twitter:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
 
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-10-24" />
+<meta name="date" content="2022-10-31" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="msmatch-home.html"/>
-<link rel="next" href="used_packages.html"/>
+<link rel="prev" href="table-explorer-home.html"/>
+<link rel="next" href="msmatch-home.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -156,10 +156,10 @@ div.csl-indent {
 
 <ul class="summary">
 <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
-<h2 id="book-title">DIMSpec User Guide</h2>
 
 <li class="divider"></li>
 <li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="part"><span><b>DIMSpec User Guide</b></span></li>
 <li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html"><i class="fa fa-check"></i>Introduction</a>
 <ul>
 <li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html#intro-contributors"><i class="fa fa-check"></i>Contributors</a></li>
@@ -186,19 +186,14 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#future-development"><i class="fa fa-check"></i>Future Development</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="conclusions.html"><a href="conclusions.html"><i class="fa fa-check"></i>Conclusions</a></li>
-<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html"><i class="fa fa-check"></i>App - Table Explorer</a>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="part"><span><b>Shiny Web Applications</b></span></li>
+<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html"><i class="fa fa-check"></i>Table Explorer</a>
 <ul>
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-table-viewer"><i class="fa fa-check"></i>Table Viewer</a></li>
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-erd"><i class="fa fa-check"></i>Entity Relationship Diagram</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>App - Mass Spectral Match (MSMatch)</a>
-<ul>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-intro"><i class="fa fa-check"></i>Introduction</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-instructions"><i class="fa fa-check"></i>Instructions</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
-</ul></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>App - Mass Spectral Quality Control (MSQC, a Shiny application)</a>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>Mass Spectral Quality Control (MSQC)</a>
 <ul>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-intro"><i class="fa fa-check"></i>Introduction</a></li>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-instructions"><i class="fa fa-check"></i>Instructions</a></li>
@@ -206,10 +201,17 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="used_packages.html"><a href="used_packages.html"><i class="fa fa-check"></i>Package References</a></li>
-<li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Appendix - Function Reference</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>Mass Spectral Match (MSMatch)</a>
+<ul>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-intro"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-instructions"><i class="fa fa-check"></i>Instructions</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendices</b></span></li>
+<li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Function Reference</a></li>
 <li class="divider"></li>
-<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+<li><a href="https://github.com/rstudio/bookdown" target="_blank">Published with bookdown</a></li>
 
 </ul>
 
@@ -229,7 +231,7 @@ div.csl-indent {
 
             <section class="normal" id="section-">
 <div id="msqc-home" class="section level1 unnumbered hasAnchor">
-<h1>App - Mass Spectral Quality Control (MSQC, a Shiny application)<a href="msqc-home.html#msqc-home" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<h1>Mass Spectral Quality Control (MSQC)<a href="msqc-home.html#msqc-home" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="msqc-intro" class="section level2 unnumbered hasAnchor">
 <h2>Introduction<a href="msqc-home.html#msqc-intro" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>One goal of the Data Infrastructure for Mass Spectrometry (DIMSpec) project is to provide a database that can be easily retasked to support individual projects within the Chemical Sciences Division to manage data coherently and accelerate analyte identification, screening, and annotation processes for non-targeted analysis projects. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. A DIMSpec mass spectral database incorporates empirical mass spectral data from analytical standards and complex mixtures with relevant analytical method metadata and mass spectral annotation. Algorithms have been developed in R to validate the quality of new experimental data.</p>
@@ -237,11 +239,11 @@ div.csl-indent {
 </div>
 <div id="msqc-instructions" class="section level2 unnumbered hasAnchor">
 <h2>Instructions<a href="msqc-home.html#msqc-instructions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The MSQC application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server for use by those connected to the NIST network without the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in <a href="https://www.rstudio.com/" target="_blank">RStudio</a><a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a> which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
+<p>The MSQC application installs alongside DIMSpec. If there is continued (or expanded) interest, the project could be turned into an R package installable directly from GitHub with additional development or this tool can be deployed to a shiny server for use by those connected to the NIST network without the need for launching or maintaining it locally. For now, this application is distributed for demonstration and evaluation with an implementation of NIST DIMSpec containing high resolution accurate mass spectrometry data for per- and polyfluorinated alkyl substances (PFAS). The R project can be opened in <a href="https://www.rstudio.com/" target="_blank">RStudio</a><a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> which may be downloaded and installed free of charge if not already installed. Initial set up does require an internet connection to install dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
 <p>Refer to the <a href="instructions.html#system-requirements">System Requirements</a> section for installation details.</p>
 <div id="msqc-input-format" class="section level3 unnumbered hasAnchor">
 <h3>Input File Format Requirements<a href="msqc-home.html#msqc-input-format" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>To use MSQC, raw data files produced by a mass spectrometer must be converted into mzML format <span class="citation">(<a href="#ref-deutsch_mass_2010" role="doc-biblioref">Deutsch 2010</a>)</span> using <a href="https://proteowizard.sourceforge.io/" target="_blank">Proteowizard’s</a> msConvert software <span class="citation">(<a href="#ref-adusumilli2017" role="doc-biblioref">Adusumilli and Mallick 2017</a>)</span>. There are specific parameters that must be used during conversion.</p>
+<p>To use MSQC, raw data files produced by a mass spectrometer must be converted into mzML format <span class="citation">(<a href="#ref-deutsch_mass_2010" role="doc-biblioref">Deutsch 2010</a>)</span> using <a href="https://proteowizard.sourceforge.io/" target="_blank">Proteowizard’s</a> msConvert software <span class="citation">(<a href="#ref-adusumilli_data_2017" role="doc-biblioref">Adusumilli, Ravali and Mallick, Parag 2017</a>)</span>. There are specific parameters that must be used during conversion.</p>
 <pre><code>Filter: Threshold peak filter
 Threshold type: absolute
 Orientation: most intense
@@ -262,7 +264,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <div id="msqc-launching-msqc" class="section level3 unnumbered hasAnchor">
 <h3>Launching MSQC<a href="msqc-home.html#msqc-launching-msqc" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Launch this tool similarly to other “shiny”-based tools as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio <span class="citation">(<a href="#ref-RStudio" role="doc-biblioref">RStudio Team 2020</a>)</span>. The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package <span class="citation">(<a href="#ref-R-shiny" role="doc-biblioref">Chang et al. 2022</a>)</span> and other necessary R packages will be installed if it not already available by running the script at <code>R/compliance.R</code>, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.</p>
-<p><em>Terminal</em><a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a></p>
+<p><em>Terminal</em><a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
 <blockquote>
 <p>R.exe “shiny::runApp(‘inst/apps/msqc’)”</p>
 </blockquote>
@@ -334,14 +336,14 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <h4>Step 5 - Closing Down<a href="msqc-home.html#msqc-step5" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <p>When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a “stop sign” button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to shut down the API server.</p>
 <ul>
-<li>Loading the entire project from the compliance script (i.e. MSMatch was launched using <code>start_app("spectral_match")</code>) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function <a href="appendix-function-reference.html#fn_close_up_shop"><code>close_up_shop()</code></a> with the argument <code>back_up_connected_tbls</code> set to <code>TRUE</code> to preserve these, or the default FALSE to simply close all connections including the API server).</li>
-<li>If launching the app directly and using the default settings there will be a session object named <code>plumber_service</code> connected to that server. To stop it, use the <a href="appendix-function-reference.html#fn_api_stop"><code>api_stop</code></a> function from the console or stop the service directly using <code>plumber_service\$kill()</code>; it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.</li>
+<li>Loading the entire project from the compliance script (i.e. MSMatch was launched using <code>start_app("spectral_match")</code>) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function <a href="appendix-function-reference.html#fn_def_close_up_shop"><code>close_up_shop()</code></a> with the argument <code>back_up_connected_tbls</code> set to <code>TRUE</code> to preserve these, or the default FALSE to simply close all connections including the API server).</li>
+<li>If launching the app directly and using the default settings there will be a session object named <code>plumber_service</code> connected to that server. To stop it, use the <a href="appendix-function-reference.html#fn_def_api_stop"><code>api_stop</code></a> function from the console or stop the service directly using <code>plumber_service\$kill()</code>; it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.</li>
 <li>After closing all connections, a hanging connection may be indicated by the presence of “-shm” and “-wal” files in the project directory. Flushing these hanging connections is not required but is recommended.
 <ul>
 <li><p>If launching MSMatch with the compliance script, run [<code>close_up_shop()</code>] again.</p></li>
 <li><p>Otherwise flush those connections by directly connecting and disconnecting with the DBI package:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="msqc-home.html#cb15-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(<span class="fu">RSQLite</span>()<span class="sc">::</span>SQLite, <span class="st">&quot;nist_pfas_nta_dev.sqlite&quot;</span>)</span>
-<span id="cb15-2"><a href="msqc-home.html#cb15-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con)</span></code></pre></div></li>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="msqc-home.html#cb13-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(<span class="fu">RSQLite</span>()<span class="sc">::</span>SQLite, <span class="st">&quot;nist_pfas_nta_dev.sqlite&quot;</span>)</span>
+<span id="cb13-2"><a href="msqc-home.html#cb13-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con)</span></code></pre></div></li>
 </ul></li>
 </ul>
 <p>Feature requests, suggestions, and bug reports are most conveniently submitted as issues via GitLab but may also be submitted by contacting the authors of this ROA. New functionality suggestions are encouraged as the project tooling develops. Likewise, if the functionality demonstrated here is of interest to projects outside of PFAS, this is only one example implementation of the underlying technology stack (i.e. DIMSpec); contact the authors to see if your mass spectrometry data would be amenable to that framework as other implementation suggestions are encouraged and a larger goal of the project to cohesively manage mass spectrometry data for non-targeted analysis within the Chemical Sciences Division.</p>
@@ -372,7 +374,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <li><p><em>annfragment_accuracy</em>: are the reported annotated fragment ion <em>m/z</em> values value within the reported instrumental error of the fragment ion <em>m/z</em> of the designated fragment, calculated from the elemental formula? This calculation uses the instrument relative mass error and fragment elemental formulas contained in the Sample JSON file and the absolute minimum mass error (default: <strong>0.01 Da</strong> - see the setting labeled <em>Minimum m/z error of instrument</em>).</p></li>
 <li><p><em>annfragments_subset</em>: are the reported annotated fragment elemental formulas a subset of the elemental formula of the designated compound? For example, is the fragment “C3F7” a subset of the designated compound elemental formula “C8F15O2H”? In this example, the result would be true. This calculation uses the elemental formula contained in the Sample JSON file and the elemental formula of the designated compound in the DIMSpec database.</p></li>
 <li><p><em>annfragment_elementalmatch</em>: if there is a SMILES structure provided for an annotated fragment, does the elemental formula of the SMILES structure match the elemental formula provided for the same annotated fragment. This calculation uses the SMILES structure and the elemental formula contained in the Sample JSON file.</p></li>
-<li><p><em>optimized_ums_parameters</em>: this is not a quality check, but occurs during the same data processing step. Optimized settings for the uncertainty mass spectrum of the MS1 and MS2 data is calculated using the function <a href="appendix-function-reference.html#fn_optimal_ums"><code>optimal_ums</code></a> for import into the DIMSpec database.</p></li>
+<li><p><em>optimized_ums_parameters</em>: this is not a quality check, but occurs during the same data processing step. Optimized settings for the uncertainty mass spectrum of the MS1 and MS2 data is calculated using the function <a href="appendix-function-reference.html#fn_def_optimal_ums"><code>optimal_ums</code></a> for import into the DIMSpec database.</p></li>
 </ul>
 <p>At any time necessary, these settings may be changed on the <a href="msqc-home.html#msqc-step0">QC Settings</a> page and QC checks run again by clicking “Process Data”.</p>
 </div>
@@ -519,13 +521,13 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 </div>
 </div>
 </div>
-<h3>References</h3>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div id="refs" class="references csl-bib-body hanging-indent">
-<div id="ref-adusumilli2017" class="csl-entry">
-Adusumilli, Ravali, and Parag Mallick. 2017. <span>“Data Conversion with ProteoWizard msConvert.”</span> <em>Methods in Molecular Biology (Clifton, N.J.)</em> 1550: 339–68. <a href="https://doi.org/10.1007/978-1-4939-6747-6_23">https://doi.org/10.1007/978-1-4939-6747-6_23</a>.
+<div id="ref-adusumilli_data_2017" class="csl-entry">
+Adusumilli, Ravali and Mallick, Parag. 2017. <span>“Data <span>Conversion</span> with <span>ProteoWizard</span> <span class="nocase">msConvert</span>.”</span> <em>Methods in Molecular Biology (Clifton, N.J.)</em> 1550: 339–68. <a href="https://doi.org/10.1007/978-1-4939-6747-6_23">https://doi.org/10.1007/978-1-4939-6747-6_23</a>.
 </div>
 <div id="ref-R-shiny" class="csl-entry">
-Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2022. <em>Shiny: Web Application Framework for r</em>. <a href="https://CRAN.R-project.org/package=shiny">https://CRAN.R-project.org/package=shiny</a>.
+Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2022. <em>Shiny: Web Application Framework for r</em>. <a href="https://shiny.rstudio.com/">https://shiny.rstudio.com/</a>.
 </div>
 <div id="ref-deutsch_mass_2010" class="csl-entry">
 Deutsch, Eric W. 2010. <span>“Mass <span>Spectrometer</span> <span>Output</span> <span>File</span> <span>Format</span> <span class="nocase">mzML</span>.”</span> In <em>Proteome <span>Bioinformatics</span></em>, edited by Simon J. Hubbard and Andrew R. Jones, 319–31. Methods in <span>Molecular</span> <span>Biology</span>™. Totowa, NJ: Humana Press. <a href="https://doi.org/10.1007/978-1-60761-444-9_22">https://doi.org/10.1007/978-1-60761-444-9_22</a>.
@@ -536,9 +538,9 @@ RStudio Team. 2020. <em>RStudio: Integrated Development Environment for r</em>. 
 </div>
 <div class="footnotes">
 <hr />
-<ol start="6">
-<li id="fn6"><p>Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.<a href="msqc-home.html#fnref6" class="footnote-back">↩︎</a></p></li>
-<li id="fn7"><p>Requires R.exe is available in your system PATH<a href="msqc-home.html#fnref7" class="footnote-back">↩︎</a></p></li>
+<ol start="4">
+<li id="fn4"><p>Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.<a href="msqc-home.html#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>Requires R.exe is available in your system PATH<a href="msqc-home.html#fnref5" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
             </section>
@@ -546,8 +548,8 @@ RStudio Team. 2020. <em>RStudio: Integrated Development Environment for r</em>. 
           </div>
         </div>
       </div>
-<a href="msmatch-home.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="used_packages.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="table-explorer-home.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="msmatch-home.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -585,7 +587,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": null,
+"download": [["_main.epub", "epub"]],
 "search": {
 "engine": "fuse",
 "options": null

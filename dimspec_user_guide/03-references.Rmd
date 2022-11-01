@@ -1,0 +1,12 @@
+---
+bibliography: ["references.bib", "packages.bib"]
+nocite: '@*'
+---
+
+`r if (knitr::is_html_output()) '
+# References {-}
+
+*Packages used as part of this project are listed as well as in-text references.*
+
+<div id="refs"></div>
+'`

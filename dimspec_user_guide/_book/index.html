@@ -10,7 +10,7 @@
 
   <meta property="og:title" content="A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
   <meta property="og:type" content="book" />
-  <meta property="og:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta property="og:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
   <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   
 
@@ -18,12 +18,12 @@
   <meta name="twitter:title" content="A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
   
   <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
-  <meta name="twitter:image" content="/assets/NIST-Logo-Brand-White.svg" />
+  <meta name="twitter:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
 
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2022-10-24" />
+<meta name="date" content="2022-10-31" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -156,10 +156,10 @@ div.csl-indent {
 
 <ul class="summary">
 <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
-<h2 id="book-title">DIMSpec User Guide</h2>
 
 <li class="divider"></li>
 <li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="part"><span><b>DIMSpec User Guide</b></span></li>
 <li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html"><i class="fa fa-check"></i>Introduction</a>
 <ul>
 <li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html#intro-contributors"><i class="fa fa-check"></i>Contributors</a></li>
@@ -186,19 +186,14 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#future-development"><i class="fa fa-check"></i>Future Development</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="conclusions.html"><a href="conclusions.html"><i class="fa fa-check"></i>Conclusions</a></li>
-<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html"><i class="fa fa-check"></i>App - Table Explorer</a>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="part"><span><b>Shiny Web Applications</b></span></li>
+<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html"><i class="fa fa-check"></i>Table Explorer</a>
 <ul>
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-table-viewer"><i class="fa fa-check"></i>Table Viewer</a></li>
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-erd"><i class="fa fa-check"></i>Entity Relationship Diagram</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>App - Mass Spectral Match (MSMatch)</a>
-<ul>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-intro"><i class="fa fa-check"></i>Introduction</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-instructions"><i class="fa fa-check"></i>Instructions</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
-<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
-</ul></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>App - Mass Spectral Quality Control (MSQC, a Shiny application)</a>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>Mass Spectral Quality Control (MSQC)</a>
 <ul>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-intro"><i class="fa fa-check"></i>Introduction</a></li>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-instructions"><i class="fa fa-check"></i>Instructions</a></li>
@@ -206,10 +201,17 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
 <li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="used_packages.html"><a href="used_packages.html"><i class="fa fa-check"></i>Package References</a></li>
-<li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Appendix - Function Reference</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>Mass Spectral Match (MSMatch)</a>
+<ul>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-intro"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-instructions"><i class="fa fa-check"></i>Instructions</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendices</b></span></li>
+<li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Function Reference</a></li>
 <li class="divider"></li>
-<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+<li><a href="https://github.com/rstudio/bookdown" target="_blank">Published with bookdown</a></li>
 
 </ul>
 
@@ -231,31 +233,36 @@ div.csl-indent {
 <div id="header">
 <h1 class="title">A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</h1>
 <p class="author"><em>Jared M. Ragland and Benjamin J. Place</em></p>
-<p class="date"><em>2022-10-24</em></p>
+<p class="date"><em>2022-10-31</em></p>
 </div>
 <div id="preface" class="section level1 unnumbered hasAnchor">
 <h1>Preface<a href="index.html#preface" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div class="fig-right">
+<p><img src="assets/fig00-01_chemical_space.png" title="The conceptual landscape of mass spectral standard availability." id="fig00-01" />
+<img src="assets/fig00-02_dimspec_conceptual_graphic.png" title="A conceptual diagram of the DIMSpec project." id="fig00-02" /></p>
+</div>
 <p>The use of mass spectral libraries is essential for the confident identification and reporting of analytical chemistry measureands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology provides a series of mass spectral libraries in use at analytical research, development, and contracting laboratories throughout the US. Contrasting with targeted methods, where analyte identities and their mass spectral properties are known <em>a priori</em> are non-targeted analysis (NTA) methods, where compound identity is unknown. Even when analytes are “known” (i.e. their mass spectral properties have been measured and reported in the literature) different extraction and measurement methods may show slight differences in mass spectral properties. The gold standard for matching mass spectra is use of a library of mass spectral standards, yet such standards are available only for a small fraction of “known” analytes.</p>
-<p><img src="assets/fig00-01_chemical_space.png" title="The conceptual landscape of mass spectral standard availability." id="fig00-01" /></p>
 <p>For analyte classes with decades of analytical study (e.g. polychlorinated biphenyls, vitamins, etc.), such “known” analytes are generally covered well by analytical standards. This is not the case for analyte classes of more recent interest (e.g. per- and polyfluorinated alkyl substances). Research needs generally run ahead of standards availability; new paradigms such as NTA are therefore necessary to assess analyte identity and properties by identifying mass spectral patterns of both the analyte itself and its fragmentation patterns. Analytes characterized in this fashion can then be published for identification in other methods and laboratories. As of 2022, the process of distributing such data still lags behind many research needs.</p>
-<p><img src="assets/fig00-02_dimspec_conceptual_graphic.png" title="A conceptual diagram of the DIMSpec project." id="fig00-02" /></p>
 <p>This book describes a tool set produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass spectrometric experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) allows for the creation of portable databases that tie such data with sample and methodological metadata. DIMSpec uses <a href="https://sqlite.org" target="_blank">SQLite</a>, a common portable database engine, for data storage and a collected set of data management and NTA tools written in the <a href="https://www.r-project.org" target="_blank">R</a> language. This includes the ability to rapidly iterate and launch new databases to hold data for a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated tools, researchers can leverage NTA tools in active use at NIST for quality assurance, identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.</p>
 <p>We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the <a href="https://www.go-fair.org" target="_blank">FAIR</a> principles.</p>
 <div class="signature-block">
 <span class="signoff">Sincerely,</span>
 <p class="names">
-Jared<sup>1</sup> and Ben<sup>2</sup>
+Jared<sup> 1</sup> and Ben<sup> 2</sup>
 </p>
 <p class="affiliation">
 National Institute of Standards and Technology<br>
 Material Measurement Laboratory<br>
 Chemical Sciences Division<br>
-<sup>1</sup>Chemical Informatics Group, Research Biologist<br>
-<sup>2</sup>Organic Chemical Metrology Group, Research Chemist
+<sup>1</sup> Chemical Informatics Group, Research Biologist<br>
+<sup>2</sup> Organic Chemical Metrology Group, Research Chemist
 </p>
 </div>
 
 </div>
+
+
+
             </section>
 
           </div>
@@ -300,7 +307,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": null,
+"download": [["DIMSpec_User_Guide.epub", "epub"]],
 "search": {
 "engine": "fuse",
 "options": null

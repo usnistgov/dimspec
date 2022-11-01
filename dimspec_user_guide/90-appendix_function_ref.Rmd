@@ -1,22 +1,77 @@
-# Appendix - Function Reference {#appendix-function-reference .unnumbered}
+# (APPENDIX) Appendices {-}
+
+# Function Reference {#appendix-function-reference .unnumbered}
 
 This appendix contains links to all documented functions included as part of the DIMSpec tool set. As is common in R packages, not all functions are documented, but most are. Functions referenced in the rest of this user guide are linked directly to their entry on this page. Click any function in this table of contents to open its documentation.
 
 ```{r appendix_fn, include=FALSE}
-fname <- here::here("man", "html", "_index.html")
-index_page <- suppressWarnings(readLines(fname))
-index_page <- stringr::str_split(index_page, "</*body>")[[1]][2]
-# modify links to correct files
-index_page <- stringr::str_replace_all(index_page, 'href="', 'href="../man/html/')
-tmp_fname <- gsub("index.html", "index_tmp.html", fname)
-readr::write_file(index_page, tmp_fname)
-# htmltools::includeHTML(tmp_fname)
+book_dir <- here::here(dirname(rstudioapi::getSourceEditorContext()$path))
+tmp_fname <- file.path(book_dir, "fn_reference.html")
+if (!file.exists(tmp_fname)) {
+  help_dir <- here::here("man", "html")
+  fname <- file.path(help_dir, "_index.html")
+  index_page <- suppressWarnings(readLines(fname))
+  index_page <- stringr::str_split(index_page, "</*body>")[[1]][2]
+  if (!dir.exists(book_dir)) dir.create(book_dir)
+  index_page <- index_page %>%
+    stringr::str_replace_all('href="', 'href="#fn_def_') %>%
+    stringr::str_replace_all(".html", "")
+  readr::write_file(index_page, tmp_fname)
+  fn_refs <- list.files(help_dir, pattern = ".html", full.names = TRUE)
+  fn_refs <- fn_refs[!stringr::str_detect(fn_refs, "index.html")]
+  pkg_refs <- installed.packages()
+  for (fn_ref in fn_refs) {
+    this_fn <- tools::file_path_sans_ext(basename(fn_ref))
+    
+    fn_raw <- fn_ref %>%
+      xml2::read_html() %>%
+      rvest::html_element("body") %>%
+      rvest::html_children() %>%
+      paste0()
+    
+    fn_help <- fn_raw %>%
+      stringr::str_replace_all(
+        sprintf('<table width="100%%" summary="page for %s">', this_fn),
+        sprintf('<hr/><table id="fn_def_%s" width="100%%" summary="page for %s">',
+                this_fn,
+                this_fn)
+      )
+    fn_links <- stringr::str_extract_all(fn_help, "\\[[[:alpha:]_]*\\]") %>%
+      unlist() %>%
+      unique()
+    if (length(fn_links) > 0 && stringr::str_detect(fn_links, this_fn)) fn_links <- fn_links[!fn_links == sprintf("[%s]", this_fn)]
+    if (length(fn_links) > 0) {
+      for (fn_link in fn_links) {
+        to_link <- stringr::str_remove_all(fn_link, "[\\[\\]]")
+        is_package_reference <- to_link %in% pkg_refs
+        internal_link_exists <- stringr::str_detect(index_page, sprintf('id="fn_%s', to_link))
+        if (is_package_reference) {
+          pkg_link <- citation(to_link)
+          if (is.character(pkg_link$url) && nchar(pkg_link$url) > 0 && str_detect(pkg_link$url, "https:")) {
+            fn_help <- stringr::str_replace_all(
+              fn_help,
+              sprintf("\\[%s\\]", to_link),
+              sprintf('[<a href="%s">%s</a>]', pkg_link$url, to_link)
+            )
+          }
+        } else if (internal_link_exists) {
+          fn_help <- stringr::str_replace_all(
+            fn_help,
+            sprintf("\\[%s\\]", to_link),
+            sprintf('[<a href="#fn_def_%s">%s</a>]', to_link, to_link)
+          )
+        }
+      }
+    }
+    readr::write_lines(fn_help, tmp_fname, append = TRUE)
+  }
+}
 ```
 
-```{r appendix_print, child="..\\man\\html\\_index_tmp.html", eval=TRUE}
+```{r appendix_print, child="fn_reference.html", eval=TRUE}
 ```
 
-
-```{r appendix_fn_remove, include=FALSE}
+```{r append_fn_remove, include=FALSE}
 file.remove(tmp_fname)
 ```
+

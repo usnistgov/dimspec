@@ -38,6 +38,14 @@ table > caption {
   padding-left: 15px;
 }
 
+td:first-child {
+  min-width: 200px;
+}
+
+td:nth-child(2) {
+  min-width: 105px;
+}
+
 p code {
   white-space: inherit;
 }
@@ -94,30 +102,63 @@ p {
   font-size: small;
 }
 
-#fig00-01 {
+.fig-right {
   display: inline;
   float: right;
   margin: 0 5%;
   width: 40%;
+  max-width: 330px;
+  min-width: 250px;
 }
 
-#fig00-02 {
-  display: inline;
-  float: right;
-  margin: 0 5%;
-  width: 40%;
+#fig02-08 {
+  width: 100%;
+  max-width: 800px;
 }
 
-#fig03-02-right {
-  display: inline;
-  float: right;
-  margin-left: 5%;
+#fig03-02 {
+  max-width: 700px;
 }
 
-#fig03-02-left {
-  display: inline;
-  float: left;
-  margin-right: 5%;
+#fig03-03 {
+  width: 100%;
+  max-width: 700px;
+}
+
+#fig04-01 {
+  max-width: 800px;
+}
+
+#fig04-03 {
+  max-width: 500px;
+}
+
+#fig04-04 {
+  max-width: 900px;
+}
+
+#fig04-05 {
+  max-width: 600px;
+}
+
+#fig04-09 {
+  max-width: 400px;
+}
+
+#fig04-10 {
+  max-width: 500px;
+}
+
+#fig04-11 {
+  max-width: 800px;
+}
+
+#fig04-12 {
+  max-width: 800px;
+}
+
+#fig05-05 {
+  width: 900px;
 }
 
 .signature-block { padding-left: 10px; }
@@ -130,4 +171,23 @@ div.csl-entry {
   padding-bottom: 0.5em;
   text-indent: -1.5em;
   padding-left: 1.5em;
+}
+
+.page-inner {
+  max-width: 85% !important;
+}
+
+@media (max-width: 1240px) {
+  .page-inner {
+    max-width: 95% !important;
+  }
+}
+
+li.part, li.appendix {
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+
+li.part > span, li.appendix > span {
+  cursor: default !important;
+  opacity: 0.75 !important;
 }
