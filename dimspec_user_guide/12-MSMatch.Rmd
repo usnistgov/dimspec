@@ -495,7 +495,7 @@ project, users also need to shut down the API server.
     Flushing these hanging connections is not required but is
     recommended.
     -   If launching MSMatch with the compliance script, run
-        [`close_up_shop()`] again.
+        [`close_up_shop()`](#fn_def_close_up_shop) again.
 
     -   Otherwise flush those connections by directly connecting and
         disconnecting with the DBI package:
@@ -506,7 +506,7 @@ project, users also need to shut down the API server.
         ```
 
 Feature requests, suggestions, and bug reports are most conveniently
-submitted as issues via GitLab but may also be submitted by contacting
+submitted as issues via GitHub but may also be submitted by contacting
 the authors of this ROA. New functionality suggestions are encouraged as
 the project tooling develops. Likewise, if the functionality
 demonstrated here is of interest to projects outside of PFAS, this is
@@ -722,7 +722,7 @@ requested by stakeholders.
 
 ## Conclusions {#msmatch-conclusions .unnumbered}
 
-The NIST Mass Spectral Match for Non-Targeted Analysis application
+The Mass Spectral Match for Non-Targeted Analysis application
 provides a new way to make NTA tools developed at NIST using the
 Database Infrastructure for Mass Spectrometry accessible to both
 internal and external stakeholders. It is the first demonstration of

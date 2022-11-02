@@ -1,3 +1,10 @@
+bookdown::epub_book:
+  fig_width: 3
+  fig_height: 3
+  stylesheet: style.css
+  number_sections: false
+  toc_depth: 2
+bookdown::word_document2: default
 bookdown::gitbook:
   css: style.css
   toc_depth: 2
@@ -8,28 +15,8 @@ bookdown::gitbook:
         <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
       after: |
         <li><a href="https://github.com/rstudio/bookdown" target="_blank">Published with bookdown</a></li>
-    download: [["DIMSPec_User_guide.epub", "epub"]]
+    download: [["DIMSPec_User_Guide.epub", "epub"], ["DIMSpec_User_Guide.pdf", "pdf"]]
     fontsettings: null
   bibliography: ["book.bib", "packages.bib", "references.bib"]
   link-citations: true
   biblio-style: analytical-chemistry.csl
-bookdown::epub_book:
-  fig_width: 3
-  fig_height: 3
-  stylesheet: style.css
-  number_sections: false
-  toc_depth: 2
-bookdown::pdf_book:
-  keep_tex: yes
-  bibliography: ["book.bib", "packages.bib", "references.bib"]
-  citation-package: biblatex
-  documentclass: book
-  title: |
-    ![](assets/NIST-Logo-Brand-Black.png)  
-    A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Project 
-  papersize: a5
-  linestretch: 1.5
-  fontsize: 12pt
-  links-as-notes: true
-  stylesheet: style.css
-

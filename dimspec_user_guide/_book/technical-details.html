@@ -284,7 +284,7 @@ div.csl-indent {
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[[&#39;table_explorer&#39;]]`." id="fig02-08" alt="" />
+<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[&#39;table_explorer&#39;]`." id="fig02-08" alt="" />
 <p class="caption">Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The “Table Explorer” shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with <code>shiny::runApp(SHINY_APPS[['table_explorer']]</code>).</p>
 </div>
 <hr />
@@ -418,7 +418,7 @@ div.csl-indent {
 </div>
 <div id="the-contributors-node" class="section level4 unnumbered hasAnchor">
 <h4>The Contributors Node<a href="technical-details.html#the-contributors-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>This node contains information relevant to identifying data contributors, similar to a “users” table. It is used primarily to provide contribution statistics and tie data to data producers in the samples and analytes node, both of which are connected to the peaks node. When the database is built, a “sys” username with the affiliation “system” is automatically added as a default user.</p>
+<p>This node contains information relevant to identifying data contributors, similar to a “users” table. It is used primarily to provide contribution statistics and tie data to data producers in the <code>samples</code> and <code>analytes</code> node, both of which are connected to the <code>peaks</code> node. When the database is built, a “sys” username with the affiliation “system” is automatically added as a default user.</p>
 <table>
 <colgroup>
 <col width="14%" />
@@ -462,7 +462,7 @@ div.csl-indent {
 </div>
 <div id="the-data-node" class="section level4 unnumbered hasAnchor">
 <h4>The Data Node<a href="technical-details.html#the-data-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>This node contains mass spectral data, metadata about samples and the software used to generate it, identification confidence, and quality control measures, as well as views to consume it directly. It is linked to the analyte node through the “compound_fragments” table and to the contributors and methods nodes through the samples table. This node contains two sub-nodes and is the main location of analytical data. One describes samples and one describes peaks generated from those samples <a href="#fig02-12">Figure 12</a>.</p>
+<p>This node contains mass spectral data, metadata about samples and the software used to generate it, identification confidence, and quality control measures, as well as views to consume it directly. It is linked to the <code>analyte</code> node through the <code>compound_fragments</code> table and to the <code>contributors</code> and <code>methods</code> nodes through the <code>samples</code> table. This node contains two sub-nodes and is the main location of analytical data. One describes <code>samples</code> and one describes <code>peaks</code> generated from those <code>samples</code> <a href="#fig02-12">Figure 12</a>.</p>
 <table>
 <colgroup>
 <col width="15%" />
@@ -869,7 +869,7 @@ div.csl-indent {
 <div id="compute-environments" class="section level2 unnumbered hasAnchor">
 <h2>Compute Environments<a href="technical-details.html#compute-environments" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Several environment resolution options are available in this project depending on which aspects are requested by the user. The default setting in the R/compliance.R file creates an R session that (1) connects to a database, (2) turns on the logging functionality, (3) turns on argument validation for certain R functions, (4) makes rdkit available to that session, and (5) spins up an API server in a background process can take a “considerable” amount of time (e.g. up to 3 minutes on slower systems; more typically this is around 90 seconds) but is still much slower than users may be accustomed to by loading packages. Environment values are set by configuration files, most of which are described in the Project Set Up section. To increase system compatibility, these are not set at the system level, but rather kept at the session level.</p>
-<p>Users likely will not need every aspect each time. Starting an R session that can (re)build or connect directly to a database, or simply launching the API server, does not require every aspect. Editing the environment files, primarily in config/env_glob.txt and config/env_R.R (Table 1; Table 2) will determine which aspects are made available in the session.</p>
+<p>Users likely will not need every aspect each time. Starting an R session that can (re)build or connect directly to a database, or simply launching the API server, does not require every aspect. Editing the environment files, primarily in config/env_glob.txt and config/env_R.R (<a href="instructions.html#step-1---global-compute-environment-settings">Table 1</a>; <a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file">Table 2</a>) will determine which aspects are made available in the session.</p>
 <p>Users may choose whether to connect to the database (and load all the database communication support) at load time; this generally is not a time intensive operation, but connection validation and loading of additional packages does increase load time somewhat. If the connect option is selected and a database file with the defined name does not exist, it will be built according to the build settings in <a href="instructions.html#project-set-up">Project Set Up</a>.</p>
 <p>Users similarly may choose whether to launch the API server which adds additional dependencies. This can be done in an active session at any time after loading using <a href="appendix-function-reference.html#fn_def_api_reload" target="_blank"><code>api_reload</code></a> with the background parameter determining if it should be launched in the current session or in a background process; the default is to launch it in a background process and return control to the session. The same function will allow the service to reload if any changes are made to API functionality in the <code>"inst/plumber/plumber.R file"</code>.</p>
 <p>Using <code>rdkit</code> slows down the load time considerably as the R session must resolve, activate, and bind to a python environment. While it is recommended it is not required; set <code>INFORMATICS</code> to <code>FALSE</code> to turn this feature off.</p>
@@ -900,7 +900,7 @@ div.csl-indent {
 </div>
 <div id="app-msmatch" class="section level3 unnumbered hasAnchor">
 <h3>Mass Spectral Match (MSMatch)<a href="technical-details.html#app-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>This Shiny application could easily be considered the entire reason behind the genesis of the DIMSpec project. It was built specifically to accelerate non-targeted analysis projects by searching experiment result data in <a href="https://www.psidev.info/mzML" target="_blank">mzML</a> format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec tool set. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program (<a href="https://serdp-estcp.org/" target="_blank">DOD-SERDP</a>), project number <a href="https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview" target="_blank">ER20-1056</a>.</p>
+<p>This Shiny application could easily be considered the entire reason behind the genesis of the DIMSpec project. It was built specifically to accelerate non-targeted analysis projects by searching experiment result data in <a href="https://www.psidev.info/mzML" target="_blank">mzML</a> format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec tool set. Launch it after the compliance script has been run with <code>run_app(“spectral_match”)</code> or from the console or command line with <code>shiny::runApp(“inst/apps/spectral_match”)</code> which will solve the environment and launch the application. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program (<a href="https://serdp-estcp.org/" target="_blank">DOD-SERDP</a>), project number <a href="https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview" target="_blank">ER20-1056</a>.</p>
 <p>The MSMatch application is detailed in its own <a href="msmatch-home.html#msmatch-home">section</a>.</p>
 <div class="figure">
 <img src="assets/fig02-16_app_spectral_match_example.png" title="Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures." id="fig02-16" style="width:100.0%" alt="" />
@@ -909,6 +909,17 @@ div.csl-indent {
 </div>
 <div id="app-mscq" class="section level3 unnumbered hasAnchor">
 <h3>Mass Spectral Quality Control (MSQC)<a href="technical-details.html#app-mscq" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>This Shiny application serves as an automated application of quality control and assurance functions built to assess data contributions to DIMSpec. There is no "hard stop" based on these quality checks, but the results of the quality checks are included alongside data contributions when they are selected for addition to a DIMSpec database. Data in the mzML format and an associated JSON file produced by the NIST NTA-MRT tool are loaded into the application and then each may be selected to evaluate data quality. Specific conversion parameters must be used during conversion from the raw instrument output. For each peak within each raw file the following checks will be performed.</o>
+<ol>
+<li><p>Is the reported precursor ion <em>m/z</em> value within the reported instrumental error of the calculated precursor ion <em>m/z</em> of the designated compound?</p></li>
+<li><p>Does the MS1 isotopic pattern of the submitted data match the calculated isotopic pattern with a match score above an expected value?</p></li>
+<li><p>Is the reported precursor ion <em>m/z</em> value present in the MS1 mass spectrum of the submitted data?</p></li>
+<li><p>Are the reported annotated fragment ion <em>m/z</em> values present in the MS1 mass spectrum of the submitted data?</p></li>
+<li><p>Are the reported annotated fragment ion <em>m/z</em> values value within the reported instrumental error of the fragment ion <em>m/z</em> of the designated fragment, calculated from the elemental formula?</p></li>
+<li><p>If there is a SMILES structure provided for an annotated fragment, does the elemental formula of the SMILES structure match the elemental formula provided for the same annotated fragment?</p></li>
+</ol>
+<p>Finally, optimized settings for the uncertainty mass spectrum of the MS1 and MS2 data are calculated to facilitate searches for submitted compounds.</p>
+<p>The MSQC application is detailed in its own <a href="msqc-home.html#msqc-home">section</a>. Launch it after the compliance script has been run with <code>run_app(“msqc”)</code> or from the console or command line with <code>shiny::runApp(“inst/apps/msqc”)</code> which will solve the environment and launch the application.</p>
 </div>
 </div>
 <div id="logger" class="section level2 unnumbered hasAnchor">
@@ -1091,7 +1102,7 @@ cat(
 <p class="caption">Figure 17. Screenshot of the results from importing a directory of data files in JSON format and verifying they meet import expectations.</p>
 </div>
 <hr />
-<p>This verification check is run automatically as part of the <code>full_import</code> pipeline, with the following parameterized options to determine behavior based on verification of individual components of the import object:</p>
+<p>This verification check is run automatically as part of the <a href="appendix-function-reference.html#fn_def_full_import" target="_blank"><code>full_import</code></a> pipeline, with the following parameterized options to determine behavior based on verification of individual components of the import object:</p>
 <ul>
 <li><em>exclude_missing_required</em>
 <ul>
@@ -1101,7 +1112,7 @@ cat(
 <li><em>stop_if_missing_required</em>
 <ul>
 <li>defaults to <code>TRUE</code></li>
-<li>Stops the import process if files do not include all requirements. This is forced to <code>TRUE</code> when exclude_missing_required is <code>FALSE</code> to ensure integrity.</li>
+<li>Stops the import process if files do not include all requirements. This is forced to <code>TRUE</code> when <code>exclude_missing_required</code> is <code>FALSE</code> to ensure integrity.</li>
 </ul></li>
 <li><em>include_if_missing_recommended</em>
 <ul>
@@ -1135,7 +1146,7 @@ cat(
 <li><strong>Peak</strong> information about features of interest measured in a sample is resolved including retention time, precursor ions, the number of points measured across a peak, and any identification confidence associated with it; conversion software settings (e.g. from processing with msconvert) are also linked as are optimal uncertainty mass spectra parameters to assist with spectral matching; measured m/z and intensity values are housed here, typically in a format describing all m/z and intensity values in a single row; for highly trusted spectra needing more advanced or rapid search capabilities, these data can also be unpacked into a long form table of the same data;</li>
 <li><strong>Compound</strong> reference information is resolved for known analytes including where data originated, known or calculated exact mass and molecular other properties, their common and machine-readable aliases, and optionally chemical categorization; when data from an identified compound are submitted, compounds are matched by all known aliases prior to being added into the table and resolved to the known internal identifier.</li>
 <li><strong>Fragments</strong> annotated in the data submission either with or without a known structure are resolved for known fragments and is matched to known aliases to firmly identify fragment identity and limit size creep and are normalized (fragments with a known structure are kept separate from those with only elemental formula notations); inspection records are also available for future annotation notes of known fragments.</li>
-<li><strong>Peak</strong>, <strong>fragments</strong>, and <strong>compound</strong> linkages are resolved in the compound_fragments table providing flexible linkages for peaks representing only known compounds (no fragment annotation), peaks with only annotated fragment information (no compound identification), and compounds with known annotated fragments but no peak data yet in the system, allowing for any combination of known information to be populated <em>a priori</em> mass spectrometric data are collected.</li>
+<li><strong>Peak</strong>, <strong>fragments</strong>, and <strong>compound</strong> linkages are resolved in the <code>compound_fragments</code> table providing flexible linkages for peaks representing only known compounds (no fragment annotation), peaks with only annotated fragment information (no compound identification), and compounds with known annotated fragments but no peak data yet in the system, allowing for any combination of known information to be populated <em>a priori</em> mass spectrometric data are collected.</li>
 </ol>
 <p>Each node is resolved using a specific function that is called during the <a href="appendix-function-reference.html#fn_def_full_import" target="_blank"><code>full_import</code></a> pipeline. Normalization resolution is accomplished using the <a href="appendix-function-reference.html#fn_def_resolve_normalization_value" target="_blank"><code>resolve_normalization_value</code></a> function which checks known values in a normalization table and, when encountering an unknown entry, prompts the user to either map it to a known value or to add a record to that table. This is leveraged heavily throughout and is the main reason the import process (for now) is only available for interactive console sessions. This is what allows the pipeline to maintain identifiers throughout the import process while populating individual data tables.</p>
 </div>
@@ -1188,7 +1199,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": [["_main.epub", "epub"]],
+"download": [["DIMSpec_User_Guide.epub", "epub"], ["DIMSpec_User_Guide.pdf", "pdf"]],
 "search": {
 "engine": "fuse",
 "options": null

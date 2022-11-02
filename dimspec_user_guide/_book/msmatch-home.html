@@ -687,7 +687,7 @@ Flushing these hanging connections is not required but is
 recommended.
 <ul>
 <li><p>If launching MSMatch with the compliance script, run
-[<code>close_up_shop()</code>] again.</p></li>
+<a href="appendix-function-reference.html#fn_def_close_up_shop"><code>close_up_shop()</code></a> again.</p></li>
 <li><p>Otherwise flush those connections by directly connecting and
 disconnecting with the DBI package:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="msmatch-home.html#cb17-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(<span class="fu">RSQLite</span>()<span class="sc">::</span>SQLite, <span class="st">&quot;nist_pfas_nta_dev.sqlite&quot;</span>)</span>
@@ -695,7 +695,7 @@ disconnecting with the DBI package:</p>
 </ul></li>
 </ul>
 <p>Feature requests, suggestions, and bug reports are most conveniently
-submitted as issues via GitLab but may also be submitted by contacting
+submitted as issues via GitHub but may also be submitted by contacting
 the authors of this ROA. New functionality suggestions are encouraged as
 the project tooling develops. Likewise, if the functionality
 demonstrated here is of interest to projects outside of PFAS, this is
@@ -983,7 +983,7 @@ requested by stakeholders.</p>
 </div>
 <div id="msmatch-conclusions" class="section level2 unnumbered hasAnchor">
 <h2>Conclusions<a href="msmatch-home.html#msmatch-conclusions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The NIST Mass Spectral Match for Non-Targeted Analysis application
+<p>The Mass Spectral Match for Non-Targeted Analysis application
 provides a new way to make NTA tools developed at NIST using the
 Database Infrastructure for Mass Spectrometry accessible to both
 internal and external stakeholders. It is the first demonstration of
@@ -1067,7 +1067,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": [["_main.epub", "epub"]],
+"download": [["DIMSpec_User_Guide.epub", "epub"], ["DIMSpec_User_Guide.pdf", "pdf"]],
 "search": {
 "engine": "fuse",
 "options": null
