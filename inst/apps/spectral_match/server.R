@@ -55,6 +55,7 @@ shinyServer(function(input, output, session) {
   )
   data_input_parameter_edit <- reactiveVal(FALSE)
   # _Compound Match page ----
+  # execute_compound_search <- reactiveVal(FALSE)
   search_compounds_results <- reactiveVal(NULL)
   search_compounds_mzrt <- reactive(as.integer(input$search_compounds_mzrt))
   search_compounds_mzrt_text <- reactive(
@@ -77,7 +78,8 @@ shinyServer(function(input, output, session) {
     if (is.null(old_val) || new_val != old_val) search_compounds_row_selected(new_val)
   })
   search_compounds_results_selected <- reactive({
-    req(search_compounds_row_selected())
+    req(search_compounds_results(),
+        search_compounds_row_selected())
     search_compounds_results()$result %>%
       slice(search_compounds_row_selected())
   })
@@ -434,7 +436,11 @@ shinyServer(function(input, output, session) {
       reset("data_input_filename")
     } else {
       log_it("success", glue::glue("Data file selected ('{fn$name}') for 'data_input_filename'."), app_ns)
-      if (data_file_loaded()) data_input_search_parameters(slice(data_input_search_parameters(), 0))
+      if (data_file_loaded()) {
+        data_input_search_parameters(slice(data_input_search_parameters(), 0))
+        search_compounds_results(NULL)
+        search_fragments_results(NULL)
+      }
     }
     data_file_loaded(TRUE)
     user_data(NULL)
@@ -684,16 +690,14 @@ shinyServer(function(input, output, session) {
   output$search_compounds_match_top <- renderUI({
     req(search_compounds_results())
     matches <- search_compounds_results()$result
-    ranks <- sort(table(matches$name))
-    top_match <- matches %>%
-      mutate(sum_match = rowSums(across(starts_with("ms")), na.rm = TRUE)) %>%
-      filter(sum_match == max(sum_match)) %>%
-      pull(name)
+    ranks <- table(matches$name)
+    top_match <- matches$name[1]
+    most_common_match <- ranks[which.max(ranks)]
     n_most_common <- paste0(
-      em("n"), " = ", ranks[1], " of ", sum(ranks)
+      em("n"), " = ", most_common_match, " of ", sum(ranks)
     )
     matches <- slice(matches, 1)
-    if (names(ranks)[1] == top_match) {
+    if (names(most_common_match) == top_match) {
       match_common <- tagList(
         icon("check", class = "success", verify_fa = FALSE),
         HTML(paste0("<p>This is the most common (", n_most_common,
@@ -704,7 +708,7 @@ shinyServer(function(input, output, session) {
       match_common <- tagList(
         icon("exclamation", class = "warning", verify_fa = FALSE),
         HTML(paste0("<p>The most common (", n_most_common,
-                    ") compound match is", strong(top_match), ".</p>",
+                    ") compound match is ", strong(names(most_common_match)), ".</p>",
                     collapse = ""))
       )
     }
@@ -715,20 +719,28 @@ shinyServer(function(input, output, session) {
                            "an",
                            "a"),
                     matches$sample_class)
-    match_score1 <- p("MS1 Score: ",
-                      p(style = "font-weight: bold;", matches$ms1_dp),
-                      "( rev score ", matches$ms1_rdp, ")")
-    if (!is.na(matches$ms2_dp)) {
-      match_score2 <- p("| MS2 Score: ",
-                        p(style = "font-weight: bold;;", matches$ms2_dp),
-                        "( rev score ", matches$ms2_rdp, ")")
+    if (!is.na(matches$ms1_dp)) {
+      match_score1 <- p(
+        "MS1 Score: ",
+        p(style = "font-weight: bold;", matches$ms1_dp),
+        paste0("(rev score ", matches$ms1_rdp, ")", collapse = "")
+      )
     } else {
-      match_score2 <- NULL
+      match_score1 <- p(style = "color: darkgrey", "No MS1 Score")
+    }
+    if (!is.na(matches$ms2_dp)) {
+      match_score2 <- p(
+        "| MS2 Score: ",
+        p(style = "font-weight: bold;;", matches$ms2_dp),
+        paste0("(rev score ", matches$ms2_rdp, ")", collapse = "")
+      )
+    } else {
+      match_score2 <- p(style = "color: darkgrey", "| no MS2 Score")
     }
     tagList(
       div(class = "one-line", match_title),
-      div(class = "one-line", match_common),
-      div(class = "one-line", match_score1, match_score2)
+      div(class = "one-line", match_score1, match_score2),
+      div(class = "one-line", match_common)
     )
   })
   output$search_compounds_match_selected <- renderUI({
@@ -749,19 +761,23 @@ shinyServer(function(input, output, session) {
                "a"),
         matches$sample_class
       )
-      match_score1 <- p(
-        "MS1 Score: ",
-        p(style = "font-weight: bold;", matches$ms1_dp),
-        "(rev score ", matches$ms1_rdp, ")"
-      )
-      if (!is.na(matches$ms2_dp)) {
-        match_score2 <- p(
-          " |  MS2 Score: ",
-          p(style = "font-weight: bold;;", matches$ms2_dp),
-          "( rev score ", matches$ms2_rdp, ")"
+      if (!is.na(matches$ms1_dp)) {
+        match_score1 <- p(
+          "MS1 Score: ",
+          p(style = "font-weight: bold;", matches$ms1_dp),
+          paste0("(rev score ", matches$ms1_rdp, ")", collapse = "")
         )
       } else {
-        match_score2 <- p(style = "color: darkgray;", "| (No MS2 score)")
+        match_score1 <- p(style = "color: darkgrey", "No MS1 Score")
+      }
+      if (!is.na(matches$ms2_dp)) {
+        match_score2 <- p(
+          "| MS2 Score: ",
+          p(style = "font-weight: bold;;", matches$ms2_dp),
+          paste0("(rev score ", matches$ms2_rdp, ")", collapse = "")
+        )
+      } else {
+        match_score2 <- p(style = "color: darkgrey", "| no MS2 Score")
       }
       div(class = "one-line", tagList(match_out, match_score1, match_score2))
     }
@@ -825,6 +841,7 @@ shinyServer(function(input, output, session) {
   })
   # __Update to MS1 if no MS2 ----
   observe({
+    req(search_compounds_results())
     if (is.na(search_compounds_results_selected()$ms2_dp) &&
         input$search_compounds_msn == "MS2") {
       shinyWidgets::updateRadioGroupButtons(
@@ -842,6 +859,26 @@ shinyServer(function(input, output, session) {
       }
     }
   })
+  # __Update to MS2 if no MS1 ----
+  observe({
+    req(search_compounds_results())
+    if (is.na(search_compounds_results_selected()$ms1_dp) &&
+        input$search_compounds_msn == "MS1") {
+      shinyWidgets::updateRadioGroupButtons(
+        session = session,
+        inputId = "search_compounds_msn",
+        selected = "MS2"
+      )
+      if (!is.null(uncertainty_results())) {
+        shinyWidgets::updateRadioGroupButtons(
+          session = session,
+          inputId = "mod_uncertainty_msn",
+          selected = "MS2"
+        )
+        log_it("warn", "MS1 data requested but no MS1 comparison was possible.", app_ns)
+      }
+    }
+  })
   # __Execute search ----
   observeEvent(input$search_compounds_search_btn, {
     log_it("trace", "Button 'search_compounds_search_btn' clicked.", app_ns)
@@ -852,6 +889,7 @@ shinyServer(function(input, output, session) {
         text = "Please choose a Feature of Interest"
       )
       log_it("warn", "No feature of interest selected in 'search_compounds_mzrt'.", app_ns)
+      return()
     }
     if (input$search_compounds_search_type == "") {
       nist_shinyalert(
@@ -860,15 +898,31 @@ shinyServer(function(input, output, session) {
         text = "Please choose a Search Type"
       )
       log_it("warn", "No search type selected in 'search_compounds_search_type'.", app_ns)
+      return()
     }
     if (input$search_compounds_search_type == "all") {
       nist_shinyalert(
+        inputId = "execute_compound_search",
         title = "Long action",
         type = "info",
-        text = "This will search your measured spectrum against all records in the database regardless and may take quite a while to execute."
+        text = "This will search your measured spectrum against all records in the database and may take quite a while to execute.",
+        # closeOnEsc = FALSE,
+        # closeOnClickOutside = FALSE,
+        # showCancelButton = TRUE,
+        # confirmButtonText = "Proceed"
       )
       log_it("info", "User requested long-running search of type 'all'.", app_ns)
     }
+    # execute_compound_search(TRUE)
+  # })
+  # observeEvent(execute_compound_search(), ignoreInit = TRUE, ignoreNULL = TRUE, {
+  #   if (!execute_compound_search)
+  #   if (input$execute_compound_search) {
+  #     log_it("info", "User confirmed long-running search of type 'all'.", app_ns)
+  #   } else {
+  #     log_it("info", "User cancelled search type 'all'.", app_ns)
+  #     return()
+  #   }
     req(
       user_data(),
       data_input_search_parameters(),
@@ -999,7 +1053,10 @@ shinyServer(function(input, output, session) {
       search_compounds_results(
         list(
           search_object = search_object,
-          result = bind_rows(search_result$result),
+          result = bind_rows(search_result$result) %>%
+            filter(if_any(starts_with("ms"), ~!is.na(.))) %>%
+            mutate(sum_match = rowSums(across(starts_with("ms")), na.rm = TRUE)) %>%
+            arrange(desc(sum_match)),
           ums1_compare = lapply(search_result$ums1_compare, bind_rows),
           ums2_compare = lapply(search_result$ums2_compare, bind_rows)
         )
