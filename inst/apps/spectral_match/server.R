@@ -1050,13 +1050,18 @@ shinyServer(function(input, output, session) {
       nist_shinyalert(type = "warning", title = msg_title, text = msg)
       log_it("warn", msg, app_ns)
     } else {
+      search_result$result <- search_result$result %>%
+        mutate(index = 1:n()) %>%
+        filter(if_any(starts_with("ms"), ~!is.na(.))) %>%
+        mutate(sum_match = rowSums(across(starts_with("ms")), na.rm = TRUE)) %>%
+        arrange(desc(sum_match))
+      search_result$ums1_compare <- search_result$ums1_compare[search_result$result$index]
+      search_result$ums2_compare <- search_result$ums2_compare[search_result$result$index]
+      search_result$result <- select(search_result$result, -index)
       search_compounds_results(
         list(
           search_object = search_object,
-          result = bind_rows(search_result$result) %>%
-            filter(if_any(starts_with("ms"), ~!is.na(.))) %>%
-            mutate(sum_match = rowSums(across(starts_with("ms")), na.rm = TRUE)) %>%
-            arrange(desc(sum_match)),
+          result = search_result$result,
           ums1_compare = lapply(search_result$ums1_compare, bind_rows),
           ums2_compare = lapply(search_result$ums2_compare, bind_rows)
         )
