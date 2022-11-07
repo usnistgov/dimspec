@@ -487,23 +487,55 @@ shinyServer(function(input, output, session) {
       log_it("warn", "Duplicate columns selected in search parameter upload", app_ns)
     } else {
       upload_parameters <- data_input_search_upload() %>%
-        select(all_of(select_cols)) %>%
+        select(all_of(select_cols))
+      # Check complete cases
+      which_complete <- complete.cases(upload_parameters)
+      if (any(!which_complete)) {
+        cols_with_na <- upload_parameters %>%
+          select(where(~any(is.na(.)))) %>%
+          names()
+        nist_shinyalert(
+          title = "Incomplete data",
+          type = "warning",
+          text = glue::glue("Some rows (n = {sum(!which_complete)} of {length(which_complete)}) in the file \"{input$data_input_import_search$name}\" do not contain values for {format_list_of_names(cols_with_na)}. Those rows have been removed. Please add any missing parameters manually OR adjust your file to contain complete values for all features of interest. Once fixed, you may upload this file again and any duplicates will be automatically removed.")
+        )
+        upload_parameters <- upload_parameters[which_complete, ]
+        log_it("warn", "Missing values in search parameter save.", app_ns)
+      }
+      upload_parameters <- upload_parameters %>%
+        mutate(across(everything(), as.numeric))
+      # Check that all are numeric
+      coercion_check <- complete.cases(upload_parameters)
+      if (any(!coercion_check)) {
+        cols_nonnumeric <- upload_parameters %>%
+          select(where(~any(is.na(.)))) %>%
+          names()
+        nist_shinyalert(
+          title = "Non-numeric data",
+          type = "warning",
+          text = glue::glue("Some rows (<em>n</em> = {sum(!coercion_check)} of {length(coercion_check)}) in the file \"{input$data_input_import_search$name}\" do not contain numeric values for {format_list_of_names(cols_nonnumeric)}. Please select columns containing only numeric data or adjust these in your upload file and try again.")
+        )
+        log_it("error", "Search parameters were not numeric.", app_ns)
+        return(NULL)
+      }
+      upload_parameters <- upload_parameters %>%
         setNames(names(data_input_search_parameters()))
+      # Check for reasonable retention times
       reasonable_rts <- upload_parameters %>%
-        mutate(reasonable_rt = (rt >= rt_start & rt <= rt_end),
+        mutate(reasonable_rt = (rt >= rt_start & rt <= rt_end | rt >= rt_end & rt <= rt_start),
                reasonable_rtstart = rt_start <= rt_end,
                reasonable = all(reasonable_rt, reasonable_rtstart))
       if (!all(reasonable_rts$reasonable)) {
         bad_entries <- reasonable_rts %>%
           filter(!reasonable,
                  across(everything(), ~ !is.na(.x))) %>%
-          mutate(msg_prefix = glue::glue("<div style='text-align: left; padding-top: 2px;' class='one-line'><p>For m/z value <p style='font-weight: bold;'>{precursor}</p>, "),
+          mutate(msg_prefix = glue::glue("<div style='text-align: left; padding-top: 2px;' class='one-line'><p>For precursor <em>m/z</em> value <p style='font-weight: bold;'>{precursor}</p>, "),
                  msg_rt = ifelse(reasonable_rt,
                                  "",
                                  glue::glue("RT <p style='font-weight: bold; color: red;'>{rt}</p> does not fall between <p style='font-weight: bold;'>{rt_start}</p> and <p style='font-weight: bold;'>{rt_end}</p>.")),
                  msg_rtstart = ifelse(reasonable_rtstart,
                                       "",
-                                      glue::glue("RT Start <p style='font-weight: bold; color: red;>{rt_start}</p> was after RT End <p style='font-weight: bold;'>{rt_end}</p>.")),
+                                      glue::glue("RT Start <p style='font-weight: bold; color: red;'>{rt_start}</p> was after RT End <p style='font-weight: bold; color: red;'>{rt_end}</p>.")),
                  message = glue::glue("{msg_prefix} {msg_rt} {msg_rtstart}</p></div>")
           )
         nist_shinyalert(
@@ -511,24 +543,15 @@ shinyServer(function(input, output, session) {
           size = "m",
           type = "error",
           text = glue::glue(
-            "<p style='font-weight: bold;'>Please address the following issues in the source file '{input$data_input_import_search$name}' and try again.</p><br>{paste0(bad_entries$message, collapse = '')}"
+            "<p style='font-weight: bold;'>Please select columns carefully or address the following issues in the source file '{input$data_input_import_search$name}' and try again.</p><br><ul><li>{paste0(bad_entries$message, collapse = '</li><li>')}</li></ul>"
           )
         )
         log_it("warn", "Unreasonable retention times identified during search parameter save.", app_ns)
+        return(NULL)
       } else {
-        which_complete <- complete.cases(upload_parameters)
-        if (any(!which_complete)) {
-          nist_shinyalert(
-            title = "Incomplete data",
-            type = "warning",
-            text = glue::glue("Some rows (n = {sum(!which_complete)}) in the file \"{input$data_input_import_search$name}\" do not contain values for all parameters. Those rows have been removed. Please adjust your file to contain complete values for all features of interest. Once fixed, you may upload this file again and any duplicates will be automatically removed.")
-          )
-          upload_parameters <- upload_parameters[which_complete, ]
-          log_it("warn", "Missing values in search parameter save.", app_ns)
-        }
         if (input$mod_upload_parameter_append) {
           upload_parameters <- data_input_search_parameters() %>%
-            bind_rows(upload_parameters)
+              bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
         user_data(NULL)
