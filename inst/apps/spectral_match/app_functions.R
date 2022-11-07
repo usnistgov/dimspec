@@ -82,7 +82,7 @@ complete_form_entry <- function(input, values, show_alert = TRUE) {
 #' @usage nist_shinyalert("test", "info", shiny::h3("test"))
 #' 
 nist_shinyalert <- function(title, type, text, className = "nist_shinyalert", html = TRUE, closeOnClickOutside = TRUE, immediate = TRUE, ...) {
-  kwargs <- as.list(environment())
+  kwargs <- append(as.list(environment()), list(...))
   kwargs <- kwargs[names(kwargs) %in% names(formals(shinyalert::shinyalert))]
   text <- div(class = "nist_shinyalert_text", text)
   do.call(shinyalert, args = kwargs)
