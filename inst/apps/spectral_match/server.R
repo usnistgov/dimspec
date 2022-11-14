@@ -1107,8 +1107,8 @@ shinyServer(function(input, output, session) {
                   input$mod_uncertainty_iterations))
     showElement("search_compounds_overlay")
     n_runs <- as.numeric(gsub(",", "", input$mod_uncertainty_iterations))
-    compare_actual <- sprintf("u%s", tolower(input$search_compounds_msn))
-    compare_with <- sprintf("u%s_compare", tolower(input$search_compounds_msn))
+    compare_actual <- sprintf("u%s", tolower(input$mod_uncertainty_msn))
+    compare_with <- sprintf("u%s_compare", tolower(input$mod_uncertainty_msn))
     bootstrap_compare_ms(
       ms1 = tmp$search_object[[compare_actual]],
       ms2 = tmp[[compare_with]][[search_compounds_row_selected()]],
@@ -1179,7 +1179,7 @@ shinyServer(function(input, output, session) {
   output$mod_uncertainty_boxplot <- renderPlot({
     res <- req(uncertainty_results()$results)
     iter <- req(isolate(input$mod_uncertainty_iterations))
-    msn <- req(isolate(input$search_compounds_msn))
+    msn <- req(isolate(input$mod_uncertainty_msn))
     real_match <- req(isolate(search_compounds_results_selected())) %>%
       select(starts_with(tolower(msn))) %>%
       pivot_longer(everything()) %>%
