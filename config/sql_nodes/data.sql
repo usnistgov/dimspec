@@ -335,6 +335,12 @@
   	n
   	  INTEGER,
   	  /* number of scans using optimal settings */
+  	masserror
+  	  REAL,
+  	  /* mass error setting used for optimal settings */
+  	minerror
+  	  REAL,
+  	  /* minimum mass error setting used for optimal settings */
   	/* Check constraints */
   	 UNIQUE (peak_id, mslevel),
   	/* Foreign key relationships */

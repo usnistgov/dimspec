@@ -23,11 +23,12 @@ unzip <- function(x, type = "gzip") {
 #' @param lockmass NUM scalar m/z value of the lockmass to remove (Waters instruments only) (default: NULL)
 #' @param lockmasswidth NUM scalar instrumental uncertainty associated with `lockmass` (default: NULL)
 #' @param correct logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)
+#' @param approach character string defining the type of lockmass removal filter to use, default is `hybrid`
 #'
 #' @return list containing mzML data with unzipped masses and intensity information
 #' @export
 #'
-mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
+mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = NULL, correct = FALSE, approach = "hybrid") {
   require(XML)
   require(base64enc)
   mzml <- xmlToList(mzmlfile)
@@ -36,13 +37,13 @@ mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = N
     if (!is.double(lockmass)) stop("bad lockmass for Waters data")
     if (!is.double(lockmass)) stop("bad lockmass width for Waters data")
     if (!is.logical(correct)) stop("bad correction TRUE/FALSE for Waters data")
-    mzml <- lockmass_remove(mzml, lockmass, lockmasswidth, correct)
+    mzml <- lockmass_remove(mzml, lockmass, lockmasswidth, correct, approach = approach)
   }
   scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
   compression <- "none"
   if ("zlib compression" %in% unlist(mzml$mzML$run$spectrumList[[1]]$binaryDataArrayList[["binaryDataArray"]])) {compression = "gzip"}
   output <- lapply(scans, function(x) {ind <- which(names(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList) == "binaryDataArray"); if ("m/z array" %in% unlist(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])) {ind <- rev(ind)}; list(masses = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[1]]], intensities = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])})
-  output <- lapply(output, function(x) list(masses = unzip(x$masses$binary), intensities = unzip(x$intensities$binary)))
+  output <- lapply(output, function(x) list(masses = unzip(x$masses$binary, type = compression), intensities = unzip(x$intensities$binary, type = compression)))
   for (x in 1:length(scans)) {
     mzml$mzML$run$spectrumList[[scans[x]]]$masses <- output[[x]]$masses
     mzml$mzML$run$spectrumList[[scans[x]]]$intensities <- output[[x]]$intensities
@@ -65,17 +66,68 @@ mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = N
 #'
 #' @examples
 
-lockmass_remove <- function(mzml, lockmass = NULL, lockmasswidth = NULL, correct = FALSE) {
+lockmass_remove <- function(mzml, lockmass = NULL, lockmasswidth = NULL, correct = FALSE, approach = "baseion") {
+  lockmasserror <- NA
   scans <- which(names(mzml$mzML$run$spectrumList) == "spectrum")
   baseions <- sapply(scans, getbaseion, mzml = mzml)
-  lockmass_scans <- which(baseions >= (lockmass - lockmasswidth) & baseions <= (lockmass + lockmasswidth))
-  lockmasserror <- 1E6*(mean(baseions[lockmass_scans]) - lockmass)/lockmass
-  if (correct) {
-    # placeholder for correct function
+  scanfn <- sapply(scans, getwatersfunction, mzml = mzml)
+  mslevels <- sapply(scans, getmslevel, mzml = mzml)
+  if (approach == "baseion") {
+    # this approach uses the mzML base ion parameter and pulls out scans whose base ion
+    # is within the lockmass error. Seems to break with Waters data.
+    lockmass_scans <- which(baseions >= (lockmass - lockmasswidth) & baseions <= (lockmass + lockmasswidth))
+    lockmasserror <- 1E6*(mean(baseions[lockmass_scans]) - lockmass)/lockmass
   }
-  mzml$mzML$run$spectrumList <- mzml$mzML$run$spectrumList[-lockmass_scans]
+  if (approach == "empbaseion") {
+    # this approach looks at the empirical base ion, not the mzML parameter
+    ms1scans <- scans[which(mslevels == 1)]
+    compression <- "none"
+    if ("zlib compression" %in% unlist(mzml$mzML$run$spectrumList[[1]]$binaryDataArrayList[["binaryDataArray"]])) {compression = "gzip"}
+    output <- lapply(ms1scans, function(x) {ind <- which(names(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList) == "binaryDataArray"); if ("m/z array" %in% unlist(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])) {ind <- rev(ind)}; list(masses = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[1]]], intensities = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])})
+    output <- lapply(output, function(x) data.frame(masses = unzip(x$masses$binary, type = compression), intensities = unzip(x$intensities$binary, type = compression)))
+    baseions <- sapply(1:length(output), function(x) output[[x]]$masses[which.max(output[[x]]$intensities)])
+    lockmass_scans <- ms1scans[which(baseions >= (lockmass - lockmasswidth) & baseions <= (lockmass + lockmasswidth))]
+    lockmasserror <- 1E6*(mean(baseions[lockmass_scans]) - lockmass)/lockmass
+  }
+  if (approach == "ms1freq") {
+    # this approach determines the two MS1 scan functions and selects the less frequent scanfn, 
+    # assuming the lockmass is a less frequent scan than the survey MS1
+    ms1_scanfn <- scanfn[which(mslevels == 1)]
+    if (length(unique(ms1_scanfn)) != 2) {stop("there are not only two MS1 scans, this lockmass filter will not work.")}
+    lockmass_scanfn <- unique(ms1_scanfn)[which.min(tabulate(match(ms1_scanfn, unique(ms1_scanfn))))]
+    lockmass_scans <- scans[which(scanfn == lockmass_scanfn)]
+  }
+  if (approach == "hybrid") {
+    # hybrid approach that takes the empirical base ion and the frequency approach for the scan functions and 
+    # selects the most common scan function related to a base ion of the lockmass.
+    
+    ms1scans <- scans[which(mslevels == 1)]
+    ms1_scanfn <- scanfn[which(mslevels == 1)]
+    if (length(unique(ms1_scanfn)) != 2) {stop("there are not only two MS1 scans, this lockmass filter will not work.")}
+    compression <- "none"
+    if ("zlib compression" %in% unlist(mzml$mzML$run$spectrumList[[1]]$binaryDataArrayList[["binaryDataArray"]])) {compression = "gzip"}
+    output <- lapply(ms1scans, function(x) {ind <- which(names(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList) == "binaryDataArray"); if ("m/z array" %in% unlist(mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])) {ind <- rev(ind)}; list(masses = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[1]]], intensities = mzml$mzML$run$spectrumList[[x]]$binaryDataArrayList[[ind[2]]])})
+    output <- lapply(output, function(x) data.frame(masses = unzip(x$masses$binary, type = compression), intensities = unzip(x$intensities$binary, type = compression)))
+    baseions <- sapply(1:length(output), function(x) output[[x]]$masses[which.max(output[[x]]$intensities)])
+    lockmass_scanfn <- ms1_scanfn[which(baseions >= (lockmass - lockmasswidth) & baseions <= (lockmass + lockmasswidth))]
+    lockmass_scanfn_val <- unique(lockmass_scanfn)[which.max(tabulate(match(lockmass_scanfn, unique(lockmass_scanfn))))]
+    
+    lockmass_scans <- scans[which(scanfn == lockmass_scanfn_val)]
+    lockmasserror <- 1E6*(mean(baseions[lockmass_scans]) - lockmass)/lockmass
+    
+  }
+  if (correct) {
+    # placeholder for correction function
+  }
+  if (length(lockmass_scans) > 0) {
+    mzml$mzML$run$spectrumList <- mzml$mzML$run$spectrumList[-lockmass_scans]
+  }
   mzml$lockmass <- list(lockmass = lockmass, lockmasswidth = lockmasswidth, correct = correct, lockmasserror = lockmasserror)
   mzml
+}
+
+getwatersfunction <- function(mzml, i) {
+  as.numeric(do.call(c, lapply(which(names(mzml$mzML$run$spectrumList[[i]]$scanList$scan) == "cvParam"), function(x) {if(!"preset scan configuration" %in% mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]]) {return(NULL)}; mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]][which(names(mzml$mzML$run$spectrumList[[i]]$scanList$scan[[x]]) == "value")]})))
 }
 
 getionint <- function(mzml, i, minmass, maxmass) {

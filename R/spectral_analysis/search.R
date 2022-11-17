@@ -460,15 +460,13 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
   }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
-  if (optimized_params == TRUE) {
-  opt_params <- get_opt_params(con, peak_ids)
-  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
-  }
+    opt_params <- get_opt_params(con, peak_ids)
+    opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
   if (optimized_params == FALSE) {
-    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+    opt_params$correl <- opt_params$ph <- opt_params$freq <- opt_params$n <- rep(NA, nrow(opt_params))
   }
-  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
-  l.ums2 <- lapply(1:length(ptms2), function(x) { ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), minerror = searchms$search_df$minerror))
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = opt_params$masserror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], minerror = opt_params$minerror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
+  l.ums2 <- lapply(1:length(ptms2), function(x) {
     get_ums(
       peaktable = ptms2[[x]],
       correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
@@ -478,7 +476,7 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
       cormethod = cormethod
     )
   })
-  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = opt_params$masserror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], minerror = opt_params$minerror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
   l.ums1 <- lapply(1:length(ptms1), function(x) {
     get_ums(
       peaktable = ptms1[[x]],
@@ -532,32 +530,31 @@ search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", opt
   }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
-  if (optimized_params == TRUE) {
-    opt_params <- get_opt_params(con, peak_ids)
-    opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
-  }
+  opt_params <- get_opt_params(con, peak_ids)
+  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
   if (optimized_params == FALSE) {
-    opt_params <- data.frame(expand.grid(peak_id = peak_ids, mslevel = c(1,2)), correl = NA, ph = NA, freq = NA, n = NA)
+    opt_params$correl <- opt_params$ph <- opt_params$freq <- opt_params$n <- rep(NA, nrow(opt_params))
   }
-  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  ptms2 <- lapply(1:length(mslist),  function(x) create_peak_table_ms2(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = opt_params$masserror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], minerror = opt_params$minerror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
   l.ums2 <- lapply(1:length(ptms2), function(x) {
-    get_ums(peaktable = ptms2[[x]],
-            correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
-            ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
-            freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
-            normfn = normfn,
-            cormethod = cormethod
+    get_ums(
+      peaktable = ptms2[[x]],
+      correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)],
+      normfn = normfn,
+      cormethod = cormethod
     )
   })
-  
-  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = as.numeric(errorinfo$value[x]), searchms$search_df$minerror))
+  ptms1 <- lapply(1:length(mslist),  function(x) create_peak_table_ms1(mslist[[x]], mass = as.numeric(errorinfo$precursor_mz[x]), masserror = opt_params$masserror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)], minerror = opt_params$minerror[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 2)]))
   l.ums1 <- lapply(1:length(ptms1), function(x) {
-    get_ums(peaktable = ptms1[[x]],
-            correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
-            ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
-            freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
-            normfn = normfn,
-            cormethod = cormethod
+    get_ums(
+      peaktable = ptms1[[x]],
+      correl = opt_params$correl[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      ph = opt_params$ph[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      freq = opt_params$freq[which(opt_params$peak_id == peak_ids[x] & opt_params$mslevel == 1)],
+      normfn = normfn,
+      cormethod = cormethod
     )
   })
   

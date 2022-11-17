@@ -64,5 +64,7 @@ get_opt_params <- function(con, peak_ids) {
              correl = suppressWarnings(as.numeric(output$correl)),
              ph = suppressWarnings(as.numeric(output$ph)),
              freq = suppressWarnings(as.numeric(output$freq)),
-             n = suppressWarnings(as.numeric(output$n)))
+             n = suppressWarnings(as.numeric(output$n)),
+             masserror = suppressWarnings(as.numeric(output$masserror)),
+             minerror = suppressWarnings(as.numeric(output$minerror)))
 }
