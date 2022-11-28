@@ -333,6 +333,9 @@ ms_plot_peak <- function(data,
       require(ggrepel)
     }
   }
+  if (inherits(invisible(try(class(db_conn))), "try-error")) {
+    db_conn <- NULL
+  }
   peak_type <- match.arg(peak_type)
   if (peak_drop_ratio > 1) peak_drop_ratio <- 1 / peak_drop_ratio
   cutoff <- max(data$base_int) * peak_drop_ratio
@@ -371,11 +374,15 @@ ms_plot_peak <- function(data,
     text_geom <- geom_label
   }
   
-  plot_titles <- ms_plot_titles(plot_data = plot_data,
-                                mz_resolution = peak_mz_resolution,
-                                drop_ratio = peak_drop_ratio,
-                                include_method = include_method,
-                                db_conn = db_conn)
+  if (!is.null(db_conn)) {
+    plot_titles <- ms_plot_titles(plot_data = plot_data,
+                                  mz_resolution = peak_mz_resolution,
+                                  drop_ratio = peak_drop_ratio,
+                                  include_method = include_method,
+                                  db_conn = db_conn)
+  } else {
+    plot_titles <- list(title = NULL, subtitle = NULL, caption = NULL)
+  }
   
   out <- plot_data %>%
     ggplot(
