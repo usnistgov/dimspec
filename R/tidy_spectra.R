@@ -696,7 +696,8 @@ ms_plot_spectra <- function(data,
     ) +
     scale_x_continuous(expand = expansion(mult = 0.1)) +
     scale_y_continuous(expand = expansion(c(0, 0.1)),
-                       labels = scales::label_scientific(digits = 2))
+                       labels = scales::label_scientific(digits = 2)) +
+    facet_wrap(~ ms_n, scales = "free", ncol = 1)
   if (spectra_log_y) {
     out <- out +
       scale_y_log10()
