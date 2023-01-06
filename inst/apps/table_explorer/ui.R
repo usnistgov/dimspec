@@ -28,6 +28,10 @@ dashboardPage(
             menuItem("Entity Relationship Diagram",
                      tabName = "erd",
                      icon = icon("sitemap")
+            ),
+            menuItem("About",
+                     tabName = "about",
+                     icon = icon("circle-info")
             )
         )
     ),
@@ -54,6 +58,9 @@ dashboardPage(
                         width = "100%",
                         height = "100%"),
                     p(style = "font-size: smaller;", "Right click to open in another tab to view in full resolution.")
+            ),
+            tabItem("about",
+                    includeHTML("about.html")
             )
         )
     )
