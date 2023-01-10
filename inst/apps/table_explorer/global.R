@@ -24,11 +24,11 @@ if (exists("LOGGING") && LOGGING_ON) {
 }
 
 # Session variables
-if (exists("PLUMBER_URL") && api_endpoint(PLUMBER_URL, path = "db_active")) {
+if (exists("PLUMBER_URL") && api_endpoint("db_active")) {
   table_list <- sort(
     c(
-      api_endpoint(PLUMBER_URL, path = "list_views"),
-      api_endpoint(PLUMBER_URL, path = "list_tables")
+      api_endpoint("list_views"),
+      api_endpoint("list_tables")
     )
   )
 } else {
