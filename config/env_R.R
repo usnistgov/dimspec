@@ -111,9 +111,14 @@ if (MINIMIZE) {
 # Whether to activate plumber integration. [SET IN env_glob.txt]
 USE_API <- ifelse(exists("USE_API"), USE_API, TRUE)
 if (USE_API) {
+  if (exists("API_LOCALHOST")) {
+    PLUMBER_HOST <- ifelse(API_LOCALHOST, "127.0.0.1", "0.0.0.0")
+    PLUMBER_PORT <- API_PORT
+  } else {
+    PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
+    PLUMBER_PORT <- getOption("plumber.port", 8080)
+  }
   PLUMBER_VERSION <- 0.1
-  PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
-  PLUMBER_PORT <- getOption("plumber.port", 8080)
   PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   PLUMBER_FILE <- here::here("inst", "plumber", "plumber.R")
 }

@@ -1237,7 +1237,7 @@ start_api <- function(plumber_file = NULL, plumber_host = NULL, plumber_port = N
     if (!exists("LOGGING_ON") || !LOGGING_ON) message("Logging will be turned on in the background instance.")
     message("Remember to kill the plumber instance (e.g. plumber_service$kill() or api_stop()) when you are finished with it.")
   }
-  PLUMBER_URL <<- running_on
+  return(running_on)
 }
 
 #' {WIP} Launch a shiny application

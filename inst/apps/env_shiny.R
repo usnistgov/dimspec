@@ -1,16 +1,25 @@
 # Set up environment -----------------------------------------------------------
+source(here::here("config", "env_glob.txt"))
+options(
+  plumber.host = ifelse(API_LOCALHOST, "127.0.0.1", "0.0.0.0"),
+  plumber.port = API_PORT
+)
+LOGGING_ON   <- TRUE
 if (!exists("start_api")) {
   source(here::here("R", "app_functions.R"))
-  start_api(background = TRUE)
+  PLUMBER_URL <- start_api(
+    background = TRUE
+  )
 }
+if (!API_LOCALHOST) PLUMBER_URL <- gsub("0.0.0.0", API_HOST, PLUMBER_URL)
 
 # Check API
 if (exists("PLUMBER_URL")) {
   if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
-    stop("API service does not appear to be available (PLUMBER_URL does not exist). Please run `api_reload()` and try again.")
+    stop("This app requires an active API connection.")
   }
 } else {
-  stop("This app requires an active API connection.")
+  stop("API service does not appear to be available (PLUMBER_URL does not exist). Please run `api_reload()` and try again.")
 }
 
 # Package requirements
