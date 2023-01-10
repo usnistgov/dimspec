@@ -432,7 +432,7 @@ api_endpoint <- function(path,
       warning("If more than one ellipsis argument is provided they must be named.")
     }
   }
-  url$query <- append(url$query, query)
+  if (length(query) > 0) url$query <- append(url$query, query)
   if (url$hostname == "data.nist.gov" && !is.null(url$fragment)) {
     url$path <- paste0(url$path, "#", url$fragment, collapse = "/")
     url$fragment <- NULL
