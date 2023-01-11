@@ -1,0 +1,27 @@
+---
+title: "DIMSpec Quick Guide - Plumber"
+author: "Jared M. Ragland"
+date: '2023-01-30'
+output: html_document
+bibliography: bibliography.bib
+---
+
+### The Plumber platform and DIMSpec {#qg2-intro}
+
+The [`plumber`](https://www.rplumber.io) (@plumber) package allows code written in R to be made available as a [RESTful application programming interface](https://restfulapi.net/) (API). In providing this, applications and packages can communicate with the database through the API in a predefined manner without actually connecting to it. While running DIMSpec in the default standalone manner may not provide much performance improvement, offering selections of the code base through an API service allows a tremendous amount of flexibility in developing applications, either web based or through the command line, and allows that development to become language agnostic while maintaining a consistent communication layer. With the service running, communication and calculation occur in a background process available either to a local machine or as a network service. As R is a single threaded language, this greatly lowers the overhead and simultaneously makes database interactions more consistent and more performant. This does come at the cost of flexibility, and so the project can be launched in either manner. All of the web applications provided in the project leverage the API for database communication and do not connect directly. This allows launching and hosting of the web applications in separate processes.
+
+### Settings {#qg2-settings}
+
+### Interacting with the API {#qg2-api}
+
+### Modifying the API {#qg2-modification}
+
+---
+
+#### References {#qg2-refs}
+
+<div id="refs"></div>
+
+---
+
+#### Disclaimers {#qg2-disclaimers}

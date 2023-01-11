@@ -1,0 +1,24 @@
+---
+title: "DIMSpec Quick Guide - Web Applications"
+author: "Jared M. Ragland"
+date: '2023-01-30'
+output: html_document
+bibliography: bibliography.bib
+---
+
+### The Shiny platform and DIMSpec {#qg3-intro}
+
+### Settings {#qg2-settings}
+
+### DIMSpec Web Applications {#qg3-apps}
+
+
+---
+
+#### References {#qg3-apps}
+
+<div id="refs"></div>
+
+---
+
+#### Disclaimers {#qg3-disclaimers}
