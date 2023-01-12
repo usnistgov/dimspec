@@ -715,7 +715,7 @@ div.csl-indent {
 <h3>Using Shiny Applications<a href="instructions.html#using-shiny-applications" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>The <a href="https://shiny.rstudio.com" target="_blank">Shiny</a> package enables web applications written using R, which often meaningfully make custom processing code like that written for this project available to broader audiences. Additionally, inputs can easily be type verified and restricted to preset expectations. When the compliance script is run, a named vector of available shiny apps will be available as <code>SHINY_APPS</code>. These can be started with the <code>start_app(app_name = X)</code> where <code>X</code> is the name of the application as found in <code>names(SHINY_APPS)</code>. Shiny apps are fluid and responsive; will automatically arrange themselves to best fit your browser size and can be custom designed with any layout or functionality. By default all communication with the database is routed through the plumber API.</p>
 <p>This allows environment resolution to launch applications directly from the console, without any need to run the compliance script. Launching an app is then possible directly from the console (or batch file shortcuts which could be included in later updates) using e.g.</p>
-<pre><code><code>shiny::runApp(“inst/apps/table_explorer”)<code></code></pre>
+<pre><code>shiny::runApp(“inst/apps/table_explorer”)</code></pre>
 <p>from the project directory.</p>
 <p>Three shiny applications ship with this project as of the time this document was written.</p>
 <ul>
