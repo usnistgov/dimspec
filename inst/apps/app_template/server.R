@@ -10,10 +10,11 @@ shinyServer(function(input, output, session) {
   
   # Navigation ----
   observeEvent(input$sidebar_menu, {
-    if (!dev) {
-    }
   })
   
   # Dashboard pages ----
+  
+  # Observers ----
+  if (dev) observeEvent(input$browser, browser())
 })
   
