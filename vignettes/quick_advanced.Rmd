@@ -1,0 +1,37 @@
+---
+title: "DIMSpec Quick Guide - Developing with DIMSpec"
+author: "Jared M. Ragland"
+date: '2023-01-13'
+output: html_document
+bibliography: bibliography.bib
+---
+
+### Developing with DIMSpec {#qg4-intro}
+
+### Environment Settings {#qg4-environment}
+
+### Database {#qg4-database}
+
+### R {#qg4-r}
+
+### Logger {#qg4-logger}
+
+### Python {#qg4-python}
+
+### Plumber {#qg4-plumber}
+
+### Shiny {#qg4-shiny}
+
+Perhaps the most common use case for using parts of DIMSpec will be developing additional user interfaces with custom functionality on top of the DIMSpec infrastructure.
+
+### Final Words {#qg4-conclusion}
+
+---
+
+#### References {#qg3-apps}
+
+<div id="refs"></div>
+
+---
+
+#### Disclaimers {#qg3-disclaimers}
