@@ -69,7 +69,7 @@ While this version of DIMSpec includes analytical data for PFAS, MSQC can be tai
 
 Every effort has been made to make using the MSQC application as intuitive to use as possible. Generally the user interface will adjust to the current needs and highlight the next step. Some steps (e.g. 2 and 3) can be used interchangeably.
 
-#### Step 0 - Modify quality control settings (optional) {#msqc-step0}
+#### Step 0 - Modify quality control settings (optional) {#msqc-step0 .unnumbered}
 
 Prior to file processing, verify or set parameters to be used for quality control analysis can be modified. On the left menu, select “QC Settings” to navigate to the settings dashboard shown in [Figure 2](#fig05-02). The default settings are recommended, but can be modified if needed.
 
