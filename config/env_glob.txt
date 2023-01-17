@@ -41,7 +41,7 @@ CONDA_CLI      = "conda"
 # start them when sourcing config/compliance.R to start a session.
 
 # Create a database connection when starting a session (requires R).
-INIT_CONNECT   = FALSE
+INIT_CONNECT   = TRUE
 
 # Whether to activate logging for this session. (requires R)
 LOGGING_ON     = TRUE
@@ -49,9 +49,9 @@ LOGGING_ON     = TRUE
 # Whether to activate plumber integration on launch. (requires R)
 USE_API        = TRUE
 # Whether to localhost for the API (TRUE) or launch on a network (FALSE).
-API_LOCALHOST  = FALSE
+API_LOCALHOST  = TRUE
 # If set to FALSE, routing must be set appropriately to the hosting machine.
-API_HOST       = "p863209.campus.nist.gov"
+API_HOST       = ""
 API_PORT       = 8080
 
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
