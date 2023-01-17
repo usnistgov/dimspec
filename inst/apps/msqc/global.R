@@ -11,6 +11,8 @@ default_title      <- "Mass Spectral Quality Control"
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
 dev                <- FALSE
+# Set to true in order to base this app on the API defined in the environment files.
+USE_API            <- TRUE
 
 
 # The following settings are necessary for the application. Only change these if

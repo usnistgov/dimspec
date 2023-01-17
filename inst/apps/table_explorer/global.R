@@ -1,7 +1,8 @@
+APP_TITLE <- "DIMSpec Explorer"
+USE_API <- TRUE
 dev <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
-APP_TITLE <- "DIMSpec Explorer"
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 if (exists("LOGGING") && LOGGING_ON) {
   log_ns <- "APP_TABLE_VIEWER"

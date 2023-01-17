@@ -41,7 +41,7 @@ CONDA_CLI      = "conda"
 # start them when sourcing config/compliance.R to start a session.
 
 # Create a database connection when starting a session (requires R).
-INIT_CONNECT   = TRUE
+INIT_CONNECT   = FALSE
 
 # Whether to activate logging for this session. (requires R)
 LOGGING_ON     = TRUE
@@ -49,9 +49,9 @@ LOGGING_ON     = TRUE
 # Whether to activate plumber integration on launch. (requires R)
 USE_API        = TRUE
 # Whether to localhost for the API (TRUE) or launch on a network (FALSE).
-API_LOCALHOST  = TRUE
+API_LOCALHOST  = FALSE
 # If set to FALSE, routing must be set appropriately to the hosting machine.
-API_HOST       = ""
+API_HOST       = "p863209.campus.nist.gov"
 API_PORT       = 8080
 
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
@@ -60,6 +60,6 @@ API_PORT       = 8080
 INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
-# Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
+# Make shiny apps available on launch (requires R). Set as FALSE for interactive use.
 USE_SHINY      = TRUE
-SHINY_BG       = TRUE
+# SHINY_BG       = TRUE

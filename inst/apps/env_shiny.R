@@ -1,27 +1,4 @@
 # Set up environment -----------------------------------------------------------
-source(here::here("config", "env_glob.txt"))
-options(
-  plumber.host = ifelse(API_LOCALHOST, "127.0.0.1", "0.0.0.0"),
-  plumber.port = API_PORT
-)
-LOGGING_ON   <- TRUE
-if (!exists("start_api")) {
-  source(here::here("R", "app_functions.R"))
-  PLUMBER_URL <- start_api(
-    background = TRUE
-  )
-}
-if (!API_LOCALHOST) PLUMBER_URL <- gsub("0.0.0.0", API_HOST, PLUMBER_URL)
-
-# Check API
-if (exists("PLUMBER_URL")) {
-  if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
-    stop("This app requires an active API connection.")
-  }
-} else {
-  stop("API service does not appear to be available (PLUMBER_URL does not exist). Please run `api_reload()` and try again.")
-}
-
 # Package requirements
 packs <- c("dplyr",
            "tidyr",
@@ -41,7 +18,8 @@ packs <- c("dplyr",
            "plotly",
            "httr",
            "readr",
-           "readxl")
+           "readxl",
+		   "stringr")
 packs_TRUE  <- which(packs %in% installed.packages())
 packs_FALSE <- packs[-packs_TRUE]
 if (length(packs_FALSE) > 0) {
@@ -49,9 +27,31 @@ if (length(packs_FALSE) > 0) {
                    quiet        = FALSE,
                    dependencies = TRUE)
 }
-lapply(packs, library, character.only = TRUE, quietly = TRUE)
+lapply(packs, require, character.only = TRUE, quietly = TRUE)
 rm(packs)
-#
+# Minimum app requirements
+source(here::here("config", "env_glob.txt"))
+LOGGING_ON   <- TRUE
+source(here::here("R", "app_functions.R"))
+# Check API
+if (USE_API) {
+  options(
+    plumber.host = ifelse(API_LOCALHOST, "127.0.0.1", "0.0.0.0"),
+    plumber.port = API_PORT
+  )
+  source(here::here("inst", "plumber", "api_control.R"))
+  if (!exists("PLUMBER_URL")) PLUMBER_URL <- sprintf("http://%s:%s", getOption("plumber.host"), getOption("plumber.port"))
+  if (!API_LOCALHOST) PLUMBER_URL <- gsub("0.0.0.0", API_HOST, PLUMBER_URL)
+  plumber_available <- suppressMessages(try(dplyr::between(api_endpoint(path = "_ping", max_pings = 1L, raw_result = TRUE)$status, 200, 299)))
+  if (inherits(plumber_available, "try-error")) {
+    PLUMBER_URL <- start_api(background = TRUE)
+    if (!API_LOCALHOST) PLUMBER_URL <- gsub("0.0.0.0", API_HOST, PLUMBER_URL)
+  }
+  if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
+    stop("This app requires an active API connection.")
+  }
+}
+
 # Set up logger ----------------------------------------------------------------
 # Set this as the name of the "LOGGING" element referring to the API settings
 # from env_logger.R e.g. "SHINY" to refer to LOGGING$SHINY (the default)
