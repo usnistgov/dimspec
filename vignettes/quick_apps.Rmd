@@ -1,5 +1,5 @@
 ---
-title: "DIMSpec Quick Guide - Web Applications"
+title: "DIMSpec Quick Guide - Shiny Web Applications"
 author: "Jared M. Ragland"
 date: '2023-01-30'
 output:
@@ -21,7 +21,7 @@ This quick guide introduces the three web applications that ship with the projec
 
 Every effort has been made to make launch of web applications as straight forward as possible. Toward that end, all applications that ship with the project can be launched directly from the command line and will establish all necessary aspects automatically. From an R console opened at the project directory, issue the command `shiny::runApp(file.path("inst", "apps", "X"))`[^1] where `"X"` is the name of the directory containing an application. This is even simpler if the compliance file has been sourced in the current session; use the helper function `start_app("X")` to launch the app in directory `"X"`[^2].
 
-[^1]: Apps are also launchable on your local network by using `shiny::runApp(file.path("inst", "apps", "X"), host = "0.0.0.0", port = Y)` where "Y" is an integer corresponding to an open port on the hosting machine. This does require that other computers on your network can connect to the host machine.
+[^1]: Apps are also launchable on your local network by using `shiny::runApp(file.path("inst", "apps", "X"), host = "0.0.0.0", port = Y)` where `Y` is an integer corresponding to an open port on the hosting machine. This does require that other computers on your network can connect to the host machine.
 
 [^2]: A list of recognized shiny applications is available in the session environment as the named vector `SHINY_APPS` after the compliance file has been sourced.
 

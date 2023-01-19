@@ -8,23 +8,96 @@ bibliography: bibliography.bib
 
 ### Developing with DIMSpec {#qg4-intro}
 
+As it stands, it was an intentional choice to distribute this project as an R project rather than an R package due to software requirements on user systems. Its complexity and its intended reusability may differ in nature from what you may be accustomed to with R packages. One easily foreseen use case is to install the project multiple times for different chemical classes. Though this does not provide a universal unique identifier, each installation will be internally consistent, and share an overall data structure with other installations to facilitate sharing. Working with the project is best done in an Integrated Development Environment (IDE) such as RStudio. This increases transparency and, as all functions are local environment functions, provides a scaffold allowing developers to modify functions for their own needs. It is the hope of these authors that users can leverage what we have built and continue adding to the project to support their specific missions.
+
+Further sections (with the exception of [Environment Settings](#qg4-environment)) will assume that the `/R/compliance.R` file has been sourced and environments established. Users are referred to the [DIMSpec User Guide](TODO LINK) for full documentation, including function documentation. At any time from a session where the compliance script has been run, documentation is available using `user_guide` to open the full User Guide in a local browser session, `fn_guide` to launch a browser pointing to HTML function documentation, or `fn_help(X)` where `X` is the name of a function to see documentation for that function. 
+
 ### Environment Settings {#qg4-environment}
 
-### Database {#qg4-database}
+Many settings for the project are controlled by environment establishment scripts. This is intended to isolate the session for a project to a particular use case (i.e. focus on a single database) and make using project functions much more convenient as function parameters will in most cases default to session settings. Settings are largely specific to particular aspects (e.g. logging settings are determined in large part in the logger environment file). These settings may be found at:
+
+1. `/config/env_glob.txt` controls mainly which aspects of the project are activated by default, as well as system information (e.g. PATH aliases), and information about the database itself (e.g. title, name, etc);
+1. `/config/env_R.R`controls aspects specific to R (or that require R functions to generate) and controls aspects which packages are used for database communication, and which files are sourced, among others;
+1. `/config/env_logger.R` controls the basic settings for project logging, which are used to write log files to the directory, define namespaces, and define log interaction functions;
+1. `/inst/apps/env_shiny.R` controls aspects related to enabling shiny apps for this session, as well as launching the API server if required by an application;
+1. `/inst/plumber/env_plumb.R` controls aspects related to the plumber API service including the session object name for the service watcher, which files are made available to it, and the logger settings specific to the plumber instance;
+1. `/inst/rdkit/env_py.R`
+
+Once these files are sourced into an R session, their package requirements will be loaded and a series of logical scalars will be present with names like `RENV_ESTABLISHED` indicating which have been activated and all settings will be present in the session. Several packages are required for DIMSpec operation and will be installed if necessary during the environment resolution stage. For new installations this may take a considerable amount of time and may result in package version conflicts; user attention to feedback during package installation is advised. See more detail about each of these files and their settings in the "Project Set Up" section of the [DIMSpec User Guide](TODO LINK). Some of these settings will be discussed in subsequent sections.
+
+### DIMSpec Databases {#qg4-database}
+
+A major goal of the project was to support rapid development of portable databases for mass spectrometric non-targeted analysis. Toward the end, creation of new databases using the DIMSpec schema has been simplified as much as possible. Importing data is an exercise left to users of the project as project inputs may vary widely, but example import routines are based around the `mzML` output format from msConvert [@adusumilli_data_2017] with annotations provided by using the [NIST Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool).
+
+The project ships with a populated database of perfluoroalkyl substances. To create a new container database, use the `build_db` function. The default title and file name are defined in the `env_glob.txt` file; to build a new database, provide it with a different name. To connect to the database defined in the environment file, use `manage_connection`; this can also be used to flush the write ahead log and reconnect at any time provided another connection does not already exist. If the defaults are used, the current database can be easily overwritten and constructed again from scratch. If using `build_db` to build a new database, provide which scripts in standard query language (SQL) to use to build and populate in `env_R.R` as the names of files (typically in the `config` directory). If `sqlite` is available on your system, R will use that preferentially to read those SQL files. For example, the following
+
+    build_db(
+      db = "test_db.sqlite",
+      populate = FALSE,
+      db_conn_name = "con2",
+      connect = TRUE
+    )
+
+will create a new database without populating it, with a corresponding connection object in the session named `con2`. More details are available in the [DIMSpec User Guide](TODO LINK).
+
+DIMSpec uses SQL an opinionated comment structure to provide more information about each table and column in the schema. Those are used to build both a data dictionary and an entity-relationship map that also ship with the project to better document the database schema and allow R to interact with it in programmatic ways. The schema is organized into a series of "nodes"; by default each node is constructed from a single `.sql` file in the `/config/sql_nodes` directory. See the [DIMSpec User Guide](TODO LINK) for more detail about the schema. The current data dictionary is written to the project directory as a JSON file with the suffix "_data_dictionary.json"; the first part of this file name will be determined by environment settings as the database name, its version, and its build date. This is read into an active session as the `db_dict` list object. Similarly, the entity-relationship map is produced by the `er_map` function and is available to an active session as the `db_map` list object. These objects are your in-session guide to understanding the database schema. A full size entity-relationship diagram is also available in the project directory as `ERD.png`.
+
+In most cases, normalized tables also include a corresponding denormalized view (e.g. `compounds` and `view_compounds`). If a table return includes foreign key relationships and your application needs the "value" instead of the "index" for those columns, load the view instead. Such views are automatically created through the `sqlite_auto_view` function by reading the `db_map` object and generating the SQL commands defining the denormalized view. SQLite databases by default do not enforce foreign key relationships. While this is turned on when an R session connects to the database, automatic triggers were created from scripts using `sqlite_auto_trigger` to enforce referential integrity in cases where the connection may be established by other mechanisms; these do not enforce integrity (e.g. no text in integer columns) *per se* they do instead insert unknown values into the corresponding normalization table and update the foreign key relationship appropriately. To include or exclude these scripted additions, edit the SQL file used to construct the database (typically at `/config/build.sql` by removing references to `auto_triggers.sql` and `auto_views.sql`).
+
+DIMSpec databases are SQLite files and as such can be used by any software able to open and interact with them. By default they are constructed in the [write-ahead logging (WAL)](https://www.sqlite.org/wal.html) mode to improve speed and provide better concurrency. It is anticipated that most interactions will be read only. Network access is provided by the plumber API as WAL mode does not work across network connections. Similarly, all connections made should set foreign key enforcement as this is not the default when opening SQLite databases; this is done automatically using the provided `manage_connection` project function and is the recommended method of connecting your R session to the database.
 
 ### R {#qg4-r}
 
+
+
 ### Logger {#qg4-logger}
+
+
 
 ### Python {#qg4-python}
 
+
+
 ### Plumber {#qg4-plumber}
+
+The [`plumber`](https://www.rplumber.io) API service is available from within the project or by launching one of the attached shiny applications from the command line. A few settings of note may be of interest; these will always be pulled into your session when the compliance file is sourced. Within the `/config/env_glob.txt` file, the following will determine availability as well as how the plumber API is launched:
+1. `USE_API` must be a logical scalar, by default set to `TRUE` to activate the API service in a background process;
+1. `API_LOCALHOST` must be a logical scalar, by default set to `TRUE` to launch the API on your local machine. Set this to `FALSE` and provide a value for `API_HOST` to make the API service available on your network;
+1. `API_HOST` must be a character scalar representing the resolveable network address (either IP or domain-based) of the host machine; this is ignored if `API_LOCALHOST` is set to `TRUE`;
+1. `API_PORT` should be an integer specifying an open communication port on the host machine, by default set to `8080`; and
+1. `INFORMATICS` must be a logical scalar, by default `TRUE` determining whether or not to activate chemometrics integration on the plumber service; set `USE_RDKIT` to `TRUE` (the default) to enable the endpoints that ship with the project (note: both are required for full functionality of the MSMatch application in its current form).
+
+If `USE_API` is set to `TRUE`, the following more specific settings for the `plumber` service are located in the `/inst/plumber/env_plumb.R` file:
+1. `PLUMBER_OBJ_NAME` must be a character scalar determines the name of the service watcher in the process from which the API service is launched. By default this is `plumber_service` and will be a [`callr::r_bg`](https://www.rdocumentation.org/packages/callr/versions/3.7.3/topics/r_bg) object that can be used to interrogate the service (e.g. `plumber_service$is_alive()`);
+1. `r_scripts` must be a character vector and determines which R files are sourced to make their functions available to the API definition file; and
+1. `LOGGING_ON` must be a logical value determining whether to activate logging for the API; additional logging settings immediately follow this setting in the file.
+
+In most cases, the `api_endpoint` function should be the entry point from R for getting data from the plumber API defined at `PLUMBER_URL` in your session environment. It may also be desireable to launch a second service (e.g. for testing new endpoints or changes to existing ones, or for providing a primitive form of load balancing). To do this, set the `pr` parameter of `api_reload` to a different name (character scalar) and the `on_port` parameter to an open port (it will fail if the port is already in use). If the compliance script was run with `USE_API = FALSE` and `api_reload` is not available, it may be more intuitive instead to use `start_api`, which will establish the service as if the compliance script had been run. If more than one plumber service is running, the function defaults for `api_endpoint` will point to the primary URL; set parameter `server_addr` more specifically to hit your desired endpoint complete with port (e.g. `api_endpoint("_ping", server_addr = "http://127.0.0.1:8181")`).
+
+See more details in the Plumber section of Technical Details in the [DIMSpec User Guide](TODO LINK) or the DIMSpec Quick Guide - Plumber vignette.
 
 ### Shiny {#qg4-shiny}
 
-Perhaps the most common use case for using parts of DIMSpec will be developing additional user interfaces with custom functionality on top of the DIMSpec infrastructure.
+Perhaps the most common use case for using parts of DIMSpec will be developing additional user interfaces with custom functionality on top of the DIMSpec infrastructure. Several helper functions for shiny development in DIMSpec are also available in the `/inst/apps/shiny_helpers.R` file to abstract some common shiny UX tasks. When a DIMSpec R session is established through the compliance script, if `USE_SHINY` is set to `TRUE` a named vector is available as session object `SHINY_APPS` enabling you to quickly launch apps quickly using `start_app("X")` where `"X"` is a name in this object. Most settings and functions supporting shiny apps assume users will be familiar with developing in shiny.
+
+To launch shiny apps on your local network and make those apps easily available to others, the environment resolution pathways for DIMSpec allow direct launching from any R terminal using `shiny::runApp("X", host = "0.0.0.0", port = Y` where `"X"` is the path to a shiny application and `Y` is an integer representing an open port on your host machine; this should be executed from the project directory. (Note this is not an advanced feature limited to DIMSpec.) If `port` is not provided, a random open port will be assigned; while this is convenient for testing, or consistency it is recommended to set the port for each application. Other hosting options are available for shiny apps; your organization may have preferences which should be honored.
+
+Settings for shiny applications are generally best left to the individual applications to resolve as needs may vary considerably. Given the integration of plumber with the DIMSpec project however, an environment resolution script is provided at `/inst/apps/env_shiny.R` which does have the following settings of note:
+1. `packs` determines which packages will be available to all apps launched from DIMSpec and will install them if necessary;
+1. `LOGGING_ON` is set to `TRUE` here by default to assist with debugging shiny applications;
+1. options `plumber.host` and `plumber.port` are set from the `API_HOST` and `API_PORT` settings in `env_glob.txt` settings (described above) to link launched apps with their defined plumber APIs;
+   - If your application requires a separate API it is recommended instead that in the `global.R` file of your app, you set `USE_API = FALSE` and these options there along with `PLUMBER_URL` as the server address desired; this will override the environment settings and point your new application to the endpoint you define. This does require you establish the API availability ahead of time.
+1. `logger_settings` will establish the logging parameters for the launched application and by default will copy settings from the `LOGGING$SHINY` object if available.
+
+To build new shiny web applications in an active DIMSpec project, a templated directory has been provided at `inst/apps/app_template/` and contains a skeleton similar to other web applications included in DIMSpec. In our experience, this app template greatly shortens many technical aspects of development as it leverages established environments and connections to the plumber API. The MSQC application was built from this template in a fraction of the time it would have taken when starting from scratch.
+
+All other settings are left to the individual applications to define needs. See more details in the Shiny Applications section of Technical Details in the [DIMSpec User Guide](TODO LINK) or the DIMSpec Quick Guide - Shiny Web Applications vignette for details of using the included application template.
 
 ### Final Words {#qg4-conclusion}
+
+Due to its nature, the DIMSpec project includes several aspects, some complicated. The quick guides are meant as a, hopefully, brief reference for some of the more common use cases and settings, and should be viewed as supplements for the full [DIMSpec User Guide](TODO LINK). A note on network hosting: if your organization (as it should) scans for active sites and vulnerabilities, and you are running the plumber API or shiny applications on your local network in the manner described here, contact your IT professionals to discuss security applications so you may adhere to your organization's IT security policies.
+
+The DIMSpec team hopes the documentation provided for the project is sufficient for your needs and allows you to quickly iterate. We want the project to be successful; reach out by email at <a href="mailto:pfas@nist.gov">`r shiny::icon("envelope")`pfas@nist.gov</a> with ideas or contributions.
 
 ---
 
