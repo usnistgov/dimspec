@@ -213,7 +213,7 @@
 			/* m/z value for specific fragment, derived */
 		fragment_id
 			INTEGER NOT NULL,
-			/* smiles structure of fragment ion, can be NULL, user submitted */
+			/* foreign key to fragments table */
 		/* Check constraints */
 		/* Foreign key relationships */
 		FOREIGN KEY (fragment_id) REFERENCES norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
