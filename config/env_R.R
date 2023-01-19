@@ -114,12 +114,13 @@ if (USE_API) {
   if (exists("API_LOCALHOST")) {
     PLUMBER_HOST <- ifelse(API_LOCALHOST, "127.0.0.1", "0.0.0.0")
     PLUMBER_PORT <- API_PORT
+    PLUMBER_URL  <- sprintf("http://%s:%s", ifelse(API_LOCALHOST, PLUMBER_HOST, API_HOST), PLUMBER_PORT)
   } else {
     PLUMBER_HOST <- getOption("plumber.host", "127.0.0.1")
     PLUMBER_PORT <- getOption("plumber.port", 8080)
+    PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   }
   PLUMBER_VERSION <- 0.1
-  PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   PLUMBER_FILE <- here::here("inst", "plumber", "plumber.R")
 }
 

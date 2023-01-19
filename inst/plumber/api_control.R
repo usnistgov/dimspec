@@ -297,7 +297,8 @@ api_reload <- function(pr = NULL,
   } else {
     api_start(
       on_host = on_host,
-      on_port = on_port
+      on_port = on_port,
+      plumber_file = plumber_file
     )
   }
   if (exists("log_it")) log_it("trace", "Evaluating service...", log_ns)
