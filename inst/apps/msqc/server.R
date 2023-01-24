@@ -6,6 +6,7 @@ shinyServer(function(input, output) {
   import_results <- reactiveValues(
     processed_data = NULL, 
     qc_results = list(), 
+    opt_ums_params = list(),
     data_select = NULL, 
     qc_check_select = NULL,
     file_dt = NULL,
@@ -44,7 +45,8 @@ shinyServer(function(input, output) {
         input$sample_qc_rows_selected)
     list(
       dat = import_results$processed_data[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]],
-      qc = import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+      qc = import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]],
+      opt_ums_params = import_results$opt_ums_params[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
     )
   })
   peak_data <- reactive({
@@ -55,6 +57,7 @@ shinyServer(function(input, output) {
         input$peak_qc_rows_selected)
     dat <- import_results$processed_data[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
     qc <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+    opt_ums_params <- import_results$opt_ums_params[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
     ind <- which(import_results$qc_check_select == input$select_qc_check)
     if (length(ind) != 0) {
       outtable <- qc[[ind]][,-1]
@@ -199,6 +202,7 @@ shinyServer(function(input, output) {
       ntotal <- sum(sapply(import_results$processed_data, length))
       for (j in 1:nj) {
         import_results$qc_results[[j]] <- list()
+        import_results$opt_ums_params[[j]] <- list()
         peak_results[[j]] <- rep(FALSE, length(import_results$processed_data[[j]]))
         ni <- length(import_results$processed_data[[j]])
         for (i in 1:ni) {
@@ -217,7 +221,8 @@ shinyServer(function(input, output) {
                           min_n_peaks = input$min_n_peaks,
                           cormethod = input$cormethod
           )
-          import_results$qc_results[[j]][[i]] <- qc
+          import_results$qc_results[[j]][[i]] <- qc$check
+          import_results$opt_ums_params[[j]][[i]] <- qc$opt_ums_params
           
           # populate summary tables
           all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
@@ -383,6 +388,7 @@ shinyServer(function(input, output) {
         for (i in 1:ni) {
           outdat <- import_results$processed_data[[j]][[i]]
           outdat$qc <- import_results$qc_results[[j]][[i]]
+          outdat$opt_ums_params <- import_results$opt_ums_params[[j]][[i]]
           write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
                      auto_unbox = TRUE,
                      pretty = TRUE)

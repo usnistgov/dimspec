@@ -76,7 +76,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
     }
     if (use_db) {
         exactmasses <- tbl(db_conn, "view_exact_masses") %>%
-          select(rlang::symbol, exact_mass) %>%
+          #select(rlang::symbol, exact_mass) %>%
           collect()
     } else {
       exactmasses <- setNames(
@@ -89,15 +89,8 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
                  function(x) {
                    tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
                    if (adduct != "neutral") {
-                     if (adduct == "+H") {mass.adj = -1.0072767}
-                     if (adduct == "-H") {mass.adj = 1.0072766}
-                     if (adduct == "+Na") {mass.adj = -22.9892213}
-                     if (adduct == "+K") {mass.adj = -38.9631585}
-                     if (adduct == "+") {mass.adj = 0.0005484}
-                     if (adduct == "-") {mass.adj = -0.0005484}
-                     if (adduct == "-radical") {mass.adj = 2*-0.0005484}
-                     if (adduct == "+radical") {mass.adj = 0}
-                     tmp <- tmp - mass.adj
+                     mass.adj <- get_massadj(adduct, exactmasses = exactmasses, db_conn = db_conn)
+                     tmp <- tmp + mass.adj
                    }
                    return(tmp)
                  })
@@ -142,15 +135,21 @@ monoisotope.list <- function(df, column, exactmasses, remove.elements = c(), add
 
 adduct_formula <- function(elementalformula, adduct = "+H") {
   elist <- extract.elements(elementalformula, remove.elements = c())
-  element <- gsub("\\+", "", gsub("-", "", adduct))
+  addformula <- gsub("\\+", "", gsub("-", "", adduct))
+  if (addformula != "") {
+  elements <- extract.elements(addformula)
   change <- unlist(strsplit(adduct, split = ""))[1]
+  for (i in 1:length(elements$elements)) {
+    element <- elements$elements[i]
+    addcount <- elements$counts[i]
   if (element %in% elist$elements) {
     if (change  == "+") {
-      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] + 1
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] + addcount
     }
     if (change  == "-") {
-      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] - 1
-      if (elist$counts[which(elist$elements == element)] == 0) {
+      elist$counts[which(elist$elements == element)] <- elist$counts[which(elist$elements == element)] - addcount
+      if (elist$counts[which(elist$elements == element)] <= 0) {
+        if (elist$counts[which(elist$elements == element)] < 0) {stop("The adduct formula cannot be applied to the formula.")}
         elist$counts <- elist$counts[-which(elist$elements == element)]
         elist$elements <- elist$elements[-which(elist$elements == element)]
       }
@@ -159,8 +158,10 @@ adduct_formula <- function(elementalformula, adduct = "+H") {
   if (!element %in% elist$elements) {
     if (change == "+") {
       elist$elements <- c(elist$elements, element)
-      elist$counts <- c(elist$counts, 1)
+      elist$counts <- c(elist$counts, addcount)
     }
+  }
+  }
   }
   paste(sapply(1:length(elist$elements), function(x) paste(elist$elements[x], elist$counts[x], sep = "")), collapse = "")
 }
