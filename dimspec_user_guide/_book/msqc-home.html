@@ -289,7 +289,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <h3>Using MSQC<a href="msqc-home.html#msqc-using-msqc" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Every effort has been made to make using the MSQC application as intuitive to use as possible. Generally the user interface will adjust to the current needs and highlight the next step. Some steps (e.g. 2 and 3) can be used interchangeably.</p>
 <div id="msqc-step0" class="section level4 hasAnchor" number="0.0.0.1">
-<h4><span class="header-section-number">0.0.0.1</span> Step 0 - Modify quality control settings (optional)<a href="msqc-home.html#msqc-step0" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<h4>Step 0 - Modify quality control settings (optional)<a href="msqc-home.html#msqc-step0" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <p>Prior to file processing, verify or set parameters to be used for quality control analysis can be modified. On the left menu, select “QC Settings” to navigate to the settings dashboard shown in <a href="msqc-home.html#fig05-02">Figure 2</a>. The default settings are recommended, but can be modified if needed.</p>
 <div class="figure">
 <img src="assets/fig05-02_msqc_settings.png" title="Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021." id="fig05-02" style="width:50.0%" alt="" />
@@ -298,7 +298,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 </div>
 <div id="msqc-step1" class="section level4 unnumbered hasAnchor">
 <h4>Step 1 - Import mzML and Sample JSON Files<a href="msqc-home.html#msqc-step1" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>Upload paired mzML and sample JSON files (conventionally named “filename_mzml_sample.JSON” by the NTA-MRT macros). First, select “Data Import” on the left menu or the “Click Here to get Started” button from the “About” page to bring up the Data Import page <a href="msqc-home.html#fig05-03">Figure 3</a>. Multiple files may be uploaded; the limit of number and size of files is dependent on system memory By default the maximum size of a single file is 250 MB, but this limit can be increased by changing the setting of <code>file_MB_limit</code> in the <code>global.R</code> file.</p>
+<p>Upload paired mzML and sample JSON files (conventionally named “filename_mzml_sample.JSON” by the NTA-MRT macros). First, select “Data Import” on the left menu or the “Click Here to get Started” button from the “About” page to bring up the Data Import page <a href="msqc-home.html#fig05-03">Figure 3</a>. Multiple files may be uploaded; the limit of number and size of files is dependent on system memory. By default the maximum size of a single file is 250 MB, but this limit can be increased by changing the setting of <code>file_MB_limit</code> in the <code>global.R</code> file.</p>
 <p>First, load the mzML files of interest using the top “Load” button or by dragging the data file(s) to the input widget labeled <em>1) Load raw mzML file(s)</em>.</p>
 <p>Second, load the paired sample JSON files using the second “Load” button or by dragging the JSON file(s) to the input widget labeled <em>2) Load Sample JSON file(s)</em>. The sample JSON files do not need to be selected in the same order as the mzML files and will be matched by name when processed.</p>
 <div class="figure">

@@ -41,20 +41,25 @@ CONDA_CLI      = "conda"
 # start them when sourcing config/compliance.R to start a session.
 
 # Create a database connection when starting a session (requires R).
-INIT_CONNECT   = FALSE
+INIT_CONNECT   = TRUE
 
 # Whether to activate logging for this session. (requires R)
-LOGGING_ON     = FALSE
+LOGGING_ON     = TRUE
 
-# Whether to activate plumber integration. (requires R)
-USE_API        = FALSE
+# Whether to activate plumber integration on launch. (requires R)
+USE_API        = TRUE
+# Whether to localhost for the API (TRUE) or launch on a network (FALSE).
+API_LOCALHOST  = TRUE
+# If set to FALSE, routing must be set appropriately to the hosting machine.
+API_HOST       = ""
+API_PORT       = 8080
 
 # RDKit integration (requires R and python) Set INFORMATICS to determine whether
 # this session will provide support for RDKit or ChemMineR, and set USE_RDKIT
 # to determine which (if false, ChemMineR) will be used.
-INFORMATICS    = FALSE
+INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
-# Spin up shiny apps on launch (requires R). Set as FALSE for interactive use.
-USE_SHINY      = FALSE
-SHINY_BG       = TRUE
+# Make shiny apps available on launch (requires R). Set as FALSE for interactive use.
+USE_SHINY      = TRUE
+# SHINY_BG       = TRUE

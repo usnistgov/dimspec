@@ -1,10 +1,22 @@
+# Set the basics for display and identification for this application here, such
+# as the page name, logging namespace, and database title.
+APP_TITLE          <- "[APP_TITLE]"
+app_name           <- basename(getwd())
+app_dir            <- file.path(app_name)
+app_ns             <- paste0("app_", app_name)
+default_title      <- "[DIMSpec App Template]"
+# Set to true to enable development mode, which includes a link to the
+# underlying API documentation and a live inspection button to see the app's
+# current state in the console.
 dev <- TRUE
+# Set to true in order to base this app on the API defined in the environment files.
+USE_API            <- TRUE
+# The following settings are necessary for the application. Only change these if
+# it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
-APP_TITLE <- "[APP_TITLE]"
-# app_dir <- "app_dir"
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
-DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "[DISPLAY TITLE HERE]")
+DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "[DATABASE TITLE HERE]")
 
 # Set need_files to those necessary for your app to function
 need_files <- c(
@@ -14,7 +26,7 @@ sapply(need_files, source, keep.source = FALSE)
 
 # To activate logging, uncomment and set these as necessary
 # log_ns <- "APP_[NAME]"
-# log_it("info", "Starting app: app_[name]", "shiny")
+# log_it("info", sprintf("Starting app: app_%s", app_name), "shiny")
 # log_it("info", "Starting app", tolower(log_ns), add_unknown_ns = TRUE, clone_settings_from = "SHINY")
 
 # Add any app wide default settings to reference when populating input values

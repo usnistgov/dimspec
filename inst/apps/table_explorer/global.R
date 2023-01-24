@@ -1,7 +1,8 @@
+APP_TITLE <- "DIMSpec Explorer"
+USE_API <- TRUE
 dev <- FALSE
 vowels <- c("a", "e", "i", "o", "u")
 vowels <- c(vowels, toupper(vowels))
-APP_TITLE <- "DIMSpec Explorer"
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 if (exists("LOGGING") && LOGGING_ON) {
   log_ns <- "APP_TABLE_VIEWER"
@@ -24,11 +25,11 @@ if (exists("LOGGING") && LOGGING_ON) {
 }
 
 # Session variables
-if (exists("PLUMBER_URL") && api_endpoint(PLUMBER_URL, path = "db_active")) {
+if (exists("PLUMBER_URL") && api_endpoint("db_active")) {
   table_list <- sort(
     c(
-      api_endpoint(PLUMBER_URL, path = "list_views"),
-      api_endpoint(PLUMBER_URL, path = "list_tables")
+      api_endpoint("list_views"),
+      api_endpoint("list_tables")
     )
   )
 } else {

@@ -69,7 +69,7 @@ While this version of DIMSpec includes analytical data for PFAS, MSQC can be tai
 
 Every effort has been made to make using the MSQC application as intuitive to use as possible. Generally the user interface will adjust to the current needs and highlight the next step. Some steps (e.g. 2 and 3) can be used interchangeably.
 
-#### Step 0 - Modify quality control settings (optional) {#msqc-step0}
+#### Step 0 - Modify quality control settings (optional) {#msqc-step0 .unnumbered}
 
 Prior to file processing, verify or set parameters to be used for quality control analysis can be modified. On the left menu, select “QC Settings” to navigate to the settings dashboard shown in [Figure 2](#fig05-02). The default settings are recommended, but can be modified if needed.
 
@@ -77,7 +77,7 @@ Prior to file processing, verify or set parameters to be used for quality contro
 
 #### Step 1 - Import mzML and Sample JSON Files {#msqc-step1 .unnumbered}
 
-Upload paired mzML and sample JSON files (conventionally named “filename_mzml_sample.JSON” by the NTA-MRT macros). First, select “Data Import” on the left menu or the “Click Here to get Started” button from the “About” page to bring up the Data Import page [Figure 3](#fig05-03). Multiple files may be uploaded; the limit of number and size of files is dependent on system memory By default the maximum size of a single file is 250 MB, but this limit can be increased by changing the setting of `file_MB_limit` in the `global.R` file.
+Upload paired mzML and sample JSON files (conventionally named “filename_mzml_sample.JSON” by the NTA-MRT macros). First, select “Data Import” on the left menu or the “Click Here to get Started” button from the “About” page to bring up the Data Import page [Figure 3](#fig05-03). Multiple files may be uploaded; the limit of number and size of files is dependent on system memory. By default the maximum size of a single file is 250 MB, but this limit can be increased by changing the setting of `file_MB_limit` in the `global.R` file.
 
 First, load the mzML files of interest using the top “Load” button or by dragging the data file(s) to the input widget labeled *1) Load raw mzML file(s)*.
 

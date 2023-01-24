@@ -361,21 +361,36 @@ div.csl-indent {
 <td>Whether or not to activate the plumber application programming interface (API) for this session (see <a href="technical-details.html#plumber">Plumber</a>). If this is set to <code>TRUE</code>, the plumber service will launch in a background process by default and return control to the console.</td>
 </tr>
 <tr class="even">
+<td>API_LOCALHOST</td>
+<td>Logical</td>
+<td>Whether or not to activate the plumber application programming interface (API) hosted on the local machine only. If this is set to <code>FALSE</code>, the API will be hosted and available on your network.</td>
+</tr>
+<tr class="odd">
+<td>API_HOST</td>
+<td>String</td>
+<td>If <code>API_LOCALHOST</code> is set to <code>FALSE</code>, set this to the IP address or network path to the computer hosting the API.</td>
+</tr>
+<tr class="even">
+<td>API_PORT</td>
+<td>Integer</td>
+<td>The hosting port on which to launch the plumber service. This must be an open port or the launch will fail. If <code>API_LOCALHOST</code> is <code>TRUE</code>, the API will launch at "localhost:API_PORT", otherwise at "API_HOST:API_PORT".</td>
+</tr>
+<tr class="odd">
 <td>INFORMATICS</td>
 <td>Logical</td>
 <td>Whether or not to establish an environment providing informatics support, primarily with RDKit. To streamline installation of only the database and R tools, set this to <code>FALSE.</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>USE_RDKIT</td>
 <td>Logical</td>
 <td>Whether or not to use RDKit for informatics (requires python). If set to <code>FALSE</code>, the packages <code>BiocManager</code>, <code>ChemmineR</code>, and <code>rcdk</code> will be installed if not available, though support for these is not provided at this time.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>USE_SHINY</td>
 <td>Logical</td>
 <td>Whether or not to establish an environment providing support for web applications provided as part of the project (defaults to <code>TRUE</code>).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>SHINY_BG</td>
 <td>Logical</td>
 <td>[PLANNED FEATURE] Whether or not to launch shiny apps as part of a background process, making them immediately available from a web browser when the compliance script is executed (defaults to <code>FALSE</code>).</td>
@@ -605,7 +620,7 @@ div.csl-indent {
 <p class="caption">Figure 1b. Details of the “samples” table from the data dictionary.</p>
 </div>
 <hr />
-<p>Relationships between database entities can also be queried programmatically. Use the <a href="appendix-function-reference.html#fn_def_er_map" target="_blank"><code>er_map</code></er> function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as <code>db_map</code> to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.</p>
+<p>Relationships between database entities can also be queried programmatically. Use the <a href="appendix-function-reference.html#fn_def_er_map" target="_blank"><code>er_map</code></a> function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as <code>db_map</code> to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.</p>
 <hr />
 <div class="figure">
 <img src="assets/fig02-02a_db_map1.png" title="Figure 2a. An example of the entity map list" id="fig02-02a" width="500" alt="" />
@@ -673,7 +688,7 @@ div.csl-indent {
 </ul>
 <hr />
 <div class="figure">
-<img src="assets/fig02-05_rdkit_molecular_aliases.png" title="Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to `rdkit_mol_aliases(&#39;CN1C=NC2=C1C(=O)N(C(=O)N2C)C&#39;, get_aliases = NULL)`" id="fig02-05" width="500" alt="" />
+<img src="assets/fig02-05_rdkit_molecular_aliases.png" title="Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to <code>rdkit_mol_aliases(&#39;CN1C=NC2=C1C(=O)N(C(=O)N2C)C&#39;, get_aliases = NULL)<code>" id="fig02-05" width="500" alt="" />
 <p class="caption">Figure 5. All molecular aliases as seen in the RStudio viewer for results of a call to <code>rdkit_mol_aliases("CN1C=NC2=C1C(=O)N(C(=O)N2C)C", get_aliases = NULL)</code></p>
 </div>
 <hr />
@@ -700,13 +715,13 @@ div.csl-indent {
 <h3>Using Shiny Applications<a href="instructions.html#using-shiny-applications" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>The <a href="https://shiny.rstudio.com" target="_blank">Shiny</a> package enables web applications written using R, which often meaningfully make custom processing code like that written for this project available to broader audiences. Additionally, inputs can easily be type verified and restricted to preset expectations. When the compliance script is run, a named vector of available shiny apps will be available as <code>SHINY_APPS</code>. These can be started with the <code>start_app(app_name = X)</code> where <code>X</code> is the name of the application as found in <code>names(SHINY_APPS)</code>. Shiny apps are fluid and responsive; will automatically arrange themselves to best fit your browser size and can be custom designed with any layout or functionality. By default all communication with the database is routed through the plumber API.</p>
 <p>This allows environment resolution to launch applications directly from the console, without any need to run the compliance script. Launching an app is then possible directly from the console (or batch file shortcuts which could be included in later updates) using e.g.</p>
-<pre><code>`shiny::runApp(“inst/apps/table_explorer”)`</code></pre>
+<pre><code>shiny::runApp(“inst/apps/table_explorer”)</code></pre>
 <p>from the project directory.</p>
 <p>Three shiny applications ship with this project as of the time this document was written.</p>
 <ul>
 <li><p><code>table_explorer</code> allows users to explore database tables and views by selecting it from a drop-down list and details definitions and connections to other tables and views; this app should be amenable to any database created with DIMSpec and is detailed in its own <a href="table-explorer-home.html#table-explorer-home">section</a>;</p></li>
 <li><p><code>spectral_match</code> allows users to upload an mzML file of mass spectral data and search user-defined features of interest by mass to charge ratio and chromatographic retention time for matches in the database for both known compounds and annotated fragments, while providing contextual information about the method and samples used to generate reference spectra. The MSMatch application is detailed in its own <a href="msmatch-home.html#msmatch-home">section</a>.</p></li>
-<li><p><code>msqc</code> allows users to perform the quality control evaluation of potential imported data and generates the necessary JSON object to be incorporated into the database. Additional information, including the workflow, will be described in a forthcoming ROA. The MSQC application is detailed in <a href="msqc-home.html#msqc-home">section</a>.</p></li>
+<li><p><code>msqc</code> allows users to perform the quality control evaluation of potential imported data and generates the necessary JSON object to be incorporated into the database. The MSQC application is detailed in <a href="msqc-home.html#msqc-home">section</a>.</p></li>
 </ul>
 <p>An application template is also included which should accelerate development of additional applications on top of the DIMSpec infrastructure to facilitate project needs.</p>
 </div>

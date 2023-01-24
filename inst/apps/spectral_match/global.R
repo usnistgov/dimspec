@@ -11,6 +11,8 @@ default_title      <- "Mass Spectral Match"
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
 dev                <- FALSE
+# Set to true in order to base this app on the API defined in the environment files.
+USE_API            <- TRUE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
