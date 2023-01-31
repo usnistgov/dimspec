@@ -50,6 +50,7 @@ peak_gather_json <- function(methodjson, mzml, compoundtable, zoom = c(1,5), min
     if (out[[i]]$massspectrometry$ms2exp == "SWATH") {
       ms2scans <- all_scans[which(precursors[all_scans] >= as.numeric(out[[i]]$peak$mz) - (as.numeric(out[[i]]$massspectrometry$isowidth)/2) & precursors[all_scans] <= as.numeric(out[[i]]$peak$mz) + (as.numeric(out[[i]]$massspectrometry$isowidth)/2))]
     }
+    if (length(ms2scans) == 0) {stop("There are no MS2 scans that fit within the defined search window.")}
     ms1data <- table_msdata(mzml, ms1scans, mz = as.numeric(out[[i]]$peak$mz), zoom = zoom, masserror = as.numeric(out[[i]]$massspectrometry$msaccuracy), minerror = minerror)
     ms2data <- table_msdata(mzml, ms2scans)
     ms1data <- cbind(mslevel = rep(1, nrow(ms1data)), ms1data)
