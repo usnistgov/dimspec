@@ -30,9 +30,12 @@ if (length(packs_FALSE) > 0) {
 lapply(packs, require, character.only = TRUE, quietly = TRUE)
 rm(packs)
 # Minimum app requirements
-api_override <- ifelse(exists("USE_API"), USE_API, NULL)
+api_override <- ifelse(exists("USE_API"), USE_API, NA)
+rdk_override <- ifelse(exists("APP_RDKIT"), APP_RDKIT, FALSE)
 source(here::here("config", "env_glob.txt"))
-if (!is.null(api_override)) USE_API <- api_override
+if (!is.na(api_override)) {
+  USE_API <- api_override
+}
 if (!API_LOCALHOST) {
   if (API_HOST == "") {
     API_HOST <- Sys.info()[["nodename"]]
@@ -61,6 +64,16 @@ if (USE_API) {
   if (!dplyr::between(api_endpoint(path = "_ping", raw_result = TRUE)$status, 200, 299)) {
     stop("This app requires an active API connection.")
   }
+}
+
+# Set up rdkit if needed -------------------------------------------------------
+if (!is.na(rdk_override)) {
+  INFORMATICS <- rdk_override
+  USE_RDKIT   <- rdk_override
+}
+if (USE_RDKIT) {
+  if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("inst", "rdkit", "env_py.R"))
+  rdkit_active(make_if_not = TRUE)
 }
 
 # Set up logger ----------------------------------------------------------------

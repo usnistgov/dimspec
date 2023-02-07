@@ -13,8 +13,8 @@ default_title      <- "Mass Spectral Quality Control"
 dev                <- TRUE
 # Set to true in order to base this app on the API defined in the environment files.
 USE_API            <- TRUE
-rdkit_active(make_if_not = TRUE)
-
+# Set to whether or not this needs an rdkit integration
+APP_RDKIT          <- TRUE
 
 # The following settings are necessary for the application. Only change these if
 # it is required (e.g. to include other source files that you want to use).

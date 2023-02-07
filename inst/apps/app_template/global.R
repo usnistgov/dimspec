@@ -11,6 +11,8 @@ default_title      <- "[DIMSpec App Template]"
 dev <- TRUE
 # Set to true in order to base this app on the API defined in the environment files.
 USE_API            <- TRUE
+# Set to whether or not this needs an rdkit integration
+APP_RDKIT          <- FALSE
 # The following settings are necessary for the application. Only change these if
 # it is required (e.g. to include other source files that you want to use).
 vowels <- c("a", "e", "i", "o", "u")
