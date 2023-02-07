@@ -44,6 +44,18 @@ export_msp <- function(ms, file, precursor = "", name = "Exported Mass Spectrum"
 }
 
 
+#' Export SQL Database to a MSP NIST MS Format
+#'
+#' @param con SQLite database connection 
+#' @param optimized_params Boolean TRUE indicates that the optimized parameters for uncertainty mass spectra will be used.
+#' @param outputfile Text string file name and/or location to save MSP file format
+#' @param cormethod Text string type of correlation function to use (DEFAULT = 'pearson')
+#' @param normfn Text string type of normalization function to use (DEFAULT = 'sum')
+#'
+#' @return
+#' @export
+#'
+
 sql_to_msp <- function(con, optimized_params = TRUE, outputfile = paste0("DimSpecExport", Sys.Date(), ".msp"), cormethod = "pearson", normfn = "sum") {
   msdata <- get_msdata(con)
   peak_ids <- unique(msdata$peak_id)
