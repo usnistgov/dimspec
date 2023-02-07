@@ -8,10 +8,12 @@ resolve_mobile_phase_NTAMRT(
   obj,
   method_id,
   sample_id,
+  peak_id,
   carrier_mix_names = NULL,
   id_mix_by = "^mp*[0-9]+",
   ms_methods_table = "ms_methods",
   sample_table = "samples",
+  peak_table = "peaks",
   db_conn = con,
   mix_collection_table = "carrier_mix_collections",
   mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
@@ -35,6 +37,8 @@ resolve_mobile_phase_NTAMRT(
 
 \item{sample_id}{INT scalar of the sample id (e.g. from the import workflow)}
 
+\item{peak_id}{INT scalar of the peak id (e.g. from the import workflow)}
+
 \item{carrier_mix_names}{CHR vector (optional) of carrier mix collection
 names to assign, the length of which should equal 1 or the length of
 discrete carrier mixtures; the default, NULL, will automatically assign
@@ -49,7 +53,9 @@ schemes}
 \item{ms_methods_table}{CHR scalar name of the methods table (default:
 "ms_methods")}
 
-\item{sample_table}{CHR scalar name of the methods table (default: "samples")}
+\item{sample_table}{CHR scalar name of the sample table (default: "samples")}
+
+\item{peak_table}{CHR scalar name of the peak table (default: "peaks")}
 
 \item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
 

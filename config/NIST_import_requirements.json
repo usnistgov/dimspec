@@ -48,5 +48,10 @@
     "class": "list",
     "names": {},
     "required": true
+  },
+  "opt_ums_params": {
+    "class": "data.frame",
+    "names": ["parameter","mslevel","correl","ph","freq","n","masserror","minerror"],
+    "required": false
   }
 }

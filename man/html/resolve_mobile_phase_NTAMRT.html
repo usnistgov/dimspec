@@ -25,10 +25,12 @@ resolve_mobile_phase_NTAMRT(
   obj,
   method_id,
   sample_id,
+  peak_id,
   carrier_mix_names = NULL,
   id_mix_by = "^mp*[0-9]+",
   ms_methods_table = "ms_methods",
   sample_table = "samples",
+  peak_table = "peaks",
   db_conn = con,
   mix_collection_table = "carrier_mix_collections",
   mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
@@ -62,6 +64,10 @@ resolve_mobile_phase_NTAMRT(
 <td>
 <p>INT scalar of the sample id (e.g. from the import workflow)</p>
 </td></tr>
+<tr valign="top"><td><code>peak_id</code></td>
+<td>
+<p>INT scalar of the peak id (e.g. from the import workflow)</p>
+</td></tr>
 <tr valign="top"><td><code>carrier_mix_names</code></td>
 <td>
 <p>CHR vector (optional) of carrier mix collection
@@ -84,7 +90,11 @@ schemes</p>
 </td></tr>
 <tr valign="top"><td><code>sample_table</code></td>
 <td>
-<p>CHR scalar name of the methods table (default: &quot;samples&quot;)</p>
+<p>CHR scalar name of the sample table (default: &quot;samples&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_table</code></td>
+<td>
+<p>CHR scalar name of the peak table (default: &quot;peaks&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>db_conn</code></td>
 <td>

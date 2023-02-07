@@ -52,7 +52,7 @@ get_suspectlist <- function(destfile = file.path("R", "compoundlist", "suspectli
 #'
 #' @examples
 #' suspectlist_at_NIST()
-suspectlist_at_NIST <- function(url_file = 'suspectlist_url.txt') {
+suspectlist_at_NIST <- function(url_file = file.path('config', 'suspectlist_url.txt')) {
   url_paths <- list.files(pattern = url_file, recursive = TRUE, full.names = TRUE)
   if (length(url_file) > 1) {
     warning(sprintf("Multiple files found matching %s; using only the first one.", url_file, url_paths[1]))

@@ -76,24 +76,43 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
     }
     if (use_db) {
         exactmasses <- tbl(db_conn, "view_exact_masses") %>%
-          #select(rlang::symbol, exact_mass) %>%
+          select(symbol, exact_mass) %>%
           collect()
     } else {
       exactmasses <- setNames(
-        readRDS("R/misc/exactmasses.RDS"),
+        readRDS(here::here("R", "misc", "exactmasses.RDS")),
         c("symbol", "exact_mass")
       )
     }
   }
-  mass <- lapply(elementlist,
-                 function(x) {
-                   tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
-                   if (adduct != "neutral") {
-                     mass.adj <- get_massadj(adduct, exactmasses = exactmasses, db_conn = db_conn)
-                     tmp <- tmp + mass.adj
-                   }
-                   return(tmp)
-                 })
+  if (use_db) {
+    mass <- lapply(elementlist,
+                   function(x) {
+                     tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+                     if (adduct != "neutral") {
+                       mass.adj <- get_massadj(adduct, exactmasses = exactmasses, db_conn = db_conn)
+                       tmp <- tmp + mass.adj
+                     }
+                     return(tmp)
+                   })
+  } else {
+    mass <- lapply(elementlist,
+                   function(x) {
+                     tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+                     if (adduct != "neutral") {
+                       if (adduct == "+H") {mass.adj = -1.0072767}
+                       if (adduct == "-H") {mass.adj = 1.0072766}
+                       if (adduct == "+Na") {mass.adj = -22.9892213}
+                       if (adduct == "+K") {mass.adj = -38.9631585}
+                       if (adduct == "+") {mass.adj = 0.0005484}
+                       if (adduct == "-") {mass.adj = -0.0005484}
+                       if (adduct == "-radical") {mass.adj = 2*-0.0005484}
+                       if (adduct == "+radical") {mass.adj = 0}
+                       tmp <- tmp - mass.adj
+                     }
+                     return(tmp)
+                   })
+  }
   unlist(mass)
 }
 

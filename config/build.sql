@@ -71,3 +71,4 @@ PRAGMA journal_mode=WAL;
 .read config/sql_nodes/auto_triggers.sql
 .read config/sql_nodes/auto_views.sql
 PRAGMA foreign_keys=on;
+insert into logs (category, description, bundle, effect, affects_table, executed_from) values ('build', 'build DIMSpec database', 'install', 4, 'all', 'script');

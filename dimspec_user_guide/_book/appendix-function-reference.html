@@ -696,6 +696,14 @@ Extract foreign key relationships from a schema
 </tr>
 <tr>
 <td>
+<a id="fn_get_massadj" class="fn_link" href="#fn_def_get_massadj" target="_blank">get_massadj</a>
+</td>
+<td>
+Calculate the mass adjustment for a specific adduct
+</td>
+</tr>
+<tr>
+<td>
 <a id="fn_get_msconvert_data" class="fn_link" href="#fn_def_get_msconvert_data" target="_blank">get_msconvert_data</a>
 </td>
 <td>
@@ -1356,6 +1364,14 @@ Resolve a normalization value against the database
 </td>
 <td>
 Resolve the peaks node during import
+</td>
+</tr>
+<tr>
+<td>
+<a id="fn_resolve_peak_ums_params" class="fn_link" href="#fn_def_resolve_peak_ums_params" target="_blank">resolve_peak_ums_params</a>
+</td>
+<td>
+Resolve and import optimal uncertain mass spectrum parameters
 </td>
 </tr>
 <tr>
@@ -8098,6 +8114,70 @@ This only functions for list objects formatted correctly. That is, each
 entry in [db_map] must contain an element with a name matching that
 provided to ‘references_in’ which contains a character vector formatted as
 “table1 REFERENCES table2(pk_column)”.
+</p>
+<hr/>
+<table id="fn_def_get_massadj" width="100%" summary="page for get_massadj">
+<tr>
+<td>get_massadj
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+Calculate the mass adjustment for a specific adduct
+</h2>
+<h3>
+Usage
+</h3>
+<pre>
+get_massadj(adduct = "+H", db_conn = "con" )
+</pre>
+<h3>
+Arguments
+</h3>
+<table summary="R argblock">
+<tr valign="top">
+<td>
+<code>
+adduct
+</code>
+</td>
+<td>
+<p>
+character string containing the + or - and the elemental formula of the adduct, note &quot;2H&quot; should be represented as &quot;H2&quot;
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>
+exactmasses
+</code>
+</td>
+<td>
+<p>list of exact masses of elements, NULL pulls from the database</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>
+db_conn
+</code>
+</td>
+<td>
+<p>
+database connection object, either a CHR scalar name (default: &quot;con&quot;) or the connection object itself (preferred)
+</p>
+</td>
+</tr>
+</table>
+<h3>
+Value
+</h3>
+<p>
+exact atomic mass of the adduct by which to adjust a formula mass
 </p>
 <hr/>
 <table id="fn_def_get_msconvert_data" width="100%" summary="page for get_msconvert_data">
@@ -15629,10 +15709,12 @@ resolve_mobile_phase_NTAMRT(
   obj,
   method_id,
   sample_id,
+  peak_id,
   carrier_mix_names = NULL,
   id_mix_by = "^mp*[0-9]+",
   ms_methods_table = "ms_methods",
   sample_table = "samples",
+  peak_table = "peaks",
   db_conn = con,
   mix_collection_table = "carrier_mix_collections",
   mobile_phase_props = list(in_item = "chromatography", db_table = "mobile_phases", props
@@ -15685,6 +15767,16 @@ INT scalar of the sample id (e.g. from the import workflow)
 </tr>
 <tr valign="top">
 <td>
+<code>peak_id</code>
+</td>
+<td>
+<p>
+INT scalar of the peak id (e.g. from the import workflow)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
 <code>carrier_mix_names</code>
 </td>
 <td>
@@ -15727,7 +15819,17 @@ CHR scalar name of the methods table (default:
 </td>
 <td>
 <p>
-CHR scalar name of the methods table (default: “samples”)
+CHR scalar name of the sample table (default: “samples”)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>peak_table</code>
+</td>
+<td>
+<p>
+CHR scalar name of the peak table (default: “peaks”)
 </p>
 </td>
 </tr>
@@ -16633,6 +16735,119 @@ This function is called as part of [full_import()]
 </p>
 <p>
 This function relies on an import map
+</p>
+<hr/>
+<table id="fn_def_resolve_peak_ums_params" width="100%" summary="page for resolve_peak_ums_params">
+<tr>
+<td>
+resolve_peak_ums_params
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+Resolve and import optimal uncertain mass spectrum parameters
+</h2>
+<h3>
+Description
+</h3>
+<p>
+This imports the defined object component containing parameters for the
+optimized uncertainty mass spectrum used to compare with new data. This
+function may be called at any time to add data for a given peak, but there is
+no row unique restriction on the underlying table and is best used in a &quot;one
+pass&quot; method during the import routine. These parameters are calculated as
+part of NIST QA procedures and are added to the output of the NTA MRT after
+those JSONs have been created.
+</p>
+<h3>
+Usage
+</h3>
+<pre>
+resolve_peak_ums_params(
+  obj,
+  peak_id,
+  ums_params_in = "opt_ums_params",
+  ums_params_table = "opt_ums_params",
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+<h3>
+Arguments
+</h3>
+<table summary="R argblock">
+<tr valign="top">
+<td>
+<code>obj</code>
+</td>
+<td>
+<p>
+LIST object containing data formatted from the import generator
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>peak_id</code>
+</td>
+<td>
+<p>
+INT scalar of the peak id in question, which must be present (e.g. from the import workflow)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>ums_params_in</code>
+</td>
+<td>
+<p>
+CHR scalar name of the item in 'obj' containing optimized uncertainty mass spectrum parameters
+</p>
+</td></tr>
+<tr valign="top">
+<td>
+<code>ums_params_table</code>
+</td>
+<td>
+<p>
+CHR scalar name of the database table holding optimized uncertainty mass spectrum parameters
+</p>
+</td></tr>
+<tr valign="top">
+<td>
+<code>db_conn</code>
+</td>
+<td>
+<p>
+Connection object (default: con)
+</p>
+</td></tr>
+<tr valign="top">
+<td>
+<code>log_ns</code>
+</td>
+<td>
+<p>
+CHR scalar of the logging namespace to use (default: &quot;db&quot;)
+</p>
+</td>
+</tr>
+</table>
+<h3>
+Value
+</h3>
+<p>
+Nothing if successful, a data frame object of the extracted parameters otherwise.
+</p>
+<h3>
+Note
+</h3>
+<p>
+This function is called as part of [resolve_peaks()]
 </p>
 <hr/>
 <table id="fn_def_resolve_qc_data_NTAMRT" width="100%" summary="page for resolve_qc_data_NTAMRT">
@@ -20727,13 +20942,10 @@ CHR scalar of the logging namespace to use (default: “db”)
 Details
 </h3>
 <p>
-The return from this is a tibble with 6 or 7 columns depending on whether the
-import file contains data from a single sample or multiple samples. It will
-parse either way depending on where required names are located in the object
-provided to ‘obj’. If it is a single list, the return will contain 6 columns;
-if it is a nested list of samples, the return will contain 7 columns, with
-the names of the provided ‘obj’ attached to each row. Other columns contain
-information related to three checks.
+The return from this is a tibble with 9 columns. The first is the name of the
+import object member, typically the file name. If a single, unnested import
+object is provided this will be "import object". The other columns include
+the following verification checks:
 </p>
 <p>
 <ol style="list-style-type: decimal">
@@ -20769,6 +20981,18 @@ dropped from the import but are provided for information sake</li>
 </ol>
 </p>
 <p>
+<ol start="7" style="list-style-type: decimal">
+<li>has_name_mismatches: Are there name differences between the import
+requirement elements and the import object? (TRUE/FALSE)</li>
+</ol>
+</p>
+<p>
+<ol start="8" style="list-style-type: decimal">
+<li>mismatched_names: Named lists enumerating which named elements (if any)
+from the import object did not match name expectations in the requirements</li>
+</ol>
+</p>
+<p>
 All of this is defined by the ‘requirements_obj’ list. Do not provide that
 list directly, instead pass this function the name of the requirements object
 for interoperability. If a ‘requirements_obj’ cannot be identified via
@@ -20779,10 +21003,7 @@ Initial use and set up may be easier in interactive sessions.
 Value
 </h3>
 <p>
-A tibble object with 6 columns containing the results of the check,
-with one row for each import object identified; if ‘obj’ is a list of
-import data, the column “import_object” is added at the left of the data
-frame with the names of the list components
+A tibble object with 9 columns containing the results of the checks.
 </p>
 <h3>
 Note

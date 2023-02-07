@@ -349,6 +349,9 @@
 		sample_id
 		  INTEGER,
 		  /* foreign key to samples */
+		peak_id
+		  INTEGER,
+		  /* foreign key to peaks */
 		carrier_mix_collection_id
 			INTEGER NOT NULL,
 			/* foreign key to carrier_mixes */
@@ -369,6 +372,7 @@
 		/* Foreign key relationships */
 		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
+		FOREIGN KEY (peak_id) REFERENCES peaks(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (carrier_mix_collection_id) REFERENCES carrier_mix_collections(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		FOREIGN KEY (flow_units) REFERENCES norm_flow_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (duration_units) REFERENCES norm_duration_units(id) ON UPDATE CASCADE ON DELETE RESTRICT
@@ -722,6 +726,8 @@
     	  /* MS Methods ID, foreign key to ms_methods.id */
     	mp.sample_id,
     	  /* Sample ID, foreign key to samples.id */
+		mp.peak_id,
+		  /* Peak ID, foreign key to peaks.id */
     	CASE ifnull(carriers, "") WHEN "" THEN "" ELSE carriers END ||
     		CASE ifnull(additives, "") WHEN "" THEN "" ELSE
     			CASE ifnull(carriers, "") WHEN "" THEN "" ELSE " with " END

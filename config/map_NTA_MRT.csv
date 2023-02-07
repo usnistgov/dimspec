@@ -24,10 +24,10 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,0,0,0,,,mobile_phases,duration,,,(optional)
 0,0,0,0,0,,,mobile_phases,duration_units,norm_duration_units,,(optional)
 0,0,1,0,0,,,carrier_mix_collections,name,,,
-1,1,1,0,0,chromatography,mp1carrier,carrier_mixes,component,norm_carriers,carrier_aliases,mix_id from carrier_mix_collections.id
-1,1,1,0,0,chromatography,mp2carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
-1,1,1,0,0,chromatography,mp3carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
-1,1,1,0,0,chromatography,mp4carrier,carrier_mixes,component,norm_carriers,carrier_aliases,
+1,1,1,0,0,chromatography,mp1solvent,carrier_mixes,component,norm_carriers,carrier_aliases,mix_id from carrier_mix_collections.id
+1,1,1,0,0,chromatography,m2solvent,carrier_mixes,component,norm_carriers,carrier_aliases,
+1,1,1,0,0,chromatography,mp3solvent,carrier_mixes,component,norm_carriers,carrier_aliases,
+1,1,1,0,0,chromatography,mp4solvent,carrier_mixes,component,norm_carriers,carrier_aliases,
 0,0,0,0,0,,,carrier_mixes,fraction,,,
 0,0,1,0,0,,,carrier_aliases,alias,,,add if not present
 1,1,1,0,0,chromatography,mp1add,carrier_additives,component,norm_additives,additive_aliases,
@@ -69,6 +69,7 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,1,0,1,,,ms_methods,has_qc_method,,,integer boolean
 1,1,1,0,1,massspectrometry,isowidth,instrument_properties,,,,key:value pairs
 1,1,0,0,1,massspectrometry,msaccuracy,instrument_properties,,,,key:value pairs
+1,1,0,0,1,massspectrometry,msminerror,instrument_properties,,,,key:value pairs
 1,1,0,0,1,massspectrometry,ms1resolution,instrument_properties,,,,key:value pairs
 1,1,0,0,1,massspectrometry,ms2resolution,instrument_properties,,,,key:value pairs
 0,0,0,0,0,,,ms_descriptions,reference,,,
@@ -87,18 +88,17 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,0,0,1,peak,peak_starttime,peaks,rt_start,,,
 1,0,0,0,1,peak,peak_endtime,peaks,rt_end,,,
 1,0,0,0,1,peak,confidence,peaks,identification_confidence,norm_peak_confidence,,
-0,0,1,1,1,,,compounds,category,compound_categories,,manual for now? Programmatic for later
-1,0,0,0,1,compounddata,NAME,compounds,name,,compound_aliases,
-1,0,0,0,1,compounddata,LOCAL_POS,compounds,local_positive,,,
-1,0,0,0,1,compounddata,LOCAL_NEG,compounds,local_negative,,,
-1,1,0,0,1,compounddata,,compound_aliases,,,,key:value pairs; add only if provided; all other columns
-1,0,0,0,1,compounddata,SOURCE,compounds,obtained_from,,,
-1,0,1,0,1,compounddata,SOURCE_TYPE,compounds,source_type,norm_source_types,,
-1,0,0,0,1,compounddata,FIXEDMASS,compounds,fixedmass,,,
-1,0,0,0,1,compounddata,NETCHARGE,compounds,netcharge,,,
-1,0,0,0,1,compounddata,FORMULA,compounds,formula,,,
-1,0,0,0,1,compounddata,ADDITIONAL,compounds,additional,,,
-1,0,1,0,0,compounddata,INSPECTEDBY,compounds,inspected_by,contributors,,id from contributors
+0,0,1,1,0,,,compounds,category,compound_categories,,manual for now? Programmatic for later
+1,0,0,0,1,compounddata,name,compounds,name,,compound_aliases,
+1,0,0,0,1,compounddata,local_positive,compounds,local_positive,,,
+1,0,0,0,1,compounddata,local_negative,compounds,local_negative,,,
+1,1,0,0,0,compounddata,,compound_aliases,,,,key:value pairs; add only if provided; all other columns
+1,0,0,0,1,compounddata,obtained_from,compounds,obtained_from,,,
+1,0,1,0,1,compounddata,source_type,compounds,source_type,norm_source_types,,
+1,0,0,0,1,compounddata,fixedmass,compounds,fixedmass,,,
+1,0,0,0,1,compounddata,netcharge,compounds,netcharge,,,
+1,0,0,0,1,compounddata,formula,compounds,formula,,,
+1,0,0,0,1,compounddata,additional,compounds,additional,,,
 0,0,1,0,0,,,compounds,inspected_on,,,default current timestamp
 1,0,0,0,1,annotation,fragment_mz,annotated_fragments,mz,,,
 1,0,0,0,1,annotation,fragment_SMILES,annotated_fragments,fragment_id,norm_fragments,fragment_aliases,
@@ -125,5 +125,14 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 0,0,0,0,1,,,qc_data,parameter,,,
 0,0,0,0,1,,,qc_data,name,,,
 0,0,0,0,1,,,qc_data,value,,,
+1,0,1,0,0,,,opt_ums_params,peak_id,,,id from peaks
+1,0,0,0,0,opt_ums_params,parameter,,,,,scrub from import
+1,0,0,0,0,opt_ums_params,mslevel,opt_ums_params,mslevel,,,
+1,0,0,0,0,opt_ums_params,correl,opt_ums_params,correl,,,
+1,0,0,0,0,opt_ums_params,ph,opt_ums_params,ph,,,
+1,0,0,0,0,opt_ums_params,freq,opt_ums_params,freq,,,
+1,0,0,0,0,opt_ums_params,n,opt_ums_params,n,,,
+1,0,0,0,0,opt_ums_params,masserror,opt_ums_params,masserror,,,
+1,0,0,0,0,opt_ums_params,minerror,opt_ums_params,minerror,,,
 ,,,,,,,,,,,
 ,,,,,,,,,,,"LINK peaks.id, compounds.id, and annotated_fragments.id in compound_fragments as appropriate"

@@ -2341,9 +2341,10 @@ make_install_code <- function(db_conn = con, new_name = NULL, log_ns = "db") {
   stopifnot(dbIsValid(db_conn),
             is.character(new_name),
             length(new_name) == 1)
-  old_code <- tbl(db_conn, "config") %>%
-    filter(id == 0) %>%
-    pull(code)
+  old_vals <- dbReadTable(db_conn, "config") %>%
+    filter(id == 0)
+  old_code <- old_vals$code
+  old_name <- old_vals$name
   use_name <- ifelse(is.null(new_name),
                      "",
                      sqlInterpolate(db_conn,
@@ -2354,6 +2355,12 @@ make_install_code <- function(db_conn = con, new_name = NULL, log_ns = "db") {
     filter(id == 0) %>%
     pull(code)
   log_it("info", glue::glue(
-    "Updating install code from {old_code} to {new_code}."
+    "Updating install code from {old_code} to {new_code}{ifelse(use_name == '', sprintf(' with %s', new_name), '')}."
   ))
+  old_vals <- toJSON(list(code = old_code, name = old_name))
+  new_vals <- toJSON(list(code = new_code, name = new_name))
+  set_cols <- "category, description, bundle, effect, affects_table, executed_from, new_vals, old_vals"
+  set_vals <- glue::glue("'build', 'mint new install code', 'install', 2, 'config', 'script', '{new_vals}', '{old_vals}'")
+  dbExecute(db_conn,
+            glue::glue("insert into logs ({set_cols}) values ({set_vals})"))
 }
