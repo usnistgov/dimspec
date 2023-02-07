@@ -309,6 +309,11 @@ full_import <- function(import_object                  = NULL,
   if (length(to_ignore) > 0) {
     import_object <- import_object[-unique(to_ignore)]
   }
+  # Ensure the database map is present
+  if (!exists("db_map")) {
+    log_it("warn", "No database map present, generating in the session environment as object `db_map` using `er_map()`.", log_ns)
+    db_map <<- er_map(db_conn)
+  }
   # Get all unique relationships to cut down on extraneous database rows
   # ____________________________________________________________________________
   # 2022-04-27: This was more easily accomplished by fixing the import map and
@@ -474,15 +479,6 @@ full_import <- function(import_object                  = NULL,
                                log_ns = log_ns)
       }
     }
-    # _Mobile phase node ----
-    do.call(
-      resolve_mobile_phase_NTAMRT,
-      args = append(list(obj = obj,
-                         method_id = ms_method_id,
-                         sample_id = sample_id),
-                    func_env[names(func_env) %in% names(formals(resolve_mobile_phase_NTAMRT))]
-      )
-    )
     # _QC node ----
     # __QC methods ----
     do.call(
@@ -511,14 +507,23 @@ full_import <- function(import_object                  = NULL,
                     func_env[names(func_env) %in% names(formals(resolve_peaks))]
       )
     )
-    # TODO uncertainty mass spectrum if applicable
-    
+    # _Mobile phase node ----
+    do.call(
+      resolve_mobile_phase_NTAMRT,
+      args = append(list(obj = obj,
+                         method_id = ms_method_id,
+                         sample_id = sample_id,
+                         peak_id = peaks),
+                    func_env[names(func_env) %in% names(formals(resolve_mobile_phase_NTAMRT))]
+      )
+    )
     # _Compounds node ----
     compounds <- do.call(
       resolve_compounds,
-      args = append(list(obj = obj),
-                    func_env[names(func_env) %in% names(formals(resolve_compounds))],
-                    norm_alias_table = compound_alias_type_norm_table
+      args = append(list(obj = obj,
+                         compound_alias_table = compound_aliases_table,
+                         norm_alias_table = compound_alias_type_norm_table),
+                    func_env[names(func_env) %in% names(formals(resolve_compounds))]
       )
     )
     # _Fragments node ----
@@ -739,7 +744,7 @@ resolve_compounds <- function(obj,
                               compound_alias_table = "compound_aliases",
                               norm_alias_table = "norm_analyte_alias_references",
                               norm_alias_name_column = "name",
-                              NIST_id_in = "ID",
+                              NIST_id_in = "id",
                               require_all = FALSE,
                               import_map = IMPORT_MAP,
                               ensure_unique = TRUE,
@@ -773,15 +778,21 @@ resolve_compounds <- function(obj,
   obj_values <- get_component(obj = obj,
                               obj_component = compounds_in,
                               log_ns = log_ns)[[1]]
+  if (compounds_in %in% names(obj_values)) obj_values <- obj_values[[1]]
   if (NIST_id_in %in% names(obj_values)) {
     check_value <- obj_values[[NIST_id_in]]
   } else {
-    check_value <- obj_values[["NAME"]]
-    if (str_detect(check_value, ";")) {
+    check_value <- obj_values[["name"]]
+    if (length(check_value) > 0 && str_detect(check_value, ";")) {
       check_value <- str_split(check_value, ";") %>%
         unlist()
       log_it("warn", glue::glue("{length(check_value)} unique compound names detected as potential aliases."), log_ns)
     }
+  }
+  if (length(check_value) == 0) {
+    msg <- "Could not identify a NIST Suspect List ID or a 'name' column for this compound. These are necessary to proceed."
+    log_it("error", msg, log_ns)
+    stop(msg)
   }
   exists <- check_for_value(
     values = check_value,
@@ -959,8 +970,7 @@ resolve_compound_aliases <- function(obj,
                               str_c(toupper(alias_type), alias, sep = ":")))
     )
   }
-  need_headers <- c("ADDITIONAL",
-                    "NAME",
+  need_headers <- c("NAME",
                     "compound_id",
                     alias_types,
                     names(list(...))
@@ -975,7 +985,8 @@ resolve_compound_aliases <- function(obj,
            alias_type = ifelse(tolower(alias_type) %in% alias_types,
                                tolower(alias_type),
                                alias_type)) %>%
-    unnest(c(alias))
+    unnest(c(alias)) %>%
+    filter(!alias == "")
   if (length(kwargs) > 0) {
     out <- bind_rows(
       out,
@@ -1279,7 +1290,7 @@ resolve_fragments_NTAMRT <- function(obj,
                                      generation_type = NULL,
                                      fragments_in = "annotation",
                                      fragments_table = "annotated_fragments",
-                                     fragments_norm_table = ref_table_from_map(fragments_table, "annotated_fragment_id"),
+                                     fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
                                      fragments_sources_table = "fragment_sources",
                                      citation_info_in = "fragment_citation",
                                      inspection_info_in = "fragment_inspections",
@@ -1344,6 +1355,11 @@ resolve_fragments_NTAMRT <- function(obj,
     stopifnot(arg_check$valid)
   }
   stopifnot(active_connection(db_conn = db_conn))
+  obj <- get_component(obj, fragments_in)
+  if (length(obj) == 0) return(NA)
+  while (!fragments_in %in% names(obj)) {
+    obj <- obj[[1]]
+  }
   # Resolve direct aliases first - this will make all smiles aliases resolve
   # automatically during import mapping of the fragment values
   fragment_identifiers <- map_import(
@@ -1376,7 +1392,8 @@ resolve_fragments_NTAMRT <- function(obj,
   if (!"smiles" %in% names(fragment_identifiers)) fragment_identifiers$smiles <- NA
   fragment_identifiers <- fragment_identifiers %>%
     bind_cols() %>%
-    mutate(smiles = ifelse(smiles == "", NA, smiles))
+    mutate(smiles = ifelse(smiles == "", NA, smiles),
+           radical = as.logical(radical))
   if (nrow(fragment_identifiers) == 0) {
     log_it("info", "No identifying aliases were located.", log_ns)
     return(NULL)
@@ -1413,9 +1430,14 @@ resolve_fragments_NTAMRT <- function(obj,
         new_fragment_identifiers$netcharge[netcharge_missing] <- sapply(
           new_fragment_identifiers$smiles[netcharge_missing],
           function(x) {
-            rdk$Chem$GetFormalCharge(
-              rdk$Chem$MolFromSmiles(x)
-            )
+            mol <- rdk$Chem$MolFromSmiles(x)
+            if (is.null(mol)) {
+              fc <- NA
+              log_it("warn", sprintf("Could not generate a mol object from smiles string `%s` to calculate the formal charge", x), log_ns)
+            } else{
+              fc <- rdk$Chem$GetFormalCharge(mol)
+            }
+            return(fc)
           }
         )
       }
@@ -1447,7 +1469,7 @@ resolve_fragments_NTAMRT <- function(obj,
   fragment_values <- get_component(obj, fragments_in)[[1]] %>%
     bind_rows() %>%
     setNames(tolower(str_remove_all(names(.), "fragment_"))) %>%
-    mutate(radical = as.numeric(radical),
+    mutate(radical = as.numeric(as.logical(radical)),
            smiles = if ("smiles" %in% names(.)) ifelse(smiles == "", NA, smiles) else NA) %>%
     left_join(fragment_identifiers) %>%
     rename("fragment_id" = "id") %>%
@@ -1591,6 +1613,7 @@ resolve_fragments_NTAMRT <- function(obj,
     if (generate_missing_aliases) {
       if (!using_rdkit) {
         log_it("warn", "Alias generation was requested but rdkit was not available.", log_ns)
+        fragment_alias_values <- data.frame(a = NULL)
       } else {
         these_args <- as.list(environment())[names(formals(add_rdkit_aliases))]
         these_args <- these_args[!is.na(names(these_args))]
@@ -2336,6 +2359,7 @@ resolve_description_NTAMRT <- function(obj,
 #' @param obj LIST object containing data formatted from the import generator
 #' @param method_id INT scalar of the method id (e.g. from the import workflow)
 #' @param sample_id INT scalar of the sample id (e.g. from the import workflow)
+#' @param peak_id INT scalar of the peak id (e.g. from the import workflow)
 #' @param carrier_mix_names CHR vector (optional) of carrier mix collection
 #'   names to assign, the length of which should equal 1 or the length of
 #'   discrete carrier mixtures; the default, NULL, will automatically assign
@@ -2347,7 +2371,8 @@ resolve_description_NTAMRT <- function(obj,
 #'   schemes
 #' @param ms_methods_table CHR scalar name of the methods table (default:
 #'   "ms_methods")
-#' @param sample_table CHR scalar name of the methods table (default: "samples")
+#' @param sample_table CHR scalar name of the samples table (default: "samples")
+#' @param peak_table CHR scalar name of the peaks table (default: "peaks")
 #' @param db_conn existing connection object (e.g. of class "SQLiteConnection")
 #' @param mix_collection_table CHR scalar name of the mix collections table
 #'   (default: "carrier_mix_collections")
@@ -2391,10 +2416,12 @@ resolve_description_NTAMRT <- function(obj,
 resolve_mobile_phase_NTAMRT <- function(obj,
                                         method_id,
                                         sample_id,
+                                        peak_id,
                                         carrier_mix_names = NULL,
                                         id_mix_by = "^mp*[0-9]+",
                                         ms_methods_table = "ms_methods",
                                         sample_table = "samples",
+                                        peak_table = "peaks",
                                         db_conn = con,
                                         mix_collection_table = "carrier_mix_collections",
                                         mobile_phase_props = list(
@@ -2441,10 +2468,16 @@ resolve_mobile_phase_NTAMRT <- function(obj,
                     db_table = sample_table,
                     db_column = "id",
                     db_conn = db_conn)$exists,
+    as.integer(peak_id) == peak_id,
+    check_for_value(values = peak_id,
+                    db_table = peak_table,
+                    db_column = "id",
+                    db_conn = db_conn)$exists,
     is.list(obj)
   )
   method_id <- as.integer(method_id)
   sample_id <- as.integer(sample_id)
+  peak_id <- as.integer(peak_id)
   obj <- get_component(obj, mobile_phase_props[["in_item"]])[[1]]
   mixes <- obj[names(obj[grep(id_mix_by, names(obj))])]
   mixes <- mixes[-which(mixes %in% exclude_values)]
@@ -2472,7 +2505,12 @@ resolve_mobile_phase_NTAMRT <- function(obj,
   
   # Separate out solvent mixes and do inserts on carrier mixes, norm_carriers, and carrier_aliases as appropriate
   carrier_mixes <- mixes %>%
-    filter(group == "carrier") %>%
+    filter(group == "carrier")
+  # Catch case of carrier not being provided
+  if (nrow(carrier_mixes) == 0) {
+    log_it("warn", "No carrier mixes provided.", log_ns)
+  }
+  carrier_mixes <- carrier_mixes %>%
     mutate(ref = str_remove_all(ref, id_mix_by)) %>%
     pivot_wider(id_cols = c(inferred_group, inferred_order),
                 values_from = c(value),
@@ -2624,99 +2662,107 @@ resolve_mobile_phase_NTAMRT <- function(obj,
   # Separate out solvent mixes and do inserts on carrier mixes, norm_carriers, and carrier_aliases as appropriate
   carrier_additives <- mixes %>%
     filter(group == "additive") %>%
-    mutate(ref = str_remove_all(ref, id_mix_by)) %>%
-    pivot_wider(id_cols = c(inferred_group, inferred_order),
-                values_from = c(value),
-                names_from = c(ref)) %>%
-    rename(
-      c("amount" = !!grep(additive_props$props[["amount_by"]], names(.), value = TRUE)),
-      c("units" = !!grep(additive_props$props[["units_by"]], names(.), value = TRUE)),
-      c("component" = !!grep(additive_props$props[["id_by"]], names(.), value = TRUE))
-    ) %>%
-    mutate(across(any_of("amount"), as.numeric)) %>%
-    left_join(
-      build_db_action(
-        action = "select",
-        table_name = additive_props$alias_in,
-        db_conn = db_conn,  
-        match_criteria = list(alias = .$component),
-        log_ns = log_ns
-      ),
-      by = c("component" = "alias")
-    ) %>%
-    rename("alias_id" = "additive_id") %>%
-    mutate(
-      additive_id = ifelse(!is.na(alias_id),
-                           alias_id,
-                           sapply(component,
-                                  function(x) {
-                                    resolve_normalization_value(
-                                      this_value = x,
-                                      db_table = additive_props$norm_by,
-                                      id_column = "id",
-                                      db_conn = db_conn,
-                                      fuzzy = fuzzy,
-                                      log_ns = log_ns)
-                                  })
+    mutate(additive_id = NA)
+  # Catch case of no additives
+  if (nrow(carrier_additives) == 0) {
+    log_it("info", "No carrier additives provided.", log_ns)
+  } else {
+    carrier_additives <- carrier_additives %>%
+      mutate(ref = str_remove_all(ref, id_mix_by)) %>%
+      pivot_wider(id_cols = c(inferred_group, inferred_order),
+                  values_from = c(value),
+                  names_from = c(ref)) %>%
+      rename(
+        c("amount" = !!grep(additive_props$props[["amount_by"]], names(.), value = TRUE)),
+        c("units" = !!grep(additive_props$props[["units_by"]], names(.), value = TRUE)),
+        c("component" = !!grep(additive_props$props[["id_by"]], names(.), value = TRUE))
+      ) %>%
+      mutate(across(any_of("amount"), as.numeric)) %>%
+      left_join(
+        build_db_action(
+          action = "select",
+          table_name = additive_props$alias_in,
+          db_conn = db_conn,  
+          match_criteria = list(alias = .$component),
+          log_ns = log_ns
+        ),
+        by = c("component" = "alias")
+      ) %>%
+      rename("alias_id" = "additive_id") %>%
+      mutate(
+        additive_id = ifelse(!is.na(alias_id),
+                             alias_id,
+                             sapply(component,
+                                    function(x) {
+                                      resolve_normalization_value(
+                                        this_value = x,
+                                        db_table = additive_props$norm_by,
+                                        id_column = "id",
+                                        db_conn = db_conn,
+                                        fuzzy = fuzzy,
+                                        log_ns = log_ns)
+                                    })
+        )
       )
-    )
-  
-  # Insert any missing aliases
-  if (any(is.na(carrier_additives$alias_id))) {
-    carrier_additives %>%
-      filter(is.na(alias_id)) %>%
-      select(additive_id, component) %>%
-      rename("alias" = "component") %>%
-      build_db_action(
-        action = "insert",
-        table_name = additive_props$alias_in,
-        db_conn = db_conn,
-        values = .,
-        ignore = TRUE)
-  }
-  # Insert into carrier_additives table by name match
-  carrier_additives <- carrier_additives %>%
-    mutate(component = additive_id) %>%
-    select(-alias_id, -additive_id) %>%
-    left_join(mix_ids, by = c("inferred_group" = "inferred_group")) %>%
-    select(any_of(c("mix_id", "component", "amount", "units", "inferred_group"))) %>%
-    mutate(
-      across(any_of("units"),
-             ~ sapply(
-               .,
-               function(x) {
-                 if (!has_missing_elements(x)) {
-                   resolve_normalization_value(
-                     this_value = x,
-                     db_table = "norm_additive_units",
-                     id_column = "id",
-                     db_conn = db_conn,
-                     fuzzy = fuzzy,
-                     log_ns = log_ns) %>%
-                     unlist()
-                 } else {
-                   x
-                 }
-               }
-             ))
-    ) %>%
-    group_by(inferred_group) %>%
-    group_split() %>%
-    lapply(
-      function(x) {
+    
+    # Insert any missing aliases
+    if (any(is.na(carrier_additives$alias_id))) {
+      carrier_additives %>%
+        filter(is.na(alias_id)) %>%
+        select(additive_id, component) %>%
+        rename("alias" = "component") %>%
         build_db_action(
           action = "insert",
-          table_name = additive_props$db_table,
+          table_name = additive_props$alias_in,
           db_conn = db_conn,
-          values = x %>%
-            select(-inferred_group),
-          log_ns = log_ns
-        )
-      })
+          values = .,
+          ignore = TRUE)
+    }
+    # Insert into carrier_additives table by name match
+    carrier_additives <- carrier_additives %>%
+      mutate(component = additive_id) %>%
+      select(-alias_id, -additive_id) %>%
+      left_join(mix_ids, by = c("inferred_group" = "inferred_group")) %>%
+      select(any_of(c("mix_id", "component", "amount", "units", "inferred_group"))) %>%
+      mutate(
+        across(any_of("units"),
+               ~ sapply(
+                 .,
+                 function(x) {
+                   if (!has_missing_elements(x)) {
+                     resolve_normalization_value(
+                       this_value = x,
+                       db_table = "norm_additive_units",
+                       id_column = "id",
+                       db_conn = db_conn,
+                       fuzzy = fuzzy,
+                       log_ns = log_ns) %>%
+                       unlist()
+                   } else {
+                     x
+                   }
+                 }
+               ))
+      ) %>%
+      group_by(inferred_group) %>%
+      group_split() %>%
+      lapply(
+        function(x) {
+          build_db_action(
+            action = "insert",
+            table_name = additive_props$db_table,
+            db_conn = db_conn,
+            values = x %>%
+              select(-inferred_group),
+            log_ns = log_ns
+          )
+        })
+  }
   # Finally, shape up and insert into mobile_phases
   mobile_phases <- mixes %>%
     filter(group == "mobile_phase")
   if (nrow(mobile_phases) == 0) {
+    log_it("info", "No mobile phase information provided.", log_ns)
     mobile_phases <- tibble(mix_id = mix_ids$mix_id)
   } else {
     mobile_phases <- mobile_phases %>%
@@ -2735,6 +2781,7 @@ resolve_mobile_phase_NTAMRT <- function(obj,
     mutate(
       ms_methods_id = method_id,
       sample_id = sample_id,
+      peak_id = peak_id,
       across(any_of("flow_units"),
              ~ sapply(
                .,
@@ -3054,6 +3101,7 @@ resolve_ms_spectra <- function(peak_id,
 #'
 #' @inheritParams resolve_ms_data
 #' @inheritParams resolve_ms_spectra
+#' @inheritParams resolve_peak_ums_params
 #'
 #' @param obj CHR vector describing settings or a named LIST with names matching
 #'   column names in table conversion_software_settings.
@@ -3082,6 +3130,8 @@ resolve_peaks <- function(obj,
                           format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
                           min_datetime = "2000-01-01 00:00:00",
                           import_map = IMPORT_MAP,
+                          ums_params_in = "opt_ums_params",
+                          ums_params_table = "opt_ums_params",
                           db_conn = con,
                           log_ns = "db") {
   stopifnot(as.integer(sample_id) == sample_id,
@@ -3094,24 +3144,27 @@ resolve_peaks <- function(obj,
                         ms_data_in, ms_data_table, unpack_spectra,
                         unpack_format, ms_spectra_table, linkage_table,
                         settings_table, as_date_format, format_checks,
-                        import_map, db_conn, log_ns),
+                        import_map, ums_params_in, ums_params_table, db_conn,
+                        log_ns),
       conditions = list(
         obj                  = list(c("mode", "list")),
         sample_id            = list(c("mode", "integer"), c("length", 1), "no_na"),
-        peaks_table               = list(c("mode", "character"), c("length", 1)),
-        software_settings_in = list(c("mode", "character"), c("length", 1)),
-        ms_data_in           = list(c("mode", "character"), c("length", 1)),
-        ms_data_table        = list(c("mode", "character"), c("length", 1)),
-        unpack_spectra       = list(c("mode", "logical"), c("length", 1)),
-        unpack_format        = list(c("mode", "character"), c("length", 1)),
-        ms_spectra_table     = list(c("mode", "character"), c("length", 1)),
-        linkage_table        = list(c("mode", "character"), c("length", 1)),
-        settings_table       = list(c("mode", "character"), c("length", 1)),
-        as_date_format       = list(c("mode", "character"), c("length", 1)),
+        peaks_table          = list(c("mode", "character"), c("length", 1), "no_na"),
+        software_settings_in = list(c("mode", "character"), c("length", 1), "no_na"),
+        ms_data_in           = list(c("mode", "character"), c("length", 1), "no_na"),
+        ms_data_table        = list(c("mode", "character"), c("length", 1), "no_na"),
+        unpack_spectra       = list(c("mode", "logical"), c("length", 1), "no_na"),
+        unpack_format        = list(c("mode", "character"), c("length", 1), "no_na"),
+        ms_spectra_table     = list(c("mode", "character"), c("length", 1), "no_na"),
+        linkage_table        = list(c("mode", "character"), c("length", 1), "no_na"),
+        settings_table       = list(c("mode", "character"), c("length", 1), "no_na"),
+        as_date_format       = list(c("mode", "character"), c("length", 1), "no_na"),
         format_checks        = list(c("mode", "character")),
         import_map           = list(c("mode", "list"), c("n>", 1)),
+        ums_params_in        = list(c("mode", "character"), c("length", 1), "no_na"),
+        ums_params_table     = list(c("mode", "character"), c("length", 1), "no_na"),
         db_conn              = list(c("length", 1)),
-        log_ns               = list(c("mode", "character"), c("length", 1))
+        log_ns               = list(c("mode", "character"), c("length", 1), "no_na")
       )
     )
     stopifnot(arg_check$valid)
@@ -3170,25 +3223,62 @@ resolve_peaks <- function(obj,
     db_conn = db_conn,
     log_ns = log_ns
   )
+  # Resolve UMS parameters (optional)
+  if (ums_params_in %in% names(obj)) {
+    resolve_peak_ums_params(
+      obj = obj,
+      peak_id = peak_id,
+      ums_params_in = ums_params_in,
+      ums_params_table = ums_params_table,
+      db_conn = db_conn,
+      log_ns = log_ns
+    )
+  }
   return(peak_id)
 }
 
-# TODO stub to add uncertainty mass spectral parameters for a given peak
+#' Resolve and import optimal uncertain mass spectrum parameters
+#'
+#' This imports the defined object component containing parameters for the
+#' optimized uncertainty mass spectrum used to compare with new data. This
+#' function may be called at any time to add data for a given peak, but there is
+#' no row unique restriction on the underlying table and is best used in a "one
+#' pass" method during the import routine. These parameters are calculated as
+#' part of NIST QA procedures and are added to the output of the NTA MRT after
+#' those JSONs have been created.
+#'
+#' @note This function is called as part of [resolve_peaks()]
+#'
+#' @inheritParams build_db_action
+#'
+#' @param obj LIST object containing data formatted from the import generator
+#' @param peak_id INT scalar of the peak ID in question, which must be present
+#'   (e.g. from the import workflow)
+#' @param ums_params_in CHR scalar name of the item in `obj` containing
+#'   optimized uncertainty mass spectrum parameters
+#' @param ums_params_table CHR scalar name of the database table holding
+#'   optimized uncertainty mass spectrum parameters
+#'
+#' @return Nothing if successful, a data frame object of the extracted
+#'   parameters otherwise.
+#' @export
+#' 
 resolve_peak_ums_params <- function(obj,
                                     peak_id,
-                                    ums_params_in = c("optimized_ums_parameters_ms1", "optimized_ums_parameters_ms2"),
+                                    ums_params_in = "opt_ums_params",
                                     ums_params_table = "opt_ums_params",
                                     db_conn = con,
                                     log_ns = "db") {
   stopifnot(peak_id == as.integer(peak_id))
+  peak_id <- as.integer(peak_id)
   if (exists("verify_args")) {
     arg_check <- verify_args(
       args       = as.list(environment()),
       conditions = list(
         obj              = list(c("mode", "list")),
         peak_id          = list(c("mode", "integer"), c("length", 1), "no_na"),
-        ums_params_in    = list(c("mode", "character"), c("n>=", 1), c("n<=", 2)),
-        ums_params_table = list(c("mode", "character"), c("length", 1)),
+        ums_params_in    = list(c("mode", "character"), c("length", 1), "no_na"),
+        ums_params_table = list(c("mode", "character"), c("length", 1), "no_na"),
         db_conn          = list(c("length", 1)),
         log_ns           = list(c("mode", "character"), c("length", 1))
       )
@@ -3198,10 +3288,11 @@ resolve_peak_ums_params <- function(obj,
   ums_params <- lapply(
     get_component(obj, ums_params_in),
     function(x) {
-      if (!inherits(x, "data.frame")) {
-        bind_rows(x) %>%
-          mutate(peak_id = peak_id)
-      }
+      if (!inherits(x, "data.frame")) bind_rows(x)
+      x <- x %>%
+        mutate(peak_id = peak_id) %>%
+        relocate(peak_id, .before = everything()) %>%
+        select(all_of(dbListFields(db_conn, ums_params_in)))
     }
   ) %>%
     bind_rows()
@@ -3210,12 +3301,11 @@ resolve_peak_ums_params <- function(obj,
   )
   if (inherits(res, "try-error")) {
     log_it("error", glue::glue('There was a problem inserting records into "{ums_params_table}."'), log_ns)
-    return(ums_params_table)
+    return(ums_params)
   } else {
     return(NULL)
   }
 }
-
 
 #' Resolve and import quality control method information
 #'
@@ -3535,10 +3625,12 @@ remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
 #' @param file_name CHR scalar indicating a file name to save the resulting name
 #'   or search on any existing file to archive if `archive` = TRUE (default:
 #'   "import_requirements.json")
+#' @param not_required CHR vector matching element names of `example_import`
+#'   which are not required; all others will be assumed to be required
 #' @param archive LGL indicating whether or not to archive an existing file
 #'   matching `file_name` by suffixing the file name with current date. Only one
 #'   archive per date is supported; if a file already exists, it will be
-#'   deleted. (default: TRUE)
+#'   deleted. (default: TRUE)\
 #' @param retain_in_R LGL indicating whether to retain a local copy of the
 #'   requirements file generated (default: TRUE)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
@@ -3549,6 +3641,7 @@ remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
 #' 
 make_requirements <- function(example_import,
                               file_name = "import_requirements.json",
+                              not_required = c("annotation", "chromatography", "opt_ums_params"),
                               archive = TRUE,
                               retain_in_R = TRUE,
                               log_ns = "db") {
@@ -3574,41 +3667,43 @@ make_requirements <- function(example_import,
         stop()
       }
     }
+    if (!file.exists(f_name)) {
+      f_name <- list.files(pattern = file_name, full.names = TRUE, recursive = TRUE)
+    }
+    if (length(f_name) > 1) {
+      f_name <- f_name[1]
+      log_it(
+        "warn",
+        sprintf(
+          "Multiple import requirements files located. Only the file at (%s) will be replaced.",
+          f_name
+        ),
+        log_ns
+      )
+    } else if (length(f_name) == 1 && archive) {
+      f_ext      <- paste0(".", tools::file_ext(f_name))
+      f_suffix   <- paste0("_", format(Sys.Date(), "%Y%m%d"), f_ext)
+      new_f_name <- gsub(
+        f_ext,
+        f_suffix,
+        f_name
+      )
+      if (file.exists(new_f_name)) file.remove(new_f_name)
+      file.rename(f_name, new_f_name)
+    } else {
+      f_name <- paste0(
+        tools::file_path_sans_ext(file_name),
+        ".json"
+      )
+    }
     example_import <- try(
       fromJSON(read_file(f_name))
     )
     if (class(example_import) == "try-error") {
       stop(sprintf('The file "%s" was not readable as JSON.', f_name))
     }
-  }
-  if (!file.exists(f_name)) {
-    f_name <- list.files(pattern = file_name, full.names = TRUE, recursive = TRUE)
-  }
-  if (length(f_name) > 1) {
-    f_name <- f_name[1]
-    log_it(
-      "warn",
-      sprintf(
-        "Multiple import requirements files located. Only the file at (%s) will be replaced.",
-        f_name
-      ),
-      log_ns
-    )
-  } else if (length(f_name) == 1 && archive) {
-    f_ext      <- paste0(".", tools::file_ext(f_name))
-    f_suffix   <- paste0("_", format(Sys.Date(), "%Y%m%d"), f_ext)
-    new_f_name <- gsub(
-      f_ext,
-      f_suffix,
-      f_name
-    )
-    if (file.exists(new_f_name)) file.remove(new_f_name)
-    file.rename(f_name, new_f_name)
   } else {
-    f_name <- paste0(
-      tools::file_path_sans_ext(file_name),
-      ".json"
-    )
+    f_name <- file_name
   }
   out <- lapply(
     example_import,
@@ -3620,13 +3715,12 @@ make_requirements <- function(example_import,
       )
     }
   )
-  not_required <- c("annotation", "chromatography")
   for (nr in not_required) {
     out[[nr]]$required <- FALSE
   }
   if (retain_in_R) import_requirements <<- out
   out <- toJSON(out, auto_unbox = TRUE, pretty = TRUE)
-  write_file(out, f_name)
+  write_file(out, file.path(here::here("config", f_name)))
   cat("Requirements file written to", f_name)
 }
 
@@ -3729,13 +3823,10 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
 #' use (e.g. pulling from multiple locations), this can be run multiple times
 #' with different values of `requirement_obj` or `file_name`.
 #'
-#' The return from this is a tibble with 6 or 7 columns depending on whether the
-#' import file contains data from a single sample or multiple samples. It will
-#' parse either way depending on where required names are located in the object
-#' provided to `obj`. If it is a single list, the return will contain 6 columns;
-#' if it is a nested list of samples, the return will contain 7 columns, with
-#' the names of the provided `obj` attached to each row. Other columns contain
-#' information related to three checks.
+#' The return from this is a tibble with 9 columns. The first is the name of the
+#' import object member, typically the file name. If a single, unnested import
+#' object is provided this will be "import object". The other columns include
+#' the following verification checks:
 #'
 #' 1. has_all_required: Are all required names present in the sample?
 #' (TRUE/FALSE)
@@ -3747,10 +3838,16 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
 #'
 #' 4. missing_detail: Character vectors naming any missing value sets
 #'
-#' 5. has_extra: Are there unexpected values provided ? (TRUE/FALSE)
+#' 5. has_extra: Are there unexpected values provided? (TRUE/FALSE)
 #'
 #' 6. extra_cols: Character vectors naming any has_extra columns; these will be
 #' dropped from the import but are provided for information sake
+#'
+#' 7. has_name_mismatches: Are there name differences between the import
+#' requirement elements and the import object? (TRUE/FALSE)
+#'
+#' 8. mismatched_names: Named lists enumerating which named elements (if any)
+#' from the import object did not match name expectations in the requirements
 #'
 #' All of this is defined by the `requirements_obj` list. Do not provide that
 #' list directly, instead pass this function the name of the requirements object
@@ -3776,17 +3873,14 @@ verify_import_columns <- function(values, db_table, names_only = FALSE, require_
 #'   the [logger] package isn't available
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")
 #'
-#' @return A tibble object with 6 columns containing the results of the check,
-#'   with one row for each import object identified; if `obj` is a list of
-#'   import data, the column "import_object" is added at the left of the data
-#'   frame with the names of the list components
+#' @return A tibble object with 9 columns containing the results of the checks.
 #'
 #' @export
 #' 
 verify_import_requirements <- function(obj,
                                        ignore_extra = TRUE,
                                        requirements_obj = "import_requirements",
-                                       file_name = "import_requirements.json",
+                                       file_name = "import_requirements",
                                        log_issues_as = "warn",
                                        log_ns = "db") {
   # Argument validation relies on verify_args
@@ -3802,10 +3896,11 @@ verify_import_requirements <- function(obj,
     )
     stopifnot(arg_check$valid)
   }
+  f_name <- sprintf("%s.json", file_name)
   if (exists(requirements_obj)) {
     reqs <- eval(rlang::sym(requirements_obj))
   } else {
-    f_name <- list.files(pattern = file_name, recursive = TRUE, full.names = TRUE)
+    f_name <- list.files(pattern = f_name, recursive = TRUE, full.names = TRUE)
     if (length(f_name) == 1) {
     } else {
       if (interactive()) {
@@ -3826,6 +3921,8 @@ verify_import_requirements <- function(obj,
     assign(requirements_obj, reqs, envir = .GlobalEnv)
   }
   req_names      <- names(reqs)
+  element_names  <- map(reqs, ~ .$names)
+  element_names  <- element_names[-which(sapply(element_names, is.null))]
   obj_names      <- names(obj)
   hard_reqs      <- req_names[which(lapply(reqs, function(x) x$required) == TRUE)]
   recommended    <- req_names[!req_names %in% hard_reqs]
@@ -3846,6 +3943,16 @@ verify_import_requirements <- function(obj,
   )
   if (all_required) {
     nested <- FALSE
+    mismatched_names <- sapply(
+      req_names,
+      function(x) {
+        setdiff(element_names[[x]], names(obj[[x]]))
+      }
+    )
+    mismatched_names <- mismatched_names[sapply(mismatched_names, length) > 0]
+    has_name_mismatches <- length(mismatched_names) > 0
+    out$has_name_mismatches <- unlist(has_name_mismatches)
+    out$mismatched_names <- list(mismatched_names)
   } else {
     required <- hard_reqs %in% unique(unlist(lapply(obj, names)))
     nested_with_all_required <- all(required)
@@ -3896,13 +4003,12 @@ verify_import_requirements <- function(obj,
   if (nested) {
     out <- out %>%
       bind_rows() %>%
-      mutate(import_object = names(obj)) %>%
-      relocate(import_object, .before = )
+      mutate(import_object = names(obj))
   } else {
     out <- as_tibble(out) %>%
-      mutate(import_object = "import object") %>%
-      relocate(import_object, .before = everything())
+      mutate(import_object = "import object")
   }
+  out <- relocate(out, import_object, .before = everything())
   return(out)
 }
 
@@ -4267,7 +4373,7 @@ add_rdkit_aliases <- function(identifiers,
     if (!tolower(type) %in% tolower(names(identifiers))) {
       log_it("error", glue::glue("Provided data do not include a column named '{type}'."), log_ns)
     } else {
-      log_it("info", glue::glue("Generating aliases for {alias_category} using rdkit_mol_aliases."), log_ns)
+      log_it("info", glue::glue("Generating aliases for {alias_category} using `rdkit_mol_aliases`."), log_ns)
       alias_values <- rdkit_mol_aliases(identifiers = identifiers,
                                         type = type,
                                         get_aliases = rdkit_aliases,

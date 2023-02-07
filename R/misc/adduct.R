@@ -11,6 +11,7 @@
 #' 
 get_massadj <- function(adduct = "+H", exactmasses = NULL, db_conn = "con") {
   #normally exact masses would be called from a previous function, but just in case.
+  # This should really get pulled into its own function and used both here and in calculate.monoisotope but the flexibility might be nice.
   if (is.null(exactmasses)) {
     if (is.character(db_conn)) {
       if (exists(db_conn)) {
@@ -23,11 +24,11 @@ get_massadj <- function(adduct = "+H", exactmasses = NULL, db_conn = "con") {
     }
     if (use_db) {
       exactmasses <- tbl(db_conn, "view_exact_masses") %>%
-        #select(rlang::symbol, exact_mass) %>%
+        select(symbol, exact_mass) %>%
         collect()
     } else {
       exactmasses <- setNames(
-        readRDS("R/misc/exactmasses.RDS"),
+        readRDS(here::here("R", "misc", "exactmasses.RDS")),
         c("symbol", "exact_mass")
       )
     }

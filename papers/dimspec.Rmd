@@ -1,0 +1,30 @@
+---
+title: "A Portable and Reusable Database Infrastructure for Mass Spectrometry, and Its Associated Toolkit (The DIMSpec Project)"
+author: 
+  - "Jared M. Ragland^[National Institute of Standards and Technology, jared.ragland@nist.gov]"
+  - "Benjamin J. Place^[National Institute of Standards and Technology, benjamin.place@nist.gov]"
+date: '2023-01-06'
+output: html_document
+---
+
+# Abstract
+
+# Introduction
+
+# Methods
+
+## Database Schema
+
+## Toolkit
+
+### R
+
+### RDKit
+
+### Plumber
+
+### Shiny
+
+# Results
+
+# Conclusion

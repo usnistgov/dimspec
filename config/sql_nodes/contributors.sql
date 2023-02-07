@@ -104,8 +104,11 @@
 				/* contributor affiliation */
 			c.contact,
 				/* contributor contact information */
-			("https://orcid.org/" || c.orcid) AS orcid_url,
-				/* contributors.orcid as a hyperlink to their ORCID page */
+			case
+				when c.orcid is null then a.PID
+				else ("https://orcid.org/" || c.orcid)
+			end AS pid_url,
+				/* contributors.orcid or affiliations.PID as a hyperlink to their persistent identifier page */
 			count(s.sample_contributor) as samples_contributed
 				/* number of samples provided by this contributor */
 		FROM contributors c

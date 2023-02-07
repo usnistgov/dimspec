@@ -97,6 +97,12 @@ requirements
 <p>6. extra_cols: Character vectors naming any has_extra columns; these will be
 dropped from the import but are provided for information sake
 </p>
+<p>7. has_name_mismatches: Are there name differences between the import
+requirement elements and the import object? (TRUE/FALSE)
+</p>
+<p>8. mismatched_names: Named lists enumerating which named elements (if any)
+from the import object did not match name expectations in the requirements
+</p>
 <p>All of this is defined by the 'requirements_obj' list. Do not provide that
 list directly, instead pass this function the name of the requirements object
 for interoperability. If a 'requirements_obj' cannot be identified via

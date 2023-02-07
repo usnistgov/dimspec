@@ -18,7 +18,7 @@ DB_BUILT       <- length(DB_DATE) > 0
 #   - Second position: application tooling changes (e.g. new tools)
 #   - Third position: data changes (e.g. new compounds)
 #   - Fourth position: creation date
-DB_RELEASE     <- "0.0.0"
+DB_RELEASE     <- "0.9.4"
 DB_VERSION     <- sprintf("%s.%s",
                           DB_RELEASE,
                           ifelse(DB_BUILT,
@@ -100,7 +100,7 @@ VERIFY_ARGUMENTS <- TRUE
 
 # Set speed and performance boost. Setting this to true will turn off function
 # argument verification and logging.
-MINIMIZE         <- FALSE
+MINIMIZE         <- if(exists("MINIMIZE")) MINIMIZE else FALSE
 if (MINIMIZE) {
   VERIFY_ARGUMENTS <- FALSE
   LOGGING_ON       <- FALSE

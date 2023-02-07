@@ -1,0 +1,51 @@
+---
+title: "DIMSpec Quick Guide - Importing Data"
+author: "Jared M. Ragland"
+date: '2023-01-30'
+output: html_document
+bibliography: bibliography.bib
+---
+
+### Importing Data{#qg5-intro}
+
+Having a database infrastructure is fine. Having one with data is better. The DIMSpec project ships with a database of per- and polyfluorinated alkyl substances (PFAS) for evaluation and use, but one major goal is to be able to easily reuse it. For now, importing data is most easily accomplished by following the data submission and quality assessment workflow established for PFAS. This guide discusses an example import workflow for non-targeted analysis (NTA) of PFAS data using the [NIST Non-Targeted Analysis Method Reporting Tool (NTA-MRT)](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool){target="_blank"} That workflow entails:
+
+1. Complete data collection.
+1. Convert raw data files to the mzML format (see the ["Converting Raw LC-HRMS/MS Files into mzML files"](/vignettes/file_convert.Rmd) vignette).
+1. Complete your NTA peak characterization protocols, with compound identification and fragment annotation where possible.
+1. Use the  to generate import files in javascript object notation (JSON) format, which will include data from step 2.
+1. Using files produced in step 4, use the DIMSpec [Mass Spectral Quality Control (MSQC)](/dimspec_user_guide/11-msqc.Rmd) web application[^1] to assess quality metrics for new data.
+1. Download import files in JSON format from the MSQC application. These will be the files used to import into your database.
+
+The rest of this guide will discuss only the steps using import format established for these files. There are a few aspects to be aware of that will determine import performance and execution. For best results, the following files MUST match your import format:
+
+#### Creating Import Requirements for Import Validation
+
+[`/config/NIST_import_requirements.json`](/config/NIST_import_requirements.JSON){target="_blank"} is a JSON file with the elements expected of an import file. It is a list object that includes a lists named for expected elements with their class, internal names, and whether or not the element is required. The entry for the `sample` element includes, for instance
+
+    ``r jsonlite::toJSON(jsonlite::fromJSON(here::here("config", "NIST_import_requirements.json"))[2])``
+    
+By default this file is used in checking files for import for the presence of all required and recommended elements. To use a different import format, develop a similar import requirements object and store it in (or read into) your session as `import_requirements` (though the `full_import` workflow allows specification of which import requirements object to use via the `requirements_obj` argument, which should be the character name of the session object).
+    
+#### Mapping Between Import Files and the Database Schema
+
+[`/config/map_NTA_MRT.csv`](/config/map_NTA_MRT.csv){target="_blank"} is a comma-separated value file containing elements mapped by name from the NTA-MRT output fields to the database schema (e.g. . If using a different import format, map elements and element components to their corresponding schema tables and columns. To use a different import map, develop a similar map object and store it in (or read into) your session as `IMPORT_MAP` (though the `full_import` workflow allows specification of which import mapping object to use via the `import_map` argument, which should be a `data.frame` session object for your import map). For mapping between the NTA-MRT `sample` element and the database `samples` table, for instance, it looks like the following, where the `import_category` and `import_parameter` columns determine which import elements are mapped to, respectively, which database table (`sql_table`) and column (`sql_column`). Other columns determine other behaviors in certain cases for this import format. The `alias_lookup` column should refer to which normalization table to use for a given column, if any, though this can also be mapped from the entity relationship map (`er_map`) function.
+
+```{r echo=FALSE}
+here::here("config", "map_NTA_MRT.csv") |>
+  readr::read_csv(show_col_types = FALSE) |>
+  dplyr::filter(sql_table == "samples") |>
+  dplyr::select(-(mapped:get_from_user), -note) |>
+  knitr::kable()
+```
+
+#### Schema Map and Data Dictionary
+
+Import routines also leverage the entity relationship map produced by `er_map` which is a list object with one element for each database table detailing its object name, type, which tables it references and the references themselves (if any), which tables it normalizes (if any), and which views it is used within. When calling `full_import` if the object `db_map` (the default session name for the result of `er_map`) does not exist it will be created. This is to facilitate automatic normalization of values, when a value is provided in an import for a foreign key field, the relationship is used to identify the corresponding integer key value. A data dictionary produced by default as object `db_dict` is also available for sessions where the compliance script has been run. This is the result of a call to `data_dictionary` and is stored on disk as a JSON file 
+
+#### Importing Data
+
+The default `full_import` function is the workflow simplification function for imports in this format. Other formats are not supported, but the transparency of the schema should allow relatively easy development of new import routines. This function first checks for missing elements according to the import requirements file via the `verify_import_requirements` function. It allows for certain overrides of missing information via function arguments (i.e. recommended aspects such as "annotation" may be left blank if `include_if_missing_recommended = TRUE`). Files for which missing information is listed as required are excluded; to continue with a batch import when such files exist, set `stop_if_missing_required = FALSE`. Information about this assessment is included in the console when the `full_import` function is called, but the recommended practice is to directly call `verify_import_requirements` ahead of this step and evaluate your import files prior to beginning import. Evaluation is the first step in the import workflow and is a catch for bad import files that may slip through other evaluation steps. The default argument parameters are the strictest, only allowing files with all required and recommended elements to proceed.
+
+
+[^1]: With the compliance file sourced, run `start_app("msqc")` or navigate to a hosted version if available.

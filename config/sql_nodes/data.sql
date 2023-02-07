@@ -398,7 +398,7 @@
   		" (" ||
   		vc.contact ||
   		" - " ||
-  		vc.orcid_url ||
+  		vc.pid_url ||
   		") of " ||
   		vc.affiliation ||
   		' and described as "' ||

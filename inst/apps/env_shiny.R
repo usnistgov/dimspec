@@ -30,7 +30,18 @@ if (length(packs_FALSE) > 0) {
 lapply(packs, require, character.only = TRUE, quietly = TRUE)
 rm(packs)
 # Minimum app requirements
+api_override <- ifelse(exists("USE_API"), USE_API, NULL)
 source(here::here("config", "env_glob.txt"))
+if (!is.null(api_override)) USE_API <- api_override
+if (!API_LOCALHOST) {
+  if (API_HOST == "") {
+    API_HOST <- Sys.info()[["nodename"]]
+  } else {
+    if (!API_HOST == Sys.info()[["nodename"]]) {
+      message("The provided host name for the API server does not match this machine.")
+    }
+  }
+}
 LOGGING_ON   <- TRUE
 source(here::here("R", "app_functions.R"))
 # Check API

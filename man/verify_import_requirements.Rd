@@ -35,10 +35,7 @@ the [logger] package isn't available}
 \item{log_ns}{CHR scalar of the logging namespace to use (default: "db")}
 }
 \value{
-A tibble object with 6 columns containing the results of the check,
-  with one row for each import object identified; if `obj` is a list of
-  import data, the column "import_object" is added at the left of the data
-  frame with the names of the list components
+A tibble object with 9 columns containing the results of the checks.
 }
 \description{
 Checks an import file's characteristics against expectations. This is mostly
@@ -51,13 +48,10 @@ use (e.g. pulling from multiple locations), this can be run multiple times
 with different values of `requirement_obj` or `file_name`.
 }
 \details{
-The return from this is a tibble with 6 or 7 columns depending on whether the
-import file contains data from a single sample or multiple samples. It will
-parse either way depending on where required names are located in the object
-provided to `obj`. If it is a single list, the return will contain 6 columns;
-if it is a nested list of samples, the return will contain 7 columns, with
-the names of the provided `obj` attached to each row. Other columns contain
-information related to three checks.
+The return from this is a tibble with 9 columns. The first is the name of the
+import object member, typically the file name. If a single, unnested import
+object is provided this will be "import object". The other columns include
+the following verification checks:
 
 1. has_all_required: Are all required names present in the sample?
 (TRUE/FALSE)
@@ -73,6 +67,12 @@ requirements
 
 6. extra_cols: Character vectors naming any has_extra columns; these will be
 dropped from the import but are provided for information sake
+
+7. has_name_mismatches: Are there name differences between the import
+requirement elements and the import object? (TRUE/FALSE)
+
+8. mismatched_names: Named lists enumerating which named elements (if any)
+from the import object did not match name expectations in the requirements
 
 All of this is defined by the `requirements_obj` list. Do not provide that
 list directly, instead pass this function the name of the requirements object
