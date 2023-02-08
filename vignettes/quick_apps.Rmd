@@ -42,7 +42,7 @@ There is only one page for interactive content, named "Table Viewer" (Figure 1).
 
 Quality control and assessment is key for trust and ensuring data integrity. Algorithms were developed for the DIMSpec project to validate the quality of new experimental data and build files suitable for database import. The Mass Spectral Quality Control (MSQC) application was developed to accelerate this quality review process and installs alongside DIMSpec.
 
-Two preprocessing steps are required to use MSQC. First, raw data files produced by a mass spectrometer must be converted into mzML format [@deutsch_mass_2010] using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software. There are specific parameters that must be used during conversion.
+Two preprocessing steps are required to use MSQC. First, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software. There are specific parameters that must be used during conversion.
 
     Filter: Threshold peak filter
     Threshold type: absolute
