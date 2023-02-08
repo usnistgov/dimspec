@@ -128,7 +128,7 @@ To include chemometric functionality from the excellent RDKit package, reticulat
 
 The [`plumber`](https://www.rplumber.io) API service is available from within the project or by launching one of the attached shiny applications from the command line. A few settings of note may be of interest; these will always be pulled into your session when the compliance file is sourced. Within the `/config/env_glob.txt` file, the following will determine availability as well as how the plumber API is launched:
 1. `USE_API` must be a logical scalar, by default set to `TRUE` to activate the API service in a background process;
-1. `API_LOCALHOST` must be a logical scalar, by default set to `TRUE` to launch the API on your local machine. Set this to `FALSE` and provide a value for `API_HOST` to make the API service available on your network;
+1. `API_LOCALHOST` must be a logical scalar, by default set to `TRUE` to launch the API on your local machine. Set this to `FALSE` and provide a value for `API_HOST` to make the API service available on your network (if `API_HOST` remains blank, your machine's network identifier as pulled by `Sys.info()[["nodename"]]` will be used preferentially, which may or may not resolve on your network);
 1. `API_HOST` must be a character scalar representing the resolveable network address (either IP or domain-based) of the host machine; this is ignored if `API_LOCALHOST` is set to `TRUE`;
 1. `API_PORT` should be an integer specifying an open communication port on the host machine, by default set to `8080`; and
 1. `INFORMATICS` must be a logical scalar, by default `TRUE` determining whether or not to activate chemometrics integration on the plumber service; set `USE_RDKIT` to `TRUE` (the default) to enable the endpoints that ship with the project (note: both are required for full functionality of the MSMatch application in its current form).
@@ -140,7 +140,7 @@ If `USE_API` is set to `TRUE`, the following more specific settings for the `plu
 
 In most cases, the `api_endpoint` function should be the entry point from R for getting data from the plumber API defined at `PLUMBER_URL` in your session environment. It may also be desirable to launch a second service (e.g. for testing new endpoints or changes to existing ones, or for providing a primitive form of load balancing). To do this, set the `pr` parameter of `api_reload` to a different name (character scalar) and the `on_port` parameter to an open port (it will fail if the port is already in use). If the compliance script was run with `USE_API = FALSE` and `api_reload` is not available, it may be more intuitive instead to use `start_api`, which will establish the service as if the compliance script had been run. If more than one plumber service is running, the function defaults for `api_endpoint` will point to the primary URL; set parameter `server_addr` more specifically to hit your desired endpoint complete with port (e.g. `api_endpoint("_ping", server_addr = "http://127.0.0.1:8181")`).
 
-See more details in the Plumber section of Technical Details in the [DIMSpec User Guide](TODO LINK) or the [DIMSpec Quick Guide - Plumber vignette](/quick_plumber.Rmd).
+See more details in the Plumber section of Technical Details in the [DIMSpec User Guide](TODO LINK) or the [DIMSpec Quick Guide - Plumber vignette](quick_plumber.Rmd).
 
 ### Shiny Web Applications
 

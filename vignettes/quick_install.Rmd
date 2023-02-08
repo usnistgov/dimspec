@@ -72,4 +72,4 @@ The full DIMSpec project can take a while to load at first. To speed this up, it
 
 ---
 
-#### Disclaimers {#qg1-disclaimers}
+#### Disclaimers

@@ -60,4 +60,4 @@ When modified, any existing plumber service will need to be terminated prior to 
 
 ---
 
-#### Disclaimers {#qg2-disclaimers}
+#### Disclaimers
