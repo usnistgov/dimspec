@@ -633,7 +633,7 @@ build_db_action <- function(action,
   catch_null <- " = '*(NULL|null|NA|na)'*| = ''"
   if (str_detect(query, catch_null)) {
     query <- query %>%
-      str_replace_all(catch_null, " = null")
+      str_replace_all(catch_null, " is null")
   }
   query <- sql(query)
   if (execute) {
