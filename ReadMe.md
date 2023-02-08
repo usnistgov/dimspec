@@ -1,9 +1,8 @@
-Requirements
-
-
 # Database Infrastructure for Mass Spectrometry (DIMSpec)
 
-## Introduction
+## About
+
+Welcome to the home page of the Database Infrastructure for Mass Spectrometry project.
 
 ## Motivation
 
@@ -25,32 +24,35 @@ For a full description of the project and its different aspects, please see the 
 
 A series of Quick Guides have been made available focusing on various aspects of the project.
 
-		[DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
-		[DIMSpec Quick Guide - Plumber](/vignettes/quick_plumber.Rmd)
-		[DIMSpec Quick Guide - Web Applications](/vignettes/quick_apps.Rmd)
-		[DIMSpec Quick Guide - Advanced Use](/vignettes/quick_advanced.Rmd)
-		[DIMSpec Quick Guide - Importing Data](/vignettes/quick_import.Rmd)
-		[File Conversion using msconvert](/vignettes/file_convert.Rmd)
+	[DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
+	[DIMSpec Quick Guide - Plumber](/vignettes/quick_plumber.Rmd)
+	[DIMSpec Quick Guide - Web Applications](/vignettes/quick_apps.Rmd)
+	[DIMSpec Quick Guide - Advanced Use](/vignettes/quick_advanced.Rmd)
+	[DIMSpec Quick Guide - Importing Data](/vignettes/quick_import.Rmd)
+	[File Conversion using msconvert](/vignettes/file_convert.Rmd)
 
 In addition, a series of video tutorials are also available.
 
-		[Import files and process on MSMatch (non Waters)]()
-		[Import files and process on MSMatch (Waters)]()
-		[Library searching and data mining]()
-		[Fragmenation searching and data mining]()
-		[(optional) Download and install the R program]() (related to [DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
-		[(optional) mzmine conversion]()
+	[Import files and process on MSMatch (non Waters)]()
+	[Import files and process on MSMatch (Waters)]()
+	[Library searching and data mining]()
+	[Fragmenation searching and data mining]()
+	[(optional) Download and install the R program]() (related to [DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
+	[(optional) mzmine conversion]()
 
 ## Links
 
 [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas)
+
 [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.)
+
 [NIST Suspect List of Possible PFAS](https://github.com/usnistgov/NISTPFAS/blob/main/suspectlist)
+
 [NIST Method Reporting Tool for Non-Targeted Analysis (NTA MRT)](https://github.com/usnistgov/NISTPFAS/blob/main/methodreportingtool)
 
 ## Contacting Us
 
-If you have any issues with any portion of the repository, please feel free to contact the NIST PFAS program at <a href="mailto:=pfas@nist.gov?subject=DIMSpec Inquiry">pfas@nist.gov</a> directly or post an issue in the repository itself.
+If you have any issues with any portion of the repository, please feel free to contact the NIST PFAS program at <a href="mailto:=pfas@nist.gov?subject=DIMSpec%20Inquiry">pfas@nist.gov</a> directly or post an issue in the repository itself.
 
 ## Contributing
 
