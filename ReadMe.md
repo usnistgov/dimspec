@@ -24,28 +24,30 @@ For a full description of the project and its different aspects, please see the 
 
 A series of Quick Guides have been made available focusing on various aspects of the project.
 
-[DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
-[DIMSpec Quick Guide - Plumber](/vignettes/quick_plumber.Rmd)
-[DIMSpec Quick Guide - Web Applications](/vignettes/quick_apps.Rmd)
-[DIMSpec Quick Guide - Advanced Use](/vignettes/quick_advanced.Rmd)
-[DIMSpec Quick Guide - Importing Data](/vignettes/quick_import.Rmd)
-[File Conversion using msconvert](/vignettes/file_convert.Rmd)
+- [DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
+- [DIMSpec Quick Guide - Plumber](/vignettes/quick_plumber.Rmd)
+- [DIMSpec Quick Guide - Web Applications](/vignettes/quick_apps.Rmd)
+- [DIMSpec Quick Guide - Advanced Use](/vignettes/quick_advanced.Rmd)
+- [DIMSpec Quick Guide - Importing Data](/vignettes/quick_import.Rmd)
+- [File Conversion using msconvert](/vignettes/file_convert.Rmd)
 
 In addition, a series of video tutorials are also available.
 
-[Import files and process on MSMatch (non Waters)]()
-[Import files and process on MSMatch (Waters)]()
-[Library searching and data mining]()
-[Fragmenation searching and data mining]()
-[(optional) Download and install the R program]() (related to [DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
-[(optional) mzmine conversion]()
+- [Import files and process on MSMatch (non Waters)]()
+- [Import files and process on MSMatch (Waters)]()
+- [Library searching and data mining]()
+- [Fragmenation searching and data mining]()
+- [(optional) Download and install the R program]() (related to [DIMSpec Quick Guide - Installation](/vignettes/quick_install.Rmd)
+- [(optional) mzmine conversion]()
 
 ## Links
 
-[PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
-[DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
-[NIST Suspect List of Possible PFAS](https://github.com/usnistgov/NISTPFAS/blob/main/suspectlist) 
-[NIST Method Reporting Tool for Non-Targeted Analysis (NTA MRT)](https://github.com/usnistgov/NISTPFAS/blob/main/methodreportingtool) 
+Several links can provide additional contextual information about this project.
+
+- [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
+- [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
+- [NIST Suspect List of Possible PFAS](https://github.com/usnistgov/NISTPFAS/blob/main/suspectlist) 
+- [NIST Method Reporting Tool for Non-Targeted Analysis (NTA MRT)](https://github.com/usnistgov/NISTPFAS/blob/main/methodreportingtool) 
 
 ## Contacting Us
 
@@ -57,6 +59,6 @@ NIST projects are provided via GitHub as a public service, and we always appreci
 
 ## Disclaimer
 
->>> Certain commercial equipment, instruments, software, or materials are identified in this documentation in order to specify the experimental procedure adequately. Such identification is not intended to imply recommendation or endorsement by the National Institute of Standards and Technology, nor is it intended to imply that the materials or equipment identified are necessarily the best available for the purpose.
+> Certain commercial equipment, instruments, software, or materials are identified in this documentation in order to specify the experimental procedure adequately. Such identification is not intended to imply recommendation or endorsement by the National Institute of Standards and Technology, nor is it intended to imply that the materials or equipment identified are necessarily the best available for the purpose.
 
->>> This work is provided by NIST as a public service and is expressly provided "AS IS." Please see the [license statement](License.md) for details.
+> This work is provided by NIST as a public service and is expressly provided "AS IS." Please see the [license statement](License.md) for details.
