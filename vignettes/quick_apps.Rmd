@@ -211,4 +211,4 @@ Settings in other environment resolution files should, in most cases, not be cha
 
 ---
 
-##### Disclaimers{#qg3-disclaimers}
+##### Disclaimers
