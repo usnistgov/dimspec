@@ -32,13 +32,13 @@ The easiest way to get started with the full DIMSpec project is by [forking](htt
 
 The DIMSpec project is distributed as an R project built around R version 4.1 and later, and leverages a large number of packages to run as designed. A development environment such as RStudio[^3] (@RStudio) is highly recommended but is not required. For integration of chemometrics, which is used in several aspects of the project but is not a strict requirement, a python environment including [`reticulate`](https://rstudio.github.io/reticulate){target="_blank"} [@reticulate] and [`rdkit`](https://www.rdkit.org/docs/index.html){target="_blank"} [@RDKit] is required; this will in many cases be installed when the compliance script runs. This can be relaxed for those preferring to use an R chemometrics package, and if informatics is requested in the environment file but rdkit is not, ChemMineR will be installed; note that ChemMineR functions are not integrated into the project at this time. If you will be developing new databases using this infrastructure, [SQLite](https://www.sqlite.com/download.html){target="_blank"} and its [command line interface (CLI)](https://www.sqlite.org/cli.html){target="_blank"} are required; this is what allows the R session to build a fresh database for population. As the project is hosted on [GitHub](TODO LINK){target="_blank"}, [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git){target="_blank"} is recommended as the easiest method to download the project and provide version control. SQLite, its CLI, and Git must be available on your system PATH for proper functionality.
 
-[^3]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
+[^3]: Any mention of commercial products is for information only; it does not imply recommendation or endorsement by NIST.
 
 ### Step by Step {#qg1-step-by-step}
 
 *See the user guide for full instructions. These instructions are a summary of those found there.*
 
-1.  Install software requirements for your operating system
+1.  Install software requirements[^1] for your operating system
     -   R v4.1 or later ([download](https://cran.r-project.org/){target="_blank"})
     -   RTools (optional but may be required for package installation on Windows) ([download](https://cran.r-project.org/bin/windows/Rtools/){target="_blank"})
     -   RStudio (optional but recommended) ([download](https://www.rstudio.com/products/rstudio/download/#download){target="_blank"})
