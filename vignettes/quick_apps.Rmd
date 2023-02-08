@@ -132,12 +132,12 @@ Click the "Click Here to Get Started" button to begin. This will activate the "D
 ---
 
 **Figure 4**
-![Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right).](../dimspec_user_guide/assets/fig04-03_FOI_input_dialogs.png "Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right).")
+![Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right).](../dimspec_user_guide/assets/fig04-03_FOI_input_dialogs.png "Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right)."){width="50%"}
 
 ---
 
 **Figure 5**
-![Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button.](../dimspec_user_guide/assets/fig04-04_FOI_list.png "Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button.")
+![Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button.](../dimspec_user_guide/assets/fig04-04_FOI_list.png "Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button."){width="75%"}
 
 ---
 
@@ -151,11 +151,13 @@ Navigate to the desired search page. Algorithmic matching of provided mass spect
 
 ---
 
- ![Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)](../dimspec_user_guide/assets/fig04-07_compound_match_results.png "Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)"){#fig-qg3-3-04 width="100%"}
+**Figure 6**
+ ![Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)](../dimspec_user_guide/assets/fig04-07_compound_match_results.png "Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)"){width="100%"}
 
 ---
 
-![Figure 7. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with Figure 6).](../dimspec_user_guide/assets/fig04-08_compound_match_change.png "Figure 8. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with [Figure 6](#fig-qg3-3-04))."){#fig-qg3-3-05 width="100%"}
+**Figure 7**
+![Figure 7. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with Figure 6).](../dimspec_user_guide/assets/fig04-08_compound_match_change.png "Figure 8. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with [Figure 6](#fig-qg3-3-04))."){width="100%"}
 
 ---
 
