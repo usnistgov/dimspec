@@ -163,7 +163,7 @@ All other settings are left to the individual applications to define needs. See 
 
 Due to its nature, the DIMSpec project includes several aspects, some complicated. The quick guides are meant as a, hopefully, brief reference for some of the more common use cases and settings, and should be viewed as supplements for the full [DIMSpec User Guide](TODO LINK). A note on network hosting: if your organization (as it should) scans for active sites and vulnerabilities, and you are running the plumber API or shiny applications on your local network in the manner described here, contact your IT professionals to discuss security applications so you may adhere to your organization's IT security policies.
 
-The DIMSpec team hopes the documentation provided for the project is sufficient for your needs and allows you to quickly iterate. We want the project to be successful; reach out by email at <a href="mailto:pfas@nist.gov">`r shiny::icon("envelope")`pfas@nist.gov</a> with ideas or contributions.
+The DIMSpec team hopes the documentation provided for the project is sufficient for your needs and allows you to quickly iterate. We want the project to be successful; reach out by email at <a href="mailto:pfas@nist.gov">pfas@nist.gov</a> with ideas or contributions.
 
 ---
 
