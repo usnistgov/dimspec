@@ -3,12 +3,11 @@ title: "DIMSpec Quick Guide - Plumber"
 author: "Jared M. Ragland"
 date: '2023-01-30'
 output: html_document
-bibliography: bibliography.bib
 ---
 
-### The Plumber platform and DIMSpec {#qg2-intro}
+### The Plumber platform and DIMSpec
 
-The [`plumber`](https://www.rplumber.io) [@plumber] package allows code written in R to be made available as a [RESTful application programming interface (API)](https://restfulapi.net/). Applications and packages can communicate with the database through the API in a predefined manner without directly connecting to it, or having it available on your local machine. While running DIMSpec in the default standalone manner may not provide much performance improvement, offering selections of the code base through an API service allows a tremendous amount of flexibility for applications, either web based or through the command line, and allows that development to become language agnostic while maintaining a consistent communication layer. With the service running, communication and calculation occur in a background process available either to a local machine or as a network service. As R is a single threaded language, this greatly lowers the overhead and simultaneously makes database interactions more consistent and more performant. This does come at the cost of flexibility, and so the project can be launched in either manner. All of the web applications provided in the project leverage the API for database communication and do not connect directly to the database. This allows launching and hosting of the web applications in separate processes. Basic settings mentioned here are located in the `/config/env_glob.txt` file. The `plumber` API can be launched in a variety of ways:
+The [`plumber`](https://www.rplumber.io) package allows code written in R to be made available as a [RESTful application programming interface (API)](https://restfulapi.net/). Applications and packages can communicate with the database through the API in a predefined manner without directly connecting to it, or having it available on your local machine. While running DIMSpec in the default standalone manner may not provide much performance improvement, offering selections of the code base through an API service allows a tremendous amount of flexibility for applications, either web based or through the command line, and allows that development to become language agnostic while maintaining a consistent communication layer. With the service running, communication and calculation occur in a background process available either to a local machine or as a network service. As R is a single threaded language, this greatly lowers the overhead and simultaneously makes database interactions more consistent and more performant. This does come at the cost of flexibility, and so the project can be launched in either manner. All of the web applications provided in the project leverage the API for database communication and do not connect directly to the database. This allows launching and hosting of the web applications in separate processes. Basic settings mentioned here are located in the `/config/env_glob.txt` file. The `plumber` API can be launched in a variety of ways:
 
 1. Sourcing the compliance file `source(file.path("config", "compliance.R"))` file with `USE_API` set to `TRUE` will automatically launch the API server in a background process.
 1. If the compliance file has been sourced and `USE_API` is set to `FALSE`, run `start_api()` or `reload_api()` to launch using the provided environment settings.
@@ -19,7 +18,7 @@ The recommended way to get started with DIMSpec is the first of these options, w
 
 [^1]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
-### Interacting with the API {#qg2-api}
+### Interacting with the API
 
 Communication with a plumber API should use parameters encoded in javascript object notation (JSON) though many endpoints include abstraction parsing for easier use and can handle strings as direct input for many parameters. Endpoints for many predictable read and search interactions are available. Session variables define the connections, and communication and control functions default to those expected values for streamlining (e.g. functions like `api_reload`, `api_open_doc`, and `api_endpoint` may be called without referring explicitly to a session object or URL for the current project).
 
@@ -49,7 +48,7 @@ issues a request to the API server for the endpoint `compound_data` for `compoun
     
 Once running, the API server is language agnostic, and the same endpoints can be called using any http communication protocol (e.g. `curl`) for application development outside of R. (Note: when using Windows Powershell, by default `curl` is an alias for the cmdlet `Invoke-WebRequest` and uses different parameters than those provided in the Swagger documentation; instead of `curl -X GET *endpoint URI*` use `curl -URI *endpoint URI*`.) These and other endpoints can be easily defined, expanded, or refined as needed to meet project requirements. Use `api_reload` to refresh the server when definitions change, or test interactively prior to deployment using Swagger by launching a separate server either by opening the plumber file and clicking the "Run API" button in RStudio, or using the `api_start` or `api_reload` functions as described elsewhere. To support network deployment, any number of API servers may be launched manually on predefined ports to allow for load balancing.
 
-### Modifying the API {#qg2-modification}
+### Modifying the API
 
 The API definition file is located at `/inst/plumber/plumber.R` and is a decorated file of R unnamed functions as described in the [`plumber` documentation](https://www.rplumber.io). Endpoints can be added, modified, or removed as needed for specific implementations of DIMSpec. Briefly, plumber endpoints are constructed as are any R functions with the following decorations:
 
@@ -58,12 +57,6 @@ The API definition file is located at `/inst/plumber/plumber.R` and is a decorat
 1. `@serializer` determines the default return data format, by default javascript object notation (JSON).
 
 When modified, any existing plumber service will need to be terminated prior to launching it again. The easiest method once the compliance file has been sourced is to use `api_reload()`, though you may want to use method 4 in the list above for testing a local copy first.
-
----
-
-#### References {#qg2-refs}
-
-<div id="refs"></div>
 
 ---
 
