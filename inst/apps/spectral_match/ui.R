@@ -94,14 +94,14 @@ dashboardPage(
       # Home Page ----
       tabItem("index",
               #h2(APP_TITLE, style = "margin: 0px;"),
-              includeHTML("index.html"),
-              hr(),
               actionButton(inputId = "index_go_data_input",
                            label = "Click Here to Get Started",
                            width = "100%",
                            icon = icon("circle-play", verify_fa = FALSE)
               ) %>%
-                with_help(tooltip = tooltip_text[["index_go_data_input"]])
+                with_help(tooltip = tooltip_text[["index_go_data_input"]]),
+              includeHTML("index.html"),
+              hr()
       ),
       # Data Input ----
       tabItem("data_input",
@@ -590,7 +590,11 @@ dashboardPage(
                     width = 12,
                     solidHeader = FALSE,
                     status = "primary",
-                    h4("[USE INSTRUCTIONS HERE]."),
+                    tags$label(
+                      "Select a feature of interest to get started. Features of interest are determined by the list in the",
+                      actionLink(inputId = "search_fragments_go_data_input", "data input"),
+                      "page."
+                    ),
                     fluidRow(
                       column(12,
                              selectizeInput(inputId = "search_fragments_mzrt",

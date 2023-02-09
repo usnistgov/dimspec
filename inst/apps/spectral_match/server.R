@@ -1232,7 +1232,10 @@ shinyServer(function(input, output, session) {
       need(nrow(search_fragments_results()$spectra) > 0,
            message = "No spectra available to plot.")
     )
-    dat <- search_fragments_results()$spectra
+    dat <- search_fragments_results()$spectra %>%
+      arrange(mz, annotated_fragment_id) %>%
+      select(match, mz, mz.u, int, int.u, formula) %>%
+	  distinct()
     conf <- dat$match
     cap1 <- if ("unknown" %in% conf) glue::glue('{sum(conf == "unknown")} unknown fragment{ifelse(sum(conf == "unknown") == 1, "", "s")}.') else NULL
     cap2 <- if ("formula" %in% conf) glue::glue('{sum(conf == "formula")} fragment{ifelse(sum(conf == "formula") == 1, "", "s")} with an annotated formula.') else NULL
@@ -1255,7 +1258,7 @@ shinyServer(function(input, output, session) {
                      na.rm = TRUE,
                      linetype = 5) +
       ggrepel::geom_text_repel(aes(label = formula),
-                               color = "black",
+                               # color = "black",
                                show.legend = FALSE,
                                hjust = 0,
                                vjust = 0) +
@@ -1287,7 +1290,10 @@ shinyServer(function(input, output, session) {
     server = FALSE,
     DT::datatable(
       data = req(search_fragments_results()$spectra) %>%
-        arrange(mz) %>%
+        arrange(mz, annotated_fragment_id) %>%
+		relocate(annotated_fragment_id, .after = everything()) %>%
+		group_by(across(mz:match)) %>%
+		summarise(annotated_fragment_id = str_c(annotated_fragment_id, collapse = ", ")) %>%
         select(match, mz, int, n, formula, mz.u, int.u, annotated_fragment_id, has_smiles),
       rownames = FALSE,
       selection = list(mode = "none"),
@@ -1312,13 +1318,17 @@ shinyServer(function(input, output, session) {
     server = FALSE,
     DT::datatable(
       data = req(search_fragments_results()$result) %>%
-        select(annotated_fragment_id, formula, measured_mz, fixedmass, mass_error, smiles, n_compounds, n_peaks),
+        mutate(
+          radical = replace_na(recode(radical, `0` = "No", `1` = "Yes", .default = "Not Recorded"), "Not Recorded"),
+		  netcharge = replace_na(as.character(netcharge), "Not Recorded")
+        ) %>%
+        select(annotated_fragment_id, formula, measured_mz, fixedmass, mass_error, smiles, radical, netcharge, n_compounds, n_peaks),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Annotated Fragment ID", "Fragment", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "SMILES", "Found in n Compounds", "Found in n Peaks"),
+      colnames = c("Annotated Fragment ID", "Fragment", "Measured at m/z", "Exact Mass", "Mass Error (ppm)", "SMILES", "Radical", "Net Charge", "Found in n Compounds", "Found in n Peaks"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
@@ -1327,7 +1337,7 @@ shinyServer(function(input, output, session) {
         buttons = c("copy", "csv", "excel"),
         columnDefs = list(
           list(visible = FALSE, targets = c("annotated_fragment_id")),
-          list(className = "dt-center", targets = c("measured_mz", "fixedmass", "mass_error", "n_compounds", "n_peaks")),
+          list(className = "dt-center", targets = c("measured_mz", "fixedmass", "mass_error", "radical", "netcharge", "n_compounds", "n_peaks")),
           list(className = "dt-left", targets = c("formula", "smiles"))
         )
       )
