@@ -113,6 +113,10 @@ CREATE VIEW IF NOT EXISTS view_mobile_phases AS
 	SELECT 	
 		mobile_phases.ms_methods_id AS ms_methods_id, 
 			/* Direct use column 'ms_methods_id' from table 'mobile_phases'. */ 	
+		mobile_phases.sample_id AS sample_id, 
+			/* Direct use column 'sample_id' from table 'mobile_phases'. */ 	
+		mobile_phases.peak_id AS peak_id, 
+			/* Direct use column 'peak_id' from table 'mobile_phases'. */ 	
 		mobile_phases.carrier_mix_collection_id AS carrier_mix_collection_id, 
 			/* Direct use column 'carrier_mix_collection_id' from table 'mobile_phases'. */ 	
 		mobile_phases.flow AS flow, 

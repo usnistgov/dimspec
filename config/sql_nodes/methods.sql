@@ -347,20 +347,20 @@
 			INTEGER NOT NULL,
 			/* foreign key to methods */
 		sample_id
-		  INTEGER,
-		  /* foreign key to samples */
+			INTEGER,
+			/* foreign key to samples */
 		peak_id
-		  INTEGER,
-		  /* foreign key to peaks */
+			INTEGER,
+			/* foreign key to peaks */
 		carrier_mix_collection_id
 			INTEGER NOT NULL,
 			/* foreign key to carrier_mixes */
 		flow
-		  REAL,
-		  /* flow rate of carrier described in carrier_mix_collection_id */
+			REAL,
+			/* flow rate of carrier described in carrier_mix_collection_id */
 		flow_units
-		  INTEGER,
-		  /* foreign key to norm_flow_units */
+			INTEGER,
+			/* foreign key to norm_flow_units */
 		duration
 			REAL,
 			/* time duration mobile phase was applied */
