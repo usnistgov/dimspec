@@ -11,11 +11,7 @@ dashboardPage(
     h4(style = "padding-left: 15px;", APP_TITLE),
     if (dev) {
       div(style = "padding-left: 15px;",
-          if (dev) {
-            h4(id = "dev_mode", style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE")
-          } else {
-            NULL
-          },
+          h4(id = "dev_mode", style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE"),
           p("Plumber instance is live at ", PLUMBER_URL, "; view the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
           actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
       )
@@ -26,8 +22,6 @@ dashboardPage(
       id = "sidebar_menu",
       menuItem(span(id = "nav_index", "Home"),
                tabName = "index",
-               badgeLabel = "WIP",
-               badgeColor = "orange",
                icon = icon("house", verify_fa = FALSE)
       ) %>%
         with_help(tooltip = tooltip_text[["nav_index"]],
@@ -52,8 +46,6 @@ dashboardPage(
                   placement = "right"),
       menuItem(span(id = "nav_about", "About"),
                tabName = "about",
-               badgeLabel = "WIP",
-               badgeColor = "orange",
                icon = icon("circle-info", verify_fa = FALSE)
       ) %>%
         with_help(tooltip = tooltip_text[["nav_about"]],
@@ -101,16 +93,15 @@ dashboardPage(
     tabItems(
       # Home Page ----
       tabItem("index",
-              h2(APP_TITLE, style = "margin: 0px;"),
+              #h2(APP_TITLE, style = "margin: 0px;"),
+              includeHTML("index.html"),
               hr(),
               actionButton(inputId = "index_go_data_input",
                            label = "Click Here to Get Started",
                            width = "100%",
                            icon = icon("circle-play", verify_fa = FALSE)
               ) %>%
-                with_help(tooltip = tooltip_text[["index_go_data_input"]]),
-              hr(),
-              includeHTML("index.html")
+                with_help(tooltip = tooltip_text[["index_go_data_input"]])
       ),
       # Data Input ----
       tabItem("data_input",

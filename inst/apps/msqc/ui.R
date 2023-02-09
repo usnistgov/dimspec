@@ -8,16 +8,16 @@ dashboardPage(
     )
   ),
   sidebar = dashboardSidebar(
+    h4(style = "padding-left: 15px;", APP_TITLE),
     if (dev) {
-      div(
-        h4("Plumber instance is live at ", PLUMBER_URL),
-        p("View the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), "here")),
-        actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
+      div(style = "padding-left: 15px;",
+          h4(id = "dev_mode", style = "padding-right: 15px; color: red; text-align: center;", "DEVELOPMENT MODE"),
+          p("Plumber instance is live at ", PLUMBER_URL, "; view the API guide", a(href = sprintf("%s/__docs__/", PLUMBER_URL), target = "_blank", "here")),
+          actionButton("browser", "Live Inspect", icon = icon("user-ninja"))
       )
     } else {
       NULL
     },
-    h3(APP_TITLE, style = "padding: 5px; margin: 0px;"),
     sidebarMenu(
       id = "sidebar_menu",
       menuItem("About",
