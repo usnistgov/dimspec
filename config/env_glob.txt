@@ -51,6 +51,7 @@ USE_API        = TRUE
 # Whether to localhost for the API (TRUE) or launch on a network (FALSE).
 API_LOCALHOST  = TRUE
 # If set to FALSE, routing must be set appropriately to the hosting machine.
+# This may be left blank to use the nodename of the computer launching the service, but it must be set for other machine to access the service. Care should be used when leaving this blank as not all networks may resolve the node name correctly.
 API_HOST       = ""
 API_PORT       = 8080
 

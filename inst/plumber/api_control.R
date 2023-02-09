@@ -65,6 +65,7 @@ api_start <- function(plumber_file = NULL,
       port = on_port
     )
   )
+  if (on_host == "0.0.0.0" && !API_LOCALHOST && API_HOST == "") on_host <- Sys.info()[["nodename"]]
   url <- sprintf("%s:%s", on_host, on_port)
   success <- inherits(attempt, "try-error") && attempt$is_alive() &&
     api_endpoint("active")
@@ -217,8 +218,19 @@ api_reload <- function(pr = NULL,
   pr      <- rectify_null_from_env(pr, PLUMBER_OBJ_NAME, "plumber_service")
   pr_name <- pr
   on_host <- rectify_null_from_env(on_host, PLUMBER_HOST, getOption("plumber.host", "127.0.0.1"))
+  api_host <- on_host
   on_port <- rectify_null_from_env(on_port, PLUMBER_PORT, getOption("plumber.port", 8080))
   plumber_file <- rectify_null_from_env(plumber_file, PLUMBER_FILE, here::here("inst", "plumber", "plumber.R"))
+  api_localhost <- rectify_null_from_env(NULL, API_LOCALHOST, TRUE)
+  if (!api_localhost) {
+    if (on_host == "" | on_host == "0.0.0.0" | is.null(on_host)) {
+      on_host <- "0.0.0.0"
+      api_host <- Sys.info()[["nodename"]]
+    }
+    if (!on_host == "0.0.0.0" && !on_host == Sys.info()[["nodename"]]) {
+      message("The provided host name for the API server does not match this machine.")
+    }
+  }
   if (!is.integer(on_port)) on_port <- as.integer(on_port)
   service_exists <- suppressWarnings(exists(pr))
   if (!service_exists) {
@@ -265,6 +277,7 @@ api_reload <- function(pr = NULL,
     }
     log_it("debug", "Calling api_start() from api_reload()", log_ns)
   }
+  url <- sprintf("http://%s:%s", api_host, on_port)
   if (background) {
     assign(
       x = pr_name,

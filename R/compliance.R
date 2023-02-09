@@ -126,7 +126,7 @@ if (USE_API) {
     log_it("info", "Resolving plumber API environment...", "api")
     source(here::here("inst", "plumber", "env_plumb.R"))
   }
-  api_reload(
+  PLUMBER_URL <- api_reload(
     pr = "plumber_service",
     background = TRUE,
     on_host = PLUMBER_HOST,
