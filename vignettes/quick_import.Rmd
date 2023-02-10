@@ -155,3 +155,5 @@ To reiterate, the current version of DIMSpec does not include a graphical user i
 1. use the MSQC-produced JSON files along with the provided mapping and requirements files to import using the `full_import` workflow aggregation function.
 
 Workflows are expected to differ between research groups. The DIMSpec specifications should capture most of the information necessary to support NTA exploration and data mining. The import requirements and mapping files must match your import files exactly. Import functions are fully parameterized to leverage different requirement and mapping files, but care should always be used when importing data.
+
+----
