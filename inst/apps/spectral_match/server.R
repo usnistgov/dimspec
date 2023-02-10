@@ -1348,13 +1348,15 @@ shinyServer(function(input, output, session) {
   output$search_fragments_compound_list <- renderDT(
     server = FALSE,
     DT::datatable(
-      data = req(search_fragments_compounds_data()),
+      data = req(search_fragments_compounds_data()) %>%
+	  select(-additional),
       rownames = FALSE,
       selection = list(mode = "single",
                        target = "row",
                        selected = 1),
       autoHideNavigation = TRUE,
-      colnames = c("Compound ID", "Name", "Category", "Formula", "Exact Mass", "Source Type", "Obtained From", "Additional", "Local (+)", "Local (-)", "Net Charge"),
+      # colnames = c("Compound ID", "Name", "Category", "Formula", "Exact Mass", "Source Type", "Obtained From", "Additional", "Local (+)", "Local (-)", "Net Charge"),
+      colnames = c("Compound ID", "Name", "Category", "Formula", "Exact Mass", "Source Type", "Obtained From", "Local (+)", "Local (-)", "Net Charge"),
       caption = NULL,
       extensions = c("Responsive", "Buttons"),
       options = list(
@@ -1629,6 +1631,7 @@ shinyServer(function(input, output, session) {
             ref_type == "ALIAS" ~ "Supplied Alias",
             ref_type == "PREFERRED_NAME" ~ "Preferred Name",
             ref_type == "INCHI" ~ "InChI",
+			ref_type == "FIXEDINCHI" ~ "Fixed InChI",
             ref_type == "INCHIKEY" ~ "InChIKey",
             ref_type == "SMILES" ~ "Smiles Notation",
             ref_type == "CASRN" ~ "CAS Registry Number",
@@ -1676,7 +1679,8 @@ shinyServer(function(input, output, session) {
                   pageLength = 10,
                   buttons = c("copy", "csv", "excel"),
                   columnDefs = list(
-                    list(visible = FALSE, targets = c("id", "compound"))
+                    list(visible = FALSE, targets = c("id", "compound")),
+                    list(className = "dt-center", targets = c("_all"))
                   )
                 )
               )
