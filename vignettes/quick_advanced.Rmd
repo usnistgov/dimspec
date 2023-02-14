@@ -2,7 +2,9 @@
 title: "DIMSpec Quick Guide - Developing with DIMSpec"
 author: "Jared M. Ragland"
 date: '2023-01-13'
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ### Developing with DIMSpec

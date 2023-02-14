@@ -2,7 +2,9 @@
 title: "DIMSpec Quick Guide - Shiny Web Applications"
 author: "Jared M. Ragland"
 date: '2023-01-30'
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ### The Shiny platform and DIMSpec
@@ -29,11 +31,12 @@ Often, one of the friction points in using a database is understanding its schem
 
 Table Explorer is a simple entity viewer for the attached database. Combining the comment decorations in DIMSpec and reading of entity definitions from the database (see Inspecting Database Properties in the DIMSpec User Guide for details) allows for R to expose a wealth of information about the underlying schema and quickly change which entity is being viewed. See above for details of how to launch this app, but the easiest method is after the `compliance.R` script has been executed, use `start_app("table_explorer")` to launch it in your preferred browser.
 
-There is only one page for interactive content, named "Table Viewer" (Figure 1). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon (≡) at the top next to the NIST logo. Click the drop down box to change the database table or view being displayed. This will update the definition narrative immediately below the selection box and display the contents of that table to the right.
+There is only one page for interactive content, named "Table Viewer" (Figure 1). A navigation bar on the left controls the current page being viewed; collapse the bar using the “hamburger” icon at the top next to the NIST logo. Click the drop down box to change the database table or view being displayed. This will update the definition narrative immediately below the selection box and display the contents of that table to the right.
 
 ---
 
 **Figure 1**
+
 ![Figure 1. The Table Explorer main page.](../dimspec_user_guide/assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page.")
 
 ---
@@ -63,6 +66,7 @@ See above for details of how to launch this app, but the easiest method is after
 ---
 
 **Figure 2**
+
 ![Figure 2. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.](../dimspec_user_guide/assets/fig05-01_msqc_landing_page.png "Figure 2. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.")
 
 ---
@@ -101,11 +105,12 @@ See above for details of how to launch this app, but the easiest method is after
 ---
 
 **Figure 3**
+
 ![Figure 3. The home page for the MSMatch web application contains basic information about the application and can be tailored easily for each use case for reuse.](../dimspec_user_guide/assets/fig04-01_msmatch_landing_page.png "Figure 3. The home page for the MSMatch web application contains basic information about the application and can be tailored easily for each use case for reuse."){#fig-qg3-3-01 width=75%}
 
 ---
 
-Every effort has been made to make MSMatch as intuitive for users as possible. Hints in the form of tooltips are provided throughout; hover over question mark icons or controls to see them. These can be toggled on and off at any time using the "Show Tooltips" toggle button at the bottom left of the application window (see Figure 3 inset at bottom right). If enabled, advanced search settings can be similarly toggled on and off for the session (see the [DIMSpec User Guide](TODO LINK) for instructions on how to set default accessibility and settings for tooltips and advanced settings). The "hamburger" (≡) icon at the top left of the screen will collapse the left-hand navigation panel to provide more horizontal room on smaller screens, though the application will rearrange itself when screens are smaller than a minimum width.
+Every effort has been made to make MSMatch as intuitive for users as possible. Hints in the form of tooltips are provided throughout; hover over question mark icons or controls to see them. These can be toggled on and off at any time using the "Show Tooltips" toggle button at the bottom left of the application window (see Figure 3 inset at bottom right). If enabled, advanced search settings can be similarly toggled on and off for the session (see the [DIMSpec User Guide](TODO LINK) for instructions on how to set default accessibility and settings for tooltips and advanced settings). The "hamburger" icon at the top left of the screen will collapse the left-hand navigation panel to provide more horizontal room on smaller screens, though the application will rearrange itself when screens are smaller than a minimum width.
 
 Click the "Click Here to Get Started" button to begin. This will activate the "Data Input" page. Example data files are provided in the project directory ("/example/PFAC30PAR_PFCA2.mzML" and "/example/example_peaklist.csv").
 
@@ -132,11 +137,13 @@ Click the "Click Here to Get Started" button to begin. This will activate the "D
 ---
 
 **Figure 4**
+
 ![Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right).](../dimspec_user_guide/assets/fig04-03_FOI_input_dialogs.png "Figure 4. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right)."){width="50%"}
 
 ---
 
 **Figure 5**
+
 ![Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button.](../dimspec_user_guide/assets/fig04-04_FOI_list.png "Figure 5. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button."){width="75%"}
 
 ---
@@ -152,11 +159,13 @@ Navigate to the desired search page. Algorithmic matching of provided mass spect
 ---
 
 **Figure 6**
+
  ![Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)](../dimspec_user_guide/assets/fig04-07_compound_match_results.png "Figure 6. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)"){width="100%"}
 
 ---
 
 **Figure 7**
+
 ![Figure 7. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with Figure 6).](../dimspec_user_guide/assets/fig04-08_compound_match_change.png "Figure 8. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with [Figure 6](#fig-qg3-3-04))."){width="100%"}
 
 ---
@@ -208,7 +217,3 @@ If you want the application to be available on your network, use the following s
     # host.address must be a resolveable network path to the hosting machine, either an IP address or a "name.domain" path
 
 Settings in other environment resolution files should, in most cases, not be changed.
-
----
-
-##### Disclaimers

@@ -2,7 +2,9 @@
 title: "DIMSpec Quick Guide - Plumber"
 author: "Jared M. Ragland"
 date: '2023-01-30'
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ### The Plumber platform and DIMSpec
