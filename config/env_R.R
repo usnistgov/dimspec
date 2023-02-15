@@ -51,7 +51,7 @@ DEPENDS_ON     <- c("tidyverse",
                     "glue",
                     "dbplyr",
                     "jsonlite",
-                    "stringi",
+                    "stringr",
                     "tools",
                     "usethis",
                     "XML")
