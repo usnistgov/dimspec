@@ -2,9 +2,7 @@
 title: "DIMSpec Quick Guide - Importing Data"
 author: "Jared M. Ragland"
 date: '2023-01-30'
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
 
 ### Importing Data
@@ -38,19 +36,19 @@ By default this file is used in checking files for import for the presence of al
 
 #### Mapping Between Import Files and the Database Schema
 
-[`/config/map_NTA_MRT.csv`](../config/map_NTA_MRT.csv) is a comma-separated value file containing elements mapped by name from the NTA-MRT output fields to the database schema (e.g. . If using a different import format, map elements and element components to their corresponding schema tables and columns. To use a different import map, develop a similar map object and store it in (or read into) your session as `IMPORT_MAP` (though the `full_import` workflow allows specification of which import mapping object to use via the `import_map` argument, which should be a `data.frame` session object for your import map). For mapping between the NTA-MRT `sample` element and the database `samples` table, for instance, it looks like the following, where the `import_category` and `import_parameter` columns determine which import elements are mapped to, respectively, which database table (`sql_table`) and column (`sql_column`). Other columns determine other behaviors in certain cases for this import format. The `alias_lookup` column should refer to which normalization table to use for a given column, if any, though this can also be mapped from the entity relationship map (`er_map`) function.
+[`/config/map_NTA_MRT.csv`](../config/map_NTA_MRT.csv) is a comma-separated value file containing elements mapped by name from the NTA-MRT output fields to the database schema (e.g. . If using a different import format, map elements and element components to their corresponding schema tables and columns. To use a different import map, develop a similar map object and store it in (or read into) your session as `IMPORT_MAP` (though the `full_import` workflow allows specification of which import mapping object to use via the `import_map` argument, which should be a `data.frame` session object for your import map). For mapping between the NTA-MRT `sample` element and the database `samples` table, for instance, it looks like the following, where the `import_category` and `import_parameter` columns determine which import elements are mapped to, respectively, which database table (`sql_table`) and column (`sql_column`). Other columns determine other behaviors in certain cases for this import format, for example the `sql_normalization` column should refer to which normalization table to use for a given column, if any, though these values can also be mapped programmatically from the entity relationship map (`er_map`) function. This is a selection of the full import map; for more detail examine the .csv file directly.
 
-| required | import_category | import_parameter | sql_table | sql_parameter      | sql_normalization    | alias_lookup    |
-|----------:|:----------|:----------|:----------|:----------|:----------|:----------|
-|        1 | sample          | name             | samples   | mzml_name          | NA                   | NA              |
-|        1 | sample          | description      | samples   | description        | NA                   | NA              |
-|        1 | sample          | sample_class     | samples   | sample_class_id    | norm_sample_classes  | NA              |
-|        1 | sample          | data_generator   | samples   | sample_contributor | contributors         | NA              |
-|        1 | sample          | source           | samples   | source_citation    | NA                   | NA              |
-|        1 | NA              | NA               | samples   | generation_type    | norm_generation_type | NA              |
-|        1 | sample          | starttime        | samples   | generated_on       | NA                   | NA              |
-|        1 | NA              | NA               | samples   | ms_methods_id      | NA                   | NA              |
-|        1 | chromatography  | ssolvent         | samples   | sample_solvent     | norm_carriers        | carrier_aliases |
+| import_category | import_parameter | sql_table | sql_parameter      | sql_normalization    |
+|----------|:----------|:----------|:----------|:----------|
+| sample          | name             | samples   | mzml_name          | NA                   |
+| sample          | description      | samples   | description        | NA                   |
+| sample          | sample_class     | samples   | sample_class_id    | norm_sample_classes  |
+| sample          | data_generator   | samples   | sample_contributor | contributors         |
+| sample          | source           | samples   | source_citation    | NA                   |
+| NA              | NA               | samples   | generation_type    | norm_generation_type |
+| sample          | starttime        | samples   | generated_on       | NA                   |
+| NA              | NA               | samples   | ms_methods_id      | NA                   |
+| chromatography  | ssolvent         | samples   | sample_solvent     | norm_carriers        |
 
 #### Schema Map and Data Dictionary
 
@@ -66,12 +64,15 @@ During the import process itself, each file in the batch will be processed in or
 
 Your workflow may need to change, or the workflow here adapted, but if using the NTA MRT and MSQC applications provided, this workflow may be perfectly adequate to import data in your use case. Other use cases and import paradigms are of interest to the developers. Eventually, the import process may be simplified through a shiny application, but for now imports are available only from the console. The following example is only that, one example of an import process from the console. Example PFAS JSON files produced by the MSQC app are provided for reference in the `/example` directory.
 
+----
+
 ```r
 # Source the compliance file.
 
 source("R/compliance.R")
 
-# Add a file parser to pull files into the session; as source files may be coming from a different workflow, this is not included in the project functions.
+# Add a file parser to pull files into the session; as source files may be coming from a
+# different workflow, this is not included in the project functions.
 
 pull_json <- function(file_list) {
   stopifnot(is.character(file_list), length(file_list) > 0, all(file.exists(file_list)))
@@ -91,19 +92,27 @@ f_list <- list.files(path = src_dir, pattern = ".JSON$", full.names = TRUE)
 
 to_import <- pull_json(f_list)
 
-# Check suitability using the verify_import_requirements function to check against any requirements that may have been imposed.
+# Check suitability using the verify_import_requirements function to check against any 
+# requirements that may have been imposed.
 
 ver <- verify_import_requirements(to_import)
 cat(
-  sprintf("Required data are %spresent.\n", ifelse(all(ver$has_all_required), "", "not ")),
-  sprintf("Full detail data are %spresent.\n", ifelse(all(ver$has_full_detail), "", "not ")),
-  sprintf("Extra data are %spresent.\n", ifelse(any(ver$has_extra), "", "not ")),
-  sprintf("Mismatched names are %spresent.\n", ifelse(any(ver$has_name_mismatches), "", "not "))
+  sprintf("Required data are %spresent.\n",
+          ifelse(all(ver$has_all_required), "", "not ")),
+  sprintf("Full detail data are %spresent.\n",
+          ifelse(all(ver$has_full_detail), "", "not ")),
+  sprintf("Extra data are %spresent.\n",
+          ifelse(any(ver$has_extra), "", "not ")),
+  sprintf("Mismatched names are %spresent.\n",
+          ifelse(any(ver$has_name_mismatches), "", "not "))
 )
 
-# We will assume a full rebuild of the database and populate it with PFAS default lists of chemicals and normalization values from the /config/data/pfas directory.
+# We will assume a full rebuild of the database and populate it with PFAS default
+# lists of chemicals and normalization values from the /config/data/pfas directory.
 
-# Skip this step to import into an existing database.
+# Skip the next two steps to import into an existing database. If making a new 
+# database it is HIGHLY recommended that you first make a backup copy of any existing 
+# database prior to performing bulk imports. This is done here by setting archive = TRUE.
 
 build_db(
   populate_with = "populate_pfas.sql",
@@ -111,17 +120,22 @@ build_db(
   connect = TRUE)
 )
 
-# Create an install name for this database - use your institution or project name here
+# Create an install name for this database - use your institution or project name here.
+
 make_install_code(new_name = "Your organization or project name")
 
-# If not connected already, establish the connection.
+# Here a connection to the database already exists in the session because build_db was
+# called with connect = TRUE. If not building a new database, the easiest way to connect is 
+# to set INIT_CONNECT = TRUE in the global environment settings (at /config/env_glob.txt).
+# If a connection does not exist, use the manage_connection function; its arguments will 
+# by default pull from the session environment which was set during the compliance script.
 
 manage_connection()
 
-# These files all include the NIST PFAS ID as an integer, but for consistency we want to instead match the alias held in the database: template is "NISTPFAS00XXXX"
+# These files all include the NIST PFAS ID as an integer, but for consistency we want
+# to instead match the alias held in the database: template is "NISTPFAS00XXXX"
 
-to_import <- lapply(
-  to_import,
+to_import <- lapply(to_import,
   function(x) {
     x$compounddata$id[1] <- x$compounddata$id[1] %>%
       as.character() %>%
@@ -131,14 +145,14 @@ to_import <- lapply(
       str_pad(6, "left", "0") %>%
       str_c("NISTPFAS", .)
       return(x)
-  }
-)
+  })
 
-# There may be other naming idiosyncracies from your workflow (e.g. "micro ampere" is recognized, but it may be provided with a greek "mu" which may have character encoding issues) that should be addressed here.
+# There may be other naming idiosyncracies from your workflow (e.g. "micro ampere" is
+# recognized, but it may be provided with a greek "mu" which may have character
+# encoding issues) that should be addressed here.
 
-# It is HIGHLY recommended that you first make a backup copy of any existing database prior to performing bulk imports.
-
-# Begin import (can test with the first member of the file list (e.g. to_import[1]) if you like.)
+# Begin import (can test with the first member of the file list (e.g. to_import[1])
+# if you like.)
 
 full_import(
   import_object = to_import,
@@ -147,13 +161,16 @@ full_import(
 )
 ```
 
+----
+
 ### Last Words
 
 To reiterate, the current version of DIMSpec does not include a graphical user interface for manipulating, importing, or exporting data. It is best to work with the database in such a manner using a database manager program. All functions provided as part of DIMSpec leverage R for database manipulations, including import files. The import routine described here is very much tailored to the project workflow pipeline of:
+
 1. generate data
 1. convert to mzML using msconvert
 1. annotate using the NIST NTA MRT
-1. use the NTA-MRT-produced JSON and the msconvert-produce mzML file to evaluate data quality metrics using the MSQC application
+1. use the NTA-MRT-produced JSON and the msconvert-produced mzML file to evaluate data quality metrics using the MSQC application
 1. use the MSQC-produced JSON files along with the provided mapping and requirements files to import using the `full_import` workflow aggregation function.
 
 Workflows are expected to differ between research groups. The DIMSpec specifications should capture most of the information necessary to support NTA exploration and data mining. The import requirements and mapping files must match your import files exactly. Import functions are fully parameterized to leverage different requirement and mapping files, but care should always be used when importing data.
