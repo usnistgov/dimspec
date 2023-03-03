@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Mass Spectral Match (MSMatch) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</title>
+  <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  <meta name="generator" content="bookdown 0.29 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Mass Spectral Match (MSMatch) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  <meta property="og:type" content="book" />
+  <meta property="og:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
+  <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Mass Spectral Match (MSMatch) | A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  
+  <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
+  <meta name="twitter:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
+
+<meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
+
+
+<meta name="date" content="2023-03-03" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="msqc-home.html"/>
+<link rel="next" href="appendix-function-reference.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<div id="nist-logo">
+<a href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
+<h4>A Database Infrastructure for Mass Spectrometry (DIMSpec)</h3>
+</div>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="part"><span><b>DIMSpec User Guide</b></span></li>
+<li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html"><i class="fa fa-check"></i>Introduction</a>
+<ul>
+<li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html#intro-contributors"><i class="fa fa-check"></i>Contributors</a></li>
+<li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html#intro-contributing"><i class="fa fa-check"></i>Contributing</a></li>
+<li class="chapter" data-level="" data-path="intro-start.html"><a href="intro-start.html#intro-about"><i class="fa fa-check"></i>About this Book</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="instructions.html"><a href="instructions.html"><i class="fa fa-check"></i>Instructions</a>
+<ul>
+<li class="chapter" data-level="" data-path="instructions.html"><a href="instructions.html#installation"><i class="fa fa-check"></i>Installation</a></li>
+<li class="chapter" data-level="" data-path="instructions.html"><a href="instructions.html#project-directory"><i class="fa fa-check"></i>Project Directory</a></li>
+<li class="chapter" data-level="" data-path="instructions.html"><a href="instructions.html#project-set-up"><i class="fa fa-check"></i>Project Set Up</a></li>
+<li class="chapter" data-level="" data-path="instructions.html"><a href="instructions.html#using-dimspec"><i class="fa fa-check"></i>Using DIMSpec</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html"><i class="fa fa-check"></i>Technical Details</a>
+<ul>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#database-schema"><i class="fa fa-check"></i>Database Schema</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#populating-data-at-build"><i class="fa fa-check"></i>Populating Data at Build</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#compute-environments"><i class="fa fa-check"></i>Compute Environments</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#shiny-applications"><i class="fa fa-check"></i>Shiny Applications</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#logger"><i class="fa fa-check"></i>Logger</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#plumber"><i class="fa fa-check"></i>Plumber</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#python"><i class="fa fa-check"></i>Python</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#importing-data-td"><i class="fa fa-check"></i>Importing Data</a></li>
+<li class="chapter" data-level="" data-path="technical-details.html"><a href="technical-details.html#future-development"><i class="fa fa-check"></i>Future Development</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="conclusions.html"><a href="conclusions.html"><i class="fa fa-check"></i>Conclusions</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="part"><span><b>Shiny Web Applications</b></span></li>
+<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html"><i class="fa fa-check"></i>Table Explorer</a>
+<ul>
+<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-table-viewer"><i class="fa fa-check"></i>Table Viewer</a></li>
+<li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-erd"><i class="fa fa-check"></i>Entity Relationship Diagram</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>Mass Spectral Quality Control (MSQC)</a>
+<ul>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-intro"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-instructions"><i class="fa fa-check"></i>Instructions</a></li>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
+<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>Mass Spectral Match (MSMatch)</a>
+<ul>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-intro"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-instructions"><i class="fa fa-check"></i>Instructions</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
+<li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html#msmatch-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendices</b></span></li>
+<li class="chapter" data-level="" data-path="appendix-function-reference.html"><a href="appendix-function-reference.html"><i class="fa fa-check"></i>Function Reference</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="_blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="msmatch-home" class="section level1 unnumbered hasAnchor">
+<h1>Mass Spectral Match (MSMatch)<a href="msmatch-home.html#msmatch-home" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="msmatch-intro" class="section level2 unnumbered hasAnchor">
+<h2>Introduction<a href="msmatch-home.html#msmatch-intro" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>One goal of the Data Infrastructure for Mass Spectrometry
+(<a href="#introduction">DIMSpec</a>) project is to provide a database that can be
+easily built to support individual projects within the Chemical Sciences
+Division to manage data coherently and accelerate analyte
+identification, screening, and annotation processes for non-targeted
+analysis projects. Toward that end, the Mass Spectral Match for
+Non-Targeted Analysis (MSMatch) application was built to accelerate
+non-targeted analysis projects by searching experiment result data in
+<a href="https://www.psidev.info/mzML">mzML</a> format for matches against a
+curated mass spectral library of compounds and annotated fragments.
+MSMatch is a web application built using the Shiny package in R and
+installs alongside DIMSpec and is one example of a tool that can built
+on top of the DIMSpec tool set. Databases built and managed with DIMSpec
+are SQLite files used within a distributed R Project. Scripts for
+automated setup are included. For this initial release, DIMSpec is
+distributed with data populated for per- and polyfluorinated alkyl
+substances (PFAS); that effort has been primarily supported by the
+Department of Defense Strategic Environmental Research and Development
+Program (<a href="https://serdp-estcp.org/" target="_blank">DOD-SERDP</a>), project number
+<a href="https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview" target="_blank">ER20-1056</a>.</p>
+<p>This section serves as a user guide for using the MSMatch application.</p>
+</div>
+<div id="msmatch-instructions" class="section level2 unnumbered hasAnchor">
+<h2>Instructions<a href="msmatch-home.html#msmatch-instructions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The MSMatch application installs alongside DIMSpec. If there is
+continued (or expanded) interest, the project could be turned into an R
+package installable directly from GitHub with additional development or
+this tool can be deployed to a shiny server to avoid the need for
+launching or maintaining it locally. For now, this application is
+distributed for demonstration and evaluation with an implementation of
+NIST DIMSpec containing high resolution accurate mass spectrometry data
+for per- and polyfluorinated alkyl substances (PFAS). The R project can
+be opened in <a href="https://www.rstudio.com/" target="_blank">RStudio</a><a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a> which may be
+downloaded and installed free of charge if not already installed.
+Initial set up does require an internet connection to install
+dependencies; on a system which does not contain any software components
+this can take a considerable amount of time.</p>
+<p>Refer to the <a href="instructions.html#system-requirements">System Requirements</a> section for
+installation details.</p>
+<div id="msmatch-file-format" class="section level3 unnumbered hasAnchor">
+<h3>Input File Format Requirements<a href="msmatch-home.html#msmatch-file-format" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>To use MSMatch, raw data files produced by a mass spectrometer must be
+converted into mzML format <span class="citation">(<a href="#ref-deutsch_mass_2010" role="doc-biblioref">Deutsch 2010</a>)</span> using
+<a href="https://proteowizard.sourceforge.io/" target="_blank">Proteowizard’s</a> msConvert
+software <span class="citation">(<a href="#ref-chambers_cross-platform_2012" role="doc-biblioref">Chambers et al. 2012</a>)</span>. There are specific parameters
+that must be used during conversion.</p>
+<pre><code>Filter: Threshold peak filter
+Threshold type: absolute
+Orientation: most intense
+Value: 1
+Filter: Peak picking
+Algorithm: vendor
+MS levels: 1-2</code></pre>
+<p>A more detailed user guide for converting the files is provided as a
+<a href="assets/file_convert.pdf">vignette</a>.</p>
+</div>
+<div id="msmatch-launching-msmatch" class="section level3 unnumbered hasAnchor">
+<h3>Launching MSMatch<a href="msmatch-home.html#msmatch-launching-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Launch this tool similarly to other “shiny”-based tools provided as part
+of DIMSpec. In brief, this can be done from a terminal or the R console,
+though the preferred method is to use RStudio <span class="citation">(<a href="#ref-RStudio" role="doc-biblioref">RStudio Team 2020</a>)</span>. The
+following commands are typical given an existing installation of R or
+RStudio and should always be run from the project directory. The shiny
+package <span class="citation">(<a href="#ref-R-shiny" role="doc-biblioref">Chang et al. 2022</a>)</span> and other necessary R packages will be
+installed if it not already available by running the script at
+<code>R/compliance.R</code>, but shiny is the only package required to start the
+application. When first run, it may take a moment to install necessary
+dependencies and launch the application programming interface (API)
+server.</p>
+<p><em>Terminal</em><a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a></p>
+<blockquote>
+<p>R.exe “shiny::runApp(‘inst/apps/spectral_match’)”</p>
+</blockquote>
+<p><em>R console</em></p>
+<blockquote>
+<p><code>shiny::runApp(‘inst/apps/spectral_match’)</code></p>
+</blockquote>
+<p><em>RStudio</em></p>
+<blockquote>
+<p>Open the “.Rproj” project file in RStudio, navigate to the
+“inst/apps/spectral_match” directory, open one of the “global.R,”
+“server.R,” or “ui.R” files, and click the “Run App” button. Files
+open in an RStudio project will remain open by default when RStudio is
+closed, allowing users to quickly relaunch by simply loading the
+project. For best performance, ensure “Run External” is selected from
+the menu “carrot” on the right to launch the application in your
+system’s default web browser. This application has been tested on
+Chrome, Edge, and Firefox.</p>
+</blockquote>
+<p>Alternatively, once the compliance script has been executed MSMatch can
+be launched using <code>start_app("spectral_match")</code>.</p>
+<p>Once launched the API server will remain active until stopped, allowing
+users to freely launch, close, and relaunch any shiny apps dependent
+upon it much more quickly. The application is fluid and will dynamically
+resize to fit the dimensions of a browser window. By default, the server
+does not stop when the browser is closed. This means that, once started,
+it is available by navigating a web browser back to the URL where it
+launched until the server is shut down.</p>
+<p>If anything is needed from the user, interactive feedback will occur in
+the console from which it was launched. Install any packages required if
+prompted by the application. Once the package environment requirements
+have been satisfied and the server has spun up, which may take a moment,
+the tool will launch (Figure 1) either in the RStudio viewer or the
+browser.</p>
+</div>
+<div id="msmatch-using-msmatch" class="section level3 unnumbered hasAnchor">
+<h3>Using MSMatch<a href="msmatch-home.html#msmatch-using-msmatch" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Every effort has been made to make MSMatch as intuitive for users as
+possible. Set up may require a bit of effort on certain systems, but
+once the application launches it should be straightforward; please
+contact the authors directly or email
+<a href="mailto:pfas@nist.gov">pfas@nist.gov</a> for support, or with any
+questions or suggestions.</p>
+<p>Hints in the form of tooltips are provided throughout; hover over
+question mark icons or controls to see them. These can be toggled on and
+off at any time using the “Show Tooltips” toggle button at the bottom
+left of the application window (see <a href="msmatch-home.html#fig04-01">Figure 1</a> inset at
+bottom right). If enabled, advanced search settings can be similarly
+toggled on and off for the session (see <a href="msmatch-home.html#msmatch-application-settings">Application
+Settings</a> for instructions on how to set default
+accessibility and settings for tooltips and advanced settings). The
+“hamburger” (≡) icon at the top left of the screen will collapse the
+left-hand navigation panel to provide more horizontal room on smaller
+screens, though the application will rearrange itself when screens are
+smaller than a minimum width.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-01_msmatch_landing_page.png" title="Figure 1. The home page for the MSMatch web application contains basic information about the application and can be tailored easily for each use case for reuse." id="fig04-01" style="width:100.0%" alt="" />
+<p class="caption">Figure 1. The home page for the MSMatch web application contains basic
+information about the application and can be tailored easily for each
+use case for
+reuse.</p>
+</div>
+<hr />
+<p>Click the “Click Here to Get Started” button to begin. This will
+activate the “Data Input” page. Example data files are provided in the
+project directory (“example/PFAC30PAR_PFCA2.mzML” and
+“example/example_peaklist.csv”).</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-02_data_input.png" title="Figure 2.The data input page of MSMatch where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided." id="fig04-02" style="width:80.0%" alt="" />
+<p class="caption">Figure 2. The data input page of MSMatch where data files, experiment
+parameters, and features of interest are identified. Workflow guidance
+options become available once data are
+provided.</p>
+</div>
+<hr />
+<p>All input values are validated against expectations and will flag the
+user if invalid values are used.</p>
+<div id="msmatch-step1" class="section level4 unnumbered hasAnchor">
+<h4>Step 1. Load an mzML Data File<a href="msmatch-home.html#msmatch-step1" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>MSMatch accepts files in the mzML format, see the previous section
+<a href="msmatch-home.html#msmatch-file-format">Input file format requirements</a> for more details.
+Either click the “Load” button to select a local file or click and drag
+one from your file system to that widget. Only .mzML files are accepted
+using this release. Set instrument parameters to match those used in the
+experiment using the controls provided.</p>
+</div>
+<div id="msmatch-step2" class="section level4 unnumbered hasAnchor">
+<h4>Step 2. Identify Features of Interest<a href="msmatch-home.html#msmatch-step2" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>Two methods (<a href="msmatch-home.html#fig04-03">Figure 3</a>) are supported to identify features
+of interest by mass-to-charge ratio and retention time properties.
+Either use case is fully supported. Users may:</p>
+<ol style="list-style-type: decimal">
+<li>import a file (either .csv, .xls, or .xlsx, though workbooks should
+have relevant data in the first worksheet) and identify which
+columns contain the correct information (<a href="msmatch-home.html#fig04-03">Figure 3,
+left</a>).
+<ul>
+<li>Click “Import” and select a file of interest from your local
+computer or drag and drop a file to this input.</li>
+<li>Use this method if you have a file containing features of
+interest from other procedures or software outputs to quickly
+import many feature properties.</li>
+<li>Select a column that corresponds to each property.</li>
+<li>To append to the current list, keep the checkbox checked. To
+overwrite, uncheck this box.</li>
+<li>Click “Load Parameters” to validate and add parameters or
+“Cancel” to abort this operation.</li>
+<li>Repeat until all files are imported. or</li>
+</ul></li>
+<li>click the “Add” button and enter search parameters one at a time
+(<a href="msmatch-home.html#fig04-03">Figure 3, left</a>); repeat this process to add more.
+<ul>
+<li>Add numeric values for all items.</li>
+<li>Click “Save Parameters” to validate and add or “Cancel” to abort
+this operation</li>
+</ul></li>
+</ol>
+<ul>
+<li>Users receive feedback on the form if values are left blank or if
+they do not meet expectations (e.g. centroid is after peak start and
+before peak end).</li>
+<li>Values should all be numeric in nature.</li>
+<li>This list may be edited after import (<a href="msmatch-home.html#fig04-04">Figure 4</a>).</li>
+</ul>
+<p>Data are ready to be processed once features of interest are added.
+Selecting any row in the resulting table makes two additional functions
+available (<a href="msmatch-home.html#fig04-04">Figure 4, right</a>). With a row selected, click
+“Remove” to delete it or “Edit” to bring up the same form as above
+(<a href="msmatch-home.html#fig04-03">Figure 3, right</a>), change the values, and click “Save
+Parameters.” All records remaining in the feature of interest list will
+be available to search widgets on subsequent pages.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-03_FOI_input_dialogs.png" title="Figure 3. Dialogs to identify features of interest by upload (left) or manually by clicking the Add button (right)." id="fig04-03" style="width:75.0%" alt="" />
+<p class="caption">Figure 3. Dialogs to identify features of interest by upload (left) or
+manually by clicking the Add button
+(right).</p>
+</div>
+<hr />
+<div class="figure">
+<img src="assets/fig04-04_FOI_list.png" title="Figure 4. Manage the feature identification list (left) interactively by adding, editing, or removing features as needed (right) by selecting a row from the table and clicking the appropriate button." id="fig04-04" style="width:100.0%" alt="" />
+<p class="caption">Figure 4. Manage the feature identification list (left) interactively
+by adding, editing, or removing features as needed (right) by selecting
+a row from the table and clicking the appropriate
+button.</p>
+</div>
+<hr />
+</div>
+<div id="msmatch-step3" class="section level4 unnumbered hasAnchor">
+<h4>Step 3. Generate the Search Object<a href="msmatch-home.html#msmatch-step3" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>Click the “Process Data” button (<a href="msmatch-home.html#fig04-05">Figure 5</a>) to filter and
+recast data in the .mzML file according to defined feature properties.
+(In further screenshots the manually added row [m/z 327.4586] has been
+removed. This will unlock mass spectral matching actions; click one of
+the buttons or navigate to the desired page using the navigation panel
+on the left.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-05_process_data_button.png" title="Figure 5. Click “Process Data” to validate experiment data and choose one of the options that appear or navigate to the desired page using the left-hand navigation menu." id="fig04-05" style="width:75.0%" alt="" />
+<p class="caption">Figure 5. Click “Process Data” to validate experiment data and choose
+one of the options that appear or navigate to the desired page using the
+left-hand navigation
+menu.</p>
+</div>
+<hr />
+</div>
+<div id="msmatch-step4" class="section level4 unnumbered hasAnchor">
+<h4>Step 4. Explore Results<a href="msmatch-home.html#msmatch-step4" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>Algorithmic matching of provided mass spectral data for features of
+interest are matched against data stored in the attached database.
+Matching algorithms are described in detail in <a href="#msmatch-algorithms">Compound and Fragment
+Match Algorithms</a>. In brief, data meeting
+properties of a feature of interest are extracted from the provided
+.mzML file given the reported mass accuracy settings of the experiment
+and mass-to-charge ratios for known compounds and fragments are searched
+within an uncertainty boundary range and returned from the database.
+Results are then stored in the application server and displayed to the
+user.</p>
+<div id="match-compounds-msmatch-compounds-.unnumbered" class="section level5 hasAnchor" number="0.0.0.0.1">
+<h5><span class="header-section-number">0.0.0.0.1</span> Match Compounds {msmatch-compounds .unnumbered}<a href="msmatch-home.html#match-compounds-msmatch-compounds-.unnumbered" class="anchor-section" aria-label="Anchor link to header"></a></h5>
+<p>Click the “Compound Match” button from the previous page or select
+“Compound Match” from the left-hand navigation menu to match features of
+interest from the mzML file to known compounds in the database.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-06_compound_match_screen.png" title="Figure 6. Compound matching options. Select a feature of interest and search type, then click the &#39;Search&#39; button." id="fig04-06" style="width:75.0%" alt="" />
+<p class="caption">Figure 6. Compound matching options. Select a feature of interest and
+search type, then click the ‘Search’
+button.</p>
+</div>
+<hr />
+<p>Select a feature of interest from the drop-down box and click the
+“Search” button.</p>
+<p>In most cases the “Precursor Search” option should remain selected; the
+other option is “All” which takes a considerable amount of time and may
+yield poor matches. The “Use Optimized Search Parameters” checkbox will
+utilize a set of predefined properties for known compounds to accelerate
+the search; uncheck this box to perform a wider search.</p>
+<p>Narrative results are provided regarding the top match and the match
+currently being viewed, including a method summary for how the reference
+was measured. The spectral comparison is visualized in a “butterfly
+plot” showing measurements in black and the comparison (database)
+spectrum in red; toggle the different fragmentation levels (e.g. MS1 vs
+MS2) to view those independently (<a href="msmatch-home.html#fig04-07">Figure 7</a>).</p>
+<p>The table at the right displays compound match identities and their
+match scores. Click the green plus icon to expand any given row of the
+table or click a different row to examine that match and update the plot
+and method narrative (<a href="msmatch-home.html#fig04-08">Figure 8</a>). This table may be
+downloaded using the buttons at the bottom left of the table.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-07_compound_match_results.png" title="Figure 7. Results of a compound match for the selected feature of interest. (Inset: Download results using the buttons at the bottom left of the match table.)" id="fig04-07" style="width:100.0%" alt="" />
+<p class="caption">Figure 7. Results of a compound match for the selected feature of
+interest. (Inset: Download results using the buttons at the bottom left
+of the match
+table.)</p>
+</div>
+<hr />
+<div class="figure">
+<img src="assets/fig04-08_compound_match_change.png" title="Figure 8. Results change in real time when different rows are selected from the table, updating the narrative, butterfly plot, and method narrative (compare with [Figure 7](#fig04-07))." id="fig04-08" style="width:100.0%" alt="" />
+<p class="caption">Figure 8. Results change in real time when different rows are selected
+from the table, updating the narrative, butterfly plot, and method
+narrative (compare with Figure
+6).</p>
+</div>
+<hr />
+<p>Evaluation of match score uncertainty is also provided. Click the
+“Estimate Match Score Uncertainty” button below the butterfly plot
+(<a href="msmatch-home.html#fig04-07">Figure 7</a>) to evaluate the spread in match scores for the
+currently selected match (<a href="msmatch-home.html#fig04-09">Figure 9</a>). Results from a
+bootstrapped version of the match algorithm are displayed as boxplots
+for both forward and reverse matches. Toggle the different fragmentation
+levels (e.g. MS1 vs MS2) to view each. Change the number of bootstrap
+iterations to use and click “Calculate Uncertainty” to run the
+estimation again. Click the “Close” button to return to the compound
+match screen and change the match being evaluated. The calculation of
+mass spectral uncertainty and estimation of the distribution of the
+match scores is described in <span class="citation">Place, Benjamin J. (<a href="#ref-place_development_2021" role="doc-biblioref">2021a</a>)</span>.</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-09_match_uncertainty.png" title="Figure 9. Estimation of match score uncertainty for any selected match candidate." id="fig04-09" style="width:50.0%" alt="" />
+<p class="caption">Figure 9. Estimation of match score uncertainty for any selected match
+candidate.</p>
+</div>
+<hr />
+<p>The match result table (Figures <a href="msmatch-home.html#fig04-07">7</a> and <a href="msmatch-home.html#fig04-08">8</a>)
+offers several options.</p>
+<ul>
+<li><p>Sort using the column headers (results are by default ordered by MS1
+score and MS2 score, with ties being decided by reverse match scores
+and the number of annotated fragments).</p></li>
+<li><p>Download the resulting match table by either copying it to the
+clipboard (“Copy”) or downloading in either CSV or XLS file formats
+using the buttons at the bottom left of the table (see Figure 6).</p></li>
+<li><p>Select any row in the table to update the narratives and plots or
+evaluate match score uncertainty for that match.</p></li>
+</ul>
+<p>If no compound matches are found, users are flagged to that effect.
+Proceed to Match Fragments using the navigation menu to identify
+fragments matching known annotations.</p>
+</div>
+<div id="msmatch-fragments" class="section level5 unnumbered hasAnchor">
+<h5>Match Fragments<a href="msmatch-home.html#msmatch-fragments" class="anchor-section" aria-label="Anchor link to header"></a></h5>
+<p>Click the “Fragment Match” button from the data input page (<a href="msmatch-home.html#fig04-05">Figure
+5</a>) or select “Fragment Match” from the left-hand navigation
+menu to match analytical fragments within features of interest from the
+.mzML file with previously annotated fragments in the database.</p>
+<p>Select a feature of interest from the drop-down box just as with
+compounds (features are defined in Step 2: Identify Features of
+Interest) and click the “Search” button (<a href="msmatch-home.html#fig04-10">Figure 10</a>).</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-10_fragment_match_screen.png" title="Figure 10. Fragment matching options. Select a feature of interest and click the &#39;Search&#39; button." id="fig04-10" style="width:75.0%" alt="" />
+<p class="caption">Figure 10. Fragment matching options. Select a feature of interest and
+click the ‘Search’
+button.</p>
+</div>
+<hr />
+<p>Fragments measured within the feature of interest will be matched
+against database fragments with known annotations. Complicated spectra
+may take a moment but generally completes within 30 seconds yielding a
+variety of results to indicate possible compound identity. Results are
+presented as an annotated mass spectral uncertainty plot (<a href="msmatch-home.html#fig04-11">Figure 11
+left</a>) and additional information about measured spectra are
+provided in an expanding table (<a href="msmatch-home.html#fig04-11">Figure 11 right</a>).</p>
+<hr />
+<div class="figure">
+<img src="assets/fig04-11_fragment_match_spectra.png" title="Figure 11. Graphical display of fragment annotations on an uncertainty mass spectral plot and the measured data provided to MSMatch." id="fig04-11" style="width:100.0%" alt="" />
+<p class="caption">Figure 11. Graphical display of fragment annotations on an uncertainty
+mass spectral plot and the measured data provided to
+MSMatch.</p>
+</div>
+<hr />
+<p>Matched fragment annotations and associated metadata are provided below
+this output (<a href="msmatch-home.html#fig04-12">Figure 12</a>). Match records are located in the
+expandable table to the left. As matches may have structural annotation
+or not, these are separated to indicate confidence and annotations with
+structural notation are displayed at the top. Select a row in the table
+(the top record is selected by default) to update the following
+displays.</p>
+<ul>
+<li><p>A human readable measurement narrative about the known fragment.</p></li>
+<li><p>If structural notation is present a molecular model is displayed
+(requires rdkit to be active in the API server)</p></li>
+<li><p>Compounds and peaks within which this fragment has been previously
+annotated appear in the table to the right. Select the tab to switch
+between compounds and peaks.</p></li>
+</ul>
+<hr />
+<div class="figure">
+<img src="assets/fig04-12_fragment_match_results.png" title="Figure 12. Results from matching user provided data to annotated fragments with associated metadata. Selecting a row in the left-hand table will update data to the right in real time. Inset A: click a button to save that table’s results. Inset B: an example of peak information available." id="fig04-12" style="width:100.0%" alt="" />
+<p class="caption">Figure 12. Results from matching user provided data to annotated
+fragments with associated metadata. Selecting a row in the left-hand
+table will update data to the right in real time. Inset A: click a
+button to save that table’s results. Inset B: an example of peak
+information
+available.</p>
+</div>
+<hr />
+<p>Two options are available for more contextual information regarding
+compounds and peaks.</p>
+<ul>
+<li>Click <strong>More Compound Information</strong> to list other known or generated
+aliases for a compound and provides links to those resources if
+available. These aliases have either been collated from existing
+locations or, in the case of most machine-readable identifiers,
+generated using rdkit.</li>
+</ul>
+<hr />
+<div class="figure">
+<img src="assets/fig04-13_additional_compound_info.png" title="Figure 13. Additional information available for compounds." id="fig04-13" width="300" alt="" />
+<p class="caption">Figure 13. Additional information available for
+compounds.</p>
+</div>
+<hr />
+<ul>
+<li>Click <strong>More Peak Information</strong> to provide a human readable
+narrative regarding measurement methods and sample information
+provided as part of the database accession process. Narratives are
+constructed directly from the underlying linked data tables by the
+database and stored as a database view.</li>
+</ul>
+<hr />
+<div class="figure">
+<img src="assets/fig04-14_additional_peak_info.png" title="Figure 14. Additional information available for peak." id="fig04-14" width="300" alt="" />
+<p class="caption">Figure 14. Additional information available for
+peaks.</p>
+</div>
+<hr />
+</div>
+</div>
+<div id="msmatch-step5" class="section level4 unnumbered hasAnchor">
+<h4>Step 5. Closing Down<a href="msmatch-home.html#msmatch-step5" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>When finished using the application, typing the escape key at the R
+console is the simplest way to stop the server and exit the application.
+If using RStudio there is a “stop sign” button at the top right of the
+console pane that will also stop it. When finished completely with the
+project, users also need to shut down the API server.</p>
+<ul>
+<li>Loading the entire project from the compliance script (i.e. MSMatch
+was launched using <code>start_app("spectral_match")</code>) provides
+additional actions and includes a live database connection with the
+ability to read data into tables and preserve them for further
+analysis. Use the function <a href="appendix-function-reference.html#fn_def_close_up_shop"><code>close_up_shop()</code></a>
+with the argument <code>back_up_connected_tbls</code> set to <code>TRUE</code> to preserve
+these, or the default FALSE to simply close all connections
+including the API server).</li>
+<li>If launching the app directly and using the default settings there
+will be a session object named <code>plumber_service</code> connected to that
+server. To stop it, use the <a href="appendix-function-reference.html#fn_def_api_stop"><code>api_stop</code></a> function from
+the console or stop the service directly using
+<code>plumber_service\$kill()</code>; it will also generally stop when the
+calling R process closes (e.g. when RStudio is closed), but it is
+highly recommended to stop it manually to prevent hanging
+connections.</li>
+<li>After closing all connections, a hanging connection may be indicated
+by the presence of “-shm” and “-wal” files in the project directory.
+Flushing these hanging connections is not required but is
+recommended.
+<ul>
+<li><p>If launching MSMatch with the compliance script, run
+<a href="appendix-function-reference.html#fn_def_close_up_shop"><code>close_up_shop()</code></a> again.</p></li>
+<li><p>Otherwise flush those connections by directly connecting and
+disconnecting with the DBI package:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="msmatch-home.html#cb17-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> DBI<span class="sc">::</span><span class="fu">dbConnect</span>(<span class="fu">RSQLite</span>()<span class="sc">::</span>SQLite, <span class="st">&quot;nist_pfas_nta_dev.sqlite&quot;</span>)</span>
+<span id="cb17-2"><a href="msmatch-home.html#cb17-2" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbDisconnect</span>(con)</span></code></pre></div></li>
+</ul></li>
+</ul>
+<p>Feature requests, suggestions, and bug reports are most conveniently
+submitted as issues via GitHub but may also be submitted by contacting
+the authors of this ROA. New functionality suggestions are encouraged as
+the project tooling develops. Likewise, if the functionality
+demonstrated here is of interest to projects outside of PFAS, this is
+only one example implementation of the underlying technology stack (i.e.
+DIMSpec); contact the authors to see if your mass spectrometry data
+would be amenable to that framework as other implementation suggestions
+are encouraged and a larger goal of the project to cohesively manage
+mass spectrometry data for non-targeted analysis within the Chemical
+Sciences Division.</p>
+<p>This concludes the User Guide for the Mass Spectral Match (MSMatch) web
+application. The following section contains technical details about the
+implementation and user customization of this digital assistant.</p>
+</div>
+</div>
+</div>
+<div id="msmatch-technical-details" class="section level2 unnumbered hasAnchor">
+<h2>Technical Details<a href="msmatch-home.html#msmatch-technical-details" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Implementation and environment details for the MSMatch application
+largely follow those for DIMSpec. See the sections on <a href="instructions.html#system-requirements">System
+Requirements</a>, <a href="technical-details.html#compute-environments">Environment
+Resolution</a>, <a href="technical-details.html#shiny-applications">Shiny
+Applications</a>, <a href="technical-details.html#plumber">Plumber</a> for the API
+implementation which is required for this application, and <a href="technical-details.html#python">Python
+Integration</a> for chemometrics support.</p>
+<p>Technical details in this section will describe only the MSMatch
+application found in the <code>inst/apps/spectral_match</code> directory and,
+unless otherwise noted, all files referred to hereafter refer to that
+directory.</p>
+<div id="msmatch-search-object" class="section level3 unnumbered hasAnchor">
+<h3>Mass Spectral Search Object<a href="msmatch-home.html#msmatch-search-object" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>In order to use the functions related to the database searching, library
+matching, and fragment matching, a <em>Mass Spectral Search Object</em> must be
+generated. A <em>Mass Spectral Search Object</em> is a nested list in the R
+environment that contains the following:</p>
+<ul>
+<li><p>Peak search parameters input in Step 1, including instrument
+performance parameters, in a <code>search_df</code> dataframe</p></li>
+<li><p>MS1 and MS2 (if available) mass spectra peak tables, nested lists
+with names <code>ms1_pt</code> and <code>ms2_pt</code> respectively. Each peak table
+contains:</p>
+<ul>
+<li><p><code>peaktable_mass</code>: a dataframe of <em>m/z</em> values with rows
+representing binned <em>m/z</em> values and columns representing
+individual scans</p></li>
+<li><p><code>peaktable_int</code>: a dataframe of intensity values with the same
+shape and organization as the <code>peaktable_mass</code> dataframe</p></li>
+<li><p><code>EIC</code>: dataframe containing paired <code>time</code> and <code>int</code> (intensity)
+values corresponding to the MS1 extracted ion chromatogram (EIC)
+of the precursor ion stated in the peak search parameters</p></li>
+<li><p><code>ms1scans</code>: integer vector that indicates the scan number of the
+MS2 scans</p></li>
+<li><p><code>ms2scans</code>: integer vector that indicates the scan number of the
+MS2 scans</p></li>
+</ul></li>
+</ul>
+<p>The <em>Mass Spectral Search Object</em> is converted into uncertainty mass
+spectra (MS1 and MS2, if available) through the
+<a href="appendix-function-reference.html#fn_def_get_ums" target="_blank"><code>get_ums</code></a> function for subsequent
+analysis.
+### Compound and Fragment Match Algorithms {#msmatch-algorithms .unnumbered}</p>
+<p>All relevant functions for compound and fragment match algorithms are in
+the <code>R/spectral_analysis</code> directory. Currently, the compound search tool
+of MSMatch can search the database using the precursor ion <em>m/z</em> of the
+unknown compound
+(<a href="appendix-function-reference.html#fn_def_search_precursor" target="_blank"><code>search_precursor</code></a> function)
+to reduce the processing time and compare only reference mass spectra
+with the same (defined below) precursor ion <em>m/z</em> or compare the mass
+spectra of the unknown compound to all compounds in the database
+(<a href="appendix-function-reference.html#fn_def_search_all" target="_blank"><code>search_all</code></a> function). The
+<a href="appendix-function-reference.html#fn_def_search_precursor" target="_blank"><code>search_precursor</code></a> function
+first identifies all peaks that have precursor ion m/z values that are
+within a range, as dependent on the type of MS2 experiment used:</p>
+<p><strong>Data-Dependent Acquisition</strong> (DDA, TopN), reference precursor ion
+<em>m/z</em> range:
+<span class="math display">\[(m_p\ -\ \max⁡(error,\ min.error),\ m_p\ +\ \max⁡(error,\ min.error))\]</span>
+<strong>Sequential Windows of All Theoretical Masses</strong> (SWATH, SONAR), range:
+<span class="math display">\[(m_p\ -\ \frac{1}{2}\ error,\ \ \ m_p\ +\ \frac{1}{2}\ error)\]</span>
+<strong>Data-Independent Acquisition</strong> (DIA, AIF), range: <span class="math display">\[(0,\ \ \ ∞)\]</span>
+Where m<sub>p</sub> is the precursor ion <em>m/z</em> of the unknown compound,
+<em>error</em> is the instrument relative error (in ppm) for DDA and the width
+of the window in SWATH, and <em>min.error</em> is the instrument absolute
+minimum error (in Da). For DIA, the range is all possible positive
+masses so that, functionally, the
+<a href="appendix-function-reference.html#fn_def_search_precursor" target="_blank"><code>search_precursor</code></a> function is
+no different than the <a href="appendix-function-reference.html#fn_def_search_all" target="_blank"><code>search_all</code></a>
+function.</p>
+<p>To determine the match score between the unknown compound mass spectra
+(MS1 and MS2) and the reference mass spectra, the dot product of the
+mean mass spectra is calculated using the
+<a href="appendix-function-reference.html#fn_def_compare_ms" target="_blank"><code>compare_ms</code></a> function, which uses the
+respective mass errors and minimum mass errors of the unknown mass
+spectra and reference mass spectra. To determine the uncertainty
+distribution of the match score, the
+<a href="appendix-function-reference.html#fn_def_bootstrap_compare_ms" target="_blank"><code>bootstrap_compare_ms</code></a>
+function is used. The application of this function is described in <span class="citation">Place, Benjamin J. (<a href="#ref-place_development_2021" role="doc-biblioref">2021a</a>)</span>.</p>
+<p>For the fragment search tool, the function
+<a href="appendix-function-reference.html#fn_def_get_annotated_fragments" target="_blank"><code>get_annotated_fragments</code></a>
+is used, where all <em>m/z</em> values in the MS2 mass spectrum of the unknown
+compound are searched against all annotated fragments in the
+<code>norm_fragments</code> view using the instrument relative mass error and
+absolute minimum mass error as boundary conditions. Annotated fragments
+are fragment <em>m/z</em> values that have elemental formulas assigned; SMILES
+structural notation can also be assigned but is not required for
+annotation.</p>
+</div>
+<div id="msmatch-application-settings" class="section level3 unnumbered hasAnchor">
+<h3>Application Settings<a href="msmatch-home.html#msmatch-application-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Many global application settings are customizable by modifying the
+<code>global.R</code> file within the application directory. Changes to those
+listed here should not cause issues, but other settings in this file may
+result in instability. Anywhere a <code>TRUE</code> or <code>FALSE</code> value is indicated
+should only be <code>TRUE</code> or <code>FALSE.</code> The most germane user settings
+include:</p>
+<p><strong>Table 4.</strong> Example application settings in the <code>global.R</code> file.</p>
+<table style="width:96%;">
+<colgroup>
+<col width="16%" />
+<col width="16%" />
+<col width="62%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Default
+Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AP
+P_TITLE</td>
+<td>“Mass S
+pectral
+Match for
+PFAS”</td>
+<td><div class="line-block">Set the application title wh</div>
+ich will appear in the browser tab when
+running.</td>
+</tr>
+<tr class="even">
+<td>defaul
+t_title</td>
+<td><code>AP P _TITLE</code></td>
+<td>The application name that will display
+inside the page. Overrides the default of
+APP_TITLE if desired.</td>
+</tr>
+<tr class="odd">
+<td>app_ns</td>
+<td><code>p ast e0(“a pp _”, ap p _name)</code></td>
+<td>The namespace to direct logging messages.</td>
+</tr>
+<tr class="even">
+<td>dev</td>
+<td><code>FALSE</code></td>
+<td>Whether to launch the application in
+development mode, which will allow for
+interactive interrogation of application
+state by unlocking a button, provide the
+opportunity to pre-load data for testing,
+and display most hidden elements for
+inspection.</td>
+</tr>
+<tr class="odd">
+<td>enable_
+adv_use</td>
+<td><code>TRUE</code></td>
+<td>Whether to launch the application with a
+toggle to display advanced controls
+available to the user.</td>
+</tr>
+<tr class="even">
+<td>advan
+ced_use</td>
+<td><code>FALSE</code></td>
+<td>Whether to launch the application with
+advanced controls visible by default.</td>
+</tr>
+<tr class="odd">
+<td>en
+able_mo
+re_help</td>
+<td><code>TRUE</code></td>
+<td>Whether to launch the application with a
+toggle to display tooltips to the user.</td>
+</tr>
+<tr class="even">
+<td>advan
+ced_use</td>
+<td><code>FALSE</code></td>
+<td>Whether to launch the application with
+tooltips by default.</td>
+</tr>
+<tr class="odd">
+<td>toolt
+ip_text</td>
+<td>“www
+/toolti
+ps.csv”</td>
+<td>A data source for populating tooltips.
+This should point to a readable file (e.g.
+www/tooltips.csv) that is coerced to a
+named vector.</td>
+</tr>
+<tr class="even">
+<td>t oy_data</td>
+<td><code>FALSE</code></td>
+<td>Whether to launch the application with
+“toy” data for testing purposes. This
+loads data from “src_toy_data” and
+“src_toy_parameters” during application
+spin up so the tester does not have to
+manually upload files or add data.</td>
+</tr>
+<tr class="odd">
+<td>src_t
+oy_data</td>
+<td>“toy_da
+ta.RDS”</td>
+<td>Name of the RDS file housing “toy” data
+from a previously processed mzML file.</td>
+</tr>
+<tr class="even">
+<td>src_
+toy_par
+ameters</td>
+<td>“toy_p
+aramete
+rs.RDS”</td>
+<td>Name of the RDS file housing “toy” data
+describing features of interest to use for
+testing.</td>
+</tr>
+<tr class="odd">
+<td>nee
+d_files</td>
+<td>Ch
+aracter
+vector</td>
+<td>File paths for files containing
+application functions.</td>
+</tr>
+<tr class="even">
+<td>app_s
+ettings</td>
+<td>Named
+list</td>
+<td>Properties used to populate controls
+within the application, by name (e.g. min,
+max, value, etc.).</td>
+</tr>
+<tr class="odd">
+<td>jscode</td>
+<td>Text/H
+TML/Jav
+ascript</td>
+<td>Custom javascript functions which either
+execute automatically or by calling the
+function server side.</td>
+</tr>
+<tr class="even">
+<td>file_M
+B_limit</td>
+<td>Numeric</td>
+<td>The maximum size in megabytes for a single
+uploaded file. Shiny’s built-in default is
+5 MB.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="msmatch-future" class="section level3 unnumbered hasAnchor">
+<h3>Future Development<a href="msmatch-home.html#msmatch-future" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Both the R/Shiny and python code bases are fully extensible for future
+functionality needs, as is the underlying database infrastructure for
+custom tables and views. Future development may include deployment of
+and to a Shiny server to serve this as a hosted web application,
+extending the python code to analyze data of various formats from
+different instruments, and adding analysis features and functionality
+(e.g. high resolution plot generation and download or supporting the
+full workflow from instrument through import and to report generation)
+requested by stakeholders.</p>
+</div>
+</div>
+<div id="msmatch-conclusions" class="section level2 unnumbered hasAnchor">
+<h2>Conclusions<a href="msmatch-home.html#msmatch-conclusions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The Mass Spectral Match for Non-Targeted Analysis application
+provides a new way to make NTA tools developed at NIST using the
+Database Infrastructure for Mass Spectrometry accessible to both
+internal and external stakeholders. It is the first demonstration of
+tools that can be built on top of databases conforming to the <a href="intro-start.html#intro-start">DIMSpec
+project</a>, which can be repurposed for any class of
+chemicals or project of interest using mass spectrometry data.</p>
+
+</div>
+</div>
+
+
+
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-chambers_cross-platform_2012" class="csl-entry">
+Chambers, Matthew C., Brendan Maclean, Robert Burke, Dario Amodei, Daniel L. Ruderman, Steffen Neumann, Laurent Gatto, et al. 2012. <span>“A Cross-Platform Toolkit for Mass Spectrometry and Proteomics.”</span> <em>Nature Biotechnology</em> 30 (10): 918–20. <a href="https://doi.org/10.1038/nbt.2377">https://doi.org/10.1038/nbt.2377</a>.
+</div>
+<div id="ref-R-shiny" class="csl-entry">
+Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2022. <em>Shiny: Web Application Framework for r</em>. <a href="https://shiny.rstudio.com/">https://shiny.rstudio.com/</a>.
+</div>
+<div id="ref-deutsch_mass_2010" class="csl-entry">
+Deutsch, Eric W. 2010. <span>“Mass <span>Spectrometer</span> <span>Output</span> <span>File</span> <span>Format</span> <span class="nocase">mzML</span>.”</span> In <em>Proteome <span>Bioinformatics</span></em>, edited by Simon J. Hubbard and Andrew R. Jones, 319–31. Methods in <span>Molecular</span> <span>Biology</span>™. Totowa, NJ: Humana Press. <a href="https://doi.org/10.1007/978-1-60761-444-9_22">https://doi.org/10.1007/978-1-60761-444-9_22</a>.
+</div>
+<div id="ref-place_development_2021" class="csl-entry">
+Place, Benjamin J. 2021a. <span>“Development of a <span>Data</span> <span>Analysis</span> <span>Tool</span> to <span>Determine</span> the <span>Measurement</span> <span>Variability</span> of <span>Consensus</span> <span>Mass</span> <span>Spectra</span>.”</span> <em>Journal of the American Society for Mass Spectrometry</em> 32 (3): 707–15. <a href="https://doi.org/10.1021/jasms.0c00423">https://doi.org/10.1021/jasms.0c00423</a>.
+</div>
+<div id="ref-RStudio" class="csl-entry">
+RStudio Team. 2020. <em>RStudio: Integrated Development Environment for r</em>. Boston, MA: RStudio, PBC. <a href="http://www.rstudio.com/">http://www.rstudio.com/</a>.
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="6">
+<li id="fn6"><p>Any mention of commercial products within NIST web pages is for
+information only; it does not imply recommendation or endorsement by
+NIST.<a href="msmatch-home.html#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>Requires R.exe is available in your system PATH<a href="msmatch-home.html#fnref7" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="msqc-home.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="appendix-function-reference.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": null,
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": [["DIMSPec_User_Guide.epub", "DIMSpec User Guide (epub)"], ["DIMSpec_User_Guide.pdf", "DIMSpec User Guide (pdf)"], ["quick_install.pdf", "Quick Guide - Installation"], ["file_convert.pdf", "Quick Guide - Conversion to mzML"], ["quick_plumber.pdf", "Quick Guide - API"], ["quick_apps.pdf", "Quick Guide - Web Apps"], ["quick_import.pdf", "Quick Guide - Importing Data"], ["quick_advanced.pdf", "Quick Guide - Advanced Use and Development"]],
+"search": {
+"engine": "fuse",
+"options": null,
+"isCaseSensitive": false,
+"threshold": 0,
+"distance": 0
+},
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

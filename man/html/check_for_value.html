@@ -21,12 +21,14 @@ will be fed directly and can accept the nested list structure defined in
 <h3>Usage</h3>
 
 <pre>
-con &lt;- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+con2 &lt;- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 alphabet &lt;- dplyr::tibble(lower = letters, upper = LETTERS)
-dplyr::copy_to(con, alphabet)
-check_for_value("A", "alphabet", "upper", con)
-check_for_value("A", "alphabet", "lower", con)
-check_for_value(letters[1:10], "alphabet", "lower", con)
+dplyr::copy_to(con2, alphabet)
+check_for_value("A", "alphabet", "upper", db_conn = con2)
+check_for_value("A", "alphabet", "lower", db_conn = con2)
+check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
+DBI::dbDisconnect(con2)
+rm(con2)
 </pre>
 
 

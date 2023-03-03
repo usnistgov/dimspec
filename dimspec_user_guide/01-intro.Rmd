@@ -18,15 +18,15 @@ This tool set[^1] was developed as part of the [NIST PFAS program](https://www.n
 
 The main two contributors to code and data in this project are
 
--   [Benjamin J. Place](https://www.nist.gov/people/benjamin-place){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0003-0953-5215){target="_blank"} (PI, Organic Chemical Metrology Group)
+-   [Benjamin J. Place](https://www.nist.gov/people/benjamin-place){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0003-0953-5215){target="_blank"} (PI, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group){target="_blank"})
 
--   [Jared M. Ragland](https://www.nist.gov/people/jared-ragland){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-8055-2432){target="_blank"} (co-PI, Chemical Informatics Group)
+-   [Jared M. Ragland](https://www.nist.gov/people/jared-ragland){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-8055-2432){target="_blank"} (co-PI, [Chemical Informatics Group](https://www.nist.gov/mml/csd/chemical-informatics-group){target="_blank"})
 
 Additional members of NIST PFAS project team providing guidance, input, and testing for this project include
 
--   [Jessica L. Reiner](https://www.nist.gov/people/jessica-l-reiner){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-1419-6062){target="_blank"} (co-PI, Biochemical and Exposure Science Group)
+-   [Jessica L. Reiner](https://www.nist.gov/people/jessica-l-reiner){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-1419-6062){target="_blank"} (co-PI, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group){target="_blank"})
 
--   [Alix Rodawa](https://www.nist.gov/people/alix-rodowa){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-2650-0981){target="_blank"} (Biochemical and Exposure Science Group)
+-   [Alix Rodawa](https://www.nist.gov/people/alix-rodowa){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0002-2650-0981){target="_blank"} ([Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group){target="_blank"})
 
 -   [Katherine Peter](https://www.researchgate.net/profile/Katherine-Peter){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0001-7379-265X){target="_blank"} (Univ. of Washington)
 

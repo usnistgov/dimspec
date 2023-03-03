@@ -4,7 +4,6 @@ bookdown::epub_book:
   stylesheet: style.css
   number_sections: false
   toc_depth: 2
-bookdown::word_document2: default
 bookdown::gitbook:
   css: style.css
   toc_depth: 2
@@ -12,11 +11,31 @@ bookdown::gitbook:
     toc:
       collapse: section
       before: |
-        <a href="https://www.nist.gov"><img id="nist-logo" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
+        <div id="nist-logo">
+        <a href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank"></img></a>
+        <h4>A Database Infrastructure for Mass Spectrometry (DIMSpec)</h3>
+        </div>
       after: |
         <li><a href="https://github.com/rstudio/bookdown" target="_blank">Published with bookdown</a></li>
-    download: [["DIMSPec_User_Guide.epub", "epub"], ["DIMSpec_User_Guide.pdf", "pdf"]]
+    download: [
+        ["DIMSPec_User_Guide.epub", "DIMSpec User Guide (epub)"],
+        ["DIMSpec_User_Guide.pdf", "DIMSpec User Guide (pdf)"],
+        ["quick_install.pdf", "Quick Guide - Installation"],
+        ["file_convert.pdf", "Quick Guide - Conversion to mzML"],
+        ["quick_plumber.pdf", "Quick Guide - API"],
+        ["quick_apps.pdf", "Quick Guide - Web Apps"],
+        ["quick_import.pdf", "Quick Guide - Importing Data"],
+        ["quick_advanced.pdf", "Quick Guide - Advanced Use and Development"]
+      ]
     fontsettings: null
+    search:
+      engine: fuse
+      isCaseSensitive: false
+      threshold: 0.0
+      distance: 0
+  url: https://usnistgov.github.io/dimspec/docs/user_guide
+  github-repo: usnistgov/dimspec/tree/main
   bibliography: ["book.bib", "packages.bib", "references.bib"]
   link-citations: true
   biblio-style: analytical-chemistry.csl
+bookdown::word_document2: default

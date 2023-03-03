@@ -5,12 +5,10 @@ date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: [book.bib, packages.bib, references.bib]
-# url: your book url like https://bookdown.org/yihui/bookdown
 cover-image: "assets/fig00-02_dimspec_conceptual_graphic.png"
 description: |
   This is the User Guide distributed alongside the R Project containing the toolset supporting the "Database Infrastructure for Mass Spectrometry (DIMSpec)" project.
 link-citations: yes
-# github-repo: usnistgov/NISTPFAS/tree/main/dimspec
 ---
 
 ------------------------------------------------------------------------

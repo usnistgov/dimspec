@@ -70,8 +70,20 @@ img {
 
 #nist-logo {
   width: 100%;
-  filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
   padding: 15px 15px 0 15px;
+}
+
+#nist-logo > a > img {
+  filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
+}
+
+.dropdown-menu {
+  min-width: 320px !important;
+}
+
+.dropdown-menu > .buttons > .button {
+  text-align: left !important;
+  padding: 8px 10px !important;
 }
 
 #book-title {

@@ -7,7 +7,7 @@
 formulalize(formula)
 }
 \arguments{
-\item{formula}{}
+\item{formula}{CHR string of an elemental formula}
 }
 \value{
 string with a standard ordered formula

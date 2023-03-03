@@ -4,12 +4,14 @@
 \alias{check_for_value}
 \title{Check for a value in a database table}
 \usage{
-con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+con2 <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
-dplyr::copy_to(con, alphabet)
-check_for_value("A", "alphabet", "upper", con)
-check_for_value("A", "alphabet", "lower", con)
-check_for_value(letters[1:10], "alphabet", "lower", con)
+dplyr::copy_to(con2, alphabet)
+check_for_value("A", "alphabet", "upper", db_conn = con2)
+check_for_value("A", "alphabet", "lower", db_conn = con2)
+check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
+DBI::dbDisconnect(con2)
+rm(con2)
 }
 \arguments{
 \item{values}{CHR vector of the values to search}

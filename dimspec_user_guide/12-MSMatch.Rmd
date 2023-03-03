@@ -142,7 +142,7 @@ off at any time using the "Show Tooltips" toggle button at the bottom
 left of the application window (see [Figure 1](#fig04-01) inset at
 bottom right). If enabled, advanced search settings can be similarly
 toggled on and off for the session (see [Application
-Settings](#application-settings) for instructions on how to set default
+Settings](#msmatch-application-settings) for instructions on how to set default
 accessibility and settings for tooltips and advanced settings). The
 "hamburger" (≡) icon at the top left of the screen will collapse the
 left-hand navigation panel to provide more horizontal room on smaller

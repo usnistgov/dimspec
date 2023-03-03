@@ -4,10 +4,15 @@
 \alias{user_guide}
 \title{Launch the User Guide for DIMSpec}
 \usage{
-user_guide(path = "_book/index.html")
+user_guide()
 }
 \arguments{
-\item{path}{}
+\item{view_on_github}{LGL scalar of whether to use the hosted version of the 
+User Guide on GitHub (default: TRUE is recommended) which will always display 
+the most up to date version}
+\item{path}{CHR scalar representing a valid file path to the local user guide}
+\item{url_gh}{CHR scalar pointing to the web resource, in this case the URL to 
+the User Guide hosted on GitHub pages}
 }
 \value{
 None, opens a browser to the index page of the User Guide

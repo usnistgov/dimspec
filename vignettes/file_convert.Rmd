@@ -1,114 +1,155 @@
 ---
 title: "Converting Raw LC-HRMS/MS Files into mzML files"
-author: "B. Place"
-date: "6/22/2022"
-output: pdf_document
+author: "Benjamin J. Place^[NIST | MML | CSD | benjamin.place@nist.gov]"
+date: "`r Sys.Date()`"
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_dir = here::here("docs", "quick_guides"),
+      envir = globalenv()
+    )
+  })
+bibliography: bibliography.bib
+output:
+  pdf_document: default
+  html_document: default
 ---
 
+## Converting To The mzML Format
 
+To use DIMSpec tools, raw data files produced by vendor software must be converted into \*.mzML files. The easiest way to convert data files is to download and install the most recent version of ProteoWizard[^1] from https://proteowizard.sourceforge.io/ to use the MSConvert tool [@adusumilli_data_2017]. Once installed, follow the next steps to convert the raw file(s) to \*.mzML format.
 
-In order to use the data analysis tools, all files must be converted into \*.mzML files. In order to convert proprietary vendor files, all users *must* download ProteoWizard MSConvert tool, which can be acquired by going to https://proteowizard.sourceforge.io/ and downloading the most recent version of ProteoWizard.
+[^1]: Any mention of commercial products is for information only; it does not imply recommendation or endorsement by NIST.
 
-Once downloaded and install, follow the next steps to convert the raw file(s) to \*.mzML format.
+### 1) Start MSConvert
 
+From the Proteowizard main page, start the MSConvert program with Menu > Proteowizard > MSConvert[^2]
 
-## 1) Run ProteoWizard MSConvert program
+[^2]: MSConvert includes a command line interface for advanced use cases; settings must be the same as described in this guide.
 
-Select the program from the start Menu > Proteowizard > MSConvert
+<center>
 
-![Initial screen when running MSConvert](images/msconvert_cwt.png)
+![Initial screen when running MSConvert](images/msconvert_cwt.png){width=85%}
 
-
-## 2) Select the files to be converted
-
-The MSConvert software can convert the following vendors:
-
-|   Thermo (\*.raw), Waters (\*.raw), SCIEX (\*.wiff2), Agilent (\*.D), Shimadzu (\*.LCD,) Bruker (\*.D)
-
-+ Select the files using the **Browse** button. 
-
-|   **Note**: If selecting only one file at a time, you must press the *Add* button to include the file in the list.
-
-+ Select the *Output Directory* Folder
-
-|   **Note**: It will default to the same directory as the original file.
-
-After loading the file, the program should look like the below image.
-
-![MSConvert with data file loaded](images/msconvert_loaddata.png)
+</center>
 
 \newpage
 
-## 3) Adjust the mzML file parameters
+### 2) Select the files to be converted
 
-* Select **mzML** from the *Output format* input and make sure the *Extension* input is blank
-* Select **64-bit** under *Binary encoding precision*
-* Check the box next to *Write Index*, *TPP Compatibility*, and *Use zlib compression* and leave all other boxes unchecked.
+The MSConvert software can convert to mzML data files from the the following vendor formats at the time this guide was written: Thermo Fisher Scientific (\*.raw); Waters (\*.raw); SCIEX (\*.wiff2); Agilent (\*.D); Shimadzu (\*.LCD); and  Bruker (\*.D)
+    
+1. Select the files to be converted using the **Browse** button at the top left (Fig 2A). 
 
-See the image above for the proper selection
+    **Note**: If selecting only one file at a time, instead click the *Add* button to include the file in the list.
 
-## 4) Add the conversion filters
+1. Select the *Output Directory* to save files by clicking the **Browse** button at the center left (Fig 2B).
 
-To use the data analysis tool the following filters *must* be used, after selecting the proper parameters click the **Add** button:
+    **Note**: It will default to the same directory as the original file.
 
+After loading the file, the program should look similar to Figure 2.
 
-#### Select the *Peak Picking* filter and include the following parameters:
+<center>
 
-* **Algorithm**: Vendor or CWT
+![Interface for MSConvert after a data file has been loaded](images/msconvert_loaddata.png)
 
-|   **Note**: Vendor filter does not work for Waters files, you must use CWT
+</center>
 
-* **MS Levels**: 1 - 
+### 3) Adjust the mzML file parameters in the **Options** box (Fig 2C).
 
-If using CWT:
+1. Select **mzML** from the *Output format* input and make sure the *Extension* input is blank.
 
-* **Min. SNR**: 0.1
-* **Min. peak spacing**: 0.1
+1. Select **64-bit** under *Binary encoding precision*.
 
-Parameters should look as follows
+1. Ensure boxes are checked next to *Write Index*, *TPP Compatibility*, and *Use zlib compression*; leave all other boxes unchecked.
 
-![Peak picking filter parameters](images/msconvert_peakpicking.png)
+The proper selections have been made in Figure 2.
 
-Press the **Add** Button
+### 4) Add conversion filters (Fig 2D)
 
-#### Select the *Threshold Peak Filter* and include the following parameters:
+Apply the following data conversion filters; to adhere to current NIST practice the following settings *must* be used. Select the filter to be applied from the drop down menu at the top of the **Filters** box. Do this sequentially as described here. After setting each parameter click the **Add** button. To remove a parameter (in case of an entry or selection error), select that filter in the table below Fig 2D and click the **Remove** button.
 
-* **Threshold type**: Absolute intensity
-* **Orientation**: Most intense
-* **Value**: 1
+1. Select the *Peak Picking* filter and apply the following parameters:
 
-Parameters should look as follows
+   - **Algorithm**: Vendor or CWT
+   
+      **Note**: Vendor filter does not work for Waters files, you must use CWT
+    
+   - **MS Levels**: 1 - _ (leave the second box blank)
+   
+   - If using CWT:
+   
+     - **Min. SNR**: 0.1
+     
+     - **Min. peak spacing**: 0.1
+     
+     
+    Parameters should match those in Figure 3.
+   
+    Click the **Add** Button
 
-![Threshold peak filter parameters](images/msconvert_peakfilter.png)
+<center>
 
-Press the **Add** Button
+![Peak picking filter parameters](images/msconvert_peakpicking.png){width=75%}
 
-#### If the raw data is from a **Waters Corporation** mass spectrometer, you must use the *Lockmass Refiner*
+</center>
 
+2. Select the *Threshold Peak Filter* and include the following parameters:
 
-* **Reference m/z**: use the m/z of the lockmass, for Leucine-Enkephalin (most common), the negative ionization *m/z* is 554.2615 and the positive ionization *m/z* is 556.2771.
-* **m/z Tolerance**: 0.1
+   - **Threshold type**: Absolute intensity
+   
+   - **Orientation**: Most intense
+   
+   - **Value**: 1
+   
 
-The parameters should look as follows:
+    Parameters should match those in Figure 4 (next page)
+   
+    Click the **Add** Button
+    
+\newpage
 
-![Lockmass refiner parameters](images/msconvert_lockmass.png)
+![Threshold peak filter parameters](images/msconvert_peakfilter.png){width=75%}
 
-Press the **Add** Button
+- If the raw data is from a **Waters Corporation** mass spectrometer, apply the *Lockmass Refiner* filter.
 
-|   **Note**: The TitleMaker filter shows up upon opening MSConvert every time, this can be included and will not affect the data analysis. But peakPicking must still be the first line in the filters.
+  - **Reference m/z**: use the mass-to-charge ratio of the lockmass, for Leucine-Enkephalin (most common), the negative ionization *m/z* is 554.2615 and the positive ionization *m/z* is 556.2771.
+     
+  - **m/z Tolerance**: 0.1
+  
+  Parameters should match those in Figure 5
+ 
+  Click the **Add** Button
+
+![Lockmass refiner parameters](images/msconvert_lockmass.png){width=75%}
+  
+Selected filter parameters should be very similar to those in Figure 2 prior to conversion to \*.mzML.
+
+**Note**: The TitleMaker filter is automatically selected upon opening MSConvert; this can be included and will not affect the data analysis. However, peakPicking must still be the first line in the filters.
+
+**Note**: Waters Corporation instruments should have the lockmass refiner filter in the as well.
 
 \newpage
 
-## 5) Press **Start** Button
+### 5) Convert data files to the \*.mzML format.
 
-This will convert all added files to \*.mzML format and put them in the assigned Output directory.
+Once all settings are as required, click the **Start** button at the bottom right (Fig 2E). This will convert all added files to \*.mzML format and put them in the assigned Output directory. Wait for the conversions to finish.
 
-![MSConvert Start button](images/msconvert_start.png)
+### 6) (Optional) Save the settings as a preset
 
-|   **Note**: Waters Corporation instruments should have the lockmass refiner filter in the as well.
-
-## 6) Save the settings as a preset using the *Save Preset* dropdown menu (optional)
+Use the **Save Preset** drop down menu to use the same settings in the future (Fig 6) by selecting *Save Preset As...*. To apply a preset profile to future files, select it from this same drop down menu.
 
 ![MSConvert presets menu](images/msconvert_presets.png)
 
+---
+
+Once all files have been converted to the \*.mzML format they are ready for use in other data tools.
+
+**This concludes the Quick Guide to Converting Raw LC-HRMS/MS Files into mzML files.**
+
+---
+
+## References
+
+<div id="refs"></div>
 

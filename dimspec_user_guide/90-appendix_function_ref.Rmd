@@ -22,13 +22,11 @@ if (!file.exists(tmp_fname)) {
   pkg_refs <- installed.packages()
   for (fn_ref in fn_refs) {
     this_fn <- tools::file_path_sans_ext(basename(fn_ref))
-    
     fn_raw <- fn_ref %>%
       xml2::read_html() %>%
       rvest::html_element("body") %>%
       rvest::html_children() %>%
       paste0()
-    
     fn_help <- fn_raw %>%
       stringr::str_replace_all(
         sprintf('<table width="100%%" summary="page for %s">', this_fn),
