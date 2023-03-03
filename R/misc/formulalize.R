@@ -1,6 +1,6 @@
 #' Generate standard chemical formula notation
 #'
-#' @param formula 
+#' @param formula CHR string of an elemental formula
 #'
 #' @return string with a standard ordered formula
 #'

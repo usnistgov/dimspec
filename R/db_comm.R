@@ -1965,12 +1965,12 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #' @export
 #'
 #' @usage
-#' con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+#' con2 <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
 #' alphabet <- dplyr::tibble(lower = letters, upper = LETTERS)
-#' dplyr::copy_to(con, alphabet)
-#' check_for_value("A", "alphabet", "upper", con)
-#' check_for_value("A", "alphabet", "lower", con)
-#' check_for_value(letters[1:10], "alphabet", "lower", con)
+#' dplyr::copy_to(con2, alphabet)
+#' check_for_value("A", "alphabet", "upper", db_conn = con2)
+#' check_for_value("A", "alphabet", "lower", db_conn = con2)
+#' check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
 check_for_value <- function(values, db_table, db_column, case_sensitive = TRUE, db_conn = con, fuzzy = FALSE) {
   if (exists("log_it")) log_fn("start")
   # Argument validation relies on verify_args

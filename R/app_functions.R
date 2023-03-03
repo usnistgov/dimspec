@@ -1529,15 +1529,33 @@ fn_guide <- function() {
 #' @note This works ONLY when DIMSpec is used as a project with the defined
 #'   directory structure
 #'
-#' @param path
+#' @param view_on_github LGL scalar of whether to use the hosted version of the
+#'   User Guide on GitHub (default: TRUE is recommended) which will always
+#'   display the most up to date version
+#' @param path CHR scalar representing a valid file path to the local user guide
+#' @param url_gh CHR scalar pointing to the web resource, in this case the URL
+#'   to the User Guide hosted on GitHub pages
+#'   
+#' @usage 
+#' user_guide()
 #'
 #' @return None, opens a browser to the index page of the User Guide
 #' @export
 #' 
-user_guide <- function(path = "_book/index.html") {
-  if (!file.exists(file.path(getwd(), path))) {
-    path <- file.path("dimspec_user_guide", path)
+user_guide <- function(view_on_github = TRUE, path = file.path("docs", "user_guide", "index.html"), url_gh = "https://usnistgov.github.io/dimspec/docs/user_guide") {
+  stopifnot(
+    is.logical(view_on_github), length(view_on_github) == 1,
+    is.character(path), length(path) == 1,
+    is.character(url_gh), length(url_gh) == 1
+  )
+  if (view_on_github) {
+    if (httr::http_error(url_gh)) {
+      warning("The User Guide is not available on GitHub at this time. Using a local copy. Search will be disabled.")
+    } else {
+      path = url_gh
+    }
+  } else {
+    stopifnot(file.exists(path))
   }
-  stopifnot(file.exists(path))
   browseURL(url = path)
 }
