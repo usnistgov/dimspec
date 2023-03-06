@@ -19,12 +19,25 @@ Welcome to the home page of the Database Infrastructure for Mass Spectrometry pr
 ## Getting Started
 
 While the only hard requirement for using DIMSpec is R version 4.1 or later (packages will be installed as part of the installation compliance script, though users on Windows systems should also install RTools), to get the most out of DIMSpec users may want to include other software such as (but are in no way limited to):
+
 - Java (with bit architecture matching that of R)
 - MSConvert >= 3.0.21050 (from ProteoWizard)
 - SQLite >= v3.32.0
 - Mini/Anaconda w/ Python >= 3.8 (if not already installed, R will install it as part of the compliance script, though advanced users may want to explicitly install this themselves)
 
-To get started in most cases from a blank slate, ensure R v4.1+ is installed ([download](https://www.r-project.org/)) and download the project by cloning this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip). If using Windows, you will need RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) to install certain packages. The only other step is to run the compliance script, which will install everything needed for the project. The easiest way is to load the project using RStudio ([download](https://github.com/usnistgov/dimspec.git)). Whether using RStudio or not, run `source(file.path("R", "compliance"))` in an R console opened at the project directory. The first installation typically takes around half an hour from start to finish, depending on the speed of your internet connection and computer.
+To get started in most cases from a blank slate:
+
+1. Ensure R v4.1+ is installed ([download](https://www.r-project.org/))
+1. Download the project by cloning this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip).
+   - If using Windows, you will need RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) to install certain packages prior to the next step.
+1. Run the compliance script, which will install everything needed for the project.
+   - The easiest way is to load the project using RStudio ([download](https://github.com/usnistgov/dimspec.git)).
+     - Open RStudio and click File > Open Project... and navigate to the location where you downloaded the project.
+     - Either open the file at "R/compliance.R" from the "Files" pane and click the "Source" button or enter the command `source(file.path("R", "compliance"))` in the console pane.
+   - If not using RStudio, open an R terminal at the project directory (or `setwd(file.path("path", "to", "project")`) and enter the command `source(file.path("R", "compliance"))`.
+   - The first installation typically takes around half an hour from start to finish, depending on the speed of your internet connection and computer.
+
+A [quick guide](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_install.pdf) is available describing the install process.
 
 For evaluation and distribution purposes, DIMSpec is distributed with a populated database of per- and polyfluorinated alkyl substances (PFAS), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
 
@@ -52,7 +65,7 @@ In addition, a series of video tutorials are also available.
 
 ## Links
 
-Several links can provide additional contextual information about this project.
+Several links can provide additional contextual information about this project. If any of the resource links above are broken, <a href="mailto:=pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
 
 - [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
 - [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
