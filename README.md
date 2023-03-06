@@ -31,7 +31,7 @@ To get started in most cases from a blank slate:
 1. Download the project by cloning this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip).
    - If using Windows, you will need RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) to install certain packages prior to the next step.
 1. Run the compliance script, which will install everything needed for the project.
-   - The easiest way is to load the project using RStudio ([download](https://github.com/usnistgov/dimspec.git)).
+   - The easiest way is to load the project using RStudio ([download](https://posit.co/download/rstudio-desktop/)).
      - Open RStudio and click File > Open Project... and navigate to the location where you downloaded the project.
      - Either open the file at "R/compliance.R" from the "Files" pane and click the "Source" button or enter the command `source(file.path("R", "compliance"))` in the console pane.
    - If not using RStudio, open an R terminal at the project directory (or `setwd(file.path("path", "to", "project")`) and enter the command `source(file.path("R", "compliance"))`.
@@ -56,16 +56,16 @@ A series of Quick Guides have been made available focusing on various aspects of
 
 In addition, a series of video tutorials are also available.
 
-- [Import files and process on MSMatch (non Waters)]()
-- [Import files and process on MSMatch (Waters)]()
-- [Library searching and data mining]()
-- [Fragmenation searching and data mining]()
-- [(optional) Download and install the R program]()
-- [(optional) mzmine conversion]()
+- [Import files and process on MSMatch (non Waters)]()(not yet available)
+- [Import files and process on MSMatch (Waters)]()(not yet available)
+- [Library searching and data mining]()(not yet available)
+- [Fragmenation searching and data mining]()(not yet available)
+- [(optional) Download and install the R program]()(not yet available)
+- [(optional) mzmine conversion]()(not yet available)
 
 ## Links
 
-Several links can provide additional contextual information about this project. If any of the resource links above are broken, <a href="mailto:=pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
+Several links can provide additional contextual information about this project. If any of the resource links above are broken, <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
 
 - [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
 - [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
@@ -74,11 +74,11 @@ Several links can provide additional contextual information about this project. 
 
 ## Contacting Us
 
-If you have any issues with any portion of the repository, please feel free to contact the NIST PFAS program at <a href="mailto:=pfas@nist.gov?subject=DIMSpec%20Inquiry">pfas@nist.gov</a> directly or post an issue in the repository itself.
+If you have any issues with any portion of the repository, please feel free to contact the NIST PFAS program at <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Inquiry">pfas@nist.gov</a> directly or post an issue in the repository itself.
 
 The main contributors to this project from NIST were members of the <a href="https://www.nist.gov/mml">Material Measurement Laboratory's</a> <a href="https://www.nist.gov/mml/csd">Chemical Sciences Division</a>:
-1. Jared M. Ragland ( <a href="https://orcid.org/0000-0002-8055-2432"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> | <a href="mailto:=jared.ragland@nist.gov?subject=DIMSpec%20Inquiry">email</a> | <a href="https://www.nist.gov/people/jared-ragland">staff page</a> | <a href="https://www.nist.gov/mml/csd/chemical-informatics-group">Chemical Informatics Group</a> )
-1. Benjamin J. Place ( <a href="https://orcid.org/0000-0003-0953-5215"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> | <a href="mailto:=benjamin.place@nist.gov?subject=DIMSpec%20Inquiry">email</a> | <a href="https://www.nist.gov/people/benjamin-place">staff page</a> | <a href="https://www.nist.gov/mml/csd/organic-chemical-metrology">Organic Chemical Metrology Group</a> )
+1. Jared M. Ragland ( <a href="https://orcid.org/0000-0002-8055-2432"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> = <a href="mailto:=jared.ragland@nist.gov?subject=DIMSpec%20Inquiry">email</a> = <a href="https://www.nist.gov/people/jared-ragland">staff page</a> = <a href="https://www.nist.gov/mml/csd/chemical-informatics-group">Chemical Informatics Group</a> )
+1. Benjamin J. Place ( <a href="https://orcid.org/0000-0003-0953-5215"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> = <a href="mailto:=benjamin.place@nist.gov?subject=DIMSpec%20Inquiry">email</a> = <a href="https://www.nist.gov/people/benjamin-place">staff page</a> = <a href="https://www.nist.gov/mml/csd/organic-chemical-metrology">Organic Chemical Metrology Group</a> )
 
 ## Contributing
 
