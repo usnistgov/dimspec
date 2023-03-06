@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve and import optimal uncertain mass spectrum parameters</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_peak_ums_params"><tr><td>resolve_peak_ums_params</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve and import optimal uncertain mass spectrum parameters</h2>
+
+<h3>Description</h3>
+
+<p>This imports the defined object component containing parameters for the
+optimized uncertainty mass spectrum used to compare with new data. This
+function may be called at any time to add data for a given peak, but there is
+no row unique restriction on the underlying table and is best used in a &quot;one
+pass&quot; method during the import routine. These parameters are calculated as
+part of NIST QA procedures and are added to the output of the NTA MRT after
+those JSONs have been created.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_peak_ums_params(
+  obj,
+  peak_id,
+  ums_params_in = "opt_ums_params",
+  ums_params_table = "opt_ums_params",
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>peak_id</code></td>
+<td>
+<p>INT scalar of the peak ID in question, which must be present
+(e.g. from the import workflow)</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_in</code></td>
+<td>
+<p>CHR scalar name of the item in 'obj' containing
+optimized uncertainty mass spectrum parameters</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>Nothing if successful, a data frame object of the extracted
+parameters otherwise.
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [resolve_peaks()]
+</p>
+
+
+</body></html>

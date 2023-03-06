@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Utility function to resolve multiple choices interactively</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_multiple_values"><tr><td>resolve_multiple_values</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Utility function to resolve multiple choices interactively</h2>
+
+<h3>Description</h3>
+
+<p>This function is generally not called directly, but rather as a workflow
+component from within [resolve_normalization_value] during interactive
+sessions to get feedback from users during the normalization value resolution
+process.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_multiple_values(values, search_value, as_regex = FALSE, db_table = "")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>CHR vector of possible values</p>
+</td></tr>
+<tr valign="top"><td><code>search_value</code></td>
+<td>
+<p>CHR scalar of the value to search</p>
+</td></tr>
+<tr valign="top"><td><code>as_regex</code></td>
+<td>
+<p>LGL scalar of whether to treat 'search_value' as a regular
+expression string (TRUE) or to use it directly (FALSE, default)</p>
+</td></tr>
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar name of the database table to search, used for
+printing log messages only (default: &quot;&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar result of the user's choice
+</p>
+
+
+</body></html>

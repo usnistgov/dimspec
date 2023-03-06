@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve a normalization value against the database</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_normalization_value"><tr><td>resolve_normalization_value</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve a normalization value against the database</h2>
+
+<h3>Description</h3>
+
+<p>Normalized SQL databases often need to resolve primary keys. This function
+checks for a given value in a given table and either returns the matching
+index value or, if a value is not found and 'interactive()' is TRUE, it will
+add that value to the table and return the new index value. It will look for
+the first matching value in all columns of the requested table to support
+loose finding of identifiers and is meant to operate only on normalization
+tables (i.e. look up tables).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_normalization_value(
+  this_value,
+  db_table,
+  id_column = "id",
+  case_sensitive = FALSE,
+  fuzzy = FALSE,
+  db_conn = con,
+  log_ns = "db",
+  ...
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>this_value</code></td>
+<td>
+<p>CHR (or coercible to) scalar value to look up</p>
+</td></tr>
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar of the database table to search</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>fuzzy</code></td>
+<td>
+<p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
+values provided are wrapped in an SQL &quot;LIKE '
+the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>other values to add to the normalization table, where names must
+match the table schema</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>The search itself is done using [check_for_value].
+</p>
+
+
+<h3>Value</h3>
+
+<p>The database primary key (typically INT) of the normalized value
+</p>
+
+
+<h3>Note</h3>
+
+<p>This is mostly a DRY convenience function to avoid having to write the
+loookup and add logic each time.
+</p>
+<p>Interactive sessions are required to add new values
+</p>
+
+
+</body></html>

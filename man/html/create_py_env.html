@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a python environment for RDKit</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for create_py_env"><tr><td>create_py_env</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a python environment for RDKit</h2>
+
+<h3>Description</h3>
+
+<p>This project offers a full integration of RDKit via [reticulate]. This
+function does the heavy lifting for setting up that environment, either from
+an environment specifications file or from the conda forge channel.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+create_py_env("nist_hrms_db", c("reticulate", "rdkit"))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>env_name</code></td>
+<td>
+<p>CHR scalar of a python environment</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Preferred set up is to set variables in the 'env_py.R' file, which will be
+used over the internal defaults chosen here. The exception is if
+'INSTALL_FROM == &quot;local&quot;' and no value is provided for 'INSTALL_FROM_FILE'
+which has no internal default.
+</p>
+<p>Germane variables are 'PYENV_NAME' (default &quot;reticulated_rdkit&quot;),
+'CONDA_PATH' (default &quot;auto&quot;), 'CONDA_MODULES' (default &quot;rdkit&quot;,
+&quot;r-reticulate&quot; will be added), 'INSTALL_FROM' (default &quot;conda&quot;),
+'INSTALL_FROM_FILE' (default &quot;rdkit/environment.yml&quot;), 'MIN_PY_VER' (default
+3.9).
+</p>
+
+
+<h3>Value</h3>
+
+<p>None
+</p>
+
+
+</body></html>

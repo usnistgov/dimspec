@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Build a WHERE clause for SQL statements</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for clause_where"><tr><td>clause_where</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Build a WHERE clause for SQL statements</h2>
+
+<h3>Description</h3>
+
+<p>Properly escaping SQL to prevent injection attacks can be difficult with more
+complicated queries. This clause constructor is intended to be specific to
+the WHERE clause of SELECT to UPDATE statements. The majority of construction
+is achieved with the 'match_criteria' parameter, which should always be a
+list with names for the columns to appear in the WHERE clause. A variety of
+convenience is built in, from simple comparisons to more complicated ones
+including negation and similarity (see the description for argument
+'match_criteria').
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+clause_where(ANSI(), "example", list(foo = "bar", cat = "dog"))
+clause_where(ANSI(), "example", list(foo = list(values = "bar", like = TRUE)))
+clause_where(ANSI(), "example", list(foo = list(values = "bar", exclude = TRUE)))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>table_names</code></td>
+<td>
+<p>CHR vector of tables to search</p>
+</td></tr>
+<tr valign="top"><td><code>match_criteria</code></td>
+<td>
+<p>LIST of matching criteria with names matching columns
+against which to apply. In the simplest case, a direct value is given to
+the name (e.g. 'list(last_name = &quot;Smith&quot;)') for single matches. All match
+criteria must be their own list item. Values can also be provided as a
+nested list for more complicated WHERE clauses with names 'values',
+'exclude', and 'like' that will be recognized. 'values' should be the
+actual search criteria, and if a vector of length greater than one is
+specified, the WHERE clause becomes an IN clause. 'exclude' (LGL scalar)
+determines whether to apply the NOT operator. 'like' (LGL scalar)
+determines whether this is an equality, list, or similarity. To reverse the
+example above by issuing a NOT statement, use 'list(last_name = list(values
+= &quot;Smith&quot;, exclude = TRUE))', or to look for all records LIKE (or NOT LIKE)
+&quot;Smith&quot;, set this as 'list(last_name = list(values = &quot;Smith&quot;, exclude =
+FALSE, like = TRUE))'</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>and_or</code></td>
+<td>
+<p>LGL scalar of whether to use &quot;AND&quot; or &quot;OR&quot; for multiple
+criteria, which will be used to combine them all. More complicated WHERE
+clauses (including a mixture of AND and OR usage) should be built directly.
+(default: &quot;OR&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar of the constructed where clause for an SQL statement
+</p>
+
+
+</body></html>

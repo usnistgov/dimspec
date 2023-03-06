@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Append additional named elements to a list</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for tack_on"><tr><td>tack_on</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Append additional named elements to a list</h2>
+
+<h3>Description</h3>
+
+<p>This does nothing more than [base::append] ellipsis arguments to be added
+directly to the end of an existing list object. This primarily supports
+additional property assignment during the import process for future
+development and refinement. Call this as part of any function with additional
+arguments. This may result in failures or ignoring unrecognized named
+parameters. If no additional arguments are passed <code>obj</code> is returned as
+provided.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+tack_on(obj, ..., log_ns = "db")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST of any length to be appended to</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Additional arguments passed to/from the ellipsis parameter of
+calling functions. If named, names are preserved.</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST object of length equal to <code>obj</code> plus additional named arguments
+</p>
+
+
+<h3>Note</h3>
+
+<p>If duplicate names exists in <code>obj</code> and those provided as ellipsis
+arguments, those provided as part of the ellipsis will replace those in
+<code>obj</code>.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+tack_on(list(a = 1:3), b = letters, c = rnorm(10))
+tack_on(list(a = 1:3))
+</pre>
+
+
+</body></html>

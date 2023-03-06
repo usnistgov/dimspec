@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Simple acronym generator</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for make_acronym"><tr><td>make_acronym</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Simple acronym generator</h2>
+
+<h3>Description</h3>
+
+<p>At times it is useful for display purposes to generate acronyms for longer
+bits of text. This naively generates those by extracting the first letter as
+upper case from each word in <code>text</code> elements.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+make_acronym(text)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>text</code></td>
+<td>
+<p>CHR vector of the text to acronym-ize</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of length equal to that of <code>text</code> with the acronym
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+make_acronym("test me")
+make_acronym(paste("department of ", c("commerce", "energy", "defense")))
+</pre>
+
+
+</body></html>

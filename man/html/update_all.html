@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Convenience function to rebuild all database related files</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for update_all"><tr><td>update_all</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Convenience function to rebuild all database related files</h2>
+
+<h3>Description</h3>
+
+<p>This is a development and deployment function that should be used with
+caution. It is intended solely to assist with the development process of
+rebuilding a database schema from source files and producing the supporting
+data. It will create both the JSON expressin of the data dictionary and the
+fallback SQL file.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+update_all()
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>rebuild</code></td>
+<td>
+<p>LGL scalar indicating whether to first rebuild from
+environment settings (default: FALSE for safety)</p>
+</td></tr>
+<tr valign="top"><td><code>api_running</code></td>
+<td>
+<p>LGL scalar of whether or not the API service is currently
+running (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>api_monitor</code></td>
+<td>
+<p>process object pointing to the API service (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>db</code></td>
+<td>
+<p>CHR scalar of the database name (default: session value DB_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>build_from</code></td>
+<td>
+<p>CHR scalar of a SQL build script to use (default:
+environment value DB_BUILD_FILE)</p>
+</td></tr>
+<tr valign="top"><td><code>populate</code></td>
+<td>
+<p>LGL scalar of whether to populate with data from the file in
+'populate_with' (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>populate_with</code></td>
+<td>
+<p>CHR scalar for the populate script (e.g.
+&quot;populate_demo.sql&quot;) to during after the build is complete; (default:
+session value DB_DATA); ignored if 'populate = FALSE'</p>
+</td></tr>
+<tr valign="top"><td><code>archive</code></td>
+<td>
+<p>LGL scalar of whether to create an archive of the current
+database (if it exists) matching the name supplied in argument 'db'
+(default: FALSE), passed to ['remove_db()']</p>
+</td></tr>
+<tr valign="top"><td><code>sqlite_cli</code></td>
+<td>
+<p>CHR scalar to use to look for installed sqlite3 CLI tools
+in the current system environment (default: session value SQLITE_CLI)</p>
+</td></tr>
+<tr valign="top"><td><code>connect</code></td>
+<td>
+<p>LGL scalar of whether or not to connect to the rebuilt
+database in the global environment as object 'con&ldquo; (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>!! To preserve data, do not call this with both 'rebuild' = TRUE and
+'archive' = FALSE !!
+</p>
+
+
+<h3>Value</h3>
+
+<p>Files for the new database, fallback build, and data dictionary will
+be created in the project directory and objects will be created in the
+global environment for the database map (LIST &quot;db_map&quot;) and current
+dictionary (LIST &quot;db_dict&quot;)
+</p>
+
+
+<h3>Note</h3>
+
+<p>This does not recast the views and triggers files created through
+[sqlite_autoview] and [sqlite_autotrigger] as the output of those may often
+need additional customization. Existing auto-views and -triggers will be
+created as defined. To exclude those, first modify the build file
+referenced by [build_db].
+</p>
+<p>This requires references to be in place to the individual functions in
+the current environment.
+</p>
+
+
+</body></html>

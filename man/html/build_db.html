@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Build or rebuild the database from scratch</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for build_db"><tr><td>build_db</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Build or rebuild the database from scratch</h2>
+
+<h3>Description</h3>
+
+<p>This function will build or rebuild the NIST HRAMS database structure from
+scratch, removing the existing instance. By default, most parameters are set
+in the environment (at &quot;./config/env_glob.txt&quot;) but any values can be passed
+directly. This can be used to quickly spin up multiple copies with a clean
+slate using different build files, data files, or return to the last stable
+release.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+build_db(db = "test_db.sqlite", db_conn_name = "test_conn")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db</code></td>
+<td>
+<p>CHR scalar of the database name (default: session value DB_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>build_from</code></td>
+<td>
+<p>CHR scalar of a SQL build script to use (default:
+environment value DB_BUILD_FILE)</p>
+</td></tr>
+<tr valign="top"><td><code>populate</code></td>
+<td>
+<p>LGL scalar of whether to populate with data from the file in
+'populate_with' (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>populate_with</code></td>
+<td>
+<p>CHR scalar for the populate script (e.g.
+&quot;populate_demo.sql&quot;) to during after the build is complete; (default:
+session value DB_DATA); ignored if 'populate = FALSE'</p>
+</td></tr>
+<tr valign="top"><td><code>archive</code></td>
+<td>
+<p>LGL scalar of whether to create an archive of the current
+database (if it exists) matching the name supplied in argument 'db'
+(default: FALSE), passed to ['remove_db()']</p>
+</td></tr>
+<tr valign="top"><td><code>sqlite_cli</code></td>
+<td>
+<p>CHR scalar to use to look for installed sqlite3 CLI tools
+in the current system environment (default: session value SQLITE_CLI)</p>
+</td></tr>
+<tr valign="top"><td><code>connect</code></td>
+<td>
+<p>LGL scalar of whether or not to connect to the rebuilt
+database in the global environment as object 'con&ldquo; (default: FALSE)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>If sqlite3 and its command line interface are available on your platform,
+that will be used (preferred method) but, if not, this function will read in
+all the necessary files to directly create it using shell commands. The shell
+method may not be universally applicable to certain compute environments or
+may require elevated permissions.
+</p>
+
+
+<h3>Value</h3>
+
+<p>None, check console for details
+</p>
+
+
+</body></html>

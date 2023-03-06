@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create an SQL file for use without the SQLite CLI</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for create_fallback_build"><tr><td>create_fallback_build</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create an SQL file for use without the SQLite CLI</h2>
+
+<h3>Description</h3>
+
+<p>For cases where the SQLite Command Line Interface is not available, dot
+commands used to simplify the database build pipeline are not usable. Call
+this function to create a self-contained SQL build file that can be used in
+[build_db] to build the database. The self-contained file will include all
+&quot;CREATE&quot; and &quot;INSERT&quot; statements necessary by parsing lines including &quot;.read&quot;
+and &quot;.import&quot; commands and directly reading referenced files.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+create_fallback_build(build_file = file.path("config", "build.sql"))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>build_file</code></td>
+<td>
+<p>CHR scalar name SQL build file to use. The default, NULL,
+will use the environment variable &quot;DB_BUILD_FILE&quot; if it is available.</p>
+</td></tr>
+<tr valign="top"><td><code>populate</code></td>
+<td>
+<p>LGL scalar of whether to populate data (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>populate_with</code></td>
+<td>
+<p>CHR scalar name SQL population file to use. The default,
+NULL, will use the environment variable &quot;DB_DATA&quot; if it is available.</p>
+</td></tr>
+<tr valign="top"><td><code>driver</code></td>
+<td>
+<p>CHR scalar of the database driver class to use to correctly
+interpolate SQL commands (default: &quot;SQLite&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>comments</code></td>
+<td>
+<p>CHR scalar regex identifying SQLite comments</p>
+</td></tr>
+<tr valign="top"><td><code>out_file</code></td>
+<td>
+<p>CHR scalar of the output file name and destination. The
+default, NULL, will write to a file named similarly to 'build_file'
+suffixed with &quot;_full&quot;.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None: a file will be written at 'out_file' with the output.
+</p>
+
+
+</body></html>

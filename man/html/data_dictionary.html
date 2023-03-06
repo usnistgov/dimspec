@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a data dictionary</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for data_dictionary"><tr><td>data_dictionary</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a data dictionary</h2>
+
+<h3>Description</h3>
+
+<p>Get a list of tables and their defined columns with properties, including
+comments, suitable as a data dictionary from a connection object amenable to
+[odbc::dbListTables]. This function relies on [pragma_table_info].
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+data_dictionary(db_conn = con)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default:con)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of length equal to the number of tables in 'con' with attributes
+identifying which tables, if any, failed to render into the dictionary.
+</p>
+
+
+</body></html>

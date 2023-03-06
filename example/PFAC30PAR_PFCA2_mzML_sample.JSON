@@ -1,0 +1,192 @@
+{
+"sample": {
+"name": "PFAC30PAR_PFCA2.mzML",
+"description": "Reference Standard for PFAS",
+"sample_class": "analytical standard",
+"data_generator": "bjp@nist.gov",
+"source": ""
+},
+"chromatography": {
+"ctype": "Liquid Chromatography",
+"cvendor": "ThermoFisher Scientific",
+"cmodel": "UltiMate 3000",
+"ssolvent": "water",
+"mp1solvent": "water",
+"mp1add": "ammonium acetate",
+"m2solvent": "methanol",
+"mp2add": "ammonium acetate",
+"mp3solvent": "none",
+"mp3add": "none",
+"mp4solvent": "none",
+"mp4add": "none",
+"gcolvendor": "none",
+"gcolname": "",
+"gcolchemistry": "none",
+"gcolid": "",
+"gcollen": "",
+"gcoldp": "",
+"colvendor": "Agilent Technologies",
+"colname": "Poroshell C18",
+"colchemistry": "C18",
+"colid": "2.1",
+"collen": "50",
+"coldp": "2.7",
+"source": ""
+},
+"massspectrometry": {
+"msvendor": "ThermoFisher Scientific",
+"msmodel": "Q-Exactive",
+"ionization": "electrospray ionization",
+"polarity": "negative",
+"voltage": "2500",
+"vunits": "V",
+"massanalyzer1": "quadrupole",
+"massanalyzer2": "orbitrap",
+"fragmode": "HCD",
+"ce_value": "30",
+"ce_desc": "fixed",
+"ce_units": "normalized",
+"ms2exp": "DDA",
+"isowidth": "0.7",
+"msaccuracy": "5",
+"ms1resolution": "70000",
+"ms2resolution": "17500",
+"source": ""
+},
+"qcmethod": [
+{
+"name": "QC Method Used",
+"value": true,
+"source": ""
+},
+{
+"name": "Mass Analyzer Calibration",
+"value": true,
+"source": ""
+},
+{
+"name": "External Standard Verification",
+"value": true,
+"source": ""
+},
+{
+"name": "Internal Standard Verification",
+"value": false,
+"source": ""
+},
+{
+"name": "Matrix Standard Verification",
+"value": false,
+"source": ""
+}
+],
+"peaks": {
+"peak": {
+"count": 1,
+"name": "Perfluorohexanoic acid",
+"identifier": "2643",
+"ionstate": "[M-H]-",
+"mz": 312.973,
+"rt": 10.8,
+"peak_starttime": 10.5,
+"peak_endtime": 11.1,
+"confidence": "level 1a - confirmed by reference standard"
+},
+"peak": {
+"count": 2,
+"name": "Perfluoroheptanoic acid",
+"identifier": "2640",
+"ionstate": "[M-H]-",
+"mz": 362.9699,
+"rt": 12.09,
+"peak_starttime": 11.9,
+"peak_endtime": 12.4,
+"confidence": "level 1a - confirmed by reference standard"
+},
+"peak": {
+"count": 3,
+"name": "Perfluorooctanoic acid",
+"identifier": "2637",
+"ionstate": "[M-H]-",
+"mz": 412.9665,
+"rt": 13.05,
+"peak_starttime": 12.8,
+"peak_endtime": 13.4,
+"confidence": "level 1a - confirmed by reference standard"
+}
+},
+"annotation": {
+"compound": {
+"name": "Perfluorohexanoic acid",
+"fragment": {
+"fragment_mz": 118.9912,
+"fragment_formula": "C2F5",
+"fragment_SMILES": "F[C-](F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 268.9828,
+"fragment_formula": "C5F11",
+"fragment_SMILES": "FC(F)(C(F)(F)C(F)(F)F)C(F)(F)[C-](F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+}
+},
+"compound": {
+"name": "Perfluoroheptanoic acid",
+"fragment": {
+"fragment_mz": 118.9912,
+"fragment_formula": "C2F5",
+"fragment_SMILES": "F[C-](F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 168.9883,
+"fragment_formula": "C3F7",
+"fragment_SMILES": "F[C-](F)C(F)(F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 318.9796,
+"fragment_formula": "C6F13",
+"fragment_SMILES": "FC(F)(C(F)(F)C(F)(F)F)C(F)(F)C(F)(F)[C-](F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+}
+},
+"compound": {
+"name": "Perfluorooctanoic acid",
+"fragment": {
+"fragment_mz": 118.9911,
+"fragment_formula": "C2F5",
+"fragment_SMILES": "F[C-](F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 168.9881,
+"fragment_formula": "C3F7",
+"fragment_SMILES": "F[C-](F)C(F)(F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 218.9855,
+"fragment_formula": "C4F9",
+"fragment_SMILES": "FC(F)([C-](F)F)C(F)(F)C(F)(F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+},
+"fragment": {
+"fragment_mz": 368.9756,
+"fragment_formula": "C7F15",
+"fragment_SMILES": "FC(F)(C(F)(F)C(F)(F)F)C(F)(F)C(F)(F)C(F)(F)[C-](F)F",
+"fragment_radical": false,
+"fragment_citation": "DOI:10.1002/rcm.3274"
+}
+}
+}
+}

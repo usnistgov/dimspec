@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Tabulate MS Data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for table_msdata"><tr><td>table_msdata</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Tabulate MS Data</h2>
+
+<h3>Description</h3>
+
+<p>Pulls specified MS Data from mzML and converts it into table format for further processing
+Internal function for 'peak_gather_json' function
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+table_msdata(mzml, scans, mz = NA, zoom = NA, masserror = NA, minerror = NA)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>mzml</code></td>
+<td>
+<p>list of msdata from 'mzMLtoR' function</p>
+</td></tr>
+<tr valign="top"><td><code>scans</code></td>
+<td>
+<p>integer vector containing scan numbers to extract MS data</p>
+</td></tr>
+<tr valign="top"><td><code>mz</code></td>
+<td>
+<p>numeric targeted m/z</p>
+</td></tr>
+<tr valign="top"><td><code>zoom</code></td>
+<td>
+<p>numeric vector specifying the range around m/z, from m/z - zoom[1] to m/z + zoom[2]</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>numeric relative mass error (in ppm) of the instrument</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>numeric minimum mass error (in Da) of the instrument</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame containing MS data
+</p>
+
+
+</body></html>

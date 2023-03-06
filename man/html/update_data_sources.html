@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Dump current database contents</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for update_data_sources"><tr><td>update_data_sources</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Dump current database contents</h2>
+
+<h3>Description</h3>
+
+<p>Perform one or both of two main tasks for backing up the NTA database.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+update_data_sources(
+  project,
+  data_dir = file.path("config", "data"),
+  create_backups = TRUE,
+  dump_tables = TRUE,
+  dump_sql = TRUE,
+  db_conn = con,
+  sqlite_cli = ifelse(exists("SQLITE_CLI"), SQLITE_CLI, NULL),
+  db_name = ifelse(exists("DB_NAME"), DB_NAME, NULL)
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>project</code></td>
+<td>
+<p>CHR scalar of the directory containing project specific data
+(required, no default)</p>
+</td></tr>
+<tr valign="top"><td><code>data_dir</code></td>
+<td>
+<p>CHR scalar of the directory containing project independent
+data sources used for population (default: 'file.path(&quot;config&quot;, &quot;data&quot;)')</p>
+</td></tr>
+<tr valign="top"><td><code>create_backups</code></td>
+<td>
+<p>LGL scalar indicating whether to create backups prior
+to writing updated data files (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>dump_tables</code></td>
+<td>
+<p>LGL scalar indicating whether to dump contents of database
+tables as comma-separated-value files (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>dump_sql</code></td>
+<td>
+<p>LGL scalar indicating whether to create an SQL dump file
+containing both schema and data as a backup (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>SQLITE_CLI</code></td>
+<td>
+<p>CHR scalar system reference to your installation of the
+sqlite command line interface</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>The main task is to update CSV files in the config/data directory with the
+current contents of the database. This is done on a table by table basis and
+results in flat files whose structures no longer interrelate except
+numerically. Primarily this would be used to migrate database contents to
+other systems or for further manipulation. Please specify a 'project' that
+project-specific information can be maintained.
+</p>
+<p>Backups created with this function are placed in a &quot;backups&quot; subdirectory of
+the directory defined by parameter 'data_dir'. If 'dump_sql = TRUE' SQL dump
+files will be written to &quot;backups/sqlite&quot; with file names equal to the
+current database name prefixed by date.
+</p>
+
+
+<h3>Value</h3>
+
+<p>None, copies database information to the local file system
+</p>
+
+
+</body></html>

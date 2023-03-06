@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Check for a value in a database table</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for check_for_value"><tr><td>check_for_value</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Check for a value in a database table</h2>
+
+<h3>Description</h3>
+
+<p>This convenience function simply checks whether a value exists in the
+distinct values of a given column. Only one column may be searched at a time;
+serialize it in other code to check multiple columns. It leverages the
+flexibility of [build_db_action] to do the searching. The 'values' parameter
+will be fed directly and can accept the nested list structure defined in
+[clause_where] for exclusions and like clauses.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+con2 &lt;- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+alphabet &lt;- dplyr::tibble(lower = letters, upper = LETTERS)
+dplyr::copy_to(con2, alphabet)
+check_for_value("A", "alphabet", "upper", db_conn = con2)
+check_for_value("A", "alphabet", "lower", db_conn = con2)
+check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>CHR vector of the values to search</p>
+</td></tr>
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar of the database table to search</p>
+</td></tr>
+<tr valign="top"><td><code>db_column</code></td>
+<td>
+<p>CHR scalar of the column to search</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>fuzzy</code></td>
+<td>
+<p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
+values provided are wrapped in an SQL &quot;LIKE '
+the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of length 1-2 containing &quot;exists&quot; as a LGL scalar for whether
+the values were found, and &quot;values&quot; containing the result of the database
+call, a data.frame object containing matching rows or NULL if exists ==
+FALSE.
+</p>
+
+
+</body></html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Sanity check for environment object names</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for obj_name_check"><tr><td>obj_name_check</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Sanity check for environment object names</h2>
+
+<h3>Description</h3>
+
+<p>Provides a sanity check on whether or not a name reference exists and return
+its name if so. If not, return the default name defined from <code>default_name</code>.
+This largely is used to prevent naming conflicts as part of managing the
+plumber service but can be used for any item in the current namespace.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+if (exists("log_it")) {
+    obj_name_check("test", "test")
+    test &lt;- letters
+    obj_name_check(test)
+  }
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>R object or CHR scalar in question to be resolved in the namespace</p>
+</td></tr>
+<tr valign="top"><td><code>default_name</code></td>
+<td>
+<p>CHR scalar name to use for <code>obj</code> if it does not exist
+(default: NULL).</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar of the resolved object name
+</p>
+
+
+</body></html>

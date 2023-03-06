@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create the JS to append an icon to an HTML element by its ID</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for append_icon_to"><tr><td>append_icon_to</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create the JS to append an icon to an HTML element by its ID</h2>
+
+<h3>Description</h3>
+
+<p>Create the JS to append an icon to an HTML element by its ID
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+append_icon_to(id, icon_name, icon_class = NULL)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>id</code></td>
+<td>
+<p>CHR scalar of the HTML ID to which to append an icon</p>
+</td></tr>
+<tr valign="top"><td><code>icon_name</code></td>
+<td>
+<p>CHR scalar of the icon name, which must be understandable by
+the 'shiny::icon' function; e.g. a font-awesome icon name.</p>
+</td></tr>
+<tr valign="top"><td><code>icon_class</code></td>
+<td>
+<p>CHR vector of classes to apply</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar suitable to execute with 'shinyjs::runJS'
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+append_icon_to("example", "r-project", "fa-3x")
+
+</pre>
+
+
+</body></html>

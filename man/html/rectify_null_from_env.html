@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Rectify NULL values provided to functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for rectify_null_from_env"><tr><td>rectify_null_from_env</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Rectify NULL values provided to functions</h2>
+
+<h3>Description</h3>
+
+<p>To support redirection of sensible parameter reads from an environment,
+either Global or System, functions in this package may include NULL as their
+default value. This returns values in precedence of <code>parameter</code>,
+<code>env_parameter</code> and <code>default</code>.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+rectify_null_from_env(test, test, "test")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>parameter</code></td>
+<td>
+<p>the object being evaluated</p>
+</td></tr>
+<tr valign="top"><td><code>env_parameter</code></td>
+<td>
+<p>the name or object of a value to use from the
+environment if <code>parameter</code> is NULL</p>
+</td></tr>
+<tr valign="top"><td><code>default</code></td>
+<td>
+<p>the fallback value to use if <code>parameter</code> is NULL and
+<code>env_parameter</code> does not exist</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>the namespace to use with [log_it] if available</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>The requested value, either as-is, rectified from the environment, or 
+the default
+</p>
+
+
+<h3>Note</h3>
+
+<p><code>log_ns</code> is only applicable if logging is set up in this project (see
+project settings in env_glob.txt, env_R.R, and env_logger.R for details).
+</p>
+<p>Both [base::.GlobalEnv] and [base::Sys.getenv] are checked, and can be
+provided as a character scalar or as an object reference
+</p>
+
+
+</body></html>

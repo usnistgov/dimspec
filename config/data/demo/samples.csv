@@ -1,0 +1,5 @@
+id,name,description,sample_class_id,source_citation,sample_contributor,generation_type,generated_on,ms_methods_id,sample_solvent
+1,file1,CR001,4,colab1,2,1,2021-08-18 14:47:15,1,2
+2,file2,CR002,4,colab1,3,1,2021-08-18 14:47:15,1,2
+3,file3,SD001,1,colab1,6,1,2021-08-18 14:47:15,1,2
+4,file4,SD002,1,colab1,6,1,2021-08-18 14:47:15,2,2

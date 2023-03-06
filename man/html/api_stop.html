@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Stop the plumber API</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for api_stop"><tr><td>api_stop</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Stop the plumber API</h2>
+
+<h3>Description</h3>
+
+<p>Stop the plumber API
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+api_stop(pr = NULL, flush = TRUE, db_conn = "con", remove_service_obj = TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>pr</code></td>
+<td>
+<p>CHR scalar name of the plumber service object, typically only
+created as a background observer from [callr::r_bg] as a result of calling
+[api_reload] (default: NULL gets the environment setting for
+PLUMBER_OBJ_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>flush</code></td>
+<td>
+<p>LGL scalar of whether to disconnect and reconnect to a database
+connection named as 'db_conn' (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>CHR scalar of the connection object name (default: &quot;con&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>remove_service_obj</code></td>
+<td>
+<p>LGL scalar of whether to remove the reference to
+'pr' from the current global environment (default: TRUE)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, stops the plumber server
+</p>
+
+
+<h3>Note</h3>
+
+<p>This will also kill and restart the connection object if 'flush' is
+TRUE to release connections with certain configurations such as SQLite in
+write ahead log mode.
+</p>
+<p>This function assumes the object referenced by name 'pr' exists in the
+global environment, and 'remove_service_object' will only remove it from
+.GlobalEnv.
+</p>
+
+
+</body></html>

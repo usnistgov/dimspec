@@ -1,0 +1,6 @@
+id,name,acronym
+1,volts,V
+2,kilovolts,kV
+3,amperes,A
+4,micro amperes,μA
+5,electron volts,eV

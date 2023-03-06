@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Ensure database column presence</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for validate_column_names"><tr><td>validate_column_names</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Ensure database column presence</h2>
+
+<h3>Description</h3>
+
+<p>When working with SQL databases, this convenience function validates any
+number of column names by comparing against the list of column names in any
+number of tables. Typically it is called transparently inline to cause
+execution failure when column names are not present in referenced tables
+during build of SQL queries.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+validate_column_names(con, "peaks", "id")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (e.g. of class &quot;SQLiteConnection&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>table_names</code></td>
+<td>
+<p>CHR vector of tables to search</p>
+</td></tr>
+<tr valign="top"><td><code>column_names</code></td>
+<td>
+<p>CHR vector of column names to validate</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None
+</p>
+
+
+</body></html>

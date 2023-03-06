@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Start the plumber API</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for api_start"><tr><td>api_start</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Start the plumber API</h2>
+
+<h3>Description</h3>
+
+<p>This is a wrapper to [plumber::pr_run] pointing to a project's opinionated
+plumber settings with some error trapping. The host, port, and plumber file
+are set in the &quot;config/env_R.R&quot; location as PLUMBER_HOST, PLUMBER_PORT, and
+PLUMBER_FILE respectively.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+api_start(plumber_file = NULL, on_host = NULL, on_port = NULL)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>plumber_file</code></td>
+<td>
+<p>CHR scalar of the path to a plumber API to launch
+(default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>on_host</code></td>
+<td>
+<p>CHR scalar of the host IP address (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>on_port</code></td>
+<td>
+<p>CHR or INT scalar of the host port to use (default: NULL)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LGL scalar with success status
+</p>
+
+
+<h3>Note</h3>
+
+<p>If either of 'on_host' or 'on_port' are NULL they will default first to
+any existing environment values of PLUMBER_HOST and PLUMBER_PORT, then to
+getOption(&quot;plumber.host&quot;, &quot;127.0.0.1&quot;) and getOption(&quot;plumber.port&quot;, 8080)
+</p>
+<p>This will fail if the requested port is in use.
+</p>
+
+
+</body></html>

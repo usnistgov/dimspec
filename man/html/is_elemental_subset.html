@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Check if elemental formula is a subset of another formula</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for is_elemental_subset"><tr><td>is_elemental_subset</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Check if elemental formula is a subset of another formula</h2>
+
+<h3>Description</h3>
+
+<p>Check if elemental formula is a subset of another formula
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+is_elemental_subset(fragmentformula, parentformula)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>fragmentformula</code></td>
+<td>
+<p>character string of elemental formula subset to test</p>
+</td></tr>
+<tr valign="top"><td><code>parentformula</code></td>
+<td>
+<p>character string of elemental formula to check for subset</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>logical
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+is_elemental_subset("C2H2", "C2H5O")
+
+is_elemental_subset("C2H2", "C2H1O")
+</pre>
+
+
+</body></html>

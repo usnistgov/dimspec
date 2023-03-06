@@ -1,0 +1,49 @@
+Project Reference
+
+/config
+	This is the configuration directory. it contains environment references and build files for the database itself to support operation on various systems.
+		
+	/build.sql
+		This is the primary build script, which leverages files in /sql_nodes/. It can be updated using other programmatic means and leverages a modular "node" design build. If a new node is added, simply add a line here to read that file.
+	
+	/build_full.sql
+		This is the complete build script in pure SQL, which contains the entire contents of each node file. If /build.sql does not work for any reason, this is a fall back which should work regardless of environment setup provided you have a method of reading sql files into a database. Mostly it is present to catch cases where sqlite CLI dot commands may fail, or if it is desireable to build the database from another programming language or interface. This will be rebuilt for every dot release.
+	
+	/populate_demo.sql
+		Populates the database structure with demonstration data using files located in the /data/demo/ directory.
+	
+	/populate_pfas.sql
+		Populates the database structure with data for poly- and perfluoroalkyl substances using files located in the /data/pfas/ directory.
+		
+	/sql_nodes/
+		Each .sql file in this directory build a particular "node" in the database containing tables, views, and triggers as necessary. These are used by the /build.sql script to initialize a blank database. Refer to the annotated entity relationship diagram for a graphical view.
+		/analyte.sql
+			Creates the analyte node relating to compounds and their mass spectrometry fragments.
+			- compounds						(table)	Controlled list of chemical compounds with attributable analytical data.
+			- compound_categories			(table)	Normalization table for self-hierarchical chemical classes of compounds.
+			- compound_url					(view)	Combine information from the compounds table to form a URL link to the resource.
+			- compound_fragments			(table) Bidirectional linkage table to tie peaks and compounds to their confirmed and annotated fragments.
+			- annotated_fragments			(table)	Potential annotated fragment ions that are attributed to one or more peak ID by identification from their mass spectra.
+			- norm_fragments          (table) Normalization table of all fragments that have been annotated and their properties.
+			- fragment_sources				(table)	Citation information about a given fragment to hold multiple identifications (e.g. one in silico and two empirical).
+			- norm_fragment_generation_type	(table)	Normalization table for fragmenet generation source type.
+			- view_compound_fragments		(view)	Fragments associated with compounds.
+			- view_fragment_count			(view)	Number of fragments associated with compounds.
+		/contributors.sql
+			Creates the contributors node relating to data production and annotation activities for attribution. It is similar to a users table in many respects.
+		/contributors_data.sql
+			Creates a standard "system" user for logging purposes (if enabled).
+		/data.sql
+			Creates the data node relating to mass spectrometry results. Connected to all other nodes except logging.
+		/logging.sql
+			Creates the logging node
+			- norm_log_executed_from		(table)	Normalization table for logs(executed_from)
+			
+		/methods.sql
+		/reference.sql
+			Creates the reference tables node containing globally application references such as elements, isotopes, and their exact masses.
+		/reference_data.sql
+			Populates tables in the reference node.
+			
+	/data/
+		Contains standardized comma-separated-value (.csv) data files matching sql table definitions. Names match the corresponding table. This makes it easier to add or customize the database initialization state during build time. Subdirectories contain data files necessary to populate the database with data specific to a particular research application. Data from each subdirectory can be populated with one of the ../populate_x.sql scripts as necessary, and more can be added easily.

@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Export QC result JSONfile into PDF</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for report_qc"><tr><td>report_qc</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Export QC result JSONfile into PDF</h2>
+
+<h3>Description</h3>
+
+<p>Export QC result JSONfile into PDF
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+report_qc(
+  jsonfile = file.choose(),
+  outputfile = gsub(".json", ".pdf", jsonfile, ignore.case = TRUE)
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>jsonfile</code></td>
+<td>
+<p>jsonfile file path</p>
+</td></tr>
+<tr valign="top"><td><code>outputfile</code></td>
+<td>
+<p>output pdf file path</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>generates reporting PDF
+</p>
+
+
+</body></html>

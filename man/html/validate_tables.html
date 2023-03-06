@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Ensure database table presence</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for validate_tables"><tr><td>validate_tables</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Ensure database table presence</h2>
+
+<h3>Description</h3>
+
+<p>When working with SQL databases, this convenience function validates any
+number of table names by comparing against the list of those present.
+Typically it is called transparently inline to cause execution failure when
+tables are not present during build of SQL queries.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+validate_tables(con, "peaks")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (e.g. of class &quot;SQLiteConnection&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>table_names</code></td>
+<td>
+<p>CHR vector name of tables to ensure are present</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>Failure if the table doesn't exist, none if it does.
+</p>
+
+
+</body></html>

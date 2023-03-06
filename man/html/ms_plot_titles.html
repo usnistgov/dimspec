@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Consistent title for ms_plot_x functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_plot_titles"><tr><td>ms_plot_titles</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Consistent title for ms_plot_x functions</h2>
+
+<h3>Description</h3>
+
+<p>This helper function creates consistently formatted plot label elements in an
+opinionated manner. This is unlikely to be useful outside the direct context
+of [ms_plot_peak], [ms_plot_spectra], and [ms_plot_spectral_intensity].
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_plot_titles(
+  plot_data,
+  mz_resolution,
+  drop_ratio,
+  include_method,
+  db_conn = con
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>plot_data</code></td>
+<td>
+<p>data.frame object passed from the plotting function</p>
+</td></tr>
+<tr valign="top"><td><code>mz_resolution</code></td>
+<td>
+<p>NUM scalar passed from the plotting function</p>
+</td></tr>
+<tr valign="top"><td><code>drop_ratio</code></td>
+<td>
+<p>NUM scalar passed from the plotting function</p>
+</td></tr>
+<tr valign="top"><td><code>include_method</code></td>
+<td>
+<p>LGL scalar indicating whether or not to get the method
+narrative from the database</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection (default: con) which must be live to pull
+sample and compound identification information</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of strings named for ggplot title elements &quot;title&quot;, &quot;subtitle&quot;,
+and &quot;caption&quot;
+</p>
+
+
+</body></html>

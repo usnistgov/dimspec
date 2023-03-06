@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Conveniently set up an RDKit python environment for use with...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for setup_rdkit"><tr><td>setup_rdkit</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Conveniently set up an RDKit python environment for use with R</h2>
+
+<h3>Description</h3>
+
+<p>Conveniently set up an RDKit python environment for use with R
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+setup_rdkit(env_name = "nist_hrms_db", required_libraries = c("reticulate", "rdkit"), env_ref = "rdk")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>env_name</code></td>
+<td>
+<p>CHR scalar of the name of a python environment</p>
+</td></tr>
+<tr valign="top"><td><code>env_ref</code></td>
+<td>
+<p>CHR scalar of the name of an R expression bound to a python
+library OR an R object reference by name to an existing object that should be
+bound to RDKit (e.g. from [reticulate::import])</p>
+</td></tr>
+<tr valign="top"><td><code>ns</code></td>
+<td>
+<p>CHR scalar</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, though calls to utility functions will give their own returns
+</p>
+
+
+</body></html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Tidy up table and field comments</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for tidy_comments"><tr><td>tidy_comments</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Tidy up table and field comments</h2>
+
+<h3>Description</h3>
+
+<p>Creates more human-readable outputs after extracting the raw SQL used to
+build entities and parsing out the comments as identified with the /* ... */
+multi-line comment flag pair. Single line comments are not extracted. The
+first comment is assumed to be the table comment. See examples in the
+'config/sql_nodes' directory.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+tidy_comments(pragma_table_def("compounds", get_sql = TRUE))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>result of calling [pragma_table_def] with 'get_sql' = TRUE</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of length equal to 'obj' containing extracted comments
+</p>
+
+
+</body></html>

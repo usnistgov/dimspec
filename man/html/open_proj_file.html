@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Open and edit project files</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for open_proj_file"><tr><td>open_proj_file</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Open and edit project files</h2>
+
+<h3>Description</h3>
+
+<p>Project files are organized in several topical directories depending on their
+purpose as part of the package. For example, several project control
+variables are set to establish the session global environment in the &quot;config&quot;
+directory rather than the &quot;R&quot; directory.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+open_proj_file(name, dir = NULL, create_new = FALSE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>name</code></td>
+<td>
+<p>CHR scalar of the file name to open, accepts regex</p>
+</td></tr>
+<tr valign="top"><td><code>dir</code></td>
+<td>
+<p>CHR scalar of a directory name to search within</p>
+</td></tr>
+<tr valign="top"><td><code>create_new</code></td>
+<td>
+<p>LGL scalar of whether to create the file (similar
+functionality to [usethis]; default FALSE)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>If a direct file match to name is not found, it will be searched for using a
+recursive [list.files] allowing for regex matches (e.g. &quot;.R$&quot;). Directories
+are similarly sought out within the project. Reasonable feedback is provided.
+</p>
+<p>This convenience function uses [usethis::edit_file] to open (or create if
+'create_new' is TRUE) any given file in the project.
+</p>
+
+
+<h3>Value</h3>
+
+<p>None, opens a file for editing
+</p>
+
+
+<h3>Note</h3>
+
+<p>If the directory and file cannot be found, and 'create_new' is true,
+the directory will be placed within the project directory.
+</p>
+
+
+</body></html>

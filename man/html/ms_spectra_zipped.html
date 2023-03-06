@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Parse &quot;Zipped&quot; MS Data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_spectra_zipped"><tr><td>ms_spectra_zipped</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Parse &quot;Zipped&quot; MS Data</h2>
+
+<h3>Description</h3>
+
+<p>The &quot;zipped&quot; format includes spectra packed into one column containing
+alternating mass and intensity values for all observations. All values are
+packed into these columns for a given scan time, separated by spaces, with an
+unlimited number of discrete values, and must be in an alternating 1:1
+pattern of values of the form &quot;mass intensity mass intensity&quot;.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_spectra_zipped(df, spectra_col = "data")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>df</code></td>
+<td>
+<p>data.frame object containing spectra compressed in the &quot;zipped&quot;
+format</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_col</code></td>
+<td>
+<p>CHR vector of length 2 identifying the column names to use
+for mass and intensity in the source data; must be of length 2, with the
+first value identifying the mass column and the second identifying the
+intensity column</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object containing unpacked spectra as a list column
+</p>
+
+
+<h3>Note</h3>
+
+<p>spectra-col is treated as a regex expression, but it is safest to
+provide a matching column name
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+### JSON Example
+tmp &lt;- jsonlite::as.json('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}')
+ms_spectra_separated(tmp)
+
+### Example data.frame
+tmp &lt;- data.frame(
+  msdata = "712.9501 15094.41015625 713.1851 34809.9765625"
+)
+ms_spectra_zipped(tmp)
+</pre>
+
+
+</body></html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Map an import file to the database schema</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for map_import"><tr><td>map_import</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Map an import file to the database schema</h2>
+
+<h3>Description</h3>
+
+<p>This parses an import object and attempts to map it to database fields and
+tables as defined by an import map stored in an object of class data.frame,
+typically created during project compliance as &quot;IMPORT_MAP&quot;. This object is a
+list of all columns and their tables in the import file matched with the
+database table and column to which they should be imported.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+map_import(
+  import_obj,
+  aspect,
+  import_map,
+  case_sensitive = TRUE,
+  fuzzy = FALSE,
+  ignore = TRUE,
+  id_column = "_*id$",
+  alias_column = "^alias$",
+  resolve_normalization = TRUE,
+  strip_na = FALSE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>import_obj</code></td>
+<td>
+<p>LIST object of values to import</p>
+</td></tr>
+<tr valign="top"><td><code>aspect</code></td>
+<td>
+<p>CHR scalar of the import aspect (e.g. &quot;sample&quot;) to map</p>
+</td></tr>
+<tr valign="top"><td><code>import_map</code></td>
+<td>
+<p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>fuzzy</code></td>
+<td>
+<p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
+values provided are wrapped in an SQL &quot;LIKE '
+the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of final mapped values
+</p>
+
+
+<h3>Note</h3>
+
+<p>The object used for 'import_map' must be of a data.frame object that at
+minimum includes names columns that includes import_category,
+import_parameter, alias_lookup, and sql_normalization
+</p>
+
+
+</body></html>

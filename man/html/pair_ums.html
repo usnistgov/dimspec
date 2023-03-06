@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Pairwise data.frame of two uncertainty mass spectra</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for pair_ums"><tr><td>pair_ums</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Pairwise data.frame of two uncertainty mass spectra</h2>
+
+<h3>Description</h3>
+
+<p>The function stacks two uncertainty mass spectra together based on binned m/z values
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+pair_ums(ums1, ums2, error = 5, minerror = 0.002)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>ums1</code></td>
+<td>
+<p>uncertainty mass spectrum from 'get_ums' function</p>
+</td></tr>
+<tr valign="top"><td><code>ums2</code></td>
+<td>
+<p>uncertainty mass spectrum from 'get_ums' function</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>the minimum mass error (in Da) of the instrument data</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>the mass accuracy (in ppm) of the instrument data</p>
+</td></tr>
+</table>
+
+
+</body></html>

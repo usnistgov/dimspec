@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Format a file name as an HTML element ID</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for format_html_id"><tr><td>format_html_id</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Format a file name as an HTML element ID</h2>
+
+<h3>Description</h3>
+
+<p>This is often useful to provide feedback to the user about the files they've
+provided to a shiny application in a more informative manner, as IDs produced
+here are suitable to build dynamic UI around. This can serve as the base ID
+for tooltips, additional information, icons, etc. and produce everything
+necessary in one place for any number of files.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+format_html_id(filename)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>filename</code></td>
+<td>
+<p>CHR vector of file names</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of the same size as filename
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+format_html_id(list.files())
+
+</pre>
+
+
+</body></html>

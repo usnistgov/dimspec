@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Get the optimal uncertainty mass spectrum parameters for data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for optimal_ums"><tr><td>optimal_ums</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Get the optimal uncertainty mass spectrum parameters for data</h2>
+
+<h3>Description</h3>
+
+<p>Get the optimal uncertainty mass spectrum parameters for data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+optimal_ums(
+  peaktable,
+  max_correl = 0.75,
+  correl_bin = 0.05,
+  max_ph = 10,
+  ph_bin = 1,
+  max_freq = 10,
+  freq_bin = 1,
+  min_n_peaks = 3,
+  cormethod = "pearson"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>peaktable</code></td>
+<td>
+<p>list generated from 'create_peak_table_ms1' or 'create_peak_table_ms2'</p>
+</td></tr>
+<tr valign="top"><td><code>max_correl</code></td>
+<td>
+<p>numeric maximum acceptable correlation</p>
+</td></tr>
+<tr valign="top"><td><code>correl_bin</code></td>
+<td>
+<p>numeric sequence bin width from max_correl..0</p>
+</td></tr>
+<tr valign="top"><td><code>max_ph</code></td>
+<td>
+<p>numeric maximum acceptable peak height (%)</p>
+</td></tr>
+<tr valign="top"><td><code>ph_bin</code></td>
+<td>
+<p>numeric sequence bin width from max_ph..0</p>
+</td></tr>
+<tr valign="top"><td><code>max_freq</code></td>
+<td>
+<p>numeric maximum acceptable observational frequency (%)</p>
+</td></tr>
+<tr valign="top"><td><code>freq_bin</code></td>
+<td>
+<p>numeric sequence bin width from max_freq..0</p>
+</td></tr>
+<tr valign="top"><td><code>min_n_peaks</code></td>
+<td>
+<p>integer ideal minimum number of scans for mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>string indicating correlation function to use (see [cor()] for description)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object containing optimized search parameters
+</p>
+
+
+</body></html>

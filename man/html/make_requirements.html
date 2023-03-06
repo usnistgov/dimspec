@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Make import requirements file</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for make_requirements"><tr><td>make_requirements</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Make import requirements file</h2>
+
+<h3>Description</h3>
+
+<p>Importing from the NIST contribution spreadsheet requires a certain format.
+In order to proceed smoothly, that format must be verified for gross
+integrity with regard to expectations about shape (i.e. class), names of
+elements, and whether they are required for import. This function creates a
+JSON expression of the expected import structure and saves it to the project
+directory.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+make_requirements(
+  example_import,
+  file_name = "import_requirements.json",
+  not_required = c("annotation", "chromatography", "opt_ums_params"),
+  archive = TRUE,
+  retain_in_R = TRUE,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>example_import</code></td>
+<td>
+<p>CHR or LIST object containing an example of the
+expected import format; this should include only a SINGLE compound
+contribution file</p>
+</td></tr>
+<tr valign="top"><td><code>file_name</code></td>
+<td>
+<p>CHR scalar indicating a file name to save the resulting name
+or search on any existing file to archive if 'archive' = TRUE (default:
+&quot;import_requirements.json&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>not_required</code></td>
+<td>
+<p>CHR vector matching element names of 'example_import'
+which are not required; all others will be assumed to be required</p>
+</td></tr>
+<tr valign="top"><td><code>archive</code></td>
+<td>
+<p>LGL indicating whether or not to archive an existing file
+matching 'file_name' by suffixing the file name with current date. Only one
+archive per date is supported; if a file already exists, it will be
+deleted. (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>retain_in_R</code></td>
+<td>
+<p>LGL indicating whether to retain a local copy of the
+requirements file generated (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Either an existing JSON expression or an R list object may be used for
+'example_import'. If it is a character scalar, it will be assumed to be a
+file name, which will be loaded based on file extension. That file must be a
+JSON parseable text file, though raw text is acceptable.
+</p>
+<p>An example file is located in the project directory at
+&quot;example/PFAC30PAR_PFCA1_mzML_cmpd2627.JSON&quot;
+</p>
+<p>As with any file manipulation, use care with 'file_name'.
+</p>
+
+
+<h3>Value</h3>
+
+<p>writes a file to the project directory (based on the found location
+of 'file_name') with the JSON structure
+</p>
+
+
+</body></html>

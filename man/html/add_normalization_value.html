@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Add value(s) to a normalization table</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for add_normalization_value"><tr><td>add_normalization_value</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Add value(s) to a normalization table</h2>
+
+<h3>Description</h3>
+
+<p>One of the most common database operations is to look up or add a value in a
+normalization table. This utility function adds a single value and returns
+its associated id by using [build_db_action]. This is only suitable for a
+single value. If you need to bulk add multiple new values, use this with
+something like [lapply].
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+add_normalization_value("norm_table", name = "new value", acronym = "NV")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar of the normalization table's name</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default &quot;con&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>id_column</code></td>
+<td>
+<p>CHR scalar of the column to use as the primary key
+identifier for 'db_table' (default: &quot;id&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>database_map</code></td>
+<td>
+<p>LIST of the database entity relationship map, typically
+from calling [er_map]. If NULL (default) the object &quot;db_map&quot; will be
+searched for and used by default, otherwise it will be created with
+[er_map]</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>CHR vector of additional named arguments to be added; names not
+appearing in the referenced table will be ignored</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>NULL if unable to add the values, INT scalar of the new ID otherwise
+</p>
+
+
+</body></html>

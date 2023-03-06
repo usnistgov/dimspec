@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Apply colors to DT objects by value in a column</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for dt_color_by"><tr><td>dt_color_by</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Apply colors to DT objects by value in a column</h2>
+
+<h3>Description</h3>
+
+<p>Adds a class to each node meeting the criteria defined elsewhere as project
+object 'table_bg_classes' as a list of colors with names matches values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+dt_color_by(names(DT_table_data), "color_by")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>table_names</code></td>
+<td>
+<p>CHR vector of the names going into a table</p>
+</td></tr>
+<tr valign="top"><td><code>look_for</code></td>
+<td>
+<p>CHR vector of the column name to color by</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>JS function to apply to a DT object by row
+</p>
+
+
+</body></html>

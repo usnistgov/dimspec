@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Import software settings</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_software_settings_NTAMRT"><tr><td>resolve_software_settings_NTAMRT</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Import software settings</h2>
+
+<h3>Description</h3>
+
+<p>Part of the standard import pipeline, adding rows to the
+'conversion_software_settings' table with a given sample id. Some argument
+names are shared with other import functions, specifically 'obj' but are
+formed differently to resolve the node complexity correctly.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_software_settings_NTAMRT(
+  obj,
+  software_timestamp = NULL,
+  db_conn = con,
+  software_settings_in = "msconvertsettings",
+  settings_table = "conversion_software_settings",
+  linkage_table = "conversion_software_peaks_linkage",
+  as_date_format = "%Y-%m-%d %H:%M:%S",
+  format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
+  min_datetime = "2000-01-01 00:00:00",
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>CHR vector describing settings or a named LIST with names matching
+column names in table conversion_software_settings.</p>
+</td></tr>
+<tr valign="top"><td><code>software_timestamp</code></td>
+<td>
+<p>CHR scalar of the sample timestamp (e.g.
+sample$starttime) to use for linking software conversion settings with peak
+data, with a call back to the originating sample. If NULL (the default),
+the current system timestamp in UTC will be used from [lubridate::now()].</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>software_settings_in</code></td>
+<td>
+<p>CHR scalar name of the component in 'obj'
+containing software settings (default: &quot;msconvertsettings&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>settings_table</code></td>
+<td>
+<p>CHR scalar name of the database table containing the
+software settings used for an imported data file (default:
+&quot;conversion_software_settings&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>linkage_table</code></td>
+<td>
+<p>CHR scalar name of the database table containing the
+linkage between peaks and their software settings (default:
+&quot;conversion_software_peaks_linkage&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>as_date_format</code></td>
+<td>
+<p>CHR scalar the format to use when storing timestamps
+that matches database column expectations (default: &quot;%Y-%m-%d %H:%M:%S&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>format_checks</code></td>
+<td>
+<p>CHR vector of the [lubridate::parse_date_time()] format
+checks to execute in order of priority; these must match a lubridate
+function of the same name (default: c(&quot;ymd_HMS&quot;, &quot;ydm_HMS&quot;, &quot;mdy_HMS&quot;,
+&quot;dmy_HMS&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>min_datetime</code></td>
+<td>
+<p>CHR scalar of the minimum reasonable timestamp used as a
+sanity check (default: &quot;2000-01-01 00:00:00&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>NULL on errors, INT scalar of the inserted software linkage id if
+successful
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+
+
+</body></html>

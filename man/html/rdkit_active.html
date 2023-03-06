@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Sanity check on RDKit binding</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for rdkit_active"><tr><td>rdkit_active</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Sanity check on RDKit binding</h2>
+
+<h3>Description</h3>
+
+<p>Given a name of an R object, performs a simple check on RDKit availability on
+that object, creating it if it does not exist. A basic structure conversion
+check is tried and a TRUE/FALSE result returned. Leave all arguments as their
+defaults of NULL to ensure they will honor the settings in 'rdkit/env_py.R'.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+rdkit_active(
+  rdkit_ref = NULL,
+  rdkit_name = NULL,
+  log_ns = NULL,
+  make_if_not = FALSE
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>rdkit_ref</code></td>
+<td>
+<p>CHR scalar OR R object of an RDKit binding (default NULL
+goes to &quot;rdk&quot; for convenience with other pipelines in this project)</p>
+</td></tr>
+<tr valign="top"><td><code>rdkit_name</code></td>
+<td>
+<p>CHR scalar the name of a python environment able to run
+rdkit (default NULL goes to &quot;rdkit&quot; for convenience with other pipelines in
+this project)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+</td></tr>
+<tr valign="top"><td><code>make_if_not</code></td>
+<td>
+<p>LGL scalar of whether or not to create a new python
+environment using [activate_py_env] if the binding is not active</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LGL scalar of whether or not the test of RDKit was successful
+</p>
+
+
+</body></html>

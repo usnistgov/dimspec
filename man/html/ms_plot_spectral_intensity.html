@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a spectral intensity plot</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_plot_spectral_intensity"><tr><td>ms_plot_spectral_intensity</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a spectral intensity plot</h2>
+
+<h3>Description</h3>
+
+<p>Often it is useful to get an overview of mass-to-charge intensity across the
+scanning time of a peak. Typically this is done with individual traces in the
+peak fashion, but large peaks can often mask smaller ones, or wash out lower
+intensity signals. Use this to plot m/z as dependent upon scan time with
+intensity shown by color and size. It is intended as a complement to
+[ms_plot_peak] and may be called at the same levels of granularity, generally
+greater so than [ms_plot_peak] which is more of an overview.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_plot_spectral_intensity(
+  data,
+  intensity_mz_resolution = 5,
+  intensity_drop_ratio = 0,
+  intensity_facet_by = NULL,
+  intensity_plot_resolution = c("spectra", "peak"),
+  include_method = TRUE,
+  db_conn = con
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>data</code></td>
+<td>
+<p>tibble or pointer with data to plot, either at the peak level, in
+which case &quot;base_ion&quot; must be present, or at the spectral level, in which
+case &quot;intensity&quot; must be present</p>
+</td></tr>
+<tr valign="top"><td><code>intensity_mz_resolution</code></td>
+<td>
+<p>INT scalar mass to charge ratio tolerance to
+group peaks, with at minimum columns for intensity (as &quot;base_int&quot; or
+&quot;intensity&quot;), ion m/z value (as &quot;base_ion&quot; or &quot;mz&quot;), and scan time (as
+&quot;scantime&quot;) - (default: 5)</p>
+</td></tr>
+<tr valign="top"><td><code>intensity_drop_ratio</code></td>
+<td>
+<p>NUM scalar threshold of the maximum intensity
+below which traces will be dropped (default: 0 returns all); if &gt; 1 the
+inversion will be used (1e5 -&gt; 1e-5)</p>
+</td></tr>
+<tr valign="top"><td><code>intensity_facet_by</code></td>
+<td>
+<p>CHR scalar of a column name in 'data' by which to
+facet the resulting plot (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection (default: con) which must be live to pull
+sample and compound identification information</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>object of classes 'gg' and 'ggplot'
+</p>
+
+
+</body></html>

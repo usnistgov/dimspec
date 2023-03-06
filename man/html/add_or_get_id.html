@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Utility function to add a record</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for add_or_get_id"><tr><td>add_or_get_id</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Utility function to add a record</h2>
+
+<h3>Description</h3>
+
+<p>Checks a table in the attached SQL connection for a primary key ID matching
+the provided 'values' and returns the ID. If none exists, adds a record and
+returns the resulting ID if successful. Values should be provided as a named
+vector of the values to add. No data coercion is performed, relying almost
+entirely on the database schema or preprocessing to ensure data integrity.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+add_or_get_id(
+  db_table,
+  values,
+  db_conn = con,
+  ensure_unique = TRUE,
+  require_all = TRUE,
+  ignore = FALSE,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar name of the database table being modified</p>
+</td></tr>
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>named vector of the values being added, passed to
+[build_db_action]</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>ensure_unique</code></td>
+<td>
+<p>LGL scalar of whether or not to first check that the
+values provided form a new unique record (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>require_all</code></td>
+<td>
+<p>LGL scalar of whether to require all columns (except the
+assumed primary key column of &quot;id&quot;) or only those defined as &quot;NOT NULL&quot;
+(default: TRUE requires the presence of all columns in the table)</p>
+</td></tr>
+<tr valign="top"><td><code>ignore</code></td>
+<td>
+<p>LGL scalar on whether to treat the insert try as an &quot;INSERT OR
+IGNORE&quot; SQL statement (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Provided values are checked agaisnt required columns in the table using
+[verify_import_columns].
+</p>
+<p>Operations to add the record and get the resulting ID are both performed with
+[build_db_action] and are performed virtually back to back with the
+latest-added ID being given preference in cases where added values may match
+multiple extant records.
+</p>
+
+
+<h3>Value</h3>
+
+<p>INT scalar of the record identifier
+</p>
+
+
+<h3>Note</h3>
+
+<p>If this is used in high volume/traffic applications, ID conflicts may
+occur if the timing is such that another record containing identical values
+is added before the call getting the ID completes.
+</p>
+
+
+</body></html>

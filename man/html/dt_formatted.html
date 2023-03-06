@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Easily format multiple DT objects in a shiny project in the...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for dt_formatted"><tr><td>dt_formatted</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Easily format multiple DT objects in a shiny project in the same manner</h2>
+
+<h3>Description</h3>
+
+<p>This serves solely to reduce the amount of options fed into 'DT::datatable'
+by providing common defaults and transparent options. Parameters largely do
+exactly what they say and will create a list 'column_defs' suitable for use
+as 'datatable(... options = list(columnDefs = column_defs)'. Leave NULL to
+ignore any aspect.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+dt_formatted(
+  dataframe,
+  show_rownames = FALSE,
+  hide_cols = NULL,
+  center_cols = NULL,
+  narrow_cols = NULL,
+  narrow_col_width = "5%",
+  medium_cols = NULL,
+  medium_col_width = "10%",
+  large_cols = NULL,
+  large_col_width = "15%",
+  truncate_cols = NULL,
+  truncate_width = 20,
+  date_cols = NULL,
+  date_col_width = "10%",
+  selection_mode = "single",
+  callback = NULL,
+  color_by_column = NULL,
+  names_to = "title",
+  filter_at = "top",
+  chr_to_factor = TRUE,
+  page_length = 10,
+  page_length_menu = c(10, 25, 50),
+  ...
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>dataframe</code></td>
+<td>
+<p>data.frame to be converted to a DT::datatable object</p>
+</td></tr>
+<tr valign="top"><td><code>hide_cols</code></td>
+<td>
+<p>CHR vector of column names to hide</p>
+</td></tr>
+<tr valign="top"><td><code>center_cols</code></td>
+<td>
+<p>CHR vector of column names to center</p>
+</td></tr>
+<tr valign="top"><td><code>narrow_cols</code></td>
+<td>
+<p>CHR vector of column names to make 'narrow_col_width' wide</p>
+</td></tr>
+<tr valign="top"><td><code>narrow_col_width</code></td>
+<td>
+<p>CHR scalar defining column width (default: &quot;5%&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>medium_cols</code></td>
+<td>
+<p>CHR vector of column names to make 'medium_col_width' wide</p>
+</td></tr>
+<tr valign="top"><td><code>medium_col_width</code></td>
+<td>
+<p>CHR scalar defining column width (default: &quot;10%&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>large_cols</code></td>
+<td>
+<p>CHR vector of column names to make 'large_col_width' wide</p>
+</td></tr>
+<tr valign="top"><td><code>large_col_width</code></td>
+<td>
+<p>CHR scalar defining column width (default: &quot;15%&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>truncate_cols</code></td>
+<td>
+<p>CHR vector of column names to truncate</p>
+</td></tr>
+<tr valign="top"><td><code>truncate_width</code></td>
+<td>
+<p>INT scalar of the position at which to truncate</p>
+</td></tr>
+<tr valign="top"><td><code>date_cols</code></td>
+<td>
+<p>CHR vector of column names identifying dates</p>
+</td></tr>
+<tr valign="top"><td><code>date_col_width</code></td>
+<td>
+<p>CHR scalar defining column width (default: &quot;10%&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>selection_mode</code></td>
+<td>
+<p>CHR scalar of the DT selection mode (default: &quot;single&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>callback</code></td>
+<td>
+<p>JS custom callback to apply to the datatable widget</p>
+</td></tr>
+<tr valign="top"><td><code>color_by_column</code></td>
+<td>
+<p>CHR scalar of the column name by which to color rows</p>
+</td></tr>
+<tr valign="top"><td><code>names_to</code></td>
+<td>
+<p>CHR scalar of the name formatting modification to apply, as
+one of the options available in the 'stringr' package (default: &quot;title&quot; to
+apply 'stringr::str_to_title')</p>
+</td></tr>
+<tr valign="top"><td><code>filter_at</code></td>
+<td>
+<p>CHR scalar of the position for the column filter as
+understood by 'DT::datatable(..., filter = filter_at)'. (default: &quot;top&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>chr_to_factor</code></td>
+<td>
+<p>BOOL scalar for whether or not to automatically convert
+character columns to factor columns (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>other named arguments to be passed to 'DT::datatable'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>DT::datatable object formatted as requested
+</p>
+
+
+<h3>Note</h3>
+
+<p>Truncation applies a JS function to retain the underlying information
+as a hover tooltip and truncates using ellipses.
+</p>
+<p>Column name formatting relies on being able to parse 'names_to' as a
+valid function of the form 'sprintf(&quot;str_to_
+recognized options include &quot;lower&quot;, &quot;upper&quot;, &quot;title&quot;, and &quot;sentence&quot;.
+</p>
+<p>To apply a custom format, define these parameters as a list (e.g.
+&quot;dt_format_options&quot;) and pass it, along with your dataframe, as
+do.call(&quot;dt_formatted&quot;, c(dataframe = df, dt_format_options))
+</p>
+
+
+</body></html>

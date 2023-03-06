@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Add a sample via import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_sample"><tr><td>resolve_sample</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Add a sample via import</h2>
+
+<h3>Description</h3>
+
+<p>Part of the data import routine. Adds a record to the &quot;samples&quot; table with
+the values provided in the JSON import template. Uses [verify_sample_class]
+and [verify_contributor] to parse foreign key relationships, [resolve_method]
+to add a record to ms_methods to get the proper id, and
+[resolve_software_settings_NTAMRT] to insert records into and get the proper
+conversion software linkage id from tables &quot;conversion_software_settings&quot; and
+&quot;conversion_software_linkage&quot; if appropriate.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_sample(
+  obj,
+  db_conn = con,
+  method_id = NULL,
+  sample_in = "sample",
+  sample_table = "samples",
+  generation_type = NULL,
+  generation_type_default = "empirical",
+  generation_type_norm_table = "norm_generation_type",
+  import_map = IMPORT_MAP,
+  ensure_unique = TRUE,
+  require_all = TRUE,
+  fuzzy = FALSE,
+  case_sensitive = TRUE,
+  log_ns = "db",
+  ...
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>method_id</code></td>
+<td>
+<p>INT scalar of the associated ms_methods record id</p>
+</td></tr>
+<tr valign="top"><td><code>sample_in</code></td>
+<td>
+<p>CHR scalar of the import object name storing sample data
+(default: &quot;sample&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>sample_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding sample
+information (default: &quot;samples&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>generation_type</code></td>
+<td>
+<p>CHR scalar of the type of data generated for this
+sample (e.g. &quot;empirical&quot; or &quot;in silico&quot;). The default (NULL) will assign
+based on 'generation_type_default'; any other value will override the
+default value and be checked against values in 'geneation_type_norm_table'</p>
+</td></tr>
+<tr valign="top"><td><code>generation_type_default</code></td>
+<td>
+<p>CHR scalar naming the default data generation
+type (default: &quot;empirical&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>generation_type_norm_table</code></td>
+<td>
+<p>CHR scalar name of the database table
+normalizing sample generation type (default: &quot;empirical&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>import_map</code></td>
+<td>
+<p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>ensure_unique</code></td>
+<td>
+<p>LGL scalar of whether or not to first check that the
+values provided form a new unique record (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>require_all</code></td>
+<td>
+<p>LGL scalar of whether to require all columns (except the
+assumed primary key column of &quot;id&quot;) or only those defined as &quot;NOT NULL&quot;
+(default: TRUE requires the presence of all columns in the table)</p>
+</td></tr>
+<tr valign="top"><td><code>fuzzy</code></td>
+<td>
+<p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
+values provided are wrapped in an SQL &quot;LIKE '
+the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Other named elements to be appended to samples as necessary for
+workflow resolution, can be used to pass defaults or additional values.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>INT scalar if successful, result of the call to [add_or_get_id]
+otherwise
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+
+
+</body></html>

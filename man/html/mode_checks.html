@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Get list of available functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for mode_checks"><tr><td>mode_checks</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Get list of available functions</h2>
+
+<h3>Description</h3>
+
+<p>Helper function for <code>verify_args()</code> that returns all the
+currently available functions matching a given prefix. This searches the
+entire library associated with the current R install.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+mode_checks(prefix = "is", use_deprecated = FALSE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>prefix</code></td>
+<td>
+<p>CHR scalar for the function prefix to search (default &quot;is&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>use_deprecated</code></td>
+<td>
+<p>BOOL scalar indicating whether or not to include
+functions marked as deprecated (PLACEHOLDER default FALSE)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Note: argument <code>use_deprecated</code> is not currently used but serves as a
+placeholder for future development to avoid or include deprecated functions
+</p>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of functions matching <code>prefix</code>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+mode_checks()
+</pre>
+
+
+</body></html>

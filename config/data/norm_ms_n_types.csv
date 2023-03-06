@@ -1,0 +1,6 @@
+id,name,acronym,import_text
+0,none,,
+1,data-dependent acquisition,DDA,data-dependent acquisition (DDA/TopN)
+2,sequential windowed acquisition of all theoretical fragment ion mass spectra,SWATH,sequential windowed acquisition of all theoretical fragment ion mass spectra (SWATH)
+3,data-independent acquisition,DIA,data-independent acquisition (DIA/AIF)
+4,SWATH synonym for Orbitrap mass analyzers,HRM,SWATH synonym for Orbitrap mass analyzers (HRM)

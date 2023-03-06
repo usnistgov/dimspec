@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Pool uncertainty mass spectra</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for pool.ums"><tr><td>pool.ums</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Pool uncertainty mass spectra</h2>
+
+<h3>Description</h3>
+
+<p>Calculates a pooled uncertainty mass spectrum that is a result of data from multiple 
+uncertainty mass spectra.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+pool.ums(umslist, error = 5, minerror = 0.002)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>umslist</code></td>
+<td>
+<p>A list where each item is a uncertainty mass spectrum from function 'get_ums'</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>the minimum mass error (in Da) of the instrument data</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>the mass accuracy (in ppm) of the instrument data</p>
+</td></tr>
+</table>
+
+
+</body></html>

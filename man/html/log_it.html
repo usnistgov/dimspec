@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Conveniently log a message to the console</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for log_it"><tr><td>log_it</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Conveniently log a message to the console</h2>
+
+<h3>Description</h3>
+
+<p>Use this to log messages of arbitrary level and message. It works best with
+[logger] but will also print directly to the console to support setups where
+package [logger] may not be available or custom log levels are desired.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+log_it(
+  log_level,
+  msg = NULL,
+  log_ns = NULL,
+  reset_logger_settings = FALSE,
+  reload_all = FALSE,
+  logger_settings = file.path("config", "env_logger.R"),
+  add_unknown_ns = FALSE,
+  clone_settings_from = NULL
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>log_level</code></td>
+<td>
+<p>CHR scalar of the level at which to log a given statement.
+If using the [logger] package, must match one of [logger:::log_levels]</p>
+</td></tr>
+<tr valign="top"><td><code>msg</code></td>
+<td>
+<p>CHR scalar of the message to accompany the log.</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: NULL prints to the global logging namespace)</p>
+</td></tr>
+<tr valign="top"><td><code>reset_logger_settings</code></td>
+<td>
+<p>LGL scalar indicating whether or not to refresh
+the logger settings using the file identified in <code>logger_settings</code>
+(default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>reload_all</code></td>
+<td>
+<p>LGL scalar indicating whether to, during
+<code>reset_logger_settings</code>, to reload the R environment configuration file</p>
+</td></tr>
+<tr valign="top"><td><code>logger_settings</code></td>
+<td>
+<p>CHR file path to the file containing logger settings
+(default: file.path(&quot;config&quot;, &quot;env_logger.R&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>add_unknown_ns</code></td>
+<td>
+<p>LGL scalar indicating whether or not to add a new
+namespace if <code>log_ns</code> is not defined in <code>logger_settings</code> (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>clone_settings_from</code></td>
+<td>
+<p>CHR scalar indicating</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>When using [logger], create settings for each namespace in file
+<code>config/env_logger.R</code> as a list (see examples there) and make sure it is
+sourced. If using with [logger] and &quot;file&quot; or &quot;both&quot; is selected for the
+namespace <code>LOGGING[[log_ns]]$to</code> parameter in <code>env_logger.R</code> logs will be
+written to disk at the file defined in <code>LOGGING[[log_ns]]$file</code> as well as
+the console.
+</p>
+
+
+<h3>Value</h3>
+
+<p>Adds to the logger file (if enabled) and/or prints to the console if
+enabled. See
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+log_it("test", "a test message")
+test_log &lt;- function() {
+  log_it("success", "a success message")
+  log_it("warn", "a warning message")
+}
+test_log()
+# Try it with and without logger loaded.
+</pre>
+
+
+</body></html>

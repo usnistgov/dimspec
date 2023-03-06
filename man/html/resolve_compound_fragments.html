@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Link together peaks, fragments, and compounds</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_compound_fragments"><tr><td>resolve_compound_fragments</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Link together peaks, fragments, and compounds</h2>
+
+<h3>Description</h3>
+
+<p>This function links together the peaks, annotated_fragments, and compounds
+table. This serves as the main connection table conceptually tying together
+peaks, the fragments annotated within those peaks, and the compound
+identification associated with the peaks. The database supports flexible
+assignment wherein compounds may be related to either peaks or annotated
+fragments, or both, and vice versa. At least two IDs are required for
+linkage; i.e. compounds may not have an acciated peak in the database, but
+are known to produce fragments at a particular m/z value. Ideally, all three
+are provided to provide traceback from compounds, a complete list of their
+annotated fragments, and association with a peak object with data containing
+unannotated fragments, which can be traced back to the sample from which it
+was drawn and the associated metrological method information.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_compound_fragments(
+  values = NULL,
+  peak_id = NA,
+  annotated_fragment_id = NA,
+  compound_id = NA,
+  linkage_table = "compound_fragments",
+  peaks_table = "peaks",
+  annotated_fragments_table = "annotated_fragments",
+  compounds_table = "compounds",
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>LIST item containing items for 'peak_id',
+'annotated_fragment_id', and 'compound_id' (default: NULL); used
+preferentially if provided</p>
+</td></tr>
+<tr valign="top"><td><code>peak_id</code></td>
+<td>
+<p>INT vector (ideally of length 1) of the peak ID(s) to link;
+ignored if 'values' is provided (default: NA)</p>
+</td></tr>
+<tr valign="top"><td><code>annotated_fragment_id</code></td>
+<td>
+<p>INT vector of fragment ID(s) to link; ignored if
+'values' is provided (default: NA)</p>
+</td></tr>
+<tr valign="top"><td><code>compound_id</code></td>
+<td>
+<p>INT vector of compound ID(s) to link; ignored if 'values'
+is provided (default: NA)</p>
+</td></tr>
+<tr valign="top"><td><code>linkage_table</code></td>
+<td>
+<p>CHR scalar name of the database table containing
+linkages between peaks, fragments, and compounds (default:
+&quot;compound_fragments&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peaks_table</code></td>
+<td>
+<p>CHR scalar name of the database table containing peaks for
+look up (default: &quot;peaks&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>compounds_table</code></td>
+<td>
+<p>CHR scalar name of the table holding compound
+information</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>fragments_table</code></td>
+<td>
+<p>CHR scalar name of the table holding annotated
+fragment information</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, value checks entries and executes database actions
+</p>
+
+
+</body></html>

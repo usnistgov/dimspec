@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Export to MSP</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for export_msp"><tr><td>export_msp</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Export to MSP</h2>
+
+<h3>Description</h3>
+
+<p>The function exports an uncertainty mass spectrum into a NIST MS Search .msp file
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+export_msp(
+  ms,
+  file,
+  precursor = "",
+  name = "Exported Mass Spectrum",
+  headerdata = c(),
+  append = FALSE
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>ms</code></td>
+<td>
+<p>uncertainty mass spectrum from 'get_ums' function</p>
+</td></tr>
+<tr valign="top"><td><code>file</code></td>
+<td>
+<p>export .msp file to save the msp files</p>
+</td></tr>
+<tr valign="top"><td><code>precursor</code></td>
+<td>
+<p>If available, the numeric precursor m/z for the designated mass spectrum</p>
+</td></tr>
+<tr valign="top"><td><code>name</code></td>
+<td>
+<p>Text name to assign to the mass spectrum (not used in spectral searching)</p>
+</td></tr>
+<tr valign="top"><td><code>headerdata</code></td>
+<td>
+<p>character string containing named values for additional data to put in the header</p>
+</td></tr>
+<tr valign="top"><td><code>append</code></td>
+<td>
+<p>boolean (TRUE/FALSE) to append to .msp file (TRUE) or overwrite (FALSE)</p>
+</td></tr>
+</table>
+
+
+</body></html>

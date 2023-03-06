@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Parse &quot;Separated&quot; MS Data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_spectra_separated"><tr><td>ms_spectra_separated</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Parse &quot;Separated&quot; MS Data</h2>
+
+<h3>Description</h3>
+
+<p>The &quot;separated&quot; format includes spectra packed into two separate columns, one
+for mass and another for intensity. All values for a given scan time are
+packed into these columns, separated by space, with an unlimited number of
+discrete values, and must be a 1:1 ratio of values between the two columns.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_spectra_separated(df, ms_cols = c("mz", "intensity"))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>df</code></td>
+<td>
+<p>data.frame or json object containing spectra compressed in the
+&quot;separated&quot; format</p>
+</td></tr>
+<tr valign="top"><td><code>ms_cols</code></td>
+<td>
+<p>CHR vector of length 2 identifying the column names to use for
+mass and intensity in the source data; must be of length 2, with the first
+value identifying the mass-to-charge ratio column and the second
+identifying the intensity column</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object of the unpacked spectra as a list column
+</p>
+
+
+<h3>Note</h3>
+
+<p>ms_cols is treated as regex expressions, but it is safest to provide
+matching column names
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+### JSON Example
+tmp &lt;- jsonify::as.json('{
+ "measured_mz": "712.9501 713.1851",
+ "measured_intensity": "15094.41015625 34809.9765625"
+}')
+ms_spectra_separated(tmp)
+
+### Example data.frame
+tmp &lt;- data.frame(
+  measured_mz = "712.9501 713.1851",
+  measured_intensity = "15094.41015625 34809.9765625"
+)
+ms_spectra_separated(tmp)
+</pre>
+
+
+</body></html>

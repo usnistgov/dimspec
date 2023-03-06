@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Remove an existing database</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for remove_db"><tr><td>remove_db</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Remove an existing database</h2>
+
+<h3>Description</h3>
+
+<p>This is limited to only the current working directory and includes its
+subdirectories. If you wish to retain a copy of the prior database, ensure
+argument 'archive = TRUE' (note the default is FALSE) to create a copy of the
+requested database prior to rebuild; this is created in the same directory as
+the found database and appends
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+remove_db("test.sqlite", archive = TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db</code></td>
+<td>
+<p>CHR scalar name of the database to build (default: session value
+DB_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>archive</code></td>
+<td>
+<p>LGL scalar of whether to create an archive of the current
+database (if it exists) matching the name supplied in argument 'db'
+(default: FALSE)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, check console for details
+</p>
+
+
+</body></html>

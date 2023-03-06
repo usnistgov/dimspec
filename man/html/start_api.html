@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Start the plumber interface from a clean environment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for start_api"><tr><td>start_api</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Start the plumber interface from a clean environment</h2>
+
+<h3>Description</h3>
+
+<p>This convenience function launches the plumber instance if it was not set to
+launch during the session setup. It is a thin wrapper with a more intuitive
+name than [api_reload] and the default background setting turned off to test
+the server in the current session.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+start_api()
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>plumber_file</code></td>
+<td>
+<p>CHR scalar name of the plumber definition file, which
+should be in <code>src_dir</code> (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>plumber_host</code></td>
+<td>
+<p>CHR scalar of the host server address (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>plumber_port</code></td>
+<td>
+<p>INT scalar of the listening port on the host server
+(default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>background</code></td>
+<td>
+<p>LGL scalar of whether to launch the API in a background
+process (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>src_dir</code></td>
+<td>
+<p>CHR scalar file path to settings and functions enabling the
+plumber API (default: here::here(&quot;inst&quot;, &quot;plumber&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar name of the logging namespace to use for this
+function (default: &quot;api&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, launches the plumber instance
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is intended to pull from the environment variables
+identifying the plumber file, host, and port.
+</p>
+
+
+</body></html>

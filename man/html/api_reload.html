@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Reloads the plumber API</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for api_reload"><tr><td>api_reload</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Reloads the plumber API</h2>
+
+<h3>Description</h3>
+
+<p>Depending on system architecture, the plumber service may take some time to
+spin up and spin down. If 'background' is TRUE, this may mean the calling R
+thread runs ahead of the background process resulting in unexpected behavior
+(e.g. newly defined endpoints not being available), effectively binding it to
+the prior iteration. If the API does not appear to be reloading properly, it
+may be necessary to manually kill the process controlling it through your OS
+and to call this function again.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+api_reload(
+  pr = NULL,
+  background = TRUE,
+  plumber_file = NULL,
+  on_host = NULL,
+  on_port = NULL,
+  log_ns = "api"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>pr</code></td>
+<td>
+<p>CHR scalar name of the plumber service object, typically only
+created as a background observer from [callr::r_bg] as a result of calling
+[api_reload] (default: NULL gets the environment setting for
+PLUMBER_OBJ_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>background</code></td>
+<td>
+<p>LGL scalar of whether to load the plumber server as a
+background service (default: TRUE); set to FALSE for testing</p>
+</td></tr>
+<tr valign="top"><td><code>plumber_file</code></td>
+<td>
+<p>CHR scalar of the path to a plumber API to launch
+(default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>on_host</code></td>
+<td>
+<p>CHR scalar of the host IP address (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>on_port</code></td>
+<td>
+<p>CHR or INT scalar of the host port to use (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar namespace to use for logging (default: &quot;api&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>Launches the plumber API service on your local machine and returns
+the URL on which it can be accessed as a CHR scalar
+</p>
+
+
+</body></html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve the peaks node during import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_peaks"><tr><td>resolve_peaks</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve the peaks node during import</h2>
+
+<h3>Description</h3>
+
+<p>Call this function to resolve and insert information for the &quot;peaks&quot; node in
+the database including software conversion settings (via
+[resolve_software_settings_NTAMRT]) and mass spectra data (via
+[resolve_ms_data] and, optionally, [resolve_ms_spectra]). This function
+relies on the import object being formatted appropriately.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_peaks(
+  obj,
+  sample_id,
+  peaks_table = "peaks",
+  software_timestamp = NULL,
+  software_settings_in = "msconvertsettings",
+  ms_data_in = "msdata",
+  ms_data_table = "ms_data",
+  unpack_spectra = FALSE,
+  unpack_format = c("separated", "zipped"),
+  ms_spectra_table = "ms_spectra",
+  linkage_table = "conversion_software_peaks_linkage",
+  settings_table = "conversion_software_settings",
+  as_date_format = "%Y-%m-%d %H:%M:%S",
+  format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
+  min_datetime = "2000-01-01 00:00:00",
+  import_map = IMPORT_MAP,
+  ums_params_in = "opt_ums_params",
+  ums_params_table = "opt_ums_params",
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>CHR vector describing settings or a named LIST with names matching
+column names in table conversion_software_settings.</p>
+</td></tr>
+<tr valign="top"><td><code>sample_id</code></td>
+<td>
+<p>INT scalar of the sample id (e.g. from the import workflow)</p>
+</td></tr>
+<tr valign="top"><td><code>peaks_table</code></td>
+<td>
+<p>CHR scalar of the database table name holding QC method check
+information (default: &quot;peaks&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>ms_data_in</code></td>
+<td>
+<p>CHR scalar of the named component of 'obj' holding mass
+spectral data (default: &quot;msdata&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>ms_data_table</code></td>
+<td>
+<p>CHR scalar name of the table holding packed spectra in
+the database (default: &quot;ms_data&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>unpack_spectra</code></td>
+<td>
+<p>LGL scalar indicating whether or not to unpack spectral
+data to a long format (i.e. all masses and intensities will become a single
+record) in the table defined by 'ms_spectra_table' (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>unpack_format</code></td>
+<td>
+<p>CHR scalar of the type of data packing for the spectra,
+one of &quot;separated&quot; (default) or &quot;zipped&quot;</p>
+</td></tr>
+<tr valign="top"><td><code>ms_spectra_table</code></td>
+<td>
+<p>CHR scalar name of the table holding long form
+spectra in the database (default: &quot;ms_spectra&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>import_map</code></td>
+<td>
+<p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_in</code></td>
+<td>
+<p>CHR scalar name of the item in 'obj' containing
+optimized uncertainty mass spectrum parameters</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>Connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>INT scalar of the newly inserted or identified peak ID(s)
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+<p>This function relies on an import map
+</p>
+
+
+</body></html>

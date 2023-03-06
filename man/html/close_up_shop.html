@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Conveniently close all database connections</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for close_up_shop"><tr><td>close_up_shop</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Conveniently close all database connections</h2>
+
+<h3>Description</h3>
+
+<p>This closes both the plumber service and all database connections from the
+current running environment. If outstanding promises exist to database tables
+or views were created as class 'tbl_' (e.g. with 'tbl(con, &quot;table&quot;)'), set
+'back_up_connected_tbls' to TRUE to collect data from those and preserve
+in-place in the current global environment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+manage_connection()
+close_up_shop(TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>back_up_connected_tbls</code></td>
+<td>
+<p>LGL scalar of whether to clone currently
+promised tibble connections to database objects as data frames (default:
+FALSE).</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, modifies the current global environment in place
+</p>
+
+
+</body></html>

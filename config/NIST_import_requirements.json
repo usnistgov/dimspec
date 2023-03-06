@@ -1,0 +1,57 @@
+{
+  "msconvertsettings": {
+    "class": "character",
+    "names": {},
+    "required": true
+  },
+  "sample": {
+    "class": "list",
+    "names": ["name", "description", "sample_class", "data_generator", "source", "starttime"],
+    "required": true
+  },
+  "chromatography": {
+    "class": "list",
+    "names": ["ctype", "cvendor", "cmodel", "ssolvent", "mp1solvent", "mp1add", "m2solvent", "mp2add", "mp3solvent", "mp3add", "mp4solvent", "mp4add", "colvendor", "colname", "colchemistry", "colid", "collen", "coldp", "gcolvendor", "gcolname", "gcolchemistry", "gcolid", "gcollen", "gcoldp", "source"],
+    "required": false
+  },
+  "massspectrometry": {
+    "class": "list",
+    "names": ["msvendor", "msmodel", "ionization", "polarity", "voltage", "vunits", "massanalyzer1", "massanalyzer2", "fragmode", "ce_value", "ce_desc", "ce_units", "ms2exp", "isowidth", "msaccuracy", "ms1resolution", "ms2resolution", "source"],
+    "required": true
+  },
+  "qcmethod": {
+    "class": "data.frame",
+    "names": ["name", "value", "source"],
+    "required": true
+  },
+  "peak": {
+    "class": "data.frame",
+    "names": ["count", "name", "identifier", "ionstate", "mz", "rt", "peak_starttime", "peak_endtime", "verified"],
+    "required": true
+  },
+  "compounddata": {
+    "class": "data.frame",
+    "names": ["ID", "NAME", "INCHI", "SOURCE", "SOURCE_TYPE", "SMILES", "INCHIKEY", "LOCAL_POS", "LOCAL_NEG", "FORMULA", "FIXEDMASS", "NETCHARGE", "DTXSID", "DTXCID", "CASRN"],
+    "required": true
+  },
+  "annotation": {
+    "class": "data.frame",
+    "names": ["fragment_mz", "fragment_formula", "fragment_SMILES", "fragment_radical", "fragment_citation"],
+    "required": false
+  },
+  "msdata": {
+    "class": "data.frame",
+    "names": ["scantime", "msn", "baseion", "baseint", "masses", "intensities"],
+    "required": true
+  },
+  "qc": {
+    "class": "list",
+    "names": {},
+    "required": true
+  },
+  "opt_ums_params": {
+    "class": "data.frame",
+    "names": ["parameter","mslevel","correl","ph","freq","n","masserror","minerror"],
+    "required": false
+  }
+}

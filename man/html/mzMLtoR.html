@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Opens file of type mzML into R environment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for mzMLtoR"><tr><td>mzMLtoR</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Opens file of type mzML into R environment</h2>
+
+<h3>Description</h3>
+
+<p>Opens file of type mzML into R environment
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+mzMLtoR(
+  mzmlfile = file.choose(),
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE,
+  approach = "hybrid"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>mzmlfile</code></td>
+<td>
+<p>the file path of the mzML file which the data are to be read from.</p>
+</td></tr>
+<tr valign="top"><td><code>lockmass</code></td>
+<td>
+<p>NUM scalar m/z value of the lockmass to remove (Waters instruments only) (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>lockmasswidth</code></td>
+<td>
+<p>NUM scalar instrumental uncertainty associated with 'lockmass' (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>correct</code></td>
+<td>
+<p>logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)</p>
+</td></tr>
+<tr valign="top"><td><code>approach</code></td>
+<td>
+<p>character string defining the type of lockmass removal filter to use, default is 'hybrid'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>list containing mzML data with unzipped masses and intensity information
+</p>
+
+
+</body></html>

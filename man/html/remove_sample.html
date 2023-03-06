@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Delete a sample</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for remove_sample"><tr><td>remove_sample</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Delete a sample</h2>
+
+<h3>Description</h3>
+
+<p>Removes a sample from the database and associated records in ms_methods,
+conversion_software_settings, and conversion_software_linkage. Associated
+peak and mass spectrometric signals will also be removed.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+remove_sample(sample_ids, db_conn = con, log_ns = "db")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>sample_ids</code></td>
+<td>
+<p>INT vector of IDs to remove from the samples table.</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, executes actions on the database
+</p>
+
+
+</body></html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve the fragments node during database import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_fragments_NTAMRT"><tr><td>resolve_fragments_NTAMRT</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve the fragments node during database import</h2>
+
+<h3>Description</h3>
+
+<p>Call this function as part of an import routine to resolve the fragments node
+including fragment inspections and aliases. If the python connection to RDKit
+is available and no aliases are provided, aliases as defined in
+'rdkit_aliases' will be generated and stored if 'generate_missing_aliases' is
+set to TRUE. Components of the import file will be collated, have their
+values normalized, and any new fragment identifiers will be added to the
+database.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_fragments_NTAMRT(
+  obj,
+  sample_id = NULL,
+  generation_type = NULL,
+  fragments_in = "annotation",
+  fragments_table = "annotated_fragments",
+  fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
+  fragments_sources_table = "fragment_sources",
+  citation_info_in = "fragment_citation",
+  inspection_info_in = "fragment_inspections",
+  inspection_table = "fragment_inspections",
+  generate_missing_aliases = FALSE,
+  fragment_aliases_in = "fragment_aliases",
+  fragment_aliases_table = "fragment_aliases",
+  alias_type_norm_table = ref_table_from_map(fragment_aliases_table, "alias_type"),
+  inchi_prefix = "InChI=1S/",
+  rdkit_name = ifelse(exists("PYENV_NAME"), PYENV_NAME, "rdkit"),
+  rdkit_ref = ifelse(exists("PYENV_REF"), PYENV_REF, "rdk"),
+  rdkit_ns = "rdk",
+  rdkit_make_if_not = TRUE,
+  rdkit_aliases = c("Inchi", "InchiKey"),
+  mol_to_prefix = "MolTo",
+  mol_from_prefix = "MolFrom",
+  type = "smiles",
+  import_map = IMPORT_MAP,
+  case_sensitive = FALSE,
+  fuzzy = FALSE,
+  strip_na = TRUE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>sample_id</code></td>
+<td>
+<p>INT scalar matching a sample ID to which to tie these
+fragments (optional, default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>generation_type</code></td>
+<td>
+<p>CHR scalar containing the generation type as defined
+in the &quot;norm_generation_type&quot; table (default: NULL will obtain the
+generation type attached to the 'sample_id' by database lookup)</p>
+</td></tr>
+<tr valign="top"><td><code>fragments_in</code></td>
+<td>
+<p>CHR scalar name of the 'obj' component holding annotated
+fragment information (default: &quot;annotation&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>fragments_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+annotated fragment information (default: &quot;annotated_fragments&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>fragments_norm_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+normalized fragment identities (default: obtains this from the result of a
+call to [er_map] with the table name from 'fragments_table')</p>
+</td></tr>
+<tr valign="top"><td><code>fragments_sources_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+fragment source (e.g. generation) information (default: &quot;fragment_sources&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>citation_info_in</code></td>
+<td>
+<p>CHR scalar name of the 'obj' component holding
+fragment citation information (default: &quot;fragment_citation&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>inspection_info_in</code></td>
+<td>
+<p>CHR scalar name of the 'obj' component holding
+fragment inspection information (default: &quot;fragment_inspections&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>inspection_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+fragment inspection information (default: &quot;fragment_inspections&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>generate_missing_aliases</code></td>
+<td>
+<p>LGL scalar determining whether or not to
+generate machine readable expressions (e.g. InChI) for fragment aliases
+from RDKit (requires RDKit activation; default: FALSE); see formals list
+for [add_rdkit_aliases]</p>
+</td></tr>
+<tr valign="top"><td><code>fragment_aliases_in</code></td>
+<td>
+<p>CHR scalar name of the 'obj' component holding
+fragment aliases (default: &quot;fragment_aliases&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>fragment_aliases_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+fragment aliases (default: &quot;fragment_aliases&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>rdkit_ref</code></td>
+<td>
+<p>CHR scalar OR R object of an RDKit binding (default NULL
+goes to &quot;rdk&quot; for convenience with other pipelines in this project)</p>
+</td></tr>
+<tr valign="top"><td><code>mol_to_prefix</code></td>
+<td>
+<p>CHR scalar of the prefix to identify an RDKit function
+to create an alias from a mol object (default: &quot;MolTo&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>mol_from_prefix</code></td>
+<td>
+<p>CHR scalar of the prefix to identify an RDKit function
+to create a mol object from'identifiers' (default: &quot;MolFrom&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>type</code></td>
+<td>
+<p>CHR scalar of the type of encoding to use for 'identifiers'
+(default: smiles)</p>
+</td></tr>
+<tr valign="top"><td><code>import_map</code></td>
+<td>
+<p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>case_sensitive</code></td>
+<td>
+<p>LGL scalar of whether to match on a case sensitive
+basis (the default TRUE searches for values as-provided) or whether to
+coerce value matches by upper, lower, sentence, and title case matches</p>
+</td></tr>
+<tr valign="top"><td><code>fuzzy</code></td>
+<td>
+<p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
+values provided are wrapped in an SQL &quot;LIKE '
+the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>fragment_alias_type_norm_table</code></td>
+<td>
+<p>CHR scalar name of the database table
+holding normalized fragment alias type identities (default: obtains this
+from the result of a call to [er_map] with the table name from
+'fragment_aliases_table')</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Fragments missing structure annotation are supported (e.g. those with a
+formula but no SMILES notation provided).
+</p>
+<p>For new fragments, the calculated molecular mass is generated by
+[calculate.monoisotope] from exact masses of each constituent atom. If RDKit
+is available and a SMILES notation is provided, the formal molecular net
+charge is also calculated via rdkit.Chem.GetFormalCharge.
+</p>
+<p>Database tables affected by resolving the fragments node include:
+annotated_fragments, norm_fragments, fragment_inspections, fragment_aliases,
+and fragment_sources.
+</p>
+
+
+<h3>Value</h3>
+
+<p>INT vector of resolved annotated fragment IDs; executes database
+actions
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+<p>If components named in 'citation_info_in' and 'inspection_info_in' do
+not exist, that information will not be appended to the resulting database
+records.
+</p>
+<p>Typical usage as part of the import workflow involves simply passing
+the import object and associated sample id: resolve_fragments_NTAMRT(obj =
+import_object, sample_id = 1), though wrapper functions like [full_import]
+also contain name-matched arguments to be passed in a [do.call] context.
+</p>
+
+
+</body></html>

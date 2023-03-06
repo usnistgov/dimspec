@@ -1,0 +1,76 @@
+need_bjp_review,reviewed,element_location,element_id,tooltip_text
+FALSE,TRUE,sidebar_menu,nav_index,"Contextural material for the application you are currently using, along with some information about the project itself."
+FALSE,TRUE,sidebar_menu,nav_data_input,Start here with data entry where you will upload a data file and select features of interest by mass-to-charge ratio (m/z) and retention time.
+FALSE,TRUE,sidebar_menu,nav_search_compounds,Search the library for compounds matching the mass spectrometric fingerprints for features of interest.
+FALSE,TRUE,sidebar_menu,nav_fragments,"Match fragments from your mass spectrometry experiment against those held in the library, including linked metrics for which compounds and peaks those fragments have been annotated within."
+FALSE,TRUE,sidebar_menu,nav_about,"Your reference guide to this application, including user guides and other information."
+FALSE,TRUE,sidebar_menu,nav_show_help_label,Click here to toggle tooltips throughout this application.
+FALSE,TRUE,sidebar_menu,nav_show_advanced_settings_label,Click here to toggle advanced settings throughout this application.
+FALSE,TRUE,sidebar_menu,nav_download_all,Click here to execute compound and fragment matches for all features of interest. Warning! This may take a considerable amount of time.
+FALSE,TRUE,sidebar_menu,mod_download_all_save,Click here to execute compound and fragment matches for all features of interest. Warning! This may take a considerable amount of time.
+FALSE,TRUE,sidebar_menu,mod_download_all_cancel,Click here to cancel this action and return to the application.
+FALSE,TRUE,index,index_go_data_input,Click here to go to the data input page and get started.
+FALSE,TRUE,index,data_input_filename_label,"Start by dragging a data file here, or click ""Load"" to select one from your computer."
+TRUE,FALSE,index,data_input_relative_error,"Set the instrument mass-to-charge ratio (m/z) relative error in parts-per-million (ppm) for processing, ranging from {this_min} ppm to {this_max} ppm. The default of {this_value} ppm is typical for most applications."
+TRUE,FALSE,index,data_input_minimum_error,"Set the instrument minimum mass-to-charge ratio (m/z) absolute error in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for most applications."
+TRUE,FALSE,index,data_input_experiment_type,"Set the experiment type for your data file; choices are defined in the ""norm_ms_n_types"" database table."
+TRUE,FALSE,index,data_input_isolation_width,"Set the instrument data isolation width in Daltons (Da) for processing, ranging from {this_min} Da to {this_max} Da. The default of {this_value} Da is typical for data-dependent acquisition, but may be different for other acquisition types (e.g. for SWATH or HRM it may be much larger)."
+FALSE,TRUE,index,data_input_parameters,"Start by clicking ""Add"" to manually add a feature of interest, or by dragging a data file to the widget below or clicking ""Import"" to select one from your computer."
+FALSE,TRUE,index,data_input_dt_peak_list_add_row,Click to manually add a feature of interest by its mass-to-charge ratio value and retention time properties.
+FALSE,TRUE,index,data_input_dt_peak_list_edit_row,Click to edit a feature of interest selected in the table below.
+FALSE,TRUE,index,data_input_dt_peak_list_remove_row,Click to remove a feature of interest selected in the table below.
+FALSE,TRUE,index,data_input_process_btn,Click here to begin processing the data file provided and extract data matching the features of interest defined in the list above. More options will be available once data have been processed.
+FALSE,TRUE,index,data_input_go_compound,Data have been processed. Click here to go to the compound match page and search for compounds matching your defined features of interest. This is most useful for a broad search or if you suspect an identity already.
+FALSE,TRUE,index,data_input_go_fragment,Data have been processed. Click here to go to the fragment match page and search for fragments matching your defined features of interest. This is most useful for examining which fragments within your feature of interest are shared by other compounds.
+FALSE,FALSE,index,data_input_is_waters,Click this box to indicate you are using data that includes a lock mass to reveal those settings.
+FALSE,FALSE,index,data_input_waters_lockmass,Enter the lock mass value in Daltons for these data.
+FALSE,FALSE,index,data_input_waters_lockmass_width,Enter the lock mass instrumental uncertainty value in Daltons for these data.
+FALSE,FALSE,index,data_input_waters_lockmass_correct,Click this box to indicate whether measured data have already been corrected for the lock mass value.
+FALSE,TRUE,search_compounds,search_compounds_search_type,Select the type of search to perform. Precursor search limits itself to matching precursor mass-to-charge ratios between the error limits defined earlier. Search all attempts to find every possible match within the database and will take considerably longer.
+TRUE,FALSE,search_compounds,search_compounds_mzrt,"Select the feature of interest to use in the search. These were provided on the data input page. If you need to change them, go back to the data input page, alter the feature list, and process your data again."
+TRUE,FALSE,search_compounds,search_compounds_additional_title,Alter advanced parameters for compound matching here. Click the plus icon to the right to expand this box.
+TRUE,FALSE,search_compounds,search_compounds_search_zoom,"Set the search window which will determine how data are grouped, ranging from {this_min} to {this_max} Daltons. The default of {paste0(this_value, collapse = ' to ')} Da is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_correlation,"Set the correlation rho threshold for peak deconvolution, ranging from {this_min} (uncorrelated) to {this_max} (fully correlated). The default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_ph,"Set the percentage peak height threshold for processing, ranging from {this_min}% to {this_max}%. The default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."
+TRUE,FALSE,search_compounds,search_compounds_freq,"Set the minimum frequency for the number of times a mass must appear in scans across a peak, ranging from {this_min} to {this_max}. The default of {this_value} is typical for most applications, but this depends in part upon scan rate."
+TRUE,FALSE,search_compounds,search_compounds_norm_function,"Choose a normalization function to use when matching compounds, either ""sum"" (typical default) for base peak normalization or ""mean"" for relative intensity normalization."
+TRUE,FALSE,search_compounds,search_compounds_correlation_method,Choose a correlation method to use when matching compounds; pearson is the only method currently supported.
+TRUE,FALSE,search_compounds,search_compounds_max_correl,"Set the maximum correlation to be used during the search refinement stage of the search function, ranging from {this_min} (uncorrelated) to {this_max} (completely correlated); the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_correl_bin,"Set the correlation bin size which will be used to group correlation results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_max_ph,"Set the percentage of base peak height threshold to be used during the refinement stage of the search function, ranging from {this_min}% to {this_max}%; the default of {this_value}% is typical for most applications. Peaks with lesser relative heights will be ignored."
+TRUE,FALSE,search_compounds,search_compounds_ph_bin,"Set the peak height bin size which will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_max_freq,"Set the maximum observation frequency will be used to group potential results during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_freq_bin,"Set the frequency bin size which will be used to during the refinement stage of the search function, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_min_n_peaks,"Set the minimum number of spectra which must be present to be included in a match, ranging from {this_min} to {this_max}; the default of {this_value} is typical for most applications."
+TRUE,FALSE,search_compounds,search_compounds_search_btn,Click here to execute a search for compounds matching this feature.
+FALSE,TRUE,search_compounds,search_compounds_use_optimized_parameters,"Ensure this is checked to use optimized search parameters held within the database and speed up your search. If it is left unchecked, new search parameters will be generated, which may take a considerable amount of time."
+FALSE,TRUE,search_compounds,search_compounds_butterfly_plot_label,Change the MS level to plot by clicking one of the options below. If no data are available for that level then MS1 will be selected.
+FALSE,TRUE,search_compounds,search_compounds_uncertainty_btn,Click to see how this match score compares with bootstrapped scores for these data.
+FALSE,TRUE,search_fragments,search_fragments_mzrt,"Select the feature of interest to use in the search. These were provided on the data input page. If you need to change them, go back to the data input page, alter the feature list, and process your data again."
+FALSE,TRUE,search_fragments,search_fragments_search_btn,Click here to execute a search for known fragments found in this feature.
+FALSE,TRUE,search_fragments,search_fragments_fragment_info,Click here to get more information about this fragment.
+FALSE,TRUE,search_fragments,search_fragments_compound_info,Click here to get more information about the currently selected compound.
+FALSE,TRUE,search_fragments,search_fragments_peak_info,Click here to get more information about the currently selected peak.
+TRUE,FALSE,mod_data_input_parameters_manual,mod_search_parameter_precursor,Enter the mass-to-charge (m/z) ratio of interest. Settings from the data input page regarding mass accuracy will be used in conjunction with this value to match your data with known compounds and fragments.
+TRUE,FALSE,mod_data_input_parameters_manual,mod_search_parameter_rt,Enter the retention time centroid for your feature of interest.
+TRUE,FALSE,mod_data_input_parameters_manual,mod_search_parameter_rt_start,Enter the retention time of the beginning of the peak containing your feature of interest.
+TRUE,FALSE,mod_data_input_parameters_manual,mod_search_parameter_rt_end,Enter the retention time of the end of the peak containing your feature of interest.
+TRUE,FALSE,mod_data_input_parameters_manual,mod_data_input_search_parameter_save,Click here to save these parameters to your current session.
+FALSE,TRUE,mod_data_input_parameters_manual,mod_search_parameter_cancel,Click here to cancel this action and close this dialog.
+TRUE,FALSE,mod_data_input_parameters_upload,mod_upload_parameter_precursor,Select the column from your uploaded data file that contains the mass-to-charge (m/z) ratio of interest. Settings from the data input page regarding mass accuracy will be used in conjunction with this value to match your data with known compounds and fragments. The selected default is the first column in the file you provided.
+TRUE,FALSE,mod_data_input_parameters_upload,mod_upload_parameter_rt,Select the column from your uploaded data file that contains the retention time centroid for your feature of interest. The selected default is the second column in the file you provided.
+TRUE,FALSE,mod_data_input_parameters_upload,mod_upload_parameter_rt_start,Select the column from your uploaded data file that contains the beginning of the peak for your feature of interest. The selected default is the third column in the file you provided.
+TRUE,FALSE,mod_data_input_parameters_upload,mod_upload_parameter_rt_end,Select the column from your uploaded data file that contains the end of the peak for your feature of interest. The selected default is the fourth column in the file you provided.
+TRUE,FALSE,mod_data_input_parameters_upload,mod_upload_parameter_append,"If checked, uploaded parameters will be appended to the current parameter list. If left unchecked, it will replace the current list. Generally, this should always be checked. There is no limit to the number of features of interest that can be evaluated in a single session."
+FALSE,TRUE,mod_data_input_parameters_upload,mod_data_input_upload_parameter_save,Click here to upload these parameters to your current session.
+FALSE,TRUE,mod_data_input_parameters_upload,mod_upload_parameter_cancel,Click here to cancel this action and close this dialog.
+FALSE,TRUE,mod_uncertainty_evaluation,mod_uncertainty_iterations,Set the number of bootstrap iterations to run and click the button below to visualize how this match score compares with bootstrapped estimates.
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_mass_error_compare_actual,Set the tolerable mass error of measurements in parts per million (ppm).
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_min_error_compare_actual,Set the minimum mass error of measurements in absolute terms (Daltons).
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_weighting_mass,Set the weighting value for uncertainty estimation.
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_mass_error_compare_with,Set the tolerable mass error for the reference spectra in parts per million (ppm).
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_min_error_compare_with,Set the minimum mass error for the reference spectra in parts per million (ppm).
+TRUE,FALSE,mod_uncertainty_evaluation,mod_uncertainty_weighting_intensity,Set the weighting intensity value for uncertainty estimation.
+FALSE,TRUE,mod_uncertainty_evaluation,mod_uncertainty_calculate,Click here to calculate the range of match scores using these settings.
+FALSE,TRUE,mod_uncertainty_evaluation,mod_uncertainty_msn,Change the MS level to plot by clicking one of the options below. If no data are available for that level then MS1 will be selected. This choice also affects the choice on the search compunds page.
+FALSE,TRUE,mod_uncertainty_evaluation,mod_uncertainty_close,Click here or outside this dialog to cancel this action and return to the compound match page.

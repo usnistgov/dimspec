@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a patchwork plot of peak spectral properties</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_plot_peak_overview"><tr><td>ms_plot_peak_overview</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a patchwork plot of peak spectral properties</h2>
+
+<h3>Description</h3>
+
+<p>Call this function to generate a combined plot from [ms_plot_peak],
+[ms_plot_spectra], and [ms_plot_spectral_intensity] using the [patchwork]
+package, which must be installed. All arguments will be passed directly to
+the underlying functions to provide flexibility in the final display. The
+default settings match those of the called plotting functions, and the output
+can be further manipulated with the patchwork package.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_plot_peak_overview(
+  plot_peak_id,
+  peak_type = c("area", "line", "segment"),
+  peak_facet_by = "ms_n",
+  peak_mz_resolution = 0,
+  peak_drop_ratio = 0.01,
+  peak_repel_labels = TRUE,
+  peak_line_color = "black",
+  peak_fill_color = "grey50",
+  peak_fill_alpha = 0.2,
+  peak_text_size = 3,
+  peak_text_offset = 0.02,
+  spectra_mz_resolution = 3,
+  spectra_drop_ratio = 0.01,
+  spectra_repel_labels = TRUE,
+  spectra_repel_line_color = "grey50",
+  spectra_nudge_y_factor = 0.03,
+  spectra_log_y = FALSE,
+  spectra_text_size = 3,
+  spectra_max_overlaps = 50,
+  intensity_plot_resolution = c("spectra", "peak"),
+  intensity_mz_resolution = 3,
+  intensity_drop_ratio = 0,
+  patchwork_design = c(area(1, 4, 7, 7), area(1, 1, 4, 2), area(6, 1, 7, 2)),
+  as_individual_plots = FALSE,
+  include_method = TRUE,
+  db_conn = con,
+  log_ns = "global"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>peak_type</code></td>
+<td>
+<p>CHR scalar of the plot type to draw, must be one of &quot;line&quot;,
+&quot;segment&quot;, or &quot;area&quot; (default: &quot;line&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_facet_by</code></td>
+<td>
+<p>CHR scalar name of a column by which to facet the
+resulting plot (default: &quot;ms_n&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_mz_resolution</code></td>
+<td>
+<p>INT scalar mass to charge ratio tolerance to group
+peaks, with at minimum columns for intensity (as &quot;base_int&quot;), ion m/z value
+(as &quot;base_ion&quot;), and scan time (as &quot;scantime&quot;) - (default: 0 goes to unit
+resolution)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_drop_ratio</code></td>
+<td>
+<p>NUM scalar threshold of the maximum intensity below
+which traces will be dropped (default: 1e-2 means any trace with a maximum
+intensity less than 1% of the maximum intensity in the plot will be
+dropped); if &gt; 1 the inversion will be used (1e5 -&gt; 1e-5)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_repel_labels</code></td>
+<td>
+<p>LGL scalar on whether to use the [ggrepel] package
+to space out m/z labels in the plot (default: TRUE). If [ggrepel] is not
+installed, it will default to FALSE rather than requiring an installation</p>
+</td></tr>
+<tr valign="top"><td><code>peak_line_color</code></td>
+<td>
+<p>CHR scalar name of the color to use for the &quot;color&quot;
+aesthetic (only a single color is supported; default: &quot;black&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_fill_color</code></td>
+<td>
+<p>CHR scalar name of the color to use for the &quot;fill&quot;
+aesthetic (only a single color is supported; default: &quot;grey70&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>peak_text_offset</code></td>
+<td>
+<p>NUM scalar y-axis offset as a fraction of the maximum
+intensity for trace annotation (default: 0.02 offsets labels in the
+positive direction by 2% of the maximum intensity)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_mz_resolution</code></td>
+<td>
+<p>INT scalar mass to charge ratio tolerance to
+group peaks, with at minimum columns for intensity (as base_int), ion m/z
+value (as base_ion), and scan time (as scantime) - (default: 3)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_drop_ratio</code></td>
+<td>
+<p>NUM scalar threshold of the maximum intensity below
+which traces will be dropped (default: 1e-2 means any trace with a maximum
+intensity less than 1% of the maximum intensity in the plot will be
+dropped); if &gt; 1 the inversion will be used (1e5 -&gt; 1e-5)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_repel_labels</code></td>
+<td>
+<p>LGL scalar on whether to use the [ggrepel]
+package to space out m/z labels in the plot (default: TRUE). If [ggrepel]
+is not installed, it will default to FALSE rather than requiring an
+installation</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_repel_line_color</code></td>
+<td>
+<p>CHR scalar name of the color to use for the
+&quot;color&quot; aesthetic of the lines connecting repelled labels to their data
+points; passed to [ggrepel::geom_text_repel] as segment.color (only a
+single color is supported; default: &quot;grey50&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_nudge_y_factor</code></td>
+<td>
+<p>NUM scalar y-axis offset as a fraction of the
+maximum intensity for trace annotation (default: 0.03 offsets labels in the
+positive direction by 3% of the maximum intensity)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_log_y</code></td>
+<td>
+<p>LGL scalar of whether or not to apply a log10 scaling
+factor to the y-axis (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_text_size</code></td>
+<td>
+<p>NUM scalar of the text size to use for annotation
+labels (default: 3)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_max_overlaps</code></td>
+<td>
+<p>INT scalar of the maximum number of text overlaps
+to allow (default: 50)</p>
+</td></tr>
+<tr valign="top"><td><code>intensity_mz_resolution</code></td>
+<td>
+<p>INT scalar mass to charge ratio tolerance to
+group peaks, with at minimum columns for intensity (as &quot;base_int&quot; or
+&quot;intensity&quot;), ion m/z value (as &quot;base_ion&quot; or &quot;mz&quot;), and scan time (as
+&quot;scantime&quot;) - (default: 5)</p>
+</td></tr>
+<tr valign="top"><td><code>intensity_drop_ratio</code></td>
+<td>
+<p>NUM scalar threshold of the maximum intensity
+below which traces will be dropped (default: 0 returns all); if &gt; 1 the
+inversion will be used (1e5 -&gt; 1e-5)</p>
+</td></tr>
+<tr valign="top"><td><code>patchwork_design</code></td>
+<td>
+<p>the layout of the final plot see [patchwork::design]</p>
+</td></tr>
+<tr valign="top"><td><code>as_individual_plots</code></td>
+<td>
+<p>LGL scalar of whether to return the plots
+individually in a list (set TRUE) or as a patchwork plot (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection (default: con) which must be live to pull
+sample and compound identification information</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>object of classes 'gg' and 'ggplot', as a patchwork unless
+'as_individual_plots' is TRUE
+</p>
+
+
+<h3>Note</h3>
+
+<p>Requires a live connection to the database to pull all plots for a
+given peak_id.
+</p>
+<p>Defaults are as for called functions
+</p>
+
+
+</body></html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Generate msdata object from input peak data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for get_search_object"><tr><td>get_search_object</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Generate msdata object from input peak data</h2>
+
+<h3>Description</h3>
+
+<p>Generate msdata object from input peak data
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+get_search_object(searchmzml, zoom = c(1, 4))
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>searchmzml</code></td>
+<td>
+<p>mzml with searching dataframe from 'getmzML' function</p>
+</td></tr>
+<tr valign="top"><td><code>zoom</code></td>
+<td>
+<p>vector length of 2 containing +/- the area around the MS1 precursor ion to collect data.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST object of data.frames include MS1 and MS2 analytical data, and the search parameters used to generate them
+</p>
+
+
+</body></html>

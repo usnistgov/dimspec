@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Verify column names for import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for verify_import_columns"><tr><td>verify_import_columns</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Verify column names for import</h2>
+
+<h3>Description</h3>
+
+<p>This function validates that all required columns are present prior to
+importing into a database column by examining provided values against the
+database schema. This is more of a sanity check on other functions than
+anything, but also strips extraneous columns to meet the needs of an INSERT
+action. The input to 'values' should be either a LIST or named CHR vector of
+values for insertion or a CHR vector of the column names.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+verify_import_columns(
+  values,
+  db_table,
+  names_only = FALSE,
+  require_all = TRUE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>LIST or CHR vector of values to add. If 'names_only' is TRUE,
+values are directly interpreted as column names. Otherwise, all values
+provided must be named.</p>
+</td></tr>
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar of the table name</p>
+</td></tr>
+<tr valign="top"><td><code>names_only</code></td>
+<td>
+<p>LGL scalar of whether to treat entries of 'values' as the
+column names rather than the column values (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>require_all</code></td>
+<td>
+<p>LGL scalar of whether to require all columns (except the
+assumed primary key column of &quot;id&quot;) or only those defined as &quot;NOT NULL&quot;
+(default: TRUE requires the presence of all columns in the table)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>An object of the same type as 'values' with extraneous values (i.e.
+those not matching a database column header) stripped away.
+</p>
+
+
+<h3>Note</h3>
+
+<p>If columns are defined as required in the schema and are not present,
+this will fail with an informative message about which columns were
+missing.
+</p>
+<p>If columns are provided that do not match the schema, they will be
+stripped away in the return value.
+</p>
+
+
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Tidy Spectra</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for tidy_ms_spectra"><tr><td>tidy_ms_spectra</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Tidy Spectra</h2>
+
+<h3>Description</h3>
+
+<p>A convenience function to take outputs from [ms_spectra_separated] and
+[ms_spectra_zipped] and return them as a tidy data frame by unpacking the
+list column &quot;spectra&quot;.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+tidy_ms_spectra(df = packed_data)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>df</code></td>
+<td>
+<p>data.frame object containing nested spectra in a column</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object containing tidy spectra
+</p>
+
+
+</body></html>

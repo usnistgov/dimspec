@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Parse SQL build statements</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for sqlite_parse_build"><tr><td>sqlite_parse_build</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Parse SQL build statements</h2>
+
+<h3>Description</h3>
+
+<p>Reading SQL files directly into R can be problematic. This function is
+primarily called in [create_fallback_build]. To support multiline,
+human-readable SQL statements, 'sql_statements' must be of length 1.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+example_file &lt;- "./config/sql_nodes/reference.sql"
+if (file.exists(example_file)) {
+  build_commands &lt;- readr::read_file(example_file)
+  sqlite_parse_build(build_commands)
+}
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>sql_statements</code></td>
+<td>
+<p>CHR scalar of SQL build statements from an SQL file.</p>
+</td></tr>
+<tr valign="top"><td><code>magicsplit</code></td>
+<td>
+<p>CHR scalar regex indicating some &quot;magic&quot; split point SQL
+comment to simplify the identification of discrete commands; will be used
+to split results (optional but highly recommended)</p>
+</td></tr>
+<tr valign="top"><td><code>header</code></td>
+<td>
+<p>CHR scalar regex indicating the format of header comments SQL
+comment to remove (optional)</p>
+</td></tr>
+<tr valign="top"><td><code>section</code></td>
+<td>
+<p>CHR scalar regex indicating the format of section comments SQL
+comment to remove (optional)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>All arguments 'magicsplit', 'header', and 'section' provide flexibility in
+the comment structure of the SQL file and accept regex for character matching
+purposes.
+</p>
+
+
+<h3>Value</h3>
+
+<p>LIST of parsed complete build commands as CHR vectors containing each
+line.
+</p>
+
+
+</body></html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Activate a python environment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for activate_py_env"><tr><td>activate_py_env</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Activate a python environment</h2>
+
+<h3>Description</h3>
+
+<p>Programmatically setting up python bindings is a bit more convoluted than in
+a standard script. Given the name of a Python environment, it either (1)
+checks the provided 'env_name' against currently installed environments and
+binds the current session to it if found OR (2) installs a new environment
+with [create_py_env] and activates it by calling itself.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+activate_py_env(
+  env_name = NULL,
+  required_libraries = NULL,
+  required_modules = NULL,
+  log_ns = NULL,
+  conda_path = NULL
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>env_name</code></td>
+<td>
+<p>CHR scalar of a python environment name to bind. The default,
+NULL, will look for an environment variable named 'PYENV_NAME'</p>
+</td></tr>
+<tr valign="top"><td><code>required_libraries</code></td>
+<td>
+<p>CHR vector of python libraries to include in the
+environment, if building a new environment. Ignored if 'env_name' is an
+existing environment. The default, NULL, will look for an environment
+variable named 'PYENV_LIBRARIES'.</p>
+</td></tr>
+<tr valign="top"><td><code>required_modules</code></td>
+<td>
+<p>CHR vector of modules to be checked for availability
+once the environment is activated. The default, NULL, will look for an
+environment variable named 'PYENV_MODULES'.</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use, if any.</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>It is recommended that project variables in '../config/env_py.R' and
+'../config/env_glob.txt' be used to control most of the behavior of this
+function. This works with both virtual and conda environments, though
+creation of new environments is done in conda.
+</p>
+
+
+<h3>Value</h3>
+
+<p>LGL scalar of whether or not activate was successful
+</p>
+
+
+<h3>Note</h3>
+
+<p>Where parameters are NULL, [rectify_null_from_env] will be used to get
+a value associated with it if they exist.
+</p>
+
+
+</body></html>

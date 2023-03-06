@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Get table definition from SQLite</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for pragma_table_def"><tr><td>pragma_table_def</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Get table definition from SQLite</h2>
+
+<h3>Description</h3>
+
+<p>Given a database connection ('con'). Get more information about the
+properties of (a) database table(s) directly from 'PRAGMA table_info()'
+rather than e.g. [DBI::dbListFields()]. Set 'get_sql' to 'TRUE' to include
+the direct schema using sqlite_master; depending on formatting this may or
+may not be directly usable though some effort has been made to remove
+formatting characters (e.g. line feeds, tabs, etc) if stringr is available.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+pragma_table_def(db_table, db_conn = con, get_sql = FALSE, pretty = TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR vector name of the table(s) to inspect</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>get_sql</code></td>
+<td>
+<p>BOOL scalar of whether or not to return the schema sql
+(default FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>pretty</code></td>
+<td>
+<p>BOOL scalar for whether to return &quot;pretty&quot; SQL that includes
+human readability enhancements; if this is set to TRUE (the default), it is
+recommended that the output is fed through 'cat' and, in the case of
+multiple tables</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>Note that the package 'stringr' is required for formatting returns that
+include either 'get_sql' or 'pretty' as TRUE.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data.frame object representing the SQL PRAGMA expression
+</p>
+
+
+</body></html>

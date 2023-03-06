@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Verify an import file's properties</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for verify_import_requirements"><tr><td>verify_import_requirements</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Verify an import file's properties</h2>
+
+<h3>Description</h3>
+
+<p>Checks an import file's characteristics against expectations. This is mostly
+a sanity check against changing conditions from project to project. Import
+requirements should be defined at the environment level and enumerated as a
+JSON object, which can be created by calling [make_requirements] on an
+example import for simplicity. An example is provided in the 'examples'
+directory as &quot;NIST_import_requirements.json&quot;. If multiple requirements are in
+use (e.g. pulling from multiple locations), this can be run multiple times
+with different values of 'requirement_obj' or 'file_name'.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+verify_import_requirements(
+  obj,
+  ignore_extra = TRUE,
+  requirements_obj = "import_requirements",
+  file_name = "import_requirements",
+  log_issues_as = "warn",
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST of the object to import matching structure expectations,
+typically from a JSON file fed through [full_import]</p>
+</td></tr>
+<tr valign="top"><td><code>ignore_extra</code></td>
+<td>
+<p>LGL scalar of whether to ignore extraneous import
+elements or stop the import process (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>requirements_obj</code></td>
+<td>
+<p>CHR scalar of the name of an R object holding import
+requirements; this is a convenience shorthand to prevent multiple imports
+from parameter 'file_name' (default: &quot;import_requirements&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>file_name</code></td>
+<td>
+<p>CHR scalar of the name of a file holding import
+requirements; if this has already been added to the calling environment,
+'requirements_obj' will be used preferentially as the name of that object</p>
+</td></tr>
+<tr valign="top"><td><code>log_issues_as</code></td>
+<td>
+<p>CHR scalar of the log level to use (default: &quot;warn&quot;),
+which must be a valid log level as in [logger::FATAL]; will be ignored if
+the [logger] package isn't available</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>The return from this is a tibble with 9 columns. The first is the name of the
+import object member, typically the file name. If a single, unnested import
+object is provided this will be &quot;import object&quot;. The other columns include
+the following verification checks:
+</p>
+<p>1. has_all_required: Are all required names present in the sample?
+(TRUE/FALSE)
+</p>
+<p>2. missing_requirements: Character vectors naming any of the missing
+requirements
+</p>
+<p>3. has_full_detail: Is all expected detail present? (TRUE/FALSE)
+</p>
+<p>4. missing_detail: Character vectors naming any missing value sets
+</p>
+<p>5. has_extra: Are there unexpected values provided? (TRUE/FALSE)
+</p>
+<p>6. extra_cols: Character vectors naming any has_extra columns; these will be
+dropped from the import but are provided for information sake
+</p>
+<p>7. has_name_mismatches: Are there name differences between the import
+requirement elements and the import object? (TRUE/FALSE)
+</p>
+<p>8. mismatched_names: Named lists enumerating which named elements (if any)
+from the import object did not match name expectations in the requirements
+</p>
+<p>All of this is defined by the 'requirements_obj' list. Do not provide that
+list directly, instead pass this function the name of the requirements object
+for interoperability. If a 'requirements_obj' cannot be identified via
+[base::exists] then the 'file_name' will take precedence and be imported.
+Initial use and set up may be easier in interactive sessions.
+</p>
+
+
+<h3>Value</h3>
+
+<p>A tibble object with 9 columns containing the results of the checks.
+</p>
+
+
+<h3>Note</h3>
+
+<p>If 'file_name' is provided, it need not be fully defined. The value
+provided will be used to search the project directory.
+</p>
+
+
+</body></html>

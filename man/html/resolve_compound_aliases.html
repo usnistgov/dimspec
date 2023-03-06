@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve compound aliases provided as part of the import...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_compound_aliases"><tr><td>resolve_compound_aliases</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve compound aliases provided as part of the import routine</h2>
+
+<h3>Description</h3>
+
+<p>Call this to add any aliases for a given 'compound_id' that may not be
+present in the database. Only those identifiable as part of the accepted
+types defined in 'norm_alias_table' will be mapped. If multiple items are
+provided in the import NAME, ADDITIONAL, or other items matching names in
+'norm_alias_table'.name column, indicate the split character in
+'split_multiples_by' and any separator between names and values (e.g.
+CLASS:example) in 'identify_property_by'.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_compound_aliases(
+  obj,
+  compound_id,
+  compounds_in = "compounddata",
+  compound_alias_table = "compound_aliases",
+  norm_alias_table = "norm_analyte_alias_references",
+  norm_alias_name_column = "name",
+  headers_to_examine = c("ADDITIONAL", "NAME"),
+  split_multiples_by = ";",
+  identify_property_by = ":",
+  out_file = "unknown_compound_aliases.csv",
+  db_conn = con,
+  log_ns = "db",
+  ...
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>compound_id</code></td>
+<td>
+<p>INT scalar of the compound_id to use for these aliases</p>
+</td></tr>
+<tr valign="top"><td><code>compounds_in</code></td>
+<td>
+<p>CHR scalar name in 'obj' holding compound data (default:
+&quot;compounddata&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>norm_alias_table</code></td>
+<td>
+<p>CHR scalar name of the table normalizing analyte
+alias references (default: &quot;norm_analyte_alias_references&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>norm_alias_name_column</code></td>
+<td>
+<p>CHR scalar name of the column in
+'norm_alias_table' containing the human-readable expression of alias type
+classes (default: &quot;name&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Named list of any additional aliases to tack on that are not found
+in the import object, with names matching those found in
+'norm_alias_table'.'norm_alias_name_column'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, though if unclassifiable aliases (those with alias types not
+present in the normalization table) are found, they will be written to a
+file ('out_file') in the project directory
+</p>
+
+
+<h3>Note</h3>
+
+<p>Existing aliases, and aliases for which there is no 'compound_id' will
+be ignored and not imported.
+</p>
+<p>Compound IDs provided in 'compound_id' must be present in the compounds
+table and must be provided explicitly on a 1:1 basis for each element
+extracted from 'obj'. If you provide an import object with 10 components
+for compound data, you must provide tying 'compound_id' identifiers for
+each. If all extracted components represent aliases for the same
+'compound_id' then one may be provided.
+</p>
+<p>Alias types (e.g. &quot;InChI&quot; are case insensitive)
+</p>
+
+
+</body></html>

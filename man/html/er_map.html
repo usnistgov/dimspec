@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a simple entity relationship map</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for er_map"><tr><td>er_map</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a simple entity relationship map</h2>
+
+<h3>Description</h3>
+
+<p>This will poll the database connection and create an entity relationship map
+as a list directly from defined SQL statements used to build the table or
+view. For each table object it returns a list of length three containing the
+entity names that the table (1) 'references' (i.e. has a foreign key to), (2)
+is 'referenced_by' (i.e. is a foreign key for), and (3) views where it is
+'used_in_view'. These are names. This is intended for use as a mapping
+shortcut when ER Diagrams are unavailable, or for quick reference within a
+project, similarly to a dictionary relationship reference.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+er_map(db_conn = con)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object, specifically of class &quot;SQLiteConnection&quot; but
+not strictly enforced</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>SQL is generated from [pragma_table_def()] with argument 'get_sql' = TRUE and
+ignores entities whose names start with &quot;sqlite&quot;.
+</p>
+
+
+<h3>Value</h3>
+
+<p>nested LIST object describing the database entity connections
+</p>
+
+
+</body></html>

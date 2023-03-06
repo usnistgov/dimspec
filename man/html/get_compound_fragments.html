@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Get all fragments associated with compounds</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for get_compound_fragments"><tr><td>get_compound_fragments</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Get all fragments associated with compounds</h2>
+
+<h3>Description</h3>
+
+<p>Get all fragments associated with compounds
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+get_compound_fragments(con, fragmentions, masserror, minerror)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>con</code></td>
+<td>
+<p>SQLite database connection</p>
+</td></tr>
+<tr valign="top"><td><code>fragmentions</code></td>
+<td>
+<p>numeric vector containing m/z values for fragments to search</p>
+</td></tr>
+<tr valign="top"><td><code>masserror</code></td>
+<td>
+<p>numeric relative mass error (ppm)</p>
+</td></tr>
+<tr valign="top"><td><code>minerror</code></td>
+<td>
+<p>numeric minimum mass error (Da)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object describing known fragments in the database with known compound and peak references attached
+</p>
+
+
+</body></html>

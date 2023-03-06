@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve the method description tables during import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_description_NTAMRT"><tr><td>resolve_description_NTAMRT</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve the method description tables during import</h2>
+
+<h3>Description</h3>
+
+<p>Two tables (and their associated normalization tables) exist in the database
+to store additional information about mass spectrometric and chromatographic
+methods. These tables are &quot;ms_descriptions&quot; and &quot;chromatography_descriptions&quot;
+and cannot be easily mapped directly. This function serves to coerce values
+supplied during import into that required by the database. Primarily, the
+issue rests in the need to support multiple descriptions of analytical
+instrumentation (e.g. multiple mass analyzer types, multiple vendors,
+multiple separation columns, etc.). Tables targeted by this function are
+&quot;long&quot; tables that may well have 'n' records for each mass spectrometric
+method.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_description_NTAMRT(
+  obj,
+  method_id,
+  type = c("massspec", "chromatography"),
+  mass_spec_in = "massspectrometry",
+  chrom_spec_in = "chromatography",
+  db_conn = con,
+  fuzzy = TRUE,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>method_id</code></td>
+<td>
+<p>INT scalar of the ms_method.id record to associate</p>
+</td></tr>
+<tr valign="top"><td><code>type</code></td>
+<td>
+<p>CHR scalar, one of &quot;massspec&quot; or &quot;chromatography&quot; depending on
+the type of description to add; much of the logic is shared, only details
+differ</p>
+</td></tr>
+<tr valign="top"><td><code>mass_spec_in</code></td>
+<td>
+<p>CHR scalar name of the element in 'obj' holding mass
+spectrometry information (default: &quot;massspectrometry&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>chrom_spec_in</code></td>
+<td>
+<p>CHR scalar name of the element in 'obj' holding
+chromatographic information (default: &quot;chromatography&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, executes actions on the database
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+<p>This function is brittle; built specifically for the NIST NTA MRT
+import format. If using a different import format, customize to your needs
+using this function as a guide.
+</p>
+
+
+</body></html>

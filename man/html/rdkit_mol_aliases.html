@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create aliases for a molecule from RDKit</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for rdkit_mol_aliases"><tr><td>rdkit_mol_aliases</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create aliases for a molecule from RDKit</h2>
+
+<h3>Description</h3>
+
+<p>Call this function to generate any number of machine-readable aliases from an
+identifier set. Given the 'identifiers' and their 'type', RDKit will be
+polled for conversion functions to create a mol object. That mol object is
+then used to create machine-readable aliases in any number of supported
+formats. See the [RDKit Documentation](http://rdkit.org/docs/index.html) for
+options. The 'type' argument is used to match against a &quot;MolFromX&quot; funtion,
+while the 'aliases' argument is used to match against a &quot;MolToX&quot; function.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+rdkit_mol_aliases(
+  identifiers,
+  type = "smiles",
+  mol_from_prefix = "MolFrom",
+  get_aliases = c("inchi", "inchikey"),
+  mol_to_prefix = "MolTo",
+  rdkit_ref = "rdk",
+  log_ns = "rdk",
+  make_if_not = TRUE
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>identifiers</code></td>
+<td>
+<p>CHR vector of machine-readable molecule identifiers in a
+format matching 'type'</p>
+</td></tr>
+<tr valign="top"><td><code>type</code></td>
+<td>
+<p>CHR scalar of the type of encoding to use for 'identifiers'
+(default: smiles)</p>
+</td></tr>
+<tr valign="top"><td><code>mol_from_prefix</code></td>
+<td>
+<p>CHR scalar of the prefix to identify an RDKit function
+to create a mol object from'identifiers' (default: &quot;MolFrom&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>get_aliases</code></td>
+<td>
+<p>CHR vector of aliases to produce (default: c(&quot;inchi&quot;,
+&quot;inchikey&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>mol_to_prefix</code></td>
+<td>
+<p>CHR scalar of the prefix to identify an RDKit function
+to create an alias from a mol object (default: &quot;MolTo&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>rdkit_ref</code></td>
+<td>
+<p>CHR scalar OR R object of an RDKit binding (default NULL
+goes to &quot;rdk&quot; for convenience with other pipelines in this project)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+</td></tr>
+<tr valign="top"><td><code>make_if_not</code></td>
+<td>
+<p>LGL scalar of whether or not to create a new python
+environment using [activate_py_env] if the binding is not active</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>At the time of authorship, RDK v2021.09.4 was in use, which contained the
+following options findable by this function: CMLBlock, CXSmarts, CXSmiles,
+FASTA, HELM, Inchi, InchiAndAuxInfo, InchiKey, JSON, MolBlock, PDBBlock,
+RandomSmilesVect, Sequence, Smarts, Smiles, TPLBlock, V3KMolBlock, XYZBlock.
+</p>
+
+
+<h3>Value</h3>
+
+<p>data.frame object containing the aliases and the original identifiers
+</p>
+
+
+<h3>Note</h3>
+
+<p>Both 'type' and 'aliases' are case insensitive.
+</p>
+<p>If 'aliases' is set to NULL, all possible expressions (excluding those
+with &quot;File&quot; in the name) are returned from RDKit, which will likely produce
+NULL values and module ArgumentErrors.
+</p>
+
+
+</body></html>

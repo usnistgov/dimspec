@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Get unique components of a nested list</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for get_uniques"><tr><td>get_uniques</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Get unique components of a nested list</h2>
+
+<h3>Description</h3>
+
+<p>There are times when the concept of &quot;samples&quot; and &quot;grouped data&quot; may become
+intertwined and difficult to parse. The import process is one of those times
+depending on how the import file is generated. This function takes a nested
+list and compares a specific aspect of it, grouping the output based on that
+aspect and returning its characteristics.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+get_uniques(objects, aspect)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>objects</code></td>
+<td>
+<p>LIST object</p>
+</td></tr>
+<tr valign="top"><td><code>aspect</code></td>
+<td>
+<p>CHR scalar name of the aspect from which to generate unique
+combinations</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>For example, the standard NIST import includes the &quot;sample&quot; aspect, which may
+be identical for multiple data import files. This provides a unique listing
+of those sample characteristics to reduce data manipulation and storage, and
+minimize database &quot;chatter&quot; during read/write. It returns a set of unique
+characteristics in a list, with appended characteristics &quot;import_object&quot; with
+the index number and object name of entries matching those characteristics.
+</p>
+<p>This is largely superceded by later developments to database operations that
+first check for a table primary key id given a comprehensive list of column
+values in those tables where only a single record should contain those values
+(e.g. a complete unique case, enforced or unenforced).
+</p>
+
+
+<h3>Value</h3>
+
+<p>Unnamed LIST of length equaling the number of unique combinations
+with their values and indices
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+tmp &lt;- list(list(a = 1:10, b = 1:10), list(a = 1:5, b = 1:5), list(a = 1:10, b = 1:5))
+get_uniques(tmp)
+</pre>
+
+
+</body></html>

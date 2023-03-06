@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Check for, and optionally remove, a database connection...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for manage_connection"><tr><td>manage_connection</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Check for, and optionally remove, a database connection object</h2>
+
+<h3>Description</h3>
+
+<p>This function seeks to abstract connection management objects to a degree. It
+seeks to streamline the process of connecting and disconnecting existing
+connections as defined by function parameters. This release has not been
+tested extensively with drivers other than SQLite.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+manage_connection("test.sqlite", conn_name = "test_con")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db</code></td>
+<td>
+<p>CHR scalar name of the database to check, defaults to the name
+supplied in config/env.R (default: session variable DB_NAME)</p>
+</td></tr>
+<tr valign="top"><td><code>drv_pack</code></td>
+<td>
+<p>CHR scalar of the package used to connect to this database
+(default: session variable DB_DRIVER)</p>
+</td></tr>
+<tr valign="top"><td><code>conn_class</code></td>
+<td>
+<p>CHR vector of connection object classes to check against.
+Note this may depend heavily on connection packages and must be present in
+the class names of the driver used. (default session variable DB_CLASS)</p>
+</td></tr>
+<tr valign="top"><td><code>conn_name</code></td>
+<td>
+<p>CHR scalar of the R environment object name to use for this
+connection (default: &quot;con&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>is_local</code></td>
+<td>
+<p>LGL scalar indicating whether or not the referenced database
+is a local file, if not it will be treated as though it is either a DSN or
+a database name on your host server, connecting as otherwise defined</p>
+</td></tr>
+<tr valign="top"><td><code>rm_objects</code></td>
+<td>
+<p>LGL scalar indicating whether or not to remove objects
+identifiably connected to the database from the current environment. This
+is particularly useful if there are outstanding connections that need to be
+closed (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>reconnect</code></td>
+<td>
+<p>LGL scalar indicating whether or not to connect if a
+connection does not exist; if both this and 'disconnect' are true, it will
+first be disconnected before reconnecting. (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>disconnect</code></td>
+<td>
+<p>LGL scalar indicating whether or not to terminate and
+remove the connection from the current global environment (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the namespace (if any) to use for logging</p>
+</td></tr>
+<tr valign="top"><td><code>.environ</code></td>
+<td>
+<p>environment within which to place this connection object</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>named list of any other connection parameters required for your
+database driver (e.g. postgres username/password)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None
+</p>
+
+
+<h3>Note</h3>
+
+<p>If you want to disconnect everything but retain tibble pointers to your
+data source as tibbles in this session, use [close_up_shop] instead.
+</p>
+<p>For more complicated setups, it may be easier to use this function by
+storing parameters in a list and calling with [base::do.call()]
+</p>
+
+
+</body></html>

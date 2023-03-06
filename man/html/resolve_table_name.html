@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Check presence of a database table</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_table_name"><tr><td>resolve_table_name</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Check presence of a database table</h2>
+
+<h3>Description</h3>
+
+<p>This convenience function checks for the existence of one or more 'db_table'
+objects in a database.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_table_name(db_table = "compounds", db_conn = "test_con")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR vector of table names to check</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the namespace (if any) to use for logging
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR vector of existing tables
+</p>
+
+
+</body></html>

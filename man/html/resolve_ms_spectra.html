@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Unpack mass spectral data in compressed format</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_ms_spectra"><tr><td>resolve_ms_spectra</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Unpack mass spectral data in compressed format</h2>
+
+<h3>Description</h3>
+
+<p>For some spectra, searching in a long form is much more performant. Use this
+function to unpack data already present in the 'ms_data' table into the
+'ms_spectra' table. Data should be packed in one of two ways, either two
+columns for mass-to-charge ratio and intensity (&quot;separated&quot; - see
+[ms_spectra_separated]) or in a single column with interleaved data (&quot;zipped&quot;
+- see [ms_spectra_zipped]).
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_ms_spectra(
+  peak_id,
+  spectra_data = NULL,
+  peaks_table = "peaks",
+  ms_data_table = "ms_data",
+  ms_spectra_table = "ms_spectra",
+  unpack_format = c("separated", "zipped"),
+  as_object = FALSE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>peak_id</code></td>
+<td>
+<p>INT scalar of the peak ID in question, which must be present</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_data</code></td>
+<td>
+<p>data.frame object containing spectral data</p>
+</td></tr>
+<tr valign="top"><td><code>peaks_table</code></td>
+<td>
+<p>CHR scalar name of the peaks table in the database
+(default: &quot;peaks&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>ms_data_table</code></td>
+<td>
+<p>CHR scalar name of the table holding packed spectra in
+the database (default: &quot;ms_data&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>ms_spectra_table</code></td>
+<td>
+<p>CHR scalar name of the table holding long form
+spectra in the database (default: &quot;ms_spectra&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>unpack_format</code></td>
+<td>
+<p>CHR scalar of the type of data packing for the spectra,
+one of &quot;separated&quot; (default) or &quot;zipped&quot;</p>
+</td></tr>
+<tr valign="top"><td><code>as_object</code></td>
+<td>
+<p>LGL scalar of whether to return the unpacked spectra to the
+session (default: TRUE) or to insert into the database (FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar name of the logging namespace to use</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>If 'as_object' == TRUE, a data.frame of unpacked spectra, otherwise
+no return and a database insertion will be performed
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function may be slow, especially with peaks containing a large
+number of scans or a large amount of data
+</p>
+
+
+<h3>References</h3>
+
+<p>ms_spectra_separated
+</p>
+<p>ms_spectra_zipped
+</p>
+
+
+</body></html>

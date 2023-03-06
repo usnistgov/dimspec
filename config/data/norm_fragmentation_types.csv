@@ -1,0 +1,9 @@
+id,name,acronym
+1,higher energy collision-induced dissociation,HCD
+2,collision-induced dissociation,CID
+3,electron capture dissociation,ECD
+4,electron transfer dissociation,ETD
+5,pulsed Q collision-induced dissociation,PQD
+6,hybrid ETD and CID,ETciD
+7,hybrid ETD and HCD,EThcD
+8,in-source fragmentation,ISF

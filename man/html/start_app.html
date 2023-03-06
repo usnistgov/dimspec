@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: WIP Launch a shiny application</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for start_app"><tr><td>start_app</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>WIP Launch a shiny application</h2>
+
+<h3>Description</h3>
+
+<p>Call this function to launch an app either directly or in a background
+process. The name must be present in the app directory or as a named
+element of <code>SHINY_APPS</code> in the current environment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+start_app("table_explorer")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>app_name</code></td>
+<td>
+<p>CHR scalar name of the shiny app to run, this should be the
+name of a directory containing a shiny app that is located within the
+directory defined by <code>app_dir</code> or the name of an app as defined in your
+environment SHINY_APPS variable</p>
+</td></tr>
+<tr valign="top"><td><code>app_dir</code></td>
+<td>
+<p>file path to a directory containing shiny apps (default:
+here::here(&quot;inst&quot;, &quot;apps&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>background</code></td>
+<td>
+<p>LGL scalar of whether to launch the application in a
+background process (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Other named parameters to be passed to [shiny::runApp]</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, launches a browser with the requested shiny application
+</p>
+
+
+<h3>Note</h3>
+
+<p>Background launching of shiny apps is not yet supported.
+</p>
+
+
+</body></html>

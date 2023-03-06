@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve components from a list or named vector</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for get_component"><tr><td>get_component</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve components from a list or named vector</h2>
+
+<h3>Description</h3>
+
+<p>Call this to pull a component named <code>obj_component</code> from a list or named
+vector provided as <code>obj</code> and optionally use [tack_on] to append to it. This
+is intended to ease the process of pulling specific components from a list
+for further treatment in the import process by isolating that component.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+get_component(obj, obj_component, silence = TRUE, log_ns = "global", ...)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST or NAMED vector in which to find <code>obj_component</code></p>
+</td></tr>
+<tr valign="top"><td><code>obj_component</code></td>
+<td>
+<p>CHR vector of named elements to find in <code>obj</code></p>
+</td></tr>
+<tr valign="top"><td><code>silence</code></td>
+<td>
+<p>LGL scalar indicating whether to silence recursive messages,
+which may be the same for each element of <code>obj</code> (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Additional arguments passed to/from the ellipsis parameter of
+calling functions. If named, names are preserved.</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>This is similar in scope to [purrr::pluck] in many regards, but always
+returns items with names, and will search an entire list structure, including
+data frames, to return all values associated with that name in individual
+elements.
+</p>
+
+
+<h3>Value</h3>
+
+<p>LIST object containing the elements of <code>obj</code>
+</p>
+
+
+<h3>Note</h3>
+
+<p>This is a recursive function.
+</p>
+<p>If ellipsis arguments are provided, they will be appended to each
+identified component via [tack_on]. Use with caution, but this can be
+useful for appending common data to an entire list (e.g. a datetime stamp
+for logging processing time or a processor name, human or software).
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+get_component(list(a = letters, b = 1:10), "a")
+get_component(list(ex = list(a = letters, b = 1:10), ex2 = list(c = 1:5, a = LETTERS)), "a")
+get_component(list(a = letters, b = 1:10), "a", c = 1:5)
+
+</pre>
+
+
+</body></html>

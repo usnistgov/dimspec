@@ -1,0 +1,7 @@
+id,name,acronym,definition
+1,Curated,C,"Compound structure, name, and other properties have been evaluated through a documented process for a database or library."
+2,Empirical,E,Structure has been measured and derived empirically through a peer-reviewed process.
+3,Inferred,I,"Structure that is a homolog (differing in CF2 chain lengths) of an empirically-derived structure, but has not been observed empirically."
+4,In Silico,S,"Structure has been predicted through documented in silico processes, but has not been observed empirically."
+5,Documented,D,"Structure has been reported in documentation (e.g., patent, safety data sheet), but has not been observed empirically."
+6,Limited,L,"Limited information to support structure, only a formula exists"

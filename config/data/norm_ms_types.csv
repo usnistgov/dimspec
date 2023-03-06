@@ -1,0 +1,9 @@
+id,name,acronym
+0,None,None
+1,quadrupole,Quad
+2,magnetic sector,MagSec
+3,linear ion-trap,LIT
+4,time-of-flight,TOF
+5,orbitrap,Orbi
+6,fourier transform ion cyclotron resonance,FT-ICR
+7,triple quadrupole,QQQ

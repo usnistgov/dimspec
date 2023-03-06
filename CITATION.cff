@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Ragland"
+  given-names: "Jared M."
+  orcid: "https://orcid.org/0000-0002-8055-2432"
+  email: "jared.ragland@nist.gov"
+  country: "USA"
+  affiliaiton: "US National Institute of Standards and Techonlogy"
+- family-names: "Place"
+  given-names: "Benjamin J."
+  orcid: "https://orcid.org/0000-0003-0953-5215"
+  email: "benjamin.place@nist.gov"
+  country: "USA"
+  affiliaiton: "US National Institute of Standards and Techonlogy"
+title: "A Database Infrastructure for Mass Spectrometry (DIMSpec)"
+version: 1.0
+date-released: 2023-02-22
+url: "https://github.com/usnistgov/dimspec"

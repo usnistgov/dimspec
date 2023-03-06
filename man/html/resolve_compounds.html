@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve the compounds node during bulk import</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_compounds"><tr><td>resolve_compounds</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve the compounds node during bulk import</h2>
+
+<h3>Description</h3>
+
+<p>Call this function as part of an import routine to resolve the compounds node.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_compounds(
+  obj,
+  compounds_in = "compounddata",
+  compounds_table = "compounds",
+  compound_category = NULL,
+  compound_category_table = "compound_categories",
+  compound_alias_table = "compound_aliases",
+  norm_alias_table = "norm_analyte_alias_references",
+  norm_alias_name_column = "name",
+  NIST_id_in = "id",
+  require_all = FALSE,
+  import_map = IMPORT_MAP,
+  ensure_unique = TRUE,
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>LIST object containing data formatted from the import generator</p>
+</td></tr>
+<tr valign="top"><td><code>compounds_in</code></td>
+<td>
+<p>CHR scalar name in 'obj' holding compound data (default:
+&quot;compounddata&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>compounds_table</code></td>
+<td>
+<p>CHR scalar name the database table holding compound
+data (default: &quot;compounds&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>compound_category</code></td>
+<td>
+<p>CHR or INT scalar of the compound category (either a
+direct ID or a matching category label in 'compound_category_table')
+(default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>compound_category_table</code></td>
+<td>
+<p>CHR scalar name the database table holding
+normalized compound categories (default: &quot;compound_categories&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>norm_alias_table</code></td>
+<td>
+<p>CHR scalar name of the table normalizing analyte
+alias references (default: &quot;norm_analyte_alias_references&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>norm_alias_name_column</code></td>
+<td>
+<p>CHR scalar name of the column in
+'norm_alias_table' containing the human-readable expression of alias type
+classes (default: &quot;name&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>require_all</code></td>
+<td>
+<p>LGL scalar of whether to require all columns (except the
+assumed primary key column of &quot;id&quot;) or only those defined as &quot;NOT NULL&quot;
+(default: TRUE requires the presence of all columns in the table)</p>
+</td></tr>
+<tr valign="top"><td><code>import_map</code></td>
+<td>
+<p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>ensure_unique</code></td>
+<td>
+<p>LGL scalar of whether or not to first check that the
+values provided form a new unique record (default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>INT scalar if successful, result of the call to [add_or_get_id]
+otherwise
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+
+
+</body></html>

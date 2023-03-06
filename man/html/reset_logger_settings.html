@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Update logger settings</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for reset_logger_settings"><tr><td>reset_logger_settings</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Update logger settings</h2>
+
+<h3>Description</h3>
+
+<p>This is a simple action wrapper to update any settings that may have been
+changed with regard to logger. If, for instance, something is not logging the
+way you expect it to, change the relevant setting and then run
+<code>update_logger_settings()</code> to reflect the current environment.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+reset_logger_settings()
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>reload</code></td>
+<td>
+<p>LGL scalar indicating (if TRUE) whether or not to refresh from
+<code>env_R.R</code> or (if FALSE) to use the current environment settings (e.g. for
+testing purposes) (default: FALSE)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None
+</p>
+
+
+</body></html>

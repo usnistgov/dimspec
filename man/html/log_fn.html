@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Simple logging convenience</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for log_fn"><tr><td>log_fn</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Simple logging convenience</h2>
+
+<h3>Description</h3>
+
+<p>Conveniently add a log message at the trace level. Typically this would be
+called twice bookending the body of a function along the lines of &quot;Start
+fn()&quot; and &quot;End fn()&quot; when calling a function. This can help provided
+traceability to deeply nested function calls within a log.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+fn &lt;- function() {log_fn("start"); 1+1; log_fn("end")}
+fn()
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>status</code></td>
+<td>
+<p>CHR scalar to prefix the log message; will be coerced to
+sentence case. Typically &quot;start&quot; or &quot;end&quot; but anything is accepted (default
+&quot;start&quot;).</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logger namespace to use (default NA_character_)</p>
+</td></tr>
+<tr valign="top"><td><code>level</code></td>
+<td>
+<p>CHR scalar of the logging level to be passed to [log_it]
+(default &quot;trace&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, hands logging messages to [log_it]
+</p>
+
+
+</body></html>

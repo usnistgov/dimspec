@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a basic SQL trigger for handling foreign key...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for sqlite_auto_trigger"><tr><td>sqlite_auto_trigger</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a basic SQL trigger for handling foreign key relationships</h2>
+
+<h3>Description</h3>
+
+<p>This creates a simple trigger designed to streamline foreign key compliance
+for SQLite databases. Resulting triggers will check during table insert or
+update actions that have one or more foreign key relationships defined as
+'target_table.fk_col = norm_table.pk_col'. It is primarily for use in
+controlled vocabulary lists where a single id is tied to a single value in
+the parent table, but more complicated relationships can be handled.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+sqlite_auto_trigger(target_table = "test", fk_col = c("col1", "col2",
+  "col3"), norm_table = c("norm_col1", "norm_col2", "norm_col3"), pk_col =
+  "id", val_col = "value", action_occurs = "after", trigger_action =
+  "insert", table_action = "update")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>target_table</code></td>
+<td>
+<p>CHR scalar name of a table with a foreign key constraint.</p>
+</td></tr>
+<tr valign="top"><td><code>fk_col</code></td>
+<td>
+<p>CHR vector name(s) of the column(s) in 'target_table' with
+foreign key relationship(s) defined.</p>
+</td></tr>
+<tr valign="top"><td><code>norm_table</code></td>
+<td>
+<p>CHR vector name(s) of the table(s) containing the primary
+key relationship(s).</p>
+</td></tr>
+<tr valign="top"><td><code>pk_col</code></td>
+<td>
+<p>CHR vector name(s) of the column(s) in 'norm_table' containing
+the primary key(s) side of the relationship(s).</p>
+</td></tr>
+<tr valign="top"><td><code>val_col</code></td>
+<td>
+<p>CHR vector name(s) of the column(s) in 'norm_table' containing
+values related to the primary key(s) of the relationship(s).</p>
+</td></tr>
+<tr valign="top"><td><code>action_occurs</code></td>
+<td>
+<p>CHR scalar on when to run the trigger, must be one of
+'c(&quot;before&quot;, &quot;after&quot;, &quot;instead&quot;)' (&quot;instead&quot; should only be used if
+'target_table' is a view - this restriction is not enforced).</p>
+</td></tr>
+<tr valign="top"><td><code>trigger_action</code></td>
+<td>
+<p>CHR scalar on what type of trigger this is (e.g. 'when'
+= &quot;after&quot; and 'trigger_action' = &quot;insert&quot; -&gt; &quot;AFTER INSERT INTO&quot;) and must
+be one of 'c(&quot;insert&quot;, &quot;update&quot;, &quot;delete&quot;)'.</p>
+</td></tr>
+<tr valign="top"><td><code>for_each</code></td>
+<td>
+<p>CHR scalar for SQLite this must be only 'row' - translated
+into a &quot;FOR EACH ROW&quot; clause. Set to any given noun for other SQL engines
+supporting other trigger transaction types (e.g. &quot;FOR EACH STATEMENT&quot;
+triggers)</p>
+</td></tr>
+<tr valign="top"><td><code>table_action</code></td>
+<td>
+<p>CHR scalar on what type of action to run when the trigger
+fires, must be one of 'c(&quot;insert&quot;, &quot;update&quot;, &quot;delete&quot;)'.</p>
+</td></tr>
+<tr valign="top"><td><code>filter_col</code></td>
+<td>
+<p>CHR scalar of a filter column to override the final WHERE
+clause in the trigger. This should almost always be left as the default &quot;&quot;.</p>
+</td></tr>
+<tr valign="top"><td><code>filter_val</code></td>
+<td>
+<p>CHR scalar of a filter value to override the final WHERE
+clause in the trigger. This should almost always be left as the default &quot;&quot;.</p>
+</td></tr>
+<tr valign="top"><td><code>or_ignore</code></td>
+<td>
+<p>LGL scalar on whether to ignore insertions to normalization
+tables if an error occurs (default: TRUE, which can under certain
+conditions raise exceptions during execution of the trigger if more than a
+single value column exists in the parent table)</p>
+</td></tr>
+<tr valign="top"><td><code>addl_actions</code></td>
+<td>
+<p>CHR vector of additional target actions to add to
+'table_action' statements, appended to the end of the resulting &quot;insert&quot; or
+&quot;update&quot; actions to 'target_table'. If multiple tables are in use, use
+positional matching in the vector (e.g. with three normalization tables,
+and additional actions to only the second, use c(&quot;&quot;, &quot;additional actions&quot;,
+&quot;&quot;))</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>These are intended as native database backup support for when connections do
+not change the default SQLite setting of PRAGMA foreign_keys = off.
+Theoretically any trigger could be created, but should only be used with care
+outside the intended purpose.
+</p>
+<p>Triggers created by this function will check all new INSERT and UPDATE
+statements by checking provided values against their parent table keys. If an
+index match is found no action will be taken on the parent table. If no match
+is found, it is assumed this is a new normalized value and it will be added
+to the normalization table and the resulting new key will be replaced in the
+target table column.
+</p>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar of class glue containing the SQL necessary to create a
+trigger. This is raw text; it is not escaped and should be further
+manipulated (e.g. via dbplyr::sql()) as your needs and database
+communication pipelines dictate.
+</p>
+
+
+<h3>Note</h3>
+
+<p>While this will work on any number of combinations, all triggers should
+be heavily inspected prior to use. The default case for this trigger is to
+set it for a single FK/PK relationship with a single normalization value.
+It will run on any number of normalized columns however trigger behavior
+may be unexpected for more complex relationships.
+</p>
+<p>If 'or_ignore' is set to TRUE, errors in adding to the parent table
+will be ignored silently, possibly causing NULL values to be inserted into
+the target table foreign key column. For this reason it is recommended that
+the 'or_ignore' parameter only be set to true to expand parent table
+entries, but it will only supply a single value for the new normalization
+table. If additional columns in the parent table must be populated (e.g.
+the parent table has two required columns &quot;value&quot; and &quot;acronym&quot;), it is
+recommended to take care of those prior to any action that would activate
+these triggers.
+</p>
+<p>Parameters are not checked against a schema (e.g. tables and columns
+exist, or that a relationships exists between tables). This function
+processes only text provided to it.
+</p>
+<p>Define individual relationships between 'fk_col', 'norm_table',
+'pk_col', and 'val_col' as necessary. Lengths for these parameters should
+match in a 1:1:1:1 manner to fully describe the relationships. If the
+schema of all tables listed in 'norm_table' are close matches, e.g. all
+have two columns &quot;id&quot; and &quot;value&quot; then 'pk_col' and 'val_col' will be
+reused when only a single value is provided for them. That is, provided
+three 'norm_table'(s) and one 'pk_col' and one 'val_col', the arguments for
+'pk_col' and 'val_col' will apply to each 'norm_table'.
+</p>
+<p>The usage example is built on a hypothetical SQLite schema containing
+four tables, one of which (&quot;test&quot; - with columns &quot;id&quot;, &quot;col1&quot;, &quot;col2&quot;, and
+&quot;col3&quot;) defines foreign key relationships to the other three (&quot;norm_col1&quot;,
+&quot;norm_col2&quot;, and &quot;norm_col3&quot;).
+</p>
+
+
+<h3>See Also</h3>
+
+<p>build_triggers
+</p>
+
+
+</body></html>

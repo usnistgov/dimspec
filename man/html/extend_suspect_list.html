@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Extend the compounds and aliases tables</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for extend_suspect_list"><tr><td>extend_suspect_list</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Extend the compounds and aliases tables</h2>
+
+<h3>Description</h3>
+
+<p>Suspect lists are occasionally updated. To keep the current database up to
+date, run this function by pointing it to the updated or current suspect
+list. That suspect list should be one of (1) a file in either
+comma-separated-value (CSV) or a Microsoft Excel format (XLS or XLSX), (2) a
+data frame containing the new compounds in the standard format of the suspect
+list, or (3) a URL pointing to the suspect list.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+extend_suspect_list(suspect_list, db_conn = con, retain_current = TRUE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>suspect_list</code></td>
+<td>
+<p>CHR scalar pointing either to a file (CSV, XLS, or XLSX)
+or URL pointing to an XLSX file.</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>retain_current</code></td>
+<td>
+<p>LGL scalar of whether to retain the current list by
+attempting to match new entries to older ones, or to append all entries
+(default: TRUE)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>If 'suspect_list' does not contain one of the expected file extensions, it
+will be assumed to be a URL pointing to a Microsoft Excel file with the
+suspect list in the first spreadsheet. The file for that URL will be
+downloaded temporarily, read in as a data frame, and then removed.
+</p>
+<p>Required columns for the compounds table are first pulled and all other
+columns are treated as aliases. If 'retain_current' is TRUE, entries in the
+&quot;name&quot; column will be matched against current aliases and the compound id
+will be persisted for that compound.
+</p>
+
+
+<h3>Value</h3>
+
+<p>None
+</p>
+
+
+</body></html>

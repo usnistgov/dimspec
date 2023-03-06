@@ -1,0 +1,5 @@
+ms_methods_id,chromatography_types_id,system_vendor_id,system_vendor_model,column_chemistry_id,column_position_id,vendor_id,vendor_model,internal_diameter,column_length,particle_diameter,citation
+1,1,,,2,1,5,,,,,
+1,1,,,1,2,5,,,,,
+2,2,,,3,1,4,,,,,
+2,2,,,4,2,4,,,,,

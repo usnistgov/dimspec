@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Brings raw data file into environment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for getmzML"><tr><td>getmzML</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Brings raw data file into environment</h2>
+
+<h3>Description</h3>
+
+<p>If filename is not extension .mzML, then converts the raw file
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+getmzML(
+  search_df,
+  CONVERT = FALSE,
+  CHECKCONVERT = TRUE,
+  is_waters = FALSE,
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>search_df</code></td>
+<td>
+<p>data.frame output of [create_search_df] or file name of a raw file to be converted</p>
+</td></tr>
+<tr valign="top"><td><code>CONVERT</code></td>
+<td>
+<p>LGL scalar of whether or not to convert the search_df filename (default FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>CHECKCONVERT</code></td>
+<td>
+<p>LGL scalar of whether or not to verify the conversion format (default TRUE)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST value of the trimmed mzML file matching search criteria
+</p>
+
+
+</body></html>

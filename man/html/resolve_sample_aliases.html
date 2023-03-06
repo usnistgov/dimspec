@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve and import sample aliases</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for resolve_sample_aliases"><tr><td>resolve_sample_aliases</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Resolve and import sample aliases</h2>
+
+<h3>Description</h3>
+
+<p>Call this function to attach sample aliases to a sample record in the
+database. This can be done either through the import object with a name
+reference or directly by assigning additional values.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+resolve_sample_aliases(
+  sample_id,
+  obj = NULL,
+  aliases_in = NULL,
+  values = NULL,
+  db_table = "sample_aliases",
+  db_conn = con,
+  log_ns = "db"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>sample_id</code></td>
+<td>
+<p>INT scalar of the sample id (e.g. from the import workflow)</p>
+</td></tr>
+<tr valign="top"><td><code>obj</code></td>
+<td>
+<p>(optional) LIST object containing data formatted from the import
+generator (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>aliases_in</code></td>
+<td>
+<p>(optional) CHR scalar of the name in 'obj' containing the
+sample aliases in list format (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>values</code></td>
+<td>
+<p>(optional) LIST containing the sample aliases with names as the
+alias name and values containing the reference (e.g. URI, link to a
+containing repository, or reference to the owner or project from which a
+sample is drawn) to that alias</p>
+</td></tr>
+<tr valign="top"><td><code>db_table</code></td>
+<td>
+<p>CHR scalar name of the database table containing sample
+aliases (default: &quot;sample_aliases&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>log_ns</code></td>
+<td>
+<p>CHR scalar of the logging namespace to use during execution
+(default: &quot;db&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, executes actions on the database
+</p>
+
+
+<h3>Note</h3>
+
+<p>This function is called as part of [full_import()]
+</p>
+<p>One of 'values' or both of 'obj' and 'aliases_in' must be provided to
+add new sample aliases.
+</p>
+
+
+</body></html>

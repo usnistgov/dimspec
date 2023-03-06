@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Convenience application of 'add_help' using pipes directly in...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for with_help"><tr><td>with_help</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Convenience application of <code>add_help</code> using pipes directly in <code>UI.R</code></h2>
+
+<h3>Description</h3>
+
+<p>This may not work for certain widgets with heavily nested HTML. Note that
+classes may be CSS dependent.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+actionButton("example", "With Help") 
+  with_help("Now with a question mark icon hosting a tooltip")
+actionButton("example", "With Help") 
+  with_help("Large and green", size = "xl", class = "success")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>widget</code></td>
+<td>
+<p>shiny.tag widget</p>
+</td></tr>
+<tr valign="top"><td><code>tooltip</code></td>
+<td>
+<p>CHR scalar of the tooltip text</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Other named arguments to be passed to 'add_help'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>The <code>widget</code> provided with a hover tooltip icon appended to it.
+</p>
+
+
+<h3>Note</h3>
+
+<p>Most standard Shiny widgets are supported, but maybe not all.
+</p>
+
+
+</body></html>

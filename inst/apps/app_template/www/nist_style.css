@@ -1,0 +1,249 @@
+@import url("https://use.fontawesome.com/releases/v6.1.1/css/all.css") all;
+
+body {
+  overflow: hidden !important;
+}
+
+.title-banner {
+  top: 0;
+  left: 0px;
+  width: 100%;
+  color: red;
+  text-align: center;
+  font-size: xx-large;
+  z-index: 9000;
+  padding-right: 7px;
+}
+
+.content {
+  overflow: auto;
+  height: calc(100vh - 50px);
+  padding-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .content {
+    height: calc(100vh - 100px);
+  }
+}
+
+.flex-container {
+  display: flex;
+  width: 100%;
+  padding: 0px;
+}
+
+.flex-container > span, .flex-container > button {
+  flex: auto;
+}
+
+.logo, .navbar {
+  background-color: #222d32 !important;
+}
+
+.logo > * > img {
+  width: 210px;
+}
+
+.logo > a {
+  float: left;
+}
+
+.btn {
+  white-space: normal;
+}
+
+.btn > i, .box-title > i {
+  padding-right: 5px;
+  text-align: center;
+}
+
+.dt-buttons {
+  padding-top: 4.5px;
+}
+
+button.dt-button {
+  padding: 1px 6px 0px !important;
+  font-size: 0.75em !important;
+}
+
+.paginate_button {
+  padding: 0.1em 0.25em !important;
+}
+
+@media (min-width: 768px) {
+  .box-left {
+    padding-right: 7px;
+  }
+  .box-right {
+    padding-left: 8px;
+  }
+}
+
+.one-line > p, .one-line > a  {
+  display: inline;
+  padding-top: 2px;
+}
+
+.control-label {
+  font-weight: normal;
+}
+
+.nist_shinyalert {
+  
+}
+
+.form-grouping {
+  border-left: 1px solid #ddd;
+  padding-left: 5px;
+}
+
+.centered-image {
+  text-align: center;
+}
+
+a > i {
+  padding-left: 2px;
+  padding-right: 4px;
+  text-align: center !important;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 9999;
+  opacity: 0.85;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  color: black;
+}
+
+.overlay > img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  margin-top: -100px;
+  margin-left: -100px;
+  opacity: 1;
+}
+
+.overlay > h3 {
+  width: auto;
+  max-width: 400px;
+  color: black;
+  opacity: 1;
+  text-align: center;
+  margin: auto;
+  padding-top: calc(50vh + 100px);
+}
+
+td.dtr-control {
+  padding-left: 30px !important;
+}
+
+ul.dtr-details {
+  width: 100%;
+  padding-left: 30px !important;
+}
+
+ul.dtr-details > li {
+  padding: 0 !important;
+  display: inline-block;
+  width: 100%;
+}
+
+ul.dtr-details > li > .dtr-title {
+  float: left !important;
+  text-align: left;
+}
+
+ul.dtr-details > li > .dtr-data {
+  float: right !important;
+}
+
+.success {
+  color: #00a65a;
+}
+
+.warning {
+  color: #f39c12;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.primary {
+  color: #0073b7
+}
+
+.info {
+  color: #00c0ef;
+}
+
+.tooltip {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.tooltip-inner {
+  background-color: #606060;
+  color: #dcf3fb;
+}
+
+.tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #606060;
+}
+
+.tooltip.left .tooltip-arrow {
+  border-left-color: #606060;
+}
+
+.tooltip.right .tooltip-arrow {
+  border-right-color: #606060;
+}
+
+.tooltip.top .tooltip-arrow {
+  border-top-color: #606060;
+}
+
+.tooltip.in {
+  opacity: 0.95;
+}
+
+.nav-checkbox-right {
+  padding: 0px 5px 12px 18px;
+  width: 100%;
+}
+
+.nav-checkbox-right > i {
+  padding-left: 2px;
+  padding-right: 4px;
+  width: 20px;
+  text-align: center;
+  color: #b8c7ce;
+}
+
+.nav-checkbox-right > label {
+  color: #b8c7ce;
+  margin-bottom: 0px;
+  font-weight: normal;
+}
+
+.nav-checkbox-right > .form-group {
+  margin: 0 !important;
+  padding: 0 !important;
+  float: right !important;
+}
+
+.nav-checkbox-right > .form-group > div {
+  margin: 0 !important;
+}
+
+section {
+  height: calc(100vh - 60px);
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Update a conda environment from a requirements file</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for update_env_from_file"><tr><td>update_env_from_file</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Update a conda environment from a requirements file</h2>
+
+<h3>Description</h3>
+
+<p>The 'requirements_file' can be any formatted file that contains a definition
+for python libraries to add to an environment (e.g. requirements.txt,
+environment.yml, etc) that is understood by conda. Relative file paths are
+fine, but the file will not be discovered (e.g. by 'list.files') so
+specificity is always better.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+update_env_from_file("nist_hrms_db")
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>env_name</code></td>
+<td>
+<p>CHR scalar of a python environment</p>
+</td></tr>
+<tr valign="top"><td><code>requirements_file</code></td>
+<td>
+<p>CHR scalar file path to a suitable requirements.txt
+or environment.yml file</p>
+</td></tr>
+<tr valign="top"><td><code>conda_alias</code></td>
+<td>
+<p>CHR scalar of the command line interface alias for your
+conda tools (default: NULL is translated first to the environment variable
+CONDA_CLI and then to &quot;conda&quot;)</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>This is a helper function, largely to support versions of reticulate prior to
+the introduction of the environment argument in version 1.24+.
+</p>
+
+
+<h3>Value</h3>
+
+<p>None, directly updates the referenced python environment
+</p>
+
+
+<h3>Note</h3>
+
+<p>This requires conda CLI tools to be installed.
+</p>
+<p>A default installation alias of &quot;conda&quot; is assumed.
+</p>
+<p>Set global variable 'CONDA_CLI' to your conda alias for better support.
+</p>
+
+
+</body></html>

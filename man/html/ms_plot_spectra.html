@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Plot a fragment map from database mass spectral data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for ms_plot_spectra"><tr><td>ms_plot_spectra</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Plot a fragment map from database mass spectral data</h2>
+
+<h3>Description</h3>
+
+<p>Especially for non-targeted analysis workflows, it is often necessary to
+examine annotated fragment data for spectra across a given peak of interest.
+Annotated fragments lend increasing confidence in the identification of the
+compound giving rise to a mass spectral peak. If a fragment has been
+annotated, that identification is displayed along with the mass to charge
+value in blue. Annotations of the mass to charge ratio for unannotated
+fragments are displayed in red.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+ms_plot_spectra(
+  data,
+  spectra_type = c("separated", "zipped"),
+  spectra_mz_resolution = 3,
+  spectra_drop_ratio = 0.01,
+  spectra_repel_labels = TRUE,
+  spectra_repel_line_color = "grey50",
+  spectra_nudge_y_factor = 0.03,
+  spectra_log_y = FALSE,
+  spectra_is_file = FALSE,
+  spectra_from_JSON = FALSE,
+  spectra_animate = FALSE,
+  spectra_text_size = 3,
+  spectra_max_overlaps = 50,
+  include_method = TRUE,
+  db_conn = con
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>data</code></td>
+<td>
+<p>data.frame of spectral data in the form of the 'ms_data' table</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_mz_resolution</code></td>
+<td>
+<p>INT scalar mass to charge ratio tolerance to
+group peaks, with at minimum columns for intensity (as base_int), ion m/z
+value (as base_ion), and scan time (as scantime) - (default: 3)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_drop_ratio</code></td>
+<td>
+<p>NUM scalar threshold of the maximum intensity below
+which traces will be dropped (default: 1e-2 means any trace with a maximum
+intensity less than 1% of the maximum intensity in the plot will be
+dropped); if &gt; 1 the inversion will be used (1e5 -&gt; 1e-5)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_repel_labels</code></td>
+<td>
+<p>LGL scalar on whether to use the [ggrepel]
+package to space out m/z labels in the plot (default: TRUE). If [ggrepel]
+is not installed, it will default to FALSE rather than requiring an
+installation</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_repel_line_color</code></td>
+<td>
+<p>CHR scalar name of the color to use for the
+&quot;color&quot; aesthetic of the lines connecting repelled labels to their data
+points; passed to [ggrepel::geom_text_repel] as segment.color (only a
+single color is supported; default: &quot;grey50&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_nudge_y_factor</code></td>
+<td>
+<p>NUM scalar y-axis offset as a fraction of the
+maximum intensity for trace annotation (default: 0.03 offsets labels in the
+positive direction by 3% of the maximum intensity)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_log_y</code></td>
+<td>
+<p>LGL scalar of whether or not to apply a log10 scaling
+factor to the y-axis (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_is_file</code></td>
+<td>
+<p>LGL scalar of whether data are coming from a file
+(default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_from_JSON</code></td>
+<td>
+<p>LGL scalar of whether data are in JSON format; other
+formats are not supported when 'spectra_is_file = TRUE' (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_animate</code></td>
+<td>
+<p>LGL scalar of whether to produce an animation across
+the scantime for these data (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_text_size</code></td>
+<td>
+<p>NUM scalar of the text size to use for annotation
+labels (default: 3)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_max_overlaps</code></td>
+<td>
+<p>INT scalar of the maximum number of text overlaps
+to allow (default: 50)</p>
+</td></tr>
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>database connection (default: con) which must be live to pull
+sample and compound identification information</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>ggplot object
+</p>
+
+
+<h3>Note</h3>
+
+<p>If 'spectra_animate' is set to true, it requires the [gganimate]
+package to be installed (and may also require the [gifski] package) and
+WILL take a large amount of time to complete, but results in an animation
+that will iterate through the scan period and display mass spectral data as
+they appear across the peak. Your mileage likely will vary.
+</p>
+
+
+</body></html>

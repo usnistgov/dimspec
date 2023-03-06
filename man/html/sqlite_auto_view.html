@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Create a basic SQL view of a normalized table</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for sqlite_auto_view"><tr><td>sqlite_auto_view</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Create a basic SQL view of a normalized table</h2>
+
+<h3>Description</h3>
+
+<p>Many database viewers will allow links for normalization tables to get the
+human-readable value of a normalized column. Instead it is often preferable
+to build in views automatically that &quot;denormalize&quot; such tables for display or
+use in an application. This function seeks to script the process of creating
+those views. It examines the table definition from [pragma_table_info] and
+will extract the primary/foreign key relationships to build a &quot;denormalized&quot;
+view of the table using [get_fkpk_relationships] which requires a database
+map created from [er_map] and data dictionary created from [data_dictionary].
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+sqlite_auto_view(table_pragma = pragma_table_info("contributors"),
+  target_table = "contributors", relationships =
+  get_fkpk_relationships(db_map = er_map(con), dictionary =
+  data_dictionary(con)), drop_if_exists = FALSE)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>table_pragma</code></td>
+<td>
+<p>data.frame object from [pragma_table_info] for a given
+table name in the database</p>
+</td></tr>
+<tr valign="top"><td><code>target_table</code></td>
+<td>
+<p>CHR scalar name of the database table to build for, which
+should be present in the relationship definition</p>
+</td></tr>
+<tr valign="top"><td><code>relationships</code></td>
+<td>
+<p>data.frame object describing the foreign key
+relationships for 'target_table', which should generally be the result of a
+call to [get_fkpk_relationships]</p>
+</td></tr>
+<tr valign="top"><td><code>drop_if_exists</code></td>
+<td>
+<p>LGL scalar indicating whether to include a &quot;DROP VIEW&quot;
+prefix for the generated view statement; as this has an impact on schema,
+no default is set</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>TODO for v2: abstract the relationships call by looking for objects in the
+current session.
+</p>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar of class glue containing the SQL necessary to create a
+&quot;denormalized&quot; view. This is raw text; it is not escaped and should be
+further manipulated (e.g. via dbplyr::sql()) as your needs and database
+communication pipelines dictate.
+</p>
+
+
+<h3>Note</h3>
+
+<p>No schema checking is performed by this function, but rather relies on
+definitions from other functions.
+</p>
+<p>This example will run slowly if the database map [er_map] and
+dictionary [data_dictionary] haven't yet been called. If they exist in your
+session, use those as arguments to get_fkpk_relationships.
+</p>
+
+
+<h3>See Also</h3>
+
+<p>build_views
+</p>
+<p>pragma_table_info
+</p>
+<p>get_fkpk_relationships
+</p>
+<p>er_map
+</p>
+<p>data_dictionary
+</p>
+
+
+</body></html>

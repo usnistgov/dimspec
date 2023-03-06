@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Save the current data dictionary to disk</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for save_data_dictionary"><tr><td>save_data_dictionary</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Save the current data dictionary to disk</h2>
+
+<h3>Description</h3>
+
+<p>Executes [data_dictionary()] and saves the output to a local file. If <code>output_format</code>
+is one of &quot;data.frame&quot; or &quot;list&quot;, the resulting file will be saved as an RDS.
+Parameter <code>output_file</code> will be used during the save process; relative paths
+will be identified by the current working directory.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+save_data_dictionary(db_conn = con)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>db_conn</code></td>
+<td>
+<p>connection object (default: con)</p>
+</td></tr>
+<tr valign="top"><td><code>output_format</code></td>
+<td>
+<p>CHR scalar, one of (capitalization insensitive) &quot;json&quot;,
+&quot;csv&quot;, &quot;data.frame&quot;, or &quot;list&quot; (default &quot;json&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>output_file</code></td>
+<td>
+<p>CHR scalar indicating where to save the resulting file; an
+appropriate file name will be constructed if left NULL (default: NULL)</p>
+</td></tr>
+<tr valign="top"><td><code>overwrite_existing</code></td>
+<td>
+<p>LGL scalar indicating whether to overwrite an
+existing file whose name matches that determined from 'output_file'
+(default: TRUE); file names will be appended with &quot;(x)&quot; sequentially if
+this is FALSE and a file with matching name exists.</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, saves a file to the current working directory
+</p>
+
+
+</body></html>

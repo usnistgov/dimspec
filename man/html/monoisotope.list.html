@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Calculate the monoisotopic mass of a elemental formulas in</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for monoisotope.list"><tr><td>monoisotope.list</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Calculate the monoisotopic mass of a elemental formulas in</h2>
+
+<h3>Description</h3>
+
+<p>Calculate the monoisotopic mass of a elemental formulas in
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+monoisotope.list(
+  df,
+  column,
+  exactmasses,
+  remove.elements = c(),
+  adduct = "neutral"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>df</code></td>
+<td>
+<p>data.frame with at least one column with elemental formulas</p>
+</td></tr>
+<tr valign="top"><td><code>column</code></td>
+<td>
+<p>integer or CHR scalar indicating the column containing the elemental formulas, if CHR then regex match is used</p>
+</td></tr>
+<tr valign="top"><td><code>exactmasses</code></td>
+<td>
+<p>list of exact masses</p>
+</td></tr>
+<tr valign="top"><td><code>remove.elements</code></td>
+<td>
+<p>elements to remove from the elemental formulas</p>
+</td></tr>
+<tr valign="top"><td><code>adduct</code></td>
+<td>
+<p>character string adduct/charge state to add to the elemental formula, options are 'neutral', '+H', '-H', '+Na', '+K', '+', '-', '-radical', '+radical'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame with column of exact masses appended to it
+</p>
+
+
+</body></html>

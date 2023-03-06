@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Attach a superscript icon with a bsTooltip to an HTML element</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for add_help"><tr><td>add_help</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Attach a superscript icon with a bsTooltip to an HTML element</h2>
+
+<h3>Description</h3>
+
+<p>Attach a superscript icon with a bsTooltip to an HTML element
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+add_help(
+  id,
+  tooltip,
+  icon_name = "question",
+  size = "xs",
+  icon_class = "info-tooltip primary",
+  ...
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>id</code></td>
+<td>
+<p>CHR scalar of the HTML ID to which to append the icon</p>
+</td></tr>
+<tr valign="top"><td><code>tooltip</code></td>
+<td>
+<p>CHR scalar of the tooltip text</p>
+</td></tr>
+<tr valign="top"><td><code>icon_name</code></td>
+<td>
+<p>CHR scalar of the icon name, which must be understandable by
+the 'shiny::icon' function; e.g. a font-awesome icon name (default:
+&quot;question&quot;).</p>
+</td></tr>
+<tr valign="top"><td><code>size</code></td>
+<td>
+<p>CHR scalar of the general icon size as understandable by the
+font-awesome library (default: &quot;xs&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>icon_class</code></td>
+<td>
+<p>CHR vector of classes to apply to the '&lt;sup&gt;' container,
+as defined in the current CSS (default: &quot;info-tooltip primary&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Other named arguments to be passed to 'shinyBS:bsTooltip'</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>LIST of HTML tags for the desired help icon and its tooltip
+</p>
+
+
+<h3>Note</h3>
+
+<p>The following CSS is typically defined to go with this.
+.info-tooltip 
+opacity: 30
+transition: opacity .25s;
+
+.info-tooltip:hover 
+opacity: 100
+
+.primary 
+color: #3c8dbc;
+
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+add_help("example", "a tooltip")
+
+</pre>
+
+
+</body></html>

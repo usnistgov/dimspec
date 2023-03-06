@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Decompress Spectra</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for tidy_spectra"><tr><td>tidy_spectra</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Decompress Spectra</h2>
+
+<h3>Description</h3>
+
+<p>This convenience wrapper will automatically decompress ms spectra in the
+&quot;separate&quot; and &quot;zipped&quot; formats and return them as tidy data frames suitable
+for further manipulation or visualization.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+tidy_spectra(
+  target,
+  is_file = FALSE,
+  is_format = c("separated", "zipped"),
+  spectra_set = "msdata",
+  ms_col_sep = c("measured_mz", "measured_intensity"),
+  ms_col_zip = "data",
+  is_JSON = FALSE
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>target</code></td>
+<td>
+<p>CHR scalar file path to use OR an R object containing
+compressed spectral data in the &quot;separate&quot; or &quot;zipped&quot; format</p>
+</td></tr>
+<tr valign="top"><td><code>is_file</code></td>
+<td>
+<p>BOOL scalar of whether or not 'target' is a file. Set to FALSE
+to use an existing R object, which should contain an object with a named
+element matching parameter 'spectra_set' (default TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>is_format</code></td>
+<td>
+<p>CHR scalar of the compression format, which must be one of
+the supported compression forms (&quot;separated&quot; or &quot;zipped&quot;); ignored if the
+compression format can be inferred from the text in 'target' (default
+&quot;separate&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>spectra_set</code></td>
+<td>
+<p>CHR scalar of the object name holding a spectra data frame
+to decompress (default &quot;msdata&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>ms_col_sep</code></td>
+<td>
+<p>CHR vector of the column names holding spectral masses and
+intensities in the &quot;separate&quot; format (default c(&quot;masses&quot;, &quot;intensities&quot;))</p>
+</td></tr>
+<tr valign="top"><td><code>ms_col_zip</code></td>
+<td>
+<p>CHR scalar of the name of the column holding spectral
+masses and intensities in the &quot;unzip&quot; format (default &quot;msdata&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>is_JSON</code></td>
+<td>
+<p>BOOL scalar of whether or not 'target' is a JSON expression
+needing conversion (default TRUE)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>data.frame object containing unpacked spectra
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+tidy_spectra('{"msdata": "712.9501 15094.41015625 713.1851 34809.9765625"}', is_format = "zipped")
+tidy_spectra('{"measured_mz":"712.9501 713.1851","measured_intensity":"15094.41015625 34809.9765625"}')
+</pre>
+
+
+</body></html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Build an API endpoint programmatically</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for api_endpoint"><tr><td>api_endpoint</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Build an API endpoint programmatically</h2>
+
+<h3>Description</h3>
+
+<p>This is a convenience function intended to support plumber endpoints. It only
+assists in the construction (and execution if 'execute' == TRUE) of
+endpoints. Endpoints must still be understood. Validity checking, execution,
+and opening in a web browser are supported. Invalid endpoints will not be
+executed or opened for viewing.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+api_endpoint(
+  path,
+  ...,
+  server_addr = PLUMBER_URL,
+  check_valid = TRUE,
+  execute = TRUE,
+  open_in_browser = FALSE,
+  raw_result = FALSE,
+  max_pings = 20L,
+  return_type = c("text", "raw", "parsed"),
+  return_format = c("vector", "data.frame", "list")
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>path</code></td>
+<td>
+<p>CHR scalar of the endpoint path.</p>
+</td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+<p>Additional named parameters added to the endpoint, most typically
+the query portion. If only one is provided, it can remain unnamed and a
+query is assumed. If more than one is provided, all must be named. Named
+elements must be components of the return from [httr::parse_url] (see
+https://tools.ietf.org/html/rfc3986) for details of the parsing algorithm;
+unrecognized elements will be ignored.</p>
+</td></tr>
+<tr valign="top"><td><code>server_addr</code></td>
+<td>
+<p>CHR scalar uniform resource locator (URL) address of an
+API server (e.g. &quot;https://myapi.com:8080&quot;) (defaults to the current
+environment variable &quot;PLUMBER_URL&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>check_valid</code></td>
+<td>
+<p>LGL scalar on whether or not to first check that an
+endpoint returns a valid status code (200-299) (default: TRUE).</p>
+</td></tr>
+<tr valign="top"><td><code>execute</code></td>
+<td>
+<p>LGL scalar of whether or not to execute the constructed
+endpoint and return the result; will be defaulted to FALSE if 'check_valid'
+== TRUE and the endpoint returns anything other than a valid status code.
+(default: TRUE)</p>
+</td></tr>
+<tr valign="top"><td><code>open_in_browser</code></td>
+<td>
+<p>LGL scalar of whether or not to open the resulting
+endpoint in the system's default browser; will be defaulted to FALSE if
+'check_valid' == TRUE and the endpoint returns anything other than a valid
+status code. (default: FALSE)</p>
+</td></tr>
+<tr valign="top"><td><code>max_pings</code></td>
+<td>
+<p>INT scalar maximum number of pings to try before timeout if
+using endpoint &quot;_ping&quot;; this is only used for endpoint &quot;_ping&quot; (default:
+20)</p>
+</td></tr>
+<tr valign="top"><td><code>return_type</code></td>
+<td>
+<p>CHR scalar on which return type to use, which must be one
+of &quot;text&quot;, &quot;raw&quot;, or &quot;parsed&quot; which will be used to read the content of the
+response item (default: &quot;text&quot;)</p>
+</td></tr>
+<tr valign="top"><td><code>return_format</code></td>
+<td>
+<p>CHR scalar on which form to return data, which must be
+one of &quot;vector&quot;, &quot;data.frame&quot;, or &quot;list&quot; (default: &quot;vector&quot; to support
+primarily single value responses)</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>CHR scalar of the constructed endpoint, with messages regarding
+status checks, return from the endpoint (typically JSON) if valid and
+'execute' == TRUE, or NONE if 'open_in_browser' == TRUE
+</p>
+
+
+<h3>Note</h3>
+
+<p>Special support is provided for the way in which the NIST Public Data
+Repository treats URL fragments
+</p>
+<p>This only support [httr::GET] requests.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+api_endpoint("https://www.google.com/search", list(q = "something"), open_in_browser = TRUE)
+api_endpoint("https://www.google.com/search", query = list(q = "NIST Public Data Repository"), open_in_browser = TRUE)
+</pre>
+
+
+</body></html>
