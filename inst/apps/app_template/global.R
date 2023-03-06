@@ -22,7 +22,8 @@ DB_TITLE <- rectify_null_from_env("DB_TITLE", DB_TITLE, "[DATABASE TITLE HERE]")
 
 # Set need_files to those necessary for your app to function
 need_files <- c(
-  "app_functions.R"
+  "app_functions.R",
+  here::here("inst", "apps", "shiny_helpers.R")
 )
 sapply(need_files, source, keep.source = FALSE)
 

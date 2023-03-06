@@ -24,7 +24,7 @@ if (!"here" %in% installed.packages()) install.packages("here")
 if (!exists("RENV_ESTABLISHED_SHINY") || !RENV_ESTABLISHED_SHINY) source(here::here("inst", "apps", "env_shiny.R"))
 need_files <- c(
   "app_functions.R",
-  "shiny_helpers.R",
+  here::here("inst", "apps", "shiny_helpers.R"),
   here::here("R", "tidy_spectra.R"),
   list.files(path = here::here("R", c("spectral_analysis", "base", "gather", "misc", "qualitycontrol", "methodreportingtool")),
              pattern = "\\.R$",
