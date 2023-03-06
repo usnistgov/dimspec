@@ -43,16 +43,16 @@ For evaluation and distribution purposes, DIMSpec is distributed with a populate
 
 ## Guides and docs/dimspec_user_guide
 
-For a full description of the project and its different aspects, please see the [DIMSpec User Guide](https://usnistgov.github.io/dimspec/docs/user_guide).
+For a full description of the project and its different aspects, please see the [DIMSpec User Guide](https://usnistgov.github.io/dimspec/docs).
 
 A series of Quick Guides have been made available focusing on various aspects of the project.
 
-- [DIMSpec Quick Guide - Installation](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_install.pdf)
-- [DIMSpec Quick Guide - Plumber](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_plumber.pdf)
-- [DIMSpec Quick Guide - Web Applications](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_apps.pdf)
-- [DIMSpec Quick Guide - Advanced Use](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_advanced.pdf)
-- [DIMSpec Quick Guide - Importing Data](https://usnistgov.github.io/dimspec/docs/quick_guides/quick_import.pdf)
-- [File Conversion using msconvert](https://usnistgov.github.io/dimspec/docs/quick_guides/file_convert.pdf)
+- [DIMSpec Quick Guide - Installation](https://usnistgov.github.io/dimspec/docs/quick_install.pdf)
+- [DIMSpec Quick Guide - Plumber](https://usnistgov.github.io/dimspec/docs/quick_plumber.pdf)
+- [DIMSpec Quick Guide - Web Applications](https://usnistgov.github.io/dimspec/docs/quick_apps.pdf)
+- [DIMSpec Quick Guide - Advanced Use](https://usnistgov.github.io/dimspec/docs/quick_advanced.pdf)
+- [DIMSpec Quick Guide - Importing Data](https://usnistgov.github.io/dimspec/docs/quick_import.pdf)
+- [File Conversion using msconvert](https://usnistgov.github.io/dimspec/docs/file_convert.pdf)
 
 In addition, a series of video tutorials are also available.
 

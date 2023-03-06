@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 knit: (function(input, ...) {
     rmarkdown::render(
       input,
-      output_dir = here::here("docs", "quick_guides"),
+      output_dir = here::here("docs"),
       envir = globalenv()
     )
   })
