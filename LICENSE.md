@@ -1,4 +1,4 @@
-# NIST PFAS Data Repository
+# A Database Infrastructure for Mass Spectrometry
 
 ## NIST License Statement
 
