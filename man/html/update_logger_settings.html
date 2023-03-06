@@ -14,11 +14,19 @@ current value of the LOGGING object. If LOGGING is changed (i.e. a logging
 namespace is added or changed) this function should be run to update routing
 and formatting to be in line with the current settings.
 </p>
+<p>This applies the internal routing and formatting for logger functions to the
+current value of the LOGGING object. If LOGGING is changed (i.e. a logging
+namespace is added or changed) this function should be run to update routing
+and formatting to be in line with the current settings.
+</p>
 
 
 <h3>Usage</h3>
 
 <pre>
+update_logger_settings(log_all_warnings = FALSE, log_all_errors =
+  FALSE)
+
 update_logger_settings(log_all_warnings = FALSE, log_all_errors =
   FALSE)
 </pre>
@@ -44,10 +52,18 @@ warnings (default: TRUE)</p>
 
 <p>None
 </p>
+<p>None
+</p>
 
 
 <h3>Note</h3>
 
+<p>The calling stack for auto logging of warnings and errors does not work
+with background processes. These settings call [logger::log_warnings()] and
+[logger::log_errors()].
+</p>
+<p>This function is used only for its side effects.
+</p>
 <p>The calling stack for auto logging of warnings and errors does not work
 with background processes. These settings call [logger::log_warnings()] and
 [logger::log_errors()].

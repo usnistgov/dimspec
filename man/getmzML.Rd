@@ -4,7 +4,15 @@
 \alias{getmzML}
 \title{Brings raw data file into environment}
 \usage{
-getmzML(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE)
+getmzML(
+  search_df,
+  CONVERT = FALSE,
+  CHECKCONVERT = TRUE,
+  is_waters = FALSE,
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE
+)
 }
 \arguments{
 \item{search_df}{data.frame output of [create_search_df] or file name of a raw file to be converted}

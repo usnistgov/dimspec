@@ -37,6 +37,8 @@ resolve_peaks(
   format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
   min_datetime = "2000-01-01 00:00:00",
   import_map = IMPORT_MAP,
+  ums_params_in = "opt_ums_params",
+  ums_params_table = "opt_ums_params",
   db_conn = con,
   log_ns = "db"
 )
@@ -89,6 +91,16 @@ spectra in the database (default: &quot;ms_spectra&quot;)</p>
 <tr valign="top"><td><code>import_map</code></td>
 <td>
 <p>data.frame object of the import map (e.g. from a CSV)</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_in</code></td>
+<td>
+<p>CHR scalar name of the item in 'obj' containing
+optimized uncertainty mass spectrum parameters</p>
+</td></tr>
+<tr valign="top"><td><code>ums_params_table</code></td>
+<td>
+<p>CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters</p>
 </td></tr>
 <tr valign="top"><td><code>db_conn</code></td>
 <td>

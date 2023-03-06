@@ -9,6 +9,7 @@ export_msp(
   file,
   precursor = "",
   name = "Exported Mass Spectrum",
+  headerdata = c(),
   append = FALSE
 )
 }
@@ -20,6 +21,8 @@ export_msp(
 \item{precursor}{If available, the numeric precursor m/z for the designated mass spectrum}
 
 \item{name}{Text name to assign to the mass spectrum (not used in spectral searching)}
+
+\item{headerdata}{character string containing named values for additional data to put in the header}
 
 \item{append}{boolean (TRUE/FALSE) to append to .msp file (TRUE) or overwrite (FALSE)}
 }

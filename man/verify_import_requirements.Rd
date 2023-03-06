@@ -8,7 +8,7 @@ verify_import_requirements(
   obj,
   ignore_extra = TRUE,
   requirements_obj = "import_requirements",
-  file_name = "import_requirements.json",
+  file_name = "import_requirements",
   log_issues_as = "warn",
   log_ns = "db"
 )
@@ -63,7 +63,7 @@ requirements
 
 4. missing_detail: Character vectors naming any missing value sets
 
-5. has_extra: Are there unexpected values provided ? (TRUE/FALSE)
+5. has_extra: Are there unexpected values provided? (TRUE/FALSE)
 
 6. extra_cols: Character vectors naming any has_extra columns; these will be
 dropped from the import but are provided for information sake

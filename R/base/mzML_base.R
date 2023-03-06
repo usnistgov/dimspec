@@ -61,10 +61,9 @@ mzMLtoR <- function(mzmlfile = file.choose(), lockmass = NULL, lockmasswidth = N
 #' @param lockmasswidth m/z value for the half-window of the lockmass scan
 #' @param correct logical if the subsequent spectra should be corrected
 #'
-#' @return
+#' @return A copy of the object provided to `mzml` with the lock mass removed.
 #' @export
 #'
-#' @examples
 
 lockmass_remove <- function(mzml, lockmass = NULL, lockmasswidth = NULL, correct = FALSE, approach = "baseion") {
   lockmasserror <- NA

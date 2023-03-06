@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Export SQL Database to a MSP NIST MS Format</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R-help.css" />
+</head><body>
+
+<table width="100%" summary="page for sql_to_msp"><tr><td>sql_to_msp</td><td style="text-align: right;">R Documentation</td></tr></table>
+
+<h2>Export SQL Database to a MSP NIST MS Format</h2>
+
+<h3>Description</h3>
+
+<p>Export SQL Database to a MSP NIST MS Format
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+sql_to_msp(
+  con,
+  optimized_params = TRUE,
+  outputfile = paste0("DimSpecExport", Sys.Date(), ".msp"),
+  cormethod = "pearson",
+  normfn = "sum"
+)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>con</code></td>
+<td>
+<p>SQLite database connection</p>
+</td></tr>
+<tr valign="top"><td><code>optimized_params</code></td>
+<td>
+<p>Boolean TRUE indicates that the optimized parameters for uncertainty mass spectra will be used.</p>
+</td></tr>
+<tr valign="top"><td><code>outputfile</code></td>
+<td>
+<p>Text string file name and/or location to save MSP file format</p>
+</td></tr>
+<tr valign="top"><td><code>cormethod</code></td>
+<td>
+<p>Text string type of correlation function to use (DEFAULT = 'pearson')</p>
+</td></tr>
+<tr valign="top"><td><code>normfn</code></td>
+<td>
+<p>Text string type of normalization function to use (DEFAULT = 'sum')</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<p>None, saves a *.msp file to the local file system.
+</p>
+
+
+</body></html>

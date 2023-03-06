@@ -21,6 +21,6 @@ create_peak_table_ms2(peak, mass, masserror = 5, minerror = 0.002, int0 = NA)
 nested list of dataframes containing all MS2 data for the peak
 }
 \description{
-Takes a nested peak list and creates a peak table for easier determination of
+Takes a nested peak list and creates a peak table for easier determination of 
 uncertainty of the measurement for MS2 data.
 }

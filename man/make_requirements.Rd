@@ -7,6 +7,7 @@
 make_requirements(
   example_import,
   file_name = "import_requirements.json",
+  not_required = c("annotation", "chromatography", "opt_ums_params"),
   archive = TRUE,
   retain_in_R = TRUE,
   log_ns = "db"
@@ -20,6 +21,9 @@ contribution file}
 \item{file_name}{CHR scalar indicating a file name to save the resulting name
 or search on any existing file to archive if `archive` = TRUE (default:
 "import_requirements.json")}
+
+\item{not_required}{CHR vector matching element names of `example_import`
+which are not required; all others will be assumed to be required}
 
 \item{archive}{LGL indicating whether or not to archive an existing file
 matching `file_name` by suffixing the file name with current date. Only one

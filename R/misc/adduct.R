@@ -4,10 +4,8 @@
 #' @param exactmasses list of exact masses of elements, NULL pulls from the database
 #' @param db_conn database connection object, either a CHR scalar name (default: "con") or the connection object itself (preferred)
 #'
-#' @return
+#' @return NUM scalar of the mass adjustment value
 #' @export
-#'
-#' @examples
 #' 
 get_massadj <- function(adduct = "+H", exactmasses = NULL, db_conn = "con") {
   #normally exact masses would be called from a previous function, but just in case.

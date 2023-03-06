@@ -7,10 +7,16 @@
 
 <h2>Calculate the mass adjustment for a specific adduct</h2>
 
+<h3>Description</h3>
+
+<p>Calculate the mass adjustment for a specific adduct
+</p>
+
+
 <h3>Usage</h3>
 
 <pre>
-  get_massadj(adduct = "+H", db_conn = "con" )
+get_massadj(adduct = "+H", exactmasses = NULL, db_conn = "con")
 </pre>
 
 
@@ -34,7 +40,7 @@
 
 <h3>Value</h3>
 
-<p>exact atomic mass of the adduct by which to adjust a formula mass
+<p>NUM scalar of the mass adjustment value
 </p>
 
 

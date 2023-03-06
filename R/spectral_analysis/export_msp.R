@@ -52,7 +52,7 @@ export_msp <- function(ms, file, precursor = "", name = "Exported Mass Spectrum"
 #' @param cormethod Text string type of correlation function to use (DEFAULT = 'pearson')
 #' @param normfn Text string type of normalization function to use (DEFAULT = 'sum')
 #'
-#' @return
+#' @return None, saves a *.msp file to the local file system.
 #' @export
 #'
 

@@ -4,7 +4,7 @@
 \alias{suspectlist_at_NIST}
 \title{Open the NIST PDR entry for the current NIST PFAS suspect list}
 \usage{
-suspectlist_at_NIST(url_file = "suspectlist_url.txt")
+suspectlist_at_NIST(url_file = file.path("config", "suspectlist_url.txt"))
 }
 \value{
 none

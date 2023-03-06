@@ -4,10 +4,24 @@
 \alias{mzMLtoR}
 \title{Opens file of type mzML into R environment}
 \usage{
-mzMLtoR(mzmlfile = file.choose())
+mzMLtoR(
+  mzmlfile = file.choose(),
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE,
+  approach = "hybrid"
+)
 }
 \arguments{
-\item{mzmlfile}{the name of the mzML file which the data are to be read from.}
+\item{mzmlfile}{the file path of the mzML file which the data are to be read from.}
+
+\item{lockmass}{NUM scalar m/z value of the lockmass to remove (Waters instruments only) (default: NULL)}
+
+\item{lockmasswidth}{NUM scalar instrumental uncertainty associated with `lockmass` (default: NULL)}
+
+\item{correct}{logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)}
+
+\item{approach}{character string defining the type of lockmass removal filter to use, default is `hybrid`}
 }
 \value{
 list containing mzML data with unzipped masses and intensity information

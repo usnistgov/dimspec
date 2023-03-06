@@ -4,17 +4,18 @@
 \alias{get_massadj}
 \title{Calculate the mass adjustment for a specific adduct}
 \usage{
-  get_massadj(adduct = "+H", db_conn = "con" )
+get_massadj(adduct = "+H", exactmasses = NULL, db_conn = "con")
 }
 \arguments{
-  \item{adduct}{character string containing the + or - and the elemental formula of the adduct, note "2H" should be represented as "H2"}
-  \item{exactmasses}{list of exact masses of elements, NULL pulls from the database}
-  \item{db_conn}{database connection object, either a CHR scalar name (default: "con") or the connection object itself (preferred)}
-  
+\item{adduct}{character string containing the + or - and the elemental formula of the adduct, note "2H" should be represented as "H2"}
+
+\item{exactmasses}{list of exact masses of elements, NULL pulls from the database}
+
+\item{db_conn}{database connection object, either a CHR scalar name (default: "con") or the connection object itself (preferred)}
 }
 \value{
-  exact atomic mass of the adduct by which to adjust a formula mass
+NUM scalar of the mass adjustment value
 }
 \description{
-  
+Calculate the mass adjustment for a specific adduct
 }

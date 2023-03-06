@@ -53,9 +53,9 @@ schemes}
 \item{ms_methods_table}{CHR scalar name of the methods table (default:
 "ms_methods")}
 
-\item{sample_table}{CHR scalar name of the sample table (default: "samples")}
+\item{sample_table}{CHR scalar name of the samples table (default: "samples")}
 
-\item{peak_table}{CHR scalar name of the peak table (default: "peaks")}
+\item{peak_table}{CHR scalar name of the peaks table (default: "peaks")}
 
 \item{db_conn}{existing connection object (e.g. of class "SQLiteConnection")}
 

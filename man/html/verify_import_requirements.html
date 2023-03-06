@@ -27,7 +27,7 @@ verify_import_requirements(
   obj,
   ignore_extra = TRUE,
   requirements_obj = "import_requirements",
-  file_name = "import_requirements.json",
+  file_name = "import_requirements",
   log_issues_as = "warn",
   log_ns = "db"
 )
@@ -74,13 +74,10 @@ the [logger] package isn't available</p>
 
 <h3>Details</h3>
 
-<p>The return from this is a tibble with 6 or 7 columns depending on whether the
-import file contains data from a single sample or multiple samples. It will
-parse either way depending on where required names are located in the object
-provided to 'obj'. If it is a single list, the return will contain 6 columns;
-if it is a nested list of samples, the return will contain 7 columns, with
-the names of the provided 'obj' attached to each row. Other columns contain
-information related to three checks.
+<p>The return from this is a tibble with 9 columns. The first is the name of the
+import object member, typically the file name. If a single, unnested import
+object is provided this will be &quot;import object&quot;. The other columns include
+the following verification checks:
 </p>
 <p>1. has_all_required: Are all required names present in the sample?
 (TRUE/FALSE)
@@ -92,7 +89,7 @@ requirements
 </p>
 <p>4. missing_detail: Character vectors naming any missing value sets
 </p>
-<p>5. has_extra: Are there unexpected values provided ? (TRUE/FALSE)
+<p>5. has_extra: Are there unexpected values provided? (TRUE/FALSE)
 </p>
 <p>6. extra_cols: Character vectors naming any has_extra columns; these will be
 dropped from the import but are provided for information sake
@@ -113,10 +110,7 @@ Initial use and set up may be easier in interactive sessions.
 
 <h3>Value</h3>
 
-<p>A tibble object with 6 columns containing the results of the check,
-with one row for each import object identified; if 'obj' is a list of
-import data, the column &quot;import_object&quot; is added at the left of the data
-frame with the names of the list components
+<p>A tibble object with 9 columns containing the results of the checks.
 </p>
 
 

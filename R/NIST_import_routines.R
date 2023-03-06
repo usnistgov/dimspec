@@ -3630,7 +3630,7 @@ remove_sample <- function(sample_ids, db_conn = con, log_ns = "db") {
 #' @param archive LGL indicating whether or not to archive an existing file
 #'   matching `file_name` by suffixing the file name with current date. Only one
 #'   archive per date is supported; if a file already exists, it will be
-#'   deleted. (default: TRUE)\
+#'   deleted. (default: TRUE)
 #' @param retain_in_R LGL indicating whether to retain a local copy of the
 #'   requirements file generated (default: TRUE)
 #' @param log_ns CHR scalar of the logging namespace to use (default: "db")

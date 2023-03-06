@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-03" />
+<meta name="date" content="2023-03-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -478,7 +478,7 @@ Create an SQL file for use without the SQLite CLI
 <a id="fn_create_peak_list" class="fn_link" href="#fn_def_create_peak_list" target="_blank">create_peak_list</a>
 </td>
 <td>
-Create peak list from SQL ms_data table
+Spectral Uncertainty Functions ———————————————————-
 </td>
 </tr>
 <tr>
@@ -879,6 +879,14 @@ Check if elemental formula is a subset of another formula
 </td>
 <td>
 Isotopic distribution functions
+</td>
+</tr>
+<tr>
+<td>
+<a id="fn_lockmass_remove" class="fn_link" href="#fn_def_lockmass_remove" target="_blank">lockmass_remove</a>
+</td>
+<td>
+Remove lockmass scan from mzml object
 </td>
 </tr>
 <tr>
@@ -1363,18 +1371,18 @@ Resolve a normalization value against the database
 </tr>
 <tr>
 <td>
-<a id="fn_resolve_peaks" class="fn_link" href="#fn_def_resolve_peaks" target="_blank">resolve_peaks</a>
-</td>
-<td>
-Resolve the peaks node during import
-</td>
-</tr>
-<tr>
-<td>
 <a id="fn_resolve_peak_ums_params" class="fn_link" href="#fn_def_resolve_peak_ums_params" target="_blank">resolve_peak_ums_params</a>
 </td>
 <td>
 Resolve and import optimal uncertain mass spectrum parameters
+</td>
+</tr>
+<tr>
+<td>
+<a id="fn_resolve_peaks" class="fn_link" href="#fn_def_resolve_peaks" target="_blank">resolve_peaks</a>
+</td>
+<td>
+Resolve the peaks node during import
 </td>
 </tr>
 <tr>
@@ -1471,6 +1479,14 @@ Significance testing function
 </td>
 <td>
 Convert SMILES string to Formula and other information
+</td>
+</tr>
+<tr>
+<td>
+<a id="fn_sql_to_msp" class="fn_link" href="#fn_def_sql_to_msp" target="_blank">sql_to_msp</a>
+</td>
+<td>
+Export SQL Database to a MSP NIST MS Format
 </td>
 </tr>
 <tr>
@@ -3977,8 +3993,6 @@ dplyr::copy_to(con2, alphabet)
 check_for_value("A", "alphabet", "upper", db_conn = con2)
 check_for_value("A", "alphabet", "lower", db_conn = con2)
 check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
-DBI::dbDisconnect(con2)
-rm(con2)
 </pre>
 <h3>
 Arguments
@@ -4795,6 +4809,7 @@ R Documentation
 </tr>
 </table>
 <h2>
+Spectral Uncertainty Functions ———————————————————-
 Create peak list from SQL ms_data table
 </h2>
 <h3>
@@ -5981,6 +5996,7 @@ export_msp(
   file,
   precursor = "",
   name = "Exported Mass Spectrum",
+  headerdata = c(),
   append = FALSE
 )
 </pre>
@@ -6025,6 +6041,16 @@ If available, the numeric precursor m/z for the designated mass spectrum
 <td>
 <p>
 Text name to assign to the mass spectrum (not used in spectral searching)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>headerdata</code>
+</td>
+<td>
+<p>
+character string containing named values for additional data to put in the header
 </p>
 </td>
 </tr>
@@ -8138,10 +8164,16 @@ R Documentation
 Calculate the mass adjustment for a specific adduct
 </h2>
 <h3>
+Description
+</h3>
+<p>
+Calculate the mass adjustment for a specific adduct
+</p>
+<h3>
 Usage
 </h3>
 <pre>
-  get_massadj(adduct = "+H", db_conn = "con" )
+get_massadj(adduct = "+H", exactmasses = NULL, db_conn = "con")
 </pre>
 <h3>
 Arguments
@@ -8182,7 +8214,7 @@ database connection object, either a CHR scalar name (default: “con”) or the
 Value
 </h3>
 <p>
-exact atomic mass of the adduct by which to adjust a formula mass
+NUM scalar of the mass adjustment value
 </p>
 <hr/>
 <table id="fn_def_get_msconvert_data" width="100%" summary="page for get_msconvert_data">
@@ -9166,7 +9198,15 @@ If filename is not extension .mzML, then converts the raw file
 Usage
 </h3>
 <pre>
-getmzML(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE)
+getmzML(
+  search_df,
+  CONVERT = FALSE,
+  CHECKCONVERT = TRUE,
+  is_waters = FALSE,
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE
+)
 </pre>
 <h3>
 Arguments
@@ -9632,6 +9672,90 @@ Value
 data frame containing mz and int values of mass spectrum
 </p>
 <hr/>
+<table id="fn_def_lockmass_remove" width="100%" summary="page for lockmass_remove">
+<tr>
+<td>
+lockmass_remove
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+Remove lockmass scan from mzml object
+</h2>
+<h3>
+Description
+</h3>
+<p>
+For Waters instruments only, identifies the scans that are due to a lock mass scan
+and removes them for easier processing.
+</p>
+<h3>
+Usage
+</h3>
+<pre>
+lockmass_remove(
+  mzml,
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE,
+  approach = "baseion"
+)
+</pre>
+<h3>
+Arguments
+</h3>
+<table summary="R argblock">
+<tr valign="top">
+<td>
+<code>mzml</code>
+</td>
+<td>
+<p>
+mzML object generated from mzMLtoR() function
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>lockmass</code>
+</td>
+<td>
+<p>
+m/z value of the lockmass to remove
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>lockmasswidth</code>
+</td>
+<td>
+<p>
+m/z value for the half-window of the lockmass scan
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>correct</code>
+</td>
+<td>
+<p>
+logical if the subsequent spectra should be corrected
+</p>
+</td>
+</tr>
+</table>
+<h3>
+Value
+</h3>
+<p>
+A copy of the object provided to ‘mzml’ with the lock mass removed.
+</p>
+<hr/>
 <table id="fn_def_log_as_dataframe" width="100%" summary="page for log_as_dataframe">
 <tr>
 <td>
@@ -9661,10 +9785,25 @@ remove the colors (the majority should be caught by the string provided as
 the default in this package) and ‘log_split_column’ will split the lines in
 your logging file into discrete categories named by ‘df_titles’.
 </p>
+<p>
+Log messages generated by logger with anything other than the standard
+formatting options can have multiple formatting tags to display in the R
+console. These “junk up” any resulting object. If you want to read it
+directly in the console and preserve formatting, call [<a href="appendix-function-reference.html#fn_def_read_log">read_log</a>] with the
+default ‘as_object’ argument (FALSE). For deeper inspection, a data frame
+works well, provided the formatting matches up. In ‘env_logger.R’ there is an
+option to set formatting layouts. In addition to setting formatting layouts,
+generate regex strings matching the desired format - ‘log_remove_color’ will
+remove the colors (the majority should be caught by the string provided as
+the default in this package) and ‘log_split_column’ will split the lines in
+your logging file into discrete categories named by ‘df_titles’.
+</p>
 <h3>
 Usage
 </h3>
 <pre>
+log_as_dataframe("log.txt")
+
 log_as_dataframe("log.txt")
 </pre>
 <h3>
@@ -9743,15 +9882,34 @@ Details
 <p>
 This will attempt to fail gracefully.
 </p>
+<p>
+This will attempt to fail gracefully.
+</p>
 <h3>
 Value
 </h3>
 <p>
 tibble with one row per log entry (or groups)
 </p>
+<p>
+tibble with one row per log entry (or groups)
+</p>
 <h3>
 Note
 </h3>
+<p>
+If “time” is included and ‘condense’ == TRUE, the log messages in the
+resulting tibble will nested to the nearest second.
+</p>
+<p>
+If “status” is included it will be a factor with levels including the
+valid statuses from logger (see [logger::log_levels]).
+</p>
+<p>
+Use care to develop ‘regex_split’ in order to split the log entries
+into the appropriate columns as defined by ‘df_titles’; extra
+values will be merged into the messages column.
+</p>
 <p>
 If “time” is included and ‘condense’ == TRUE, the log messages in the
 resulting tibble will nested to the nearest second.
@@ -10154,6 +10312,7 @@ Usage
 make_requirements(
   example_import,
   file_name = "import_requirements.json",
+  not_required = c("annotation", "chromatography", "opt_ums_params"),
   archive = TRUE,
   retain_in_R = TRUE,
   log_ns = "db"
@@ -10184,6 +10343,17 @@ contribution file
 CHR scalar indicating a file name to save the resulting name
 or search on any existing file to archive if ‘archive’ = TRUE (default:
 “import_requirements.json”)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>not_required</code>
+</td>
+<td>
+<p>
+CHR vector matching element names of ‘example_import’
+which are not required; all others will be assumed to be required
 </p>
 </td>
 </tr>
@@ -12069,7 +12239,13 @@ Opens file of type mzML into R environment
 Usage
 </h3>
 <pre>
-mzMLtoR(mzmlfile = file.choose())
+mzMLtoR(
+  mzmlfile = file.choose(),
+  lockmass = NULL,
+  lockmasswidth = NULL,
+  correct = FALSE,
+  approach = "hybrid"
+)
 </pre>
 <h3>
 Arguments
@@ -12081,7 +12257,47 @@ Arguments
 </td>
 <td>
 <p>
-the name of the mzML file which the data are to be read from.
+the file path of the mzML file which the data are to be read from.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>lockmass</code>
+</td>
+<td>
+<p>
+NUM scalar m/z value of the lockmass to remove (Waters instruments only) (default: NULL)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>lockmasswidth</code>
+</td>
+<td>
+<p>
+NUM scalar instrumental uncertainty associated with ‘lockmass’ (default: NULL)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>correct</code>
+</td>
+<td>
+<p>
+logical if the subsequent spectra should be corrected for the lockmass (Waters instruments only)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>approach</code>
+</td>
+<td>
+<p>
+character string defining the type of lockmass removal filter to use, default is ‘hybrid’
 </p>
 </td>
 </tr>
@@ -13725,10 +13941,17 @@ By default if ‘file’ does not exist (i.e. ‘file’ is not a fully defined
 this looks for log text files in the directory defined by ‘LOG_DIRECTORY’ in
 the session.
 </p>
+<p>
+By default if ‘file’ does not exist (i.e. ‘file’ is not a fully defined path)
+this looks for log text files in the directory defined by ‘LOG_DIRECTORY’ in
+the session.
+</p>
 <h3>
 Usage
 </h3>
 <pre>
+read_log("log.txt")
+
 read_log("log.txt")
 </pre>
 <h3>
@@ -13771,6 +13994,10 @@ just to print the log to the console.
 <h3>
 Value
 </h3>
+<p>
+CHR vector of the requested log file entries if ‘as_object’ is TRUE,
+or none with a console print if ‘as_object’ is FALSE
+</p>
 <p>
 CHR vector of the requested log file entries if ‘as_object’ is TRUE,
 or none with a console print if ‘as_object’ is FALSE
@@ -14790,7 +15017,7 @@ resolve_compounds(
   compound_alias_table = "compound_aliases",
   norm_alias_table = "norm_analyte_alias_references",
   norm_alias_name_column = "name",
-  NIST_id_in = "ID",
+  NIST_id_in = "id",
   require_all = FALSE,
   import_map = IMPORT_MAP,
   ensure_unique = TRUE,
@@ -15114,7 +15341,7 @@ resolve_fragments_NTAMRT(
   generation_type = NULL,
   fragments_in = "annotation",
   fragments_table = "annotated_fragments",
-  fragments_norm_table = ref_table_from_map(fragments_table, "annotated_fragment_id"),
+  fragments_norm_table = ref_table_from_map(fragments_table, "fragment_id"),
   fragments_sources_table = "fragment_sources",
   citation_info_in = "fragment_citation",
   inspection_info_in = "fragment_inspections",
@@ -15824,7 +16051,7 @@ CHR scalar name of the methods table (default:
 </td>
 <td>
 <p>
-CHR scalar name of the sample table (default: “samples”)
+CHR scalar name of the samples table (default: “samples”)
 </p>
 </td>
 </tr>
@@ -15834,7 +16061,7 @@ CHR scalar name of the sample table (default: “samples”)
 </td>
 <td>
 <p>
-CHR scalar name of the peak table (default: “peaks”)
+CHR scalar name of the peaks table (default: “peaks”)
 </p>
 </td>
 </tr>
@@ -16613,7 +16840,8 @@ LIST object containing data formatted from the import generator
 </td>
 <td>
 <p>
-INT scalar of the peak id in question, which must be present (e.g. from the import workflow)
+INT scalar of the peak ID in question, which must be present
+(e.g. from the import workflow)
 </p>
 </td>
 </tr>
@@ -16623,7 +16851,8 @@ INT scalar of the peak id in question, which must be present (e.g. from the imp
 </td>
 <td>
 <p>
-CHR scalar name of the item in ‘obj’ containing optimized uncertainty mass spectrum parameters
+CHR scalar name of the item in ‘obj’ containing
+optimized uncertainty mass spectrum parameters
 </p>
 </td>
 </tr>
@@ -16633,17 +16862,8 @@ CHR scalar name of the item in ‘obj’ containing optimized uncertainty mass s
 </td>
 <td>
 <p>
-CHR scalar name of the database table holding optimized uncertainty mass spectrum parameters
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>db_conn</code>
-</td>
-<td>
-<p>
-Connection object (default: con)
+CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters
 </p>
 </td>
 </tr>
@@ -16653,7 +16873,8 @@ Connection object (default: con)
 </td>
 <td>
 <p>
-CHR scalar of the logging namespace to use (default: “db”)
+CHR scalar of the logging namespace to use during execution
+(default: “db”)
 </p>
 </td>
 </tr>
@@ -16662,7 +16883,8 @@ CHR scalar of the logging namespace to use (default: “db”)
 Value
 </h3>
 <p>
-Nothing if successful, a data frame object of the extracted parameters otherwise.
+Nothing if successful, a data frame object of the extracted
+parameters otherwise.
 </p>
 <h3>
 Note
@@ -16715,6 +16937,8 @@ resolve_peaks(
   format_checks = c("ymd_HMS", "ydm_HMS", "mdy_HMS", "dmy_HMS"),
   min_datetime = "2000-01-01 00:00:00",
   import_map = IMPORT_MAP,
+  ums_params_in = "opt_ums_params",
+  ums_params_table = "opt_ums_params",
   db_conn = con,
   log_ns = "db"
 )
@@ -16818,6 +17042,28 @@ spectra in the database (default: “ms_spectra”)
 <td>
 <p>
 data.frame object of the import map (e.g. from a CSV)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>ums_params_in</code>
+</td>
+<td>
+<p>
+CHR scalar name of the item in ‘obj’ containing
+optimized uncertainty mass spectrum parameters
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>ums_params_table</code>
+</td>
+<td>
+<p>
+CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters
 </p>
 </td>
 </tr>
@@ -18156,6 +18402,99 @@ smilestoformula(c("CCCC", "C(F)(F)F"))
 smilestoformula("CCCC")
 </pre>
 <hr/>
+<table id="fn_def_sql_to_msp" width="100%" summary="page for sql_to_msp">
+<tr>
+<td>
+sql_to_msp
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+Export SQL Database to a MSP NIST MS Format
+</h2>
+<h3>
+Description
+</h3>
+<p>
+Export SQL Database to a MSP NIST MS Format
+</p>
+<h3>
+Usage
+</h3>
+<pre>
+sql_to_msp(
+  con,
+  optimized_params = TRUE,
+  outputfile = paste0("DimSpecExport", Sys.Date(), ".msp"),
+  cormethod = "pearson",
+  normfn = "sum"
+)
+</pre>
+<h3>
+Arguments
+</h3>
+<table summary="R argblock">
+<tr valign="top">
+<td>
+<code>con</code>
+</td>
+<td>
+<p>
+SQLite database connection
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>optimized_params</code>
+</td>
+<td>
+<p>
+Boolean TRUE indicates that the optimized parameters for uncertainty mass spectra will be used.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>outputfile</code>
+</td>
+<td>
+<p>
+Text string file name and/or location to save MSP file format
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>cormethod</code>
+</td>
+<td>
+<p>
+Text string type of correlation function to use (DEFAULT = ‘pearson’)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>normfn</code>
+</td>
+<td>
+<p>
+Text string type of normalization function to use (DEFAULT = ‘sum’)
+</p>
+</td>
+</tr>
+</table>
+<h3>
+Value
+</h3>
+<p>
+None, saves a *.msp file to the local file system.
+</p>
+<hr/>
 <table id="fn_def_sqlite_auto_trigger" width="100%" summary="page for sqlite_auto_trigger">
 <tr>
 <td>
@@ -19099,7 +19438,7 @@ subdirectory of the current working directory.
 Usage
 </h3>
 <pre>
-suspectlist_at_NIST(url_file = "suspectlist_url.txt")
+suspectlist_at_NIST(url_file = file.path("config", "suspectlist_url.txt"))
 </pre>
 <h3>
 Value
@@ -20032,10 +20371,19 @@ current value of the LOGGING object. If LOGGING is changed (i.e. a logging
 namespace is added or changed) this function should be run to update routing
 and formatting to be in line with the current settings.
 </p>
+<p>
+This applies the internal routing and formatting for logger functions to the
+current value of the LOGGING object. If LOGGING is changed (i.e. a logging
+namespace is added or changed) this function should be run to update routing
+and formatting to be in line with the current settings.
+</p>
 <h3>
 Usage
 </h3>
 <pre>
+update_logger_settings(log_all_warnings = FALSE, log_all_errors =
+  FALSE)
+
 update_logger_settings(log_all_warnings = FALSE, log_all_errors =
   FALSE)
 </pre>
@@ -20072,9 +20420,20 @@ Value
 <p>
 None
 </p>
+<p>
+None
+</p>
 <h3>
 Note
 </h3>
+<p>
+The calling stack for auto logging of warnings and errors does not work
+with background processes. These settings call [logger::log_warnings()] and
+[logger::log_errors()].
+</p>
+<p>
+This function is used only for its side effects.
+</p>
 <p>
 The calling stack for auto logging of warnings and errors does not work
 with background processes. These settings call [logger::log_warnings()] and
@@ -20120,9 +20479,9 @@ Arguments
 </td>
 <td>
 <p>
-LGL scalar of whether to use the hosted version of the User Guide on GitHub
-(default: TRUE is recommended) which will always display the most up to date
-version
+LGL scalar of whether to use the hosted version of the
+User Guide on GitHub (default: TRUE is recommended) which will always
+display the most up to date version
 </p>
 </td>
 </tr>
@@ -20142,8 +20501,8 @@ CHR scalar representing a valid file path to the local user guide
 </td>
 <td>
 <p>
-CHR scalar pointing to the web resource, in this case the URL to
-the User Guide hosted on GitHub pages
+CHR scalar pointing to the web resource, in this case the URL
+to the User Guide hosted on GitHub pages
 </p>
 </td>
 </tr>
@@ -20894,7 +21253,7 @@ verify_import_requirements(
   obj,
   ignore_extra = TRUE,
   requirements_obj = "import_requirements",
-  file_name = "import_requirements.json",
+  file_name = "import_requirements",
   log_issues_as = "warn",
   log_ns = "db"
 )
@@ -20976,13 +21335,10 @@ CHR scalar of the logging namespace to use (default: “db”)
 Details
 </h3>
 <p>
-The return from this is a tibble with 6 or 7 columns depending on whether the
-import file contains data from a single sample or multiple samples. It will
-parse either way depending on where required names are located in the object
-provided to ‘obj’. If it is a single list, the return will contain 6 columns;
-if it is a nested list of samples, the return will contain 7 columns, with
-the names of the provided ‘obj’ attached to each row. Other columns contain
-information related to three checks.
+The return from this is a tibble with 9 columns. The first is the name of the
+import object member, typically the file name. If a single, unnested import
+object is provided this will be “import object”. The other columns include
+the following verification checks:
 </p>
 <p>
 <ol style="list-style-type: decimal">
@@ -21008,7 +21364,7 @@ requirements</li>
 </p>
 <p>
 <ol start="5" style="list-style-type: decimal">
-<li>has_extra: Are there unexpected values provided ? (TRUE/FALSE)</li>
+<li>has_extra: Are there unexpected values provided? (TRUE/FALSE)</li>
 </ol>
 </p>
 <p>
@@ -21040,10 +21396,7 @@ Initial use and set up may be easier in interactive sessions.
 Value
 </h3>
 <p>
-A tibble object with 6 columns containing the results of the check,
-with one row for each import object identified; if ‘obj’ is a list of
-import data, the column “import_object” is added at the left of the data
-frame with the names of the list components
+A tibble object with 9 columns containing the results of the checks.
 </p>
 <h3>
 Note

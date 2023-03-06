@@ -21,6 +21,7 @@ export_msp(
   file,
   precursor = "",
   name = "Exported Mass Spectrum",
+  headerdata = c(),
   append = FALSE
 )
 </pre>
@@ -44,6 +45,10 @@ export_msp(
 <tr valign="top"><td><code>name</code></td>
 <td>
 <p>Text name to assign to the mass spectrum (not used in spectral searching)</p>
+</td></tr>
+<tr valign="top"><td><code>headerdata</code></td>
+<td>
+<p>character string containing named values for additional data to put in the header</p>
 </td></tr>
 <tr valign="top"><td><code>append</code></td>
 <td>

@@ -27,8 +27,6 @@ dplyr::copy_to(con2, alphabet)
 check_for_value("A", "alphabet", "upper", db_conn = con2)
 check_for_value("A", "alphabet", "lower", db_conn = con2)
 check_for_value(letters[1:10], "alphabet", "lower", db_conn = con2)
-DBI::dbDisconnect(con2)
-rm(con2)
 </pre>
 
 

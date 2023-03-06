@@ -16,18 +16,21 @@ resolve_peak_ums_params(
 \arguments{
 \item{obj}{LIST object containing data formatted from the import generator}
 
-\item{peak_id}{INT scalar of the peak id in question, which must be present (e.g. from the import workflow)}
+\item{peak_id}{INT scalar of the peak ID in question, which must be present
+(e.g. from the import workflow)}
 
-\item{ums_params_in}{CHR scalar name of the item in `obj` containing optimized uncertainty mass spectrum parameters}
+\item{ums_params_in}{CHR scalar name of the item in `obj` containing
+optimized uncertainty mass spectrum parameters}
 
-\item{ums_params_table}{CHR scalar name of the database table holding optimized uncertainty mass spectrum parameters}
+\item{ums_params_table}{CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters}
 
-\item{db_conn}{Connection object (default: con)}
-
-\item{log_ns}{CHR scalar of the logging namespace to use (default: "db")}
+\item{log_ns}{CHR scalar of the logging namespace to use during execution
+(default: "db")}
 }
 \value{
-Nothing if successful, a data frame object of the extracted parameters otherwise.
+Nothing if successful, a data frame object of the extracted
+  parameters otherwise.
 }
 \description{
 This imports the defined object component containing parameters for the

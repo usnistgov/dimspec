@@ -54,9 +54,11 @@ spectra in the database (default: "ms_spectra")}
 
 \item{import_map}{data.frame object of the import map (e.g. from a CSV)}
 
-\item{ums_params_in}{CHR scalar name of the item in `obj` containing optimized uncertainty mass spectrum parameters}
+\item{ums_params_in}{CHR scalar name of the item in `obj` containing
+optimized uncertainty mass spectrum parameters}
 
-\item{ums_params_table}{CHR scalar name of the database table holding optimized uncertainty mass spectrum parameters}
+\item{ums_params_table}{CHR scalar name of the database table holding
+optimized uncertainty mass spectrum parameters}
 
 \item{db_conn}{Connection object (default: con)}
 
