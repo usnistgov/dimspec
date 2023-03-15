@@ -68,12 +68,11 @@ img {
   margin: auto;
 }
 
-#nist-logo {
-  width: 100%;
-  padding: 15px 15px 0 15px;
+#book-links {
+  padding-top: 5px;
 }
 
-#nist-logo > a > img {
+#nist-logo-link {
   filter: brightness(0) saturate(100%) invert(26%) sepia(10%) saturate(818%) hue-rotate(162deg) brightness(89%) contrast(94%);
 }
 
@@ -84,11 +83,6 @@ img {
 .dropdown-menu > .buttons > .button {
   text-align: left !important;
   padding: 8px 10px !important;
-}
-
-#book-title {
-  color: #364149;
-  margin-left: 15px;
 }
 
 #intro-contributors > ul > li > p > a > img {
@@ -185,16 +179,6 @@ div.csl-entry {
   padding-left: 1.5em;
 }
 
-.page-inner {
-  max-width: 85% !important;
-}
-
-@media (max-width: 1240px) {
-  .page-inner {
-    max-width: 95% !important;
-  }
-}
-
 li.part, li.appendix {
   border-top: 1px solid rgba(0,0,0,0.07);
 }
@@ -202,4 +186,62 @@ li.part, li.appendix {
 li.part > span, li.appendix > span {
   cursor: default !important;
   opacity: 0.75 !important;
+}
+
+
+/* Customization for gitbook overrides */
+.body-inner {
+  top: 0 !important;
+}
+
+.book-header {
+  background-color: rgb(0, 0, 0, 0) !important;
+  margin-top: -3px;
+}
+
+.page-inner {
+  max-width: 95% !important;
+  padding: 10px 0 30px;
+}
+
+.title {
+  margin-top: 0 !important;
+}
+
+.book-body .navigation {
+  max-width: 3% !important;
+  min-width: 3% !important;
+}
+
+#gitbook-title {
+  margin-top: 5px !important;
+}
+
+#github-link {
+  color: black;
+  white-space: normal;
+}
+
+#github-link:hover {
+  color: #008cff
+}
+
+#github-link.visited {
+  color: black !important;
+  white-space: normal;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* NIST footer style overrides because gitbook is single page */
+.nist-footer__menu-item:after {
+  margin-right: 0.5em !important;
+}
+.nist-footer {
+  padding: 10px 0px !important;
+}
+.nist-footer__logo > a > img {
+  margin-top: 0 !important;
 }

@@ -37,22 +37,22 @@ To get started in most cases from a blank slate:
    - If not using RStudio, open an R terminal at the project directory (or `setwd(file.path("path", "to", "project")`) and enter the command `source(file.path("R", "compliance"))`.
    - The first installation typically takes around half an hour from start to finish, depending on the speed of your internet connection and computer.
 
-A [quick guide](https://usnistgov.github.io/dimspec/quick_install.pdf) is available describing the install process.
+A [quick guide](https://pages.nist.gov/dimspec/quick_install.pdf) is available describing the install process.
 
 For evaluation and distribution purposes, DIMSpec is distributed with a populated database of per- and polyfluorinated alkyl substances (PFAS), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
 
 ## Guides and docs/dimspec_user_guide
 
-For a full description of the project and its different aspects, please see the [DIMSpec User Guide](https://usnistgov.github.io/dimspec).
+For a full description of the project and its different aspects, please see the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/index.html).
 
 A series of Quick Guides have been made available focusing on various aspects of the project.
 
-- [DIMSpec Quick Guide - Installation](https://usnistgov.github.io/dimspec/quick_install.pdf)
-- [DIMSpec Quick Guide - Plumber](https://usnistgov.github.io/dimspec/quick_plumber.pdf)
-- [DIMSpec Quick Guide - Web Applications](https://usnistgov.github.io/dimspec/quick_apps.pdf)
-- [DIMSpec Quick Guide - Advanced Use](https://usnistgov.github.io/dimspec/quick_advanced.pdf)
-- [DIMSpec Quick Guide - Importing Data](https://usnistgov.github.io/dimspec/quick_import.pdf)
-- [File Conversion using msconvert](https://usnistgov.github.io/dimspec/file_convert.pdf)
+- [DIMSpec Quick Guide - Installation](https://pages.nist.gov/dimspec/docs/quick_install.pdf)
+- [DIMSpec Quick Guide - Plumber](https://pages.nist.gov/dimspec/docs/quick_plumber.pdf)
+- [DIMSpec Quick Guide - Web Applications](https://pages.nist.gov/dimspec/docs/quick_apps.pdf)
+- [DIMSpec Quick Guide - Advanced Use](https://pages.nist.gov/dimspec/docs/quick_advanced.pdf)
+- [DIMSpec Quick Guide - Importing Data](https://pages.nist.gov/dimspec/docs/quick_import.pdf)
+- [File Conversion using msconvert](https://pages.nist.gov/dimspec/docs/file_convert.pdf)
 
 In addition, a series of video tutorials are also available.
 
