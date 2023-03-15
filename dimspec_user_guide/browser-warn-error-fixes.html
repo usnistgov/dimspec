@@ -1,0 +1,34 @@
+<!--
+  Use this file to address any browser compatibility or accessibility adjustments neccessary.
+  Opening locally (and likely hosted) throws several errors and warnings in DevTools
+  Last assessed 2023-03-14 by jared.ragland@nist.gov using MS Edge DevTools: 65 warnings and 7 errors.
+  The majority of these issues were not easily fixable and stemmed from either CORS issues or gitbook styling rules.
+-->
+<!-- Accessibility -->
+<script type="text/javascript">
+  $(document).ready(function() {
+    // No lanugage attribute is set on the html element by default.
+    $("html").attr("lang", "en");
+    $("html").attr("xml:lang", "en");
+    // Default icon role is "presentation" which is not recognized as a valid role.
+    $("#preface > p > i").attr("role", "img");
+    $("div.buttons > button").each(function(){
+      $(this).attr("type", "button");
+    });
+  })
+</script>
+<!-- Compatibility
+  Errors (15x) included unrecognized CSS, primarily inclusion of the deprecated "-ms-*" rules. These stem from gitbook-2.6.7/css/style.css and will not be overridden as they are largely inapplicable as they are inclusion of additional rules for other browser.
+  Flagged gitbook style rules (5x) included: -ms-filter, -ms-text-size-adjust, -webkit-text-size-adjust, test-size-adjust, -webkit-overflow-scrolling, -webkit-tap-highlight-color, orphans, widows.
+  Flagged font-awesome header issues (2x) included: 'content-type' should be 'font/woff' not 'application/font-woff'
+-->
+<!-- Security
+  Errors (2x) from CORS, resulting when the local version tries to include the hosted NIST header footer files. Inserting locally would somewhat fix these but make things more static. In this case, given the size of the NIST footer, it was decided to let this fail behind the scenes and render from the locally cached version of the User Guide as the tool may be used off-network in support of analytical laboratory operations. These should not be an issue with the hosted version.
+  Errors (32x) CORS-related cookie errors, see above.
+-->
+<!-- Other
+  Flagged MathJax (imported by gitbook) style rules (2x) included: 'border-radius' and 'box-shadow' being listed before '-khtml-border-radius' and '-khtml-box-shadow'.
+  Flagged gitbook style rules (2x) included: 'box-sizing' and 'text-size-adjust' being listed before '-webkit-box-sizing' and '-moz-text-size-adjust'
+  Flagged javascript (1x) from gitbook included use of navigator.platform.
+  Deprecated Feature "Expect-CT header" which wasn't found in a sources search but continues to show up in the Issues list.
+-->

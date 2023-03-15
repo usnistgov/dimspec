@@ -1542,7 +1542,7 @@ fn_guide <- function() {
 #' @return None, opens a browser to the index page of the User Guide
 #' @export
 #' 
-user_guide <- function(view_on_github = TRUE, path = file.path("docs", "user_guide", "index.html"), url_gh = "https://usnistgov.github.io/dimspec/docs/user_guide") {
+user_guide <- function(view_on_github = TRUE, path = file.path("docs", "index.html"), url_gh = "https://pages.nist.gov/dimspec/docs/index.html") {
   stopifnot(
     is.logical(view_on_github), length(view_on_github) == 1,
     is.character(path), length(path) == 1,
