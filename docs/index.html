@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-14" />
+<meta name="date" content="2023-03-16" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -73,22 +73,6 @@ $(document).ready(function(){
 <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
 
 
-<!-- Adjust display dependent upon NIST styling presence -->
-<script type="text/javascript">
-$(document).ready(function() {
-  if (!$("#nistheadergoeshere").text() == ""){
-    // Add proper markings for NIST footer placement at bottom of page
-    $("html").addClass('nist-footer-bottom');
-    $("body").attr('id', 'main');
-    // Hide the NIST logo displayed without the NIST header and footer (local)
-    $("#nist-logo-link").hide();
-  } else {
-    $("#header > h1.title").attr("style", "padding-top: 50px;");
-    $(".book-header").attr("style", "background-color: rgb(255, 255, 255) !important");
-  }
-});
-</script>
-
 <!-- Project already includes jQuery 3.6 as part of gitbook -->
 <!-- <script src="https://code.jquery.com/jquery-3.6.2.min.js" type="text/javascript" defer="defer"></script> -->
 <!-- Insert NIST leave notice -->
@@ -98,23 +82,37 @@ $(document).ready(function() {
 <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
 <script type="text/javascript">
 $(document).ready(function(){
-  // Mark external (non-nist.gov) A tags with class "external"
-  // If the adress start with https and ends with nist.gov
-  var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
-  // Regex to find address that start with https 
-  var re_absolute_address = new RegExp('^((https?:)?\/\/)');
-  $("a").each(function(){
-    var url=$(this).attr('href'); 
-    if(re_nist.test(url) || !re_absolute_address.test(url)){
-      $(this).addClass('local'); 
-    }else{
-      $(this).addClass('external');
-    } 
-  });
-  // Add leaveNotice to external A elements 
-  $('a.external').leaveNotice({
-    siteName: 'the DIMSpec User Guide',
-  });
+  // Adjust display dependent upon NIST styling presence -->
+  if (!$("#nistheadergoeshere").text() == ""){
+    // Mark external (non-nist.gov) A tags with class "external"
+    // If the adress start with https and ends with nist.gov
+    var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
+    // Regex to find address that start with https 
+    var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+    $("a").each(function(){
+      var url=$(this).attr('href'); 
+      if(re_nist.test(url) || !re_absolute_address.test(url)){
+        $(this).addClass('local'); 
+      }else{
+        $(this).addClass('external');
+      } 
+    });
+    // Add leaveNotice to external A elements 
+    $('a.external').leaveNotice({
+      siteName: 'the DIMSpec User Guide',
+    });
+    
+    // Add proper markings for NIST footer placement at bottom of page
+    $("html").addClass('nist-footer-bottom');
+    $("body").attr('id', 'main');
+    // Hide the NIST logo displayed without the NIST header and footer (local)
+    $("#nist-logo-link").hide();
+    // Set the background of the gitbook header to match that of the nist header
+    $(".book-header").css("background-color", $("#nist-header").css("background-color"));
+  } else {
+    // If not the online version, hide the non-working search tool
+    $(".js-toolbar-action[aria-label='Search']").remove();
+  }
 });
 </script>
 <!-- Insert NIST GA  -->
@@ -341,7 +339,7 @@ div.csl-indent {
 <div id="header">
 <h1 class="title">User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</h1>
 <p class="author"><em>Jared M. Ragland and Benjamin J. Place</em></p>
-<p class="date"><em>2023-03-14</em></p>
+<p class="date"><em>2023-03-16</em></p>
 </div>
 <div id="preface" class="section level1 unnumbered hasAnchor">
 <h1>Preface<a href="index.html#preface" class="anchor-section" aria-label="Anchor link to header"></a></h1>

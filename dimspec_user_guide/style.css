@@ -195,17 +195,13 @@ li.part > span, li.appendix > span {
 }
 
 .book-header {
-  background-color: rgb(0, 0, 0, 0) !important;
   margin-top: -3px;
+  height: 48px;
 }
 
 .page-inner {
   max-width: 95% !important;
   padding: 10px 0 30px;
-}
-
-.title {
-  margin-top: 0 !important;
 }
 
 .book-body .navigation {
@@ -233,6 +229,11 @@ li.part > span, li.appendix > span {
 
 body {
   -webkit-text-size-adjust: 100%;
+}
+
+.book-summary > .book-search {
+  transition: top 0s ease;
+  top: -100px;
 }
 
 /* NIST footer style overrides because gitbook is single page */
