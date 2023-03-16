@@ -43,7 +43,7 @@ To get started in most cases from a blank slate:
    - If not using RStudio, open an R terminal at the project directory (or `setwd(file.path("path", "to", "project")`) and enter the command `source(file.path("R", "compliance"))`.
    - The first installation typically takes around half an hour from start to finish, depending on the speed of your internet connection and computer.
 
-A [quick guide](https://pages.nist.gov/dimspec/quick_install.pdf) is available describing the install process.
+A [quick guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) is available describing the install process.
 
 For evaluation and distribution purposes, DIMSpec is distributed with a populated database of per- and polyfluorinated alkyl substances (PFAS), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
 
