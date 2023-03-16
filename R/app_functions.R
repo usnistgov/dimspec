@@ -1542,13 +1542,13 @@ fn_guide <- function() {
 #' @return None, opens a browser to the index page of the User Guide
 #' @export
 #' 
-user_guide <- function(view_on_github = TRUE, path = file.path("docs", "index.html"), url_gh = "https://pages.nist.gov/dimspec/docs/index.html") {
+user_guide <- function(view_online = TRUE, path = here::here("docs", "index.html"), url_gh = "https://pages.nist.gov/dimspec/docs/index.html") {
   stopifnot(
-    is.logical(view_on_github), length(view_on_github) == 1,
+    is.logical(view_online), length(view_online) == 1,
     is.character(path), length(path) == 1,
     is.character(url_gh), length(url_gh) == 1
   )
-  if (view_on_github) {
+  if (view_online) {
     if (httr::http_error(url_gh)) {
       warning("The User Guide is not available on GitHub at this time. Using a local copy. Search will be disabled.")
     } else {
