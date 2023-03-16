@@ -85,53 +85,51 @@ $(document).ready(function(){
 <script type="text/javascript" defer="defer">
 $(document).ready(function(){
   $("body").prepend('<div id="nistheadergoeshere"></div>');
-    $.ajax({
-      url: "https://pages.nist.gov/nist-header-footer/boilerplate-header.html",
-      cache: false,
-      dataType: "html",
-      success: function (data) { $('#nistheadergoeshere').append(data); },
+  $.ajax({
+    url: "https://pages.nist.gov/nist-header-footer/boilerplate-header.html",
+    cache: false,
+    dataType: "html"
+  })
+    .done(function (data) {
+      $('#nistheadergoeshere').append(data);
+      // Mark external (non-nist.gov) A tags with class "external"
+      // If the adress start with https and ends with nist.gov
+      var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
+      // Regex to find address that start with https 
+      var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+      $("a").each(function(){
+        var url=$(this).attr('href'); 
+        if(re_nist.test(url) || !re_absolute_address.test(url)){
+          $(this).addClass('local'); 
+        }else{
+          $(this).addClass('external');
+        } 
+      });
+      // Add leaveNotice to external A elements 
+      $('a.external').leaveNotice({
+        siteName: 'the DIMSpec User Guide',
+      });
+      // Add proper markings for NIST footer placement at bottom of page
+      $("html").addClass('nist-footer-bottom');
+      $("body").attr('id', 'main');
+      // Hide the NIST logo displayed without the NIST header and footer (local)
+      $("#nist-logo-link").hide();
+      // Set the background of the gitbook header to match that of the nist header
+      $(".book-header").css("background-color", $("#nist-header").css("background-color"));
+    })
+    .fail(function() {
+      $(".js-toolbar-action[aria-label='Search']").remove();
     });
 
-    $("body").append('<div id="nistfootergoeshere"></div>');
-    $.ajax({
-      url: "https://pages.nist.gov/nist-header-footer/boilerplate-footer.html",
-      cache: false,
-      dataType: "html",
-      success: function (data) { $('#nistfootergoeshere').append(data); },
+  $("body").append('<div id="nistfootergoeshere"></div>');
+  $.ajax({
+    url: "https://pages.nist.gov/nist-header-footer/boilerplate-footer.html",
+    cache: false,
+    dataType: "html"
+  })
+    .done(function (data) {
+      $('#nistfootergoeshere').append(data);
     });
-  // Adjust display dependent upon NIST styling success (will fail locally due to CORS)
-  if (!$("#nistheadergoeshere").text() == ""){
-    // Mark external (non-nist.gov) A tags with class "external"
-    // If the adress start with https and ends with nist.gov
-    var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
-    // Regex to find address that start with https 
-    var re_absolute_address = new RegExp('^((https?:)?\/\/)');
-    $("a").each(function(){
-      var url=$(this).attr('href'); 
-      if(re_nist.test(url) || !re_absolute_address.test(url)){
-        $(this).addClass('local'); 
-      }else{
-        $(this).addClass('external');
-      } 
-    });
-    // Add leaveNotice to external A elements 
-    $('a.external').leaveNotice({
-      siteName: 'the DIMSpec User Guide',
-    });
-    
-    // Add proper markings for NIST footer placement at bottom of page
-    $("html").addClass('nist-footer-bottom');
-    $("body").attr('id', 'main');
-    // Hide the NIST logo displayed without the NIST header and footer (local)
-    $("#nist-logo-link").hide();
-    // Set the background of the gitbook header to match that of the nist header
-    $(".book-header").css("background-color", $("#nist-header").css("background-color"));
-    // If the online version, the search tool is available
-    $(".js-toolbar-action[aria-label='Search']").show();
-  } else {
-    // For the local version, hide the non-working search tool
-    $(".js-toolbar-action[aria-label='Search']").hide();
-  }
 });
 </script>
 <!-- Insert NIST GA  -->
