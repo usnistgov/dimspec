@@ -70,7 +70,9 @@ $(document).ready(function(){
 -->
 <!-- Uncomment to use auto updating version-->
 <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+<!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded.
 <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+-->
 
 
 <!-- Project already includes jQuery 3.6 as part of gitbook -->
@@ -82,7 +84,22 @@ $(document).ready(function(){
 <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
 <script type="text/javascript" defer="defer">
 $(document).ready(function(){
-  // Adjust display dependent upon NIST styling presence -->
+  $("body").prepend('<div id="nistheadergoeshere"></div>');
+    $.ajax({
+      url: "https://pages.nist.gov/nist-header-footer/boilerplate-header.html",
+      cache: false,
+      dataType: "html",
+      success: function (data) { $('#nistheadergoeshere').append(data); },
+    });
+
+    $("body").append('<div id="nistfootergoeshere"></div>');
+    $.ajax({
+      url: "https://pages.nist.gov/nist-header-footer/boilerplate-footer.html",
+      cache: false,
+      dataType: "html",
+      success: function (data) { $('#nistfootergoeshere').append(data); },
+    });
+  // Adjust display dependent upon NIST styling success (will fail locally due to CORS)
   if (!$("#nistheadergoeshere").text() == ""){
     // Mark external (non-nist.gov) A tags with class "external"
     // If the adress start with https and ends with nist.gov
@@ -109,9 +126,11 @@ $(document).ready(function(){
     $("#nist-logo-link").hide();
     // Set the background of the gitbook header to match that of the nist header
     $(".book-header").css("background-color", $("#nist-header").css("background-color"));
+    // If the online version, the search tool is available
+    $(".js-toolbar-action[aria-label='Search']").show();
   } else {
-    // If not the online version, hide the non-working search tool
-    $(".js-toolbar-action[aria-label='Search']").remove();
+    // For the local version, hide the non-working search tool
+    $(".js-toolbar-action[aria-label='Search']").hide();
   }
 });
 </script>
