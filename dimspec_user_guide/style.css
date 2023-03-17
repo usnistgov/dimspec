@@ -253,6 +253,6 @@ body {
 }
 
 .book.with-search > .book-summary > .book-search {
-  top: 50px !important;
+  top: 0px !important;
   opacity: 1;
 }
