@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-16" />
+<meta name="date" content="2023-03-17" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -56,86 +56,89 @@
 <link href="libs/font-awesome-5.15.3/css/v4-shims.min.css" rel="stylesheet" />
 <!-- Insert NIST header and footer -->
 
-<!-- Comment out to use auto updating version -->
-<!--
-<link rel="stylesheet" type="text/css" href="static-nist-combined.css" />
-<script type="text/javascript">
-$(document).ready(function(){
-  $("body").prepend('<div id="nistheadergoeshere"></div>');
-  $("body").append('<div id="nistfootergoeshere"></div>');
-  $('#nistheadergoeshere').append('<header class="nist-header" id="nist-header" role="banner"><a href="https://www.nist.gov/" title="National Institute of Standards and Technology" class="nist-header__logo-link" rel="home"><svg aria-hidden="true" class="nist-header__logo-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path d="M20.911 5.375l-9.482 9.482 9.482 9.482c0.446 0.446 0.446 1.161 0 1.607l-2.964 2.964c-0.446 0.446-1.161 0.446-1.607 0l-13.25-13.25c-0.446-0.446-0.446-1.161 0-1.607l13.25-13.25c0.446-0.446 1.161-0.446 1.607 0l2.964 2.964c0.446 0.446 0.446 1.161 0 1.607z"></path></svg><svg class="nist-header__logo-image" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-237 385.7 109.7 29.3"><title>Conclusions | National Institute of Standards and Technology</title><g><path class="st0" d="M-231,415h-6v-23.1c0,0,0-4.4,4.4-5.8c4-1.3,6.6,1.3,6.6,1.3l19.7,21.3c1,0.6,1.4,0,1.4-0.6v-22h6.1V409 c0,1.9-1.6,4.4-4,5.3c-2.4,0.9-4.9,0.9-7.9-1.7l-18.5-20c-0.5-0.5-1.8-0.6-1.8,0.4L-231,415L-231,415z"/><path class="st0" d="M-195,386.1h6.1v20.7c0,2.2,1.9,2.2,3.6,2.2h26.8c1.1,0,2.4-1.3,2.4-2.7c0-1.4-1.3-2.8-2.5-2.8H-176 c-3,0.1-9.2-2.7-9.2-8.5c0-7.1,5.9-8.8,8.6-9h49.4v6.1h-12.3V415h-6v-22.9h-30.2c-2.9-0.2-4.9,4.7-0.2,5.4h18.6 c2.8,0,7.4,2.4,7.5,8.4c0,6.1-3.6,9-7.5,9H-185c-4.5,0-6.2-1.1-7.8-2.5c-1.5-1.5-1.7-2.3-2.2-5.3L-195,386.1 C-194.9,386.1-195,386.1-195,386.1z"/></g></svg></a></header>');
-  $('#nistfootergoeshere').append('<footer class="nist-footer"><div class="nist-footer__inner"><div class="nist-footer__menu" role="navigation"><ul><li class="nist-footer__menu-item"><a href="https://www.nist.gov/privacy-policy">Site Privacy</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/oism/accessibility">Accessibility</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/privacy">Privacy Program</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/oism/copyrights">Copyrights</a></li><li class="nist-footer__menu-item"><a href="https://www.commerce.gov/vulnerability-disclosure-policy">Vulnerability Disclosure</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/no-fear-act-policy">No Fear Act Policy</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/foia">FOIA</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/environmental-policy-statement">Environmental Policy</a></li><li class="nist-footer__menu-item "><a href="https://www.nist.gov/summary-report-scientific-integrity">Scientific Integrity</a></li><li class="nist-footer__menu-item "><a href="https://www.nist.gov/nist-information-quality-standards">Information Quality Standards</a></li><li class="nist-footer__menu-item"><a href="https://www.commerce.gov/">Commerce.gov</a></li><li class="nist-footer__menu-item"><a href="https://www.science.gov/">Science.gov</a></li><li class="nist-footer__menu-item"><a href="https://www.usa.gov/">USA.gov</a></li><li class="nist-footer__menu-item"><a href="https://vote.gov/">Vote.gov</a></li></ul></div></div><div class="nist-footer__logo"><a href="https://www.nist.gov/" title="National Institute of Standards and Technology" class="nist-footer__logo-link" rel="home"><img src="https://pages.nist.gov/nist-header-footer/images/nist_logo_brand_white.svg" alt="National Institute of Standards and Technology logo" /></a></div></footer>');
-});
-</script>
--->
-<!-- Uncomment to use auto updating version-->
-<link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
-<!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded.
-<script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
--->
-
-
-<!-- Project already includes jQuery 3.6 as part of gitbook -->
-<!-- <script src="https://code.jquery.com/jquery-3.6.2.min.js" type="text/javascript" defer="defer"></script> -->
-<!-- Insert NIST leave notice -->
-<!-- Project already includes jQuery 3.6 as part of gitbook -->
-<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
-<script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
-<link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
-<script type="text/javascript" defer="defer">
-$(document).ready(function(){
-  $("body").prepend('<div id="nistheadergoeshere"></div>');
-  $.ajax({
-    url: "https://pages.nist.gov/nist-header-footer/boilerplate-header.html",
-    cache: false,
-    dataType: "html"
-  })
-    .done(function (data) {
-      $('#nistheadergoeshere').append(data);
-      // Mark external (non-nist.gov) A tags with class "external"
-      // If the adress start with https and ends with nist.gov
-      var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
-      // Regex to find address that start with https 
-      var re_absolute_address = new RegExp('^((https?:)?\/\/)');
-      $("a").each(function(){
-        var url=$(this).attr('href'); 
-        if(re_nist.test(url) || !re_absolute_address.test(url)){
-          $(this).addClass('local'); 
-        }else{
-          $(this).addClass('external');
-        } 
+<!-- Comment out lines 5-13 to use auto updating version. Uncomment to use local version for testing. Use of this block for on non-NIST owned domains is prohibited.
+  <!--
+    <link rel="stylesheet" type="text/css" href="static-nist-combined.css" />
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $("body").prepend('<div id="nistheadergoeshere"></div>');
+        $("body").append('<div id="nistfootergoeshere"></div>');
+        $('#nistheadergoeshere').append('<header class="nist-header" id="nist-header" role="banner"><a href="https://www.nist.gov/" title="National Institute of Standards and Technology" class="nist-header__logo-link" rel="home"><svg aria-hidden="true" class="nist-header__logo-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path d="M20.911 5.375l-9.482 9.482 9.482 9.482c0.446 0.446 0.446 1.161 0 1.607l-2.964 2.964c-0.446 0.446-1.161 0.446-1.607 0l-13.25-13.25c-0.446-0.446-0.446-1.161 0-1.607l13.25-13.25c0.446-0.446 1.161-0.446 1.607 0l2.964 2.964c0.446 0.446 0.446 1.161 0 1.607z"></path></svg><svg class="nist-header__logo-image" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-237 385.7 109.7 29.3"><title>Conclusions | National Institute of Standards and Technology</title><g><path class="st0" d="M-231,415h-6v-23.1c0,0,0-4.4,4.4-5.8c4-1.3,6.6,1.3,6.6,1.3l19.7,21.3c1,0.6,1.4,0,1.4-0.6v-22h6.1V409 c0,1.9-1.6,4.4-4,5.3c-2.4,0.9-4.9,0.9-7.9-1.7l-18.5-20c-0.5-0.5-1.8-0.6-1.8,0.4L-231,415L-231,415z"/><path class="st0" d="M-195,386.1h6.1v20.7c0,2.2,1.9,2.2,3.6,2.2h26.8c1.1,0,2.4-1.3,2.4-2.7c0-1.4-1.3-2.8-2.5-2.8H-176 c-3,0.1-9.2-2.7-9.2-8.5c0-7.1,5.9-8.8,8.6-9h49.4v6.1h-12.3V415h-6v-22.9h-30.2c-2.9-0.2-4.9,4.7-0.2,5.4h18.6 c2.8,0,7.4,2.4,7.5,8.4c0,6.1-3.6,9-7.5,9H-185c-4.5,0-6.2-1.1-7.8-2.5c-1.5-1.5-1.7-2.3-2.2-5.3L-195,386.1 C-194.9,386.1-195,386.1-195,386.1z"/></g></svg></a></header>');
+        $('#nistfootergoeshere').append('<footer class="nist-footer"><div class="nist-footer__inner"><div class="nist-footer__menu" role="navigation"><ul><li class="nist-footer__menu-item"><a href="https://www.nist.gov/privacy-policy">Site Privacy</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/oism/accessibility">Accessibility</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/privacy">Privacy Program</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/oism/copyrights">Copyrights</a></li><li class="nist-footer__menu-item"><a href="https://www.commerce.gov/vulnerability-disclosure-policy">Vulnerability Disclosure</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/no-fear-act-policy">No Fear Act Policy</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/foia">FOIA</a></li><li class="nist-footer__menu-item"><a href="https://www.nist.gov/environmental-policy-statement">Environmental Policy</a></li><li class="nist-footer__menu-item "><a href="https://www.nist.gov/summary-report-scientific-integrity">Scientific Integrity</a></li><li class="nist-footer__menu-item "><a href="https://www.nist.gov/nist-information-quality-standards">Information Quality Standards</a></li><li class="nist-footer__menu-item"><a href="https://www.commerce.gov/">Commerce.gov</a></li><li class="nist-footer__menu-item"><a href="https://www.science.gov/">Science.gov</a></li><li class="nist-footer__menu-item"><a href="https://www.usa.gov/">USA.gov</a></li><li class="nist-footer__menu-item"><a href="https://vote.gov/">Vote.gov</a></li></ul></div></div><div class="nist-footer__logo"><a href="https://www.nist.gov/" title="National Institute of Standards and Technology" class="nist-footer__logo-link" rel="home"><img src="https://pages.nist.gov/nist-header-footer/images/nist_logo_brand_white.svg" alt="National Institute of Standards and Technology logo" /></a></div></footer>');
       });
-      // Add leaveNotice to external A elements 
-      $('a.external').leaveNotice({
-        siteName: 'the DIMSpec User Guide',
+    </script>
+  -->
+<!-- Uncomment to use auto updating version -->
+  <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
+  <!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded. That script has been recreated here with the proper modifications to override gitbook CSS with the NIST header styling; see below.
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+  -->
+  <!-- Project already includes jQuery 3.6 as part of gitbook -->
+  <!-- <script src="https://code.jquery.com/jquery-3.6.2.min.js" type="text/javascript" defer="defer"></script> -->
+  <!-- Insert NIST leave notice -->
+  <!-- Project already includes jQuery 3.6 as part of gitbook -->
+  <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
+  <script type="text/javascript" src="https://pages.nist.gov/leaveNotice/js/jquery.leaveNotice-nist.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+  <script type="text/javascript" defer="defer">
+    $(document).ready(function(){
+      $("body").prepend('<div id="nistheadergoeshere"></div>');
+      $.ajax({
+        url: "https://pages.nist.gov/nist-header-footer/boilerplate-header.html",
+        cache: false,
+        dataType: "html"
+      })
+      .done(function (data) {
+        $('#nistheadergoeshere').append(data);
+        // Mark external (non-nist.gov) A tags with class "external"
+        // If the adress start with https and ends with nist.gov
+        var re_nist = new RegExp('^https?:\/\/((^\/)*\.)*nist\\.gov(\/|$)'); 
+        // Regex to find address that start with https 
+        var re_absolute_address = new RegExp('^((https?:)?\/\/)');
+        $("a").each(function(){
+          var url=$(this).attr('href'); 
+          if(re_nist.test(url) || !re_absolute_address.test(url)){
+            $(this).addClass('local'); 
+          }else{
+            $(this).addClass('external');
+          } 
+        });
+        // Add leaveNotice to external A elements 
+        $('a.external').leaveNotice({
+          siteName: 'the DIMSpec User Guide',
+        });
+        // Add proper markings for NIST footer placement at bottom of page
+        $("html").addClass('nist-footer-bottom');
+        $("body").attr('id', 'main');
+        // Hide the NIST logo, which is displayed on local copies lacking the NIST header and footer.
+        $("#nist-logo-link").hide();
+        // Set the background of the gitbook header to match that of the NIST header.
+        $(".book-header").addClass("nist-style-header");
+        var more_styles = $("<style>.nist-style-header { background-color: " + $("#nist-header").css("background-color") + " !important; }</style>");
+        $("html > head").append(more_styles);
+      })
+      .fail(function() {
+        // The gitbook search tool does not work when launched locally as it is not using a web server.
+        $(".js-toolbar-action[aria-label='Search']").remove();
+        var online_user_guide_link = $('<li class="divider"></li><li><a href="https://pages.nist.gov/dimspec/docs/index.html" target="_blank"><i class="fa fa-bookmark"></i><p style="display: inline; font-weight: bold;">&nbsp&nbspOnline Version</p></a>');
+        $(".summary").append(online_user_guide_link);
       });
-      // Add proper markings for NIST footer placement at bottom of page
-      $("html").addClass('nist-footer-bottom');
-      $("body").attr('id', 'main');
-      // Hide the NIST logo displayed without the NIST header and footer (local)
-      $("#nist-logo-link").hide();
-      // Set the background of the gitbook header to match that of the nist header
-      $(".book-header").css("background-color", $("#nist-header").css("background-color"));
+
+    $("body").append('<div id="nistfootergoeshere"></div>');
+    $.ajax({
+      url: "https://pages.nist.gov/nist-header-footer/boilerplate-footer.html",
+      cache: false,
+      dataType: "html"
     })
-    .fail(function() {
-      $(".js-toolbar-action[aria-label='Search']").remove();
+      .done(function (data) {
+        $('#nistfootergoeshere').append(data);
+      });
     });
-
-  $("body").append('<div id="nistfootergoeshere"></div>');
-  $.ajax({
-    url: "https://pages.nist.gov/nist-header-footer/boilerplate-footer.html",
-    cache: false,
-    dataType: "html"
-  })
-    .done(function (data) {
-      $('#nistfootergoeshere').append(data);
-    });
-});
-</script>
-<!-- Insert NIST GA  -->
-<!--
-<script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
--->
+  </script>
+<!-- Insert NIST GA, uncomment line 81 to activate.  -->
+  <!--
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  -->
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools

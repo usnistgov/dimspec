@@ -194,11 +194,6 @@ li.part > span, li.appendix > span {
   top: 0 !important;
 }
 
-.book-header {
-  margin-top: -3px;
-  height: 48px;
-}
-
 .page-inner {
   max-width: 95% !important;
   padding: 10px 0 30px;
@@ -232,8 +227,8 @@ body {
 }
 
 .book-summary > .book-search {
-  transition: top 0s ease;
-  top: -100px;
+  transition: top 0s ease !important;
+  top: -100px !important;
 }
 
 /* NIST footer style overrides because gitbook is single page */
@@ -245,4 +240,13 @@ body {
 }
 .nist-footer__logo > a > img {
   margin-top: 0 !important;
+}
+
+.book-header {
+  margin-top: -3px;
+  height: 48px !important;
+}
+
+.book-header > a {
+  height: 47px !important;
 }
