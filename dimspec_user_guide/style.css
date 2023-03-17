@@ -226,11 +226,6 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-.book-summary > .book-search {
-  transition: top 0s ease !important;
-  top: -100px !important;
-}
-
 /* NIST footer style overrides because gitbook is single page */
 .nist-footer__menu-item:after {
   margin-right: 0.5em !important;
@@ -249,4 +244,15 @@ body {
 
 .book-header > a {
   height: 47px !important;
+}
+
+.book > .book-summary > .book-search {
+  transition: opacity 0s ease !important;
+  top: -100px !important;
+  opacity: 0;
+}
+
+.book.with-search > .book-summary > .book-search {
+  top: 50px !important;
+  opacity: 1;
 }
