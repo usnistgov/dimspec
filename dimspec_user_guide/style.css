@@ -199,9 +199,11 @@ li.part > span, li.appendix > span {
   padding: 10px 0 30px;
 }
 
-.book-body .navigation {
-  max-width: 3% !important;
-  min-width: 3% !important;
+@media (min-width: 1241px) {
+  .book-body .navigation {
+    max-width: 3% !important;
+    min-width: 3% !important;
+  }
 }
 
 #gitbook-title {
