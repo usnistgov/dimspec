@@ -18,7 +18,7 @@ DB_BUILT       <- length(DB_DATE) > 0
 #   - Second position: application tooling changes (e.g. new tools)
 #   - Third position: data changes (e.g. new compounds)
 #   - Fourth position: creation date
-DB_RELEASE     <- "0.9.4"
+DB_RELEASE     <- "1.0.0"
 DB_VERSION     <- sprintf("%s.%s",
                           DB_RELEASE,
                           ifelse(DB_BUILT,
