@@ -70,9 +70,9 @@
     $(document).ready(function(){
       var divider = $('<li class="divider"></li>');
       var online_user_guide_link = $('<li><a href="https://pages.nist.gov/dimspec/docs/index.html" target="_blank"><i class="fa fa-bookmark"></i><p style="display: inline; font-weight: bold;">&nbsp&nbspOnline Version</p></a>');
-      var nist_pao_privacy_link = $('<li><a href="http://www.nist.gov/public_affairs/privacy.cfm#privpolicy" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspSite Privacy</p></a>');
-      var nist_disclaimers_link = $('<li><a href="https://www.nist.gov/disclaimer" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspDisclaimers</p></a>');
-      var nist_pfas_program = $('<li><a href="https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspNIST PFAS Program - Tools</p></a>');
+      var nist_pao_privacy_link = $('<li><a href="http://www.nist.gov/public_affairs/privacy.cfm#privpolicy" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspSite Privacy</p></a>');
+      var nist_disclaimers_link = $('<li><a href="https://www.nist.gov/disclaimer" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspDisclaimers</p></a>');
+      var nist_pfas_program = $('<li><a href="https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspNIST PFAS Program - Tools</p></a>');
       $("body").prepend('<div id="nistheadergoeshere"></div>');
       $(".summary").append(divider);
       $.ajax({
@@ -130,10 +130,8 @@
       });
     });
   </script>
-<!-- Insert NIST GA, uncomment line 81 to activate.  -->
-  <!--
-    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
-  -->
+<!-- Insert NIST GA, uncomment the next line to activate.  -->
+  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -698,7 +696,7 @@ div.csl-indent {
 </div>
 <div id="creating-a-new-database" class="section level4 unnumbered hasAnchor">
 <h4>Creating a New Database<a href="instructions.html#creating-a-new-database" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>Tooling to create a new SQLite database using this schema are built into the project; functions are in the “R/db_comm.R” file and help documentation is available from within the project using the <a href="appendix-function-reference.html#fn_def_fn_guide" target="_blank"><code>fn_guide</code></a> and <a href="appendix-function-reference.html#fn_def_fn_help" target="_blank"><code>fn_help</code></a> functions. When creating a new database, prior to sourcing the compliance file, set options in the “env_glob.txt” and “env_r.R” files appropriately. If the file identified by <code>DB_NAME</code> does not exist it will be created according to the SQL scripts selected as <code>DB_BUILD_FILE</code> and <code>DB_DATA</code>; edit those files if necessary for your use case. To build a new, empty database users need only set <code>DB_NAME</code> to a file that does not exist in the project directory, and <code>DB_DATA</code> to “populate_common.sql” which contains the majority of source data necessary to populate normalization tables (see the <a href="technical-details.html#database-schema">Database Schema</a> and <a href="technical-details.html#populating-data-at-build">Populating Data</a> sections for more detail).</p>
+<p>Tooling to create a new SQLite database using this schema is built into the project; functions are in the “R/db_comm.R” file and help documentation is available from within the project using the <a href="appendix-function-reference.html#fn_def_fn_guide" target="_blank"><code>fn_guide</code></a> and <a href="appendix-function-reference.html#fn_def_fn_help" target="_blank"><code>fn_help</code></a> functions. When creating a new database, prior to sourcing the compliance file, set options in the “env_glob.txt” and “env_r.R” files appropriately. If the file identified by <code>DB_NAME</code> does not exist it will be created according to the SQL scripts selected as <code>DB_BUILD_FILE</code> and <code>DB_DATA</code>; edit those files if necessary for your use case. To build a new, empty database users need only set <code>DB_NAME</code> to a file that does not exist in the project directory, and <code>DB_DATA</code> to “populate_common.sql” which contains the majority of source data necessary to populate normalization tables (see the <a href="technical-details.html#database-schema">Database Schema</a> and <a href="technical-details.html#populating-data-at-build">Populating Data</a> sections for more detail).</p>
 <p>Alternatively, once the compliance file has been sourced, a new database may be created directly from R with the <a href="appendix-function-reference.html#fn_def_build_db" target="_blank"><code>build_db</code></a> function; this function takes as default values those provided in the environment, but you can at any time define different specifications. For example, to create a new database with a different SQL definition and population script use:</p>
 <pre><code>  build_db(
     db = “new_database.sqlite”,
@@ -848,7 +846,7 @@ div.csl-indent {
 </div>
 <div id="importing-data" class="section level3 unnumbered hasAnchor">
 <h3>Importing Data<a href="instructions.html#importing-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>For now, data imports are only supported from the command line and those generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on <a href="https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool" target="_blank">GitHub</a> that</p>
+<p>For now, data imports are only supported from the command line using outputs generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on <a href="https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool" target="_blank">GitHub</a> that</p>
 <blockquote>
 <p>“…allows for the controlled ontology of method data reporting and the export of the data into a single concise, human-readable file, written in a standard JavaScript Object Notation (JSON).”</p>
 </blockquote>

@@ -30,7 +30,7 @@ Additional members of NIST PFAS project team providing guidance, input, and test
 
 -   [Katherine Peter](https://www.researchgate.net/profile/Katherine-Peter){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0001-7379-265X){target="_blank"} (Univ. of Washington)
 
--   [John Kucklick](https://www.nist.gov/people/john-kucklick){target="_blank"} (Group Leader, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group){target="_blank"})
+-   [John Kucklick](https://www.nist.gov/people/john-kucklick){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0003-0327-0519){target="_blank"}  (Group Leader, [Biochemical and Exposure Science Group](https://www.nist.gov/mml/csd/biochemical-and-exposure-science-group){target="_blank"})
 
 -   [Catherine A. Rimmer](https://www.nist.gov/people/catherine-rimmer){target="_blank"} [![](`r if (knitr::is_html_output()) {"assets/ORCIDiD_iconvector.svg"} else {"assets/ORCIDiD_iconvector_13x13.png"}`)](https://orcid.org/0000-0001-6734-6629){target="_blank"} (Group Leader, [Organic Chemical Metrology Group](https://www.nist.gov/mml/csd/organic-chemical-metrology){target="_blank"})
 

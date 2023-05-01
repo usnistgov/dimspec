@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/">
+  <head>
+    <meta name="dtb:uid" content="urn:uuid:e5371aa6-fd3c-41bf-9176-c8fa29d74cb7" />
+    <meta name="dtb:depth" content="1" />
+    <meta name="dtb:totalPageCount" content="0" />
+    <meta name="dtb:maxPageNumber" content="0" />
+    <meta name="cover" content="fig00-02_dimspec_conceptual_graphic_png" />
+  </head>
+  <docTitle>
+    <text>A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</text>
+  </docTitle>
+  <navMap>
+    <navPoint id="navPoint-0">
+      <navLabel>
+        <text>A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</text>
+      </navLabel>
+      <content src="text/title_page.xhtml" />
+    </navPoint>
+    <navPoint id="navPoint-1">
+      <navLabel>
+        <text>A User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</text>
+      </navLabel>
+      <content src="text/ch001.xhtml#a-user-guide-for-the-nist-database-infrastructure-for-mass-spectrometry-dimspec-tool-set" />
+    </navPoint>
+    <navPoint id="navPoint-2">
+      <navLabel>
+        <text>Preface</text>
+      </navLabel>
+      <content src="text/ch002.xhtml#preface" />
+    </navPoint>
+    <navPoint id="navPoint-3">
+      <navLabel>
+        <text>Introduction</text>
+      </navLabel>
+      <content src="text/ch003.xhtml#intro-start" />
+      <navPoint id="navPoint-4">
+        <navLabel>
+          <text>Contributors</text>
+        </navLabel>
+        <content src="text/ch003.xhtml#intro-contributors" />
+      </navPoint>
+      <navPoint id="navPoint-5">
+        <navLabel>
+          <text>Contributing</text>
+        </navLabel>
+        <content src="text/ch003.xhtml#intro-contributing" />
+      </navPoint>
+      <navPoint id="navPoint-6">
+        <navLabel>
+          <text>About this Book</text>
+        </navLabel>
+        <content src="text/ch003.xhtml#intro-about" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-7">
+      <navLabel>
+        <text>Instructions</text>
+      </navLabel>
+      <content src="text/ch004.xhtml#instructions" />
+      <navPoint id="navPoint-8">
+        <navLabel>
+          <text>Installation</text>
+        </navLabel>
+        <content src="text/ch004.xhtml#installation" />
+      </navPoint>
+      <navPoint id="navPoint-9">
+        <navLabel>
+          <text>Project Directory</text>
+        </navLabel>
+        <content src="text/ch004.xhtml#project-directory" />
+      </navPoint>
+      <navPoint id="navPoint-10">
+        <navLabel>
+          <text>Project Set Up</text>
+        </navLabel>
+        <content src="text/ch004.xhtml#project-set-up" />
+      </navPoint>
+      <navPoint id="navPoint-11">
+        <navLabel>
+          <text>Using DIMSpec</text>
+        </navLabel>
+        <content src="text/ch004.xhtml#using-dimspec" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-12">
+      <navLabel>
+        <text>Technical Details</text>
+      </navLabel>
+      <content src="text/ch005.xhtml#technical-details" />
+      <navPoint id="navPoint-13">
+        <navLabel>
+          <text>Database Schema</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#database-schema" />
+      </navPoint>
+      <navPoint id="navPoint-14">
+        <navLabel>
+          <text>Populating Data at Build</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#populating-data-at-build" />
+      </navPoint>
+      <navPoint id="navPoint-15">
+        <navLabel>
+          <text>Compute Environments</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#compute-environments" />
+      </navPoint>
+      <navPoint id="navPoint-16">
+        <navLabel>
+          <text>Shiny Applications</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#shiny-applications" />
+      </navPoint>
+      <navPoint id="navPoint-17">
+        <navLabel>
+          <text>Logger</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#logger" />
+      </navPoint>
+      <navPoint id="navPoint-18">
+        <navLabel>
+          <text>Plumber</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#plumber" />
+      </navPoint>
+      <navPoint id="navPoint-19">
+        <navLabel>
+          <text>Python</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#python" />
+      </navPoint>
+      <navPoint id="navPoint-20">
+        <navLabel>
+          <text>Importing Data</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#importing-data-td" />
+      </navPoint>
+      <navPoint id="navPoint-21">
+        <navLabel>
+          <text>Future Development</text>
+        </navLabel>
+        <content src="text/ch005.xhtml#future-development" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-22">
+      <navLabel>
+        <text>Conclusions</text>
+      </navLabel>
+      <content src="text/ch006.xhtml#conclusions" />
+    </navPoint>
+    <navPoint id="navPoint-23">
+      <navLabel>
+        <text>References</text>
+      </navLabel>
+      <content src="text/ch007.xhtml#references" />
+    </navPoint>
+    <navPoint id="navPoint-24">
+      <navLabel>
+        <text>Table Explorer</text>
+      </navLabel>
+      <content src="text/ch008.xhtml#table-explorer-home" />
+      <navPoint id="navPoint-25">
+        <navLabel>
+          <text>Table Viewer</text>
+        </navLabel>
+        <content src="text/ch008.xhtml#table-explorer-table-viewer" />
+      </navPoint>
+      <navPoint id="navPoint-26">
+        <navLabel>
+          <text>Entity Relationship Diagram</text>
+        </navLabel>
+        <content src="text/ch008.xhtml#table-explorer-erd" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-27">
+      <navLabel>
+        <text>Mass Spectral Quality Control (MSQC)</text>
+      </navLabel>
+      <content src="text/ch009.xhtml#msqc-home" />
+      <navPoint id="navPoint-28">
+        <navLabel>
+          <text>Introduction</text>
+        </navLabel>
+        <content src="text/ch009.xhtml#msqc-intro" />
+      </navPoint>
+      <navPoint id="navPoint-29">
+        <navLabel>
+          <text>Instructions</text>
+        </navLabel>
+        <content src="text/ch009.xhtml#msqc-instructions" />
+      </navPoint>
+      <navPoint id="navPoint-30">
+        <navLabel>
+          <text>Technical Details</text>
+        </navLabel>
+        <content src="text/ch009.xhtml#msqc-technical-details" />
+      </navPoint>
+      <navPoint id="navPoint-31">
+        <navLabel>
+          <text>Conclusions</text>
+        </navLabel>
+        <content src="text/ch009.xhtml#msqc-conclusions" />
+      </navPoint>
+      <navPoint id="navPoint-32">
+        <navLabel>
+          <text>Appendices</text>
+        </navLabel>
+        <content src="text/ch009.xhtml#msqc-appendices" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-33">
+      <navLabel>
+        <text>Mass Spectral Match (MSMatch)</text>
+      </navLabel>
+      <content src="text/ch010.xhtml#msmatch-home" />
+      <navPoint id="navPoint-34">
+        <navLabel>
+          <text>Introduction</text>
+        </navLabel>
+        <content src="text/ch010.xhtml#msmatch-intro" />
+      </navPoint>
+      <navPoint id="navPoint-35">
+        <navLabel>
+          <text>Instructions</text>
+        </navLabel>
+        <content src="text/ch010.xhtml#msmatch-instructions" />
+      </navPoint>
+      <navPoint id="navPoint-36">
+        <navLabel>
+          <text>Technical Details</text>
+        </navLabel>
+        <content src="text/ch010.xhtml#msmatch-technical-details" />
+      </navPoint>
+      <navPoint id="navPoint-37">
+        <navLabel>
+          <text>Conclusions</text>
+        </navLabel>
+        <content src="text/ch010.xhtml#msmatch-conclusions" />
+      </navPoint>
+    </navPoint>
+    <navPoint id="navPoint-38">
+      <navLabel>
+        <text>Appendices</text>
+      </navLabel>
+      <content src="text/ch011.xhtml#appendices" />
+    </navPoint>
+    <navPoint id="navPoint-39">
+      <navLabel>
+        <text>Function Reference</text>
+      </navLabel>
+      <content src="text/ch012.xhtml#appendix-function-reference" />
+    </navPoint>
+  </navMap>
+</ncx>
