@@ -4,13 +4,11 @@
 
 Welcome to the home page of the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division.
 
-*Note, this project and its associated documentation is under active development and is likely incomplete at this time. We appreciate your patience.*
-
 ## Motivation
 
 In analytical chemistry, the objective of **non-targeted analysis (NTA)** is to detect and identify unknown (generally organic) compounds using a combination of advanced analytical instrumentation (e.g. high-resolution mass spectrometry) and computational tools. For NTA using mass spectrometry, the use of reference libraries containing fragmentation mass spectra of known compounds is essential to successfully identifying unknown compounds in complex mixtures. However, due to the diversity of vendors of mass spectrometers and mass spectrometry software, it is difficult to easily share mass spectral data sets between laboratories using different instrument vendor software packages while maintaining the quality and detail of complex data and metadata that makes the mass spectra commutable and useful. Additionally, this diversity can also alter fragmentation patterns as instrument engineering and method settings can differ between analyses.
 
-This report describes a set of tools developed in the NIST Chemical Sciences Division to provide a database infrastructure for the management and use of NTA data and associated metadata. In addition, as part of a NIST-wide effort to make data more Findable, Accessible, Interoperable, and Reusable ([FAIR](https://www.go-fair.org/){target="_blank"}), the database and affiliated tools were designed using only open-source resources that can be easily shared and reused by researchers within and outside of NIST. The information provided in this report includes guidance for the setup, population, and use of the database and its affiliated analysis tools. This effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/){target="_blank"}), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview){target="_blank"}. As that project focuses on per- and polyfluoroalkyl substances (PFAS), DIMSpec is distributed with mass spectra including compounds on the NIST Suspect List of Possible PFAS [@benjamin_place_suspect_2021] as collected using the [Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool){target="_blank"}.
+This report describes a set of tools developed in the NIST Chemical Sciences Division to provide a database infrastructure for the management and use of NTA data and associated metadata. In addition, as part of a NIST-wide effort to make data more Findable, Accessible, Interoperable, and Reusable ([FAIR](https://www.go-fair.org/)), the database and affiliated tools were designed using only open-source resources that can be easily shared and reused by researchers within and outside of NIST. The information provided in this report includes guidance for the setup, population, and use of the database and its affiliated analysis tools. This effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/)), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview). As that project focuses on per- and polyfluoroalkyl substances (PFAS), DIMSpec is distributed with mass spectra including compounds on the NIST Suspect List of Possible PFAS [@benjamin_place_suspect_2021] as collected using the [Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool).
 
 ## Features
 
@@ -35,10 +33,10 @@ To get started in most cases from a blank slate:
 
 1. Ensure R v4.1+ is installed ([download](https://www.r-project.org/))
 1. Download the project by cloning this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip).
-   - If using Windows, you will need RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) to install certain packages prior to the next step.
-1. Run the compliance script, which will install everything needed for the project.
+   - If using Windows, ensure RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) matching your R version is installed to build certain packages.
+1. Run the compliance script, which should install everything needed for the project.
    - The easiest way is to load the project using RStudio ([download](https://posit.co/download/rstudio-desktop/)).
-     - Open RStudio and click File > Open Project... and navigate to the location where you downloaded the project.
+     - Open RStudio and click "File" > "Open Project..." and navigate to the location where you downloaded the project.
      - Either open the file at "R/compliance.R" from the "Files" pane and click the "Source" button or enter the command `source(file.path("R", "compliance"))` in the console pane.
    - If not using RStudio, open an R terminal at the project directory (or `setwd(file.path("path", "to", "project")`) and enter the command `source(file.path("R", "compliance"))`.
    - The first installation typically takes around half an hour from start to finish, depending on the speed of your internet connection and computer.
@@ -60,14 +58,15 @@ A series of Quick Guides have been made available focusing on various aspects of
 - [DIMSpec Quick Guide - Importing Data](https://pages.nist.gov/dimspec/docs/quick_import.pdf)
 - [File Conversion using msconvert](https://pages.nist.gov/dimspec/docs/file_convert.pdf)
 
-In addition, a series of video tutorials are also available.
+In addition, a series of video tutorials will also be available.
 
-- [Import files and process on MSMatch (non Waters)]()(not yet available)
-- [Import files and process on MSMatch (Waters)]()(not yet available)
-- [Library searching and data mining]()(not yet available)
-- [Fragmenation searching and data mining]()(not yet available)
-- [(optional) Download and install the R program]()(not yet available)
-- [(optional) mzmine conversion]()(not yet available)
+- Import files and process on MSMatch
+  - Waters Instruments (not yet available)
+  - All Other Instruments (not yet available)
+- Library searching and data mining (not yet available)
+- Fragmenation searching and data mining (not yet available)
+- Download and install the R program (not yet available)
+- mzmine conversion (not yet available)
 
 ## Links
 
@@ -83,12 +82,12 @@ Several links can provide additional contextual information about this project. 
 If you have any issues with any portion of the repository, please feel free to contact the NIST PFAS program at <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Inquiry">pfas@nist.gov</a> directly or post an issue in the repository itself.
 
 The main contributors to this project from NIST were members of the <a href="https://www.nist.gov/mml">Material Measurement Laboratory's</a> <a href="https://www.nist.gov/mml/csd">Chemical Sciences Division</a>:
-1. Jared M. Ragland ( <a href="https://orcid.org/0000-0002-8055-2432"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> = <a href="mailto:=jared.ragland@nist.gov?subject=DIMSpec%20Inquiry">email</a> = <a href="https://www.nist.gov/people/jared-ragland">staff page</a> = <a href="https://www.nist.gov/mml/csd/chemical-informatics-group">Chemical Informatics Group</a> )
-1. Benjamin J. Place ( <a href="https://orcid.org/0000-0003-0953-5215"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> = <a href="mailto:=benjamin.place@nist.gov?subject=DIMSpec%20Inquiry">email</a> = <a href="https://www.nist.gov/people/benjamin-place">staff page</a> = <a href="https://www.nist.gov/mml/csd/organic-chemical-metrology">Organic Chemical Metrology Group</a> )
+1. Jared M. Ragland <a href="https://orcid.org/0000-0002-8055-2432"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> ([@jmr-nist-gov](https://github.com/jmr-nist-gov)) (<a href="mailto:=jared.ragland@nist.gov?subject=DIMSpec%20Inquiry">email</a>) (<a href="https://www.nist.gov/people/jared-ragland">staff page</a>) (<a href="https://www.nist.gov/mml/csd/chemical-informatics-group">Chemical Informatics Group</a>)
+1. Benjamin J. Place <a href="https://orcid.org/0000-0003-0953-5215"><img src="https://avatars.githubusercontent.com/u/1122775?s=200&v=4" alt="orcid icon with link" width="15"></a> ([@benjaminplace](https://github.com/benjaminplace)) (<a href="mailto:=benjamin.place@nist.gov?subject=DIMSpec%20Inquiry">email</a>) (<a href="https://www.nist.gov/people/benjamin-place">staff page</a>) (<a href="https://www.nist.gov/mml/csd/organic-chemical-metrology">Organic Chemical Metrology Group</a>)
 
 ## Contributing
 
-NIST projects are provided as a public service, and we always appreciate feedback and contributions. If you have a contribution, feel free to fork this project, open a PR, or start a discussion. The authors hope this effort spurs further innovations in the NTA open data space for mass spectrometry.
+NIST projects are provided as a public service, and we always appreciate feedback and contributions. If you have a contribution, feel free to fork this project, open a PR, or start a discussion. The authors hope this effort spurs further innovations in the NTA open data space for environmental mass spectrometry.
 
 ## Disclaimer
 

@@ -33,7 +33,7 @@ bookdown::gitbook:
       isCaseSensitive: false
       threshold: 0.0
       distance: 0
-  url: https://pages.nist.gov/dimspec
+  url: https://pages.nist.gov/dimspec/docs
   github-repo: usnistgov/dimspec/tree/main
   bibliography: ["book.bib", "packages.bib", "references.bib"]
   link-citations: true

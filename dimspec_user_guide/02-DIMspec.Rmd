@@ -2,7 +2,7 @@
 
 ## Installation {#installation .unnumbered}
 
-At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library. It is best used as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/){target="_blank"}[^2] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
+At the moment, this tool set is only available outside of NIST through [GitHub](https://github.com/usnistgov/dimspec){target="_blank"} (the preference, either by fork, clone, or download) or directly from one of this book's authors. For now, this tool set includes the NIST PFAS Spectral Library. It is best used as an R project which can be opened directly in the [RStudio Integrated Development Environment (IDE)](https://www.rstudio.com/){target="_blank"}[^2] which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.
 
 [^2]: Any mention of commercial products within NIST web pages is for information only; it does not imply recommendation or endorsement by NIST.
 
@@ -22,23 +22,23 @@ DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit[^3] pl
 
 The following sections provide more detailed information on how to use the tools provided to interact with the database and customize it for other uses.
 
-### Quick Start Guide {#quick-start-guide .unnumbered}
+### Initial Setup {#quick-start-guide .unnumbered}
 
-This section provides instructions in a "quick start" format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project are also available for download from this book; find and click the download button at the top of this page and select your download of choice.
+This section provides instructions in a "quick start" format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project, including [installation](https://pages.nist.gov/dimspec/docs/quick_install.pdf){target="_blank"}, are also available in the repository (listed in the project [README](https://github.com/usnistgov/dimspec){target="_blank"}) and for download from the online [User Guide](https://pages.nist.gov/dimspec/docs) by clicking the download icon in the header at the top of the User Guide to select your download of choice.
 
 -   *If using RStudio:*
     1.  Open the project in RStudio.
-    2.  Open the file at "R/compliance.R" in the editor.
+    2.  Open the file at `"R/compliance.R"` in the editor.
     3.  Run the compliance script by clicking the "Source" button at the top right of the editor pane or typing `source("R/compliance.R")` in the console pane.
 -   *If not using RStudio:*
     1.  Open an R session in the project directory or launch R and set your working directory to that of the project (e.g. `setwd(file.path("path", "to", "dimspec_dir")`).
     2.  Execute the command `source("R/compliance.R")`.
 
-Using either method should in most cases establish the compute environment, including logging and argument validation, binding to a python environment providing rdkit support, launching an API server, and listing out the shiny apps available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to evaluate capabilities for reuse in other projects.
+Using either method should in most cases establish the compute environment, activate logging and argument validation, bind to a python environment providing rdkit support, launch an API server, and list out the web applications available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to evaluate capabilities for reuse in other projects.
 
 ## Project Directory {#project-directory .unnumbered}
 
-The project directory contains the following directories of interest:
+The project directory contains the following directories of interest. Generally, the only modifications (if any) that should be necessary to operate DIMSpec projects are to environment establishment files located in the `/config` directory or in the `/inst` directory if extending the DIMSpec API or web applications.
 
 -   `/config` Files pertaining to the build, description, and population of the underlying database, as well as certain compute environment settings and import settings. This serves for rapid rebuilding and reuse of the underlying database structure. Also included are environment establishment files for the project ("env_glob.txt"), the R session ("env_R.R") and the optional logging ("env_logger.R") functionality.
 
@@ -58,17 +58,17 @@ The project directory contains the following directories of interest:
 
     -   `/apps` Environment establishment, general resources, and shiny application files are located here. Each application is contained within its own directory.
 
--   `/logs` If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the "db" namespace will be written to "logs/log_db.txt").
+-   `/logs` If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the "db" namespace will be written to `"logs/log_db.txt"`).
 
 -   `/R` directory; most general R functions are housed here or in one of the subdirectories.
 
 ## Project Set Up {#project-set-up .unnumbered}
 
-Running the compliance script at `"R/compliance.R"` will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the [Compute Environments](#compute-environments) section. To accept the default settings, source the compliance file and move on to the [Using DIMSpec](#using-dimspec) section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.
+Running the compliance script at `"/R/compliance.R"` will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the [Compute Environments](#compute-environments) section. To accept the default settings, source the compliance file and move on to the [Using DIMSpec](#using-dimspec) section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.
 
 ### Step 1 - Customize global environment settings {#step-1---global-compute-environment-settings .unnumbered}
 
-Several options are available to customize the use of DIMSpec to any given project component; settings are in the file "/config/env_glob.txt". These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.
+Several options are available to customize the use of DIMSpec to any given project component; settings are in the file `"/config/env_glob.txt"`. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.
 
 +----------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Setting**    | **Type** | **Description**                                                                                                                                                                                                                                            |
@@ -114,7 +114,7 @@ Several options are available to customize the use of DIMSpec to any given proje
 
 ### Step 2 - Customize R session settings in the "env_R.R" file {#step-2---customizing-r-session-settings-in-the-env_r.r-file .unnumbered}
 
-More customization options that require R are available to set up the project specifically for your application. Open the file "config/env_R.R" to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.
+More customization options that require R are available to set up the project specifically for your application. Open the file `"config/env_R.R"` to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.
 
 +------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Setting**      | **Type**         | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -202,7 +202,7 @@ This project uses SQLite by default as a portable database engine where the data
 
 #### Creating a New Database {#creating-a-new-database .unnumbered}
 
-Tooling to create a new SQLite database using this schema are built into the project; functions are in the "R/db_comm.R" file and help documentation is available from within the project using the [`fn_guide()`](#fn_def_fn_guide){target="_blank"} and [`fn_help`](#fn_def_fn_help){target="_blank"} functions. When creating a new database, prior to sourcing the compliance file, set options in the "env_glob.txt" and "env_r.R" files appropriately. If the file identified by `DB_NAME` does not exist it will be created according to the SQL scripts selected as `DB_BUILD_FILE` and `DB_DATA`; edit those files if necessary for your use case. To build a new, empty database users need only set `DB_NAME` to a file that does not exist in the project directory, and `DB_DATA` to "populate_common.sql" which contains the majority of source data necessary to populate normalization tables (see the [Database Schema](#database-schema) and [Populating Data](#populating-data-at-build) sections for more detail).
+Tooling to create a new SQLite database using this schema is built into the project; functions are in the "R/db_comm.R" file and help documentation is available from within the project using the [`fn_guide`](#fn_def_fn_guide){target="_blank"} and [`fn_help`](#fn_def_fn_help){target="_blank"} functions. When creating a new database, prior to sourcing the compliance file, set options in the "env_glob.txt" and "env_r.R" files appropriately. If the file identified by `DB_NAME` does not exist it will be created according to the SQL scripts selected as `DB_BUILD_FILE` and `DB_DATA`; edit those files if necessary for your use case. To build a new, empty database users need only set `DB_NAME` to a file that does not exist in the project directory, and `DB_DATA` to "populate_common.sql" which contains the majority of source data necessary to populate normalization tables (see the [Database Schema](#database-schema) and [Populating Data](#populating-data-at-build) sections for more detail).
 
 Alternatively, once the compliance file has been sourced, a new database may be created directly from R with the [`build_db`](#fn_def_build_db){target="_blank"} function; this function takes as default values those provided in the environment, but you can at any time define different specifications. For example, to create a new database with a different SQL definition and population script use:
 
@@ -218,7 +218,7 @@ If a connection already exists that you wish to maintain in the session, be sure
 
 #### Connecting to Multiple Databases {#connecting-to-multiple-databases .unnumbered}
 
-If your project needs to connect to multiple databases, separate connections can be made and managed within a single R session. For convenience, the supplied [`manage_connection`](#fn_def_manage_connection){target="_blank"} function will apply to the database and connection object defined in the setup files (see [Project Set Up](#project-set-up)). Enable a second connection alongside existing connections (e.g. the one created in the previous section) with `manage_connection(db = “new_database.sqlite”, conn_name = “con2”)` . There is no limit to the number of connections that can be made in this manner, and the WAL will be flushed each time this function is called if no other connections exist.
+If your project needs to connect to multiple databases, separate connections can be made and managed within a single R session. For convenience, the supplied [`manage_connection`](#fn_def_manage_connection){target="_blank"} function will apply to the database and connection object defined in the setup files (see [Project Set Up](#project-set-up)). Enable new connections alongside existing connections (e.g. the one created in the previous section) with `manage_connection(db = “new_database.sqlite”, conn_name = “con2”)` where `db` points to the new database file and `conn_name` does not exist in the current environment. There is no limit to the number of connections that can be made in this manner, and the WAL will be flushed each time this function is called if no other connections exist.
 
 ### Using a Database Connection in an R Session {#using-a-database-connection-in-an-r-session .unnumbered}
 
@@ -383,7 +383,7 @@ An application template is also included which should accelerate development of 
 
 ### Importing Data {#importing-data .unnumbered}
 
-For now, data imports are only supported from the command line and those generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool){target="_blank"} that
+For now, data imports are only supported from the command line using outputs generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool){target="_blank"} that
 
 > "...allows for the controlled ontology of method data reporting and the export of the data into a single concise, human-readable file, written in a standard JavaScript Object Notation (JSON)."
 
@@ -777,7 +777,7 @@ Populating data can be accomplished automatically at build time from CSV or SQL 
 
 ## Compute Environments {#compute-environments .unnumbered}
 
-Several environment resolution options are available in this project depending on which aspects are requested by the user. The default setting in the R/compliance.R file creates an R session that (1) connects to a database, (2) turns on the logging functionality, (3) turns on argument validation for certain R functions, (4) makes rdkit available to that session, and (5) spins up an API server in a background process can take a "considerable" amount of time (e.g. up to 3 minutes on slower systems; more typically this is around 90 seconds) but is still much slower than users may be accustomed to by loading packages. Environment values are set by configuration files, most of which are described in the Project Set Up section. To increase system compatibility, these are not set at the system level, but rather kept at the session level.
+Several environment resolution options are available in this project depending on which aspects are requested by the user. The default setting in the R/compliance.R file creates an R session that (1) connects to a database, (2) turns on the logging functionality, (3) turns on argument validation for certain R functions, (4) makes rdkit available to that session, and (5) spins up an API server in a background process; this can take a considerable amount of time (e.g. up to 3 minutes on slower systems; more typically this is around 90 seconds) and may be slower than users are accustomed to when loading packages. Environment values are set by configuration files, most of which are described in the Project Set Up section. To increase system compatibility, these are not set at the system level, but rather kept at the session level.
 
 Users likely will not need every aspect each time. Starting an R session that can (re)build or connect directly to a database, or simply launching the API server, does not require every aspect. Editing the environment files, primarily in "config/env_glob.txt" and "config/env_R.R" ([Table 1](#step-1---global-compute-environment-settings); [Table 2](#step-2---customizing-r-session-settings-in-the-env_r.r-file)) will determine which aspects are made available in the session.
 

@@ -70,9 +70,9 @@
     $(document).ready(function(){
       var divider = $('<li class="divider"></li>');
       var online_user_guide_link = $('<li><a href="https://pages.nist.gov/dimspec/docs/index.html" target="_blank"><i class="fa fa-bookmark"></i><p style="display: inline; font-weight: bold;">&nbsp&nbspOnline Version</p></a>');
-      var nist_pao_privacy_link = $('<li><a href="http://www.nist.gov/public_affairs/privacy.cfm#privpolicy" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspSite Privacy</p></a>');
-      var nist_disclaimers_link = $('<li><a href="https://www.nist.gov/disclaimer" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspDisclaimers</p></a>');
-      var nist_pfas_program = $('<li><a href="https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools" target="_blank"><i class="fa fa-info"></i><p style="display: inline;">&nbsp&nbspNIST PFAS Program - Tools</p></a>');
+      var nist_pao_privacy_link = $('<li><a href="http://www.nist.gov/public_affairs/privacy.cfm#privpolicy" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspSite Privacy</p></a>');
+      var nist_disclaimers_link = $('<li><a href="https://www.nist.gov/disclaimer" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspDisclaimers</p></a>');
+      var nist_pfas_program = $('<li><a href="https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools" target="_blank"><i class="fa fa-info-circle"></i><p style="display: inline;">&nbsp&nbspNIST PFAS Program - Tools</p></a>');
       $("body").prepend('<div id="nistheadergoeshere"></div>');
       $(".summary").append(divider);
       $.ajax({
@@ -130,10 +130,8 @@
       });
     });
   </script>
-<!-- Insert NIST GA, uncomment line 81 to activate.  -->
-  <!--
-    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
-  -->
+<!-- Insert NIST GA, uncomment the next line to activate.  -->
+  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -355,7 +353,7 @@ div.csl-indent {
 <h1>Instructions<a href="instructions.html#instructions" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="installation" class="section level2 unnumbered hasAnchor">
 <h2>Installation<a href="instructions.html#installation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>At the moment, this tool set is only available outside of NIST through GitHub (the preference, either by fork, clone, or download) or directly from one of this book’s authors. For now, this tool set includes the NIST PFAS Spectral Library. It is best used as an R project which can be opened directly in the <a href="https://www.rstudio.com/" target="_blank">RStudio Integrated Development Environment (IDE)</a><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
+<p>At the moment, this tool set is only available outside of NIST through <a href="https://github.com/usnistgov/dimspec" target="_blank">GitHub</a> (the preference, either by fork, clone, or download) or directly from one of this book’s authors. For now, this tool set includes the NIST PFAS Spectral Library. It is best used as an R project which can be opened directly in the <a href="https://www.rstudio.com/" target="_blank">RStudio Integrated Development Environment (IDE)</a><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> which may be downloaded and installed free of charge if not already installed on a target system. Initial set up does require an internet connection to download software installers and dependencies; on a system which does not contain any software components this can take a considerable amount of time.</p>
 <div id="system-requirements" class="section level3 unnumbered hasAnchor">
 <h3>System Requirements<a href="instructions.html#system-requirements" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>DIMSpec has been tested on both Windows 10 and Ubuntu 20.0.4.3 LTS 64-bit<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> platforms and should run on any system able to install R, Python, SQLite3, and a web browser, though installation details may vary for other operating systems. Follow the instructions for each requirement on the target operating system.</p>
@@ -366,13 +364,13 @@ div.csl-indent {
 <p>The following sections provide more detailed information on how to use the tools provided to interact with the database and customize it for other uses.</p>
 </div>
 <div id="quick-start-guide" class="section level3 unnumbered hasAnchor">
-<h3>Quick Start Guide<a href="instructions.html#quick-start-guide" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>This section provides instructions in a “quick start” format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project are also available for download from this book; find and click the download button at the top of this page and select your download of choice.</p>
+<h3>Initial Setup<a href="instructions.html#quick-start-guide" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>This section provides instructions in a “quick start” format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project, including <a href="https://pages.nist.gov/dimspec/docs/quick_install.pdf" target="_blank">installation</a>, are also available in the repository (listed in the project <a href="https://github.com/usnistgov/dimspec" target="_blank">README</a>) and for download from the online <a href="https://pages.nist.gov/dimspec/docs" target="_blank">User Guide</a> by clicking the download icon in the header at the top of the User Guide to select your download of choice.</p>
 <ul>
 <li><em>If using RStudio:</em>
 <ol style="list-style-type: decimal">
 <li>Open the project in RStudio.</li>
-<li>Open the file at “R/compliance.R” in the editor.</li>
+<li>Open the file at <code>"R/compliance.R"</code> in the editor.</li>
 <li>Run the compliance script by clicking the “Source” button at the top right of the editor pane or typing <code>source("R/compliance.R")</code> in the console pane.</li>
 </ol></li>
 <li><em>If not using RStudio:</em>
@@ -381,12 +379,12 @@ div.csl-indent {
 <li>Execute the command <code>source("R/compliance.R")</code>.</li>
 </ol></li>
 </ul>
-<p>Using either method should in most cases establish the compute environment, including logging and argument validation, binding to a python environment providing rdkit support, launching an API server, and listing out the shiny apps available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to evaluate capabilities for reuse in other projects.</p>
+<p>Using either method should in most cases establish the compute environment, activate logging and argument validation, bind to a python environment providing rdkit support, launch an API server, and list out the web applications available. The project is distributed with a database populated with high resolution mass spectrometry data for per- and polyfluoroalkyl substances (PFAS) for evaluation purposes both to distribute this data set and to evaluate capabilities for reuse in other projects.</p>
 </div>
 </div>
 <div id="project-directory" class="section level2 unnumbered hasAnchor">
 <h2>Project Directory<a href="instructions.html#project-directory" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The project directory contains the following directories of interest:</p>
+<p>The project directory contains the following directories of interest. Generally, the only modifications (if any) that should be necessary to operate DIMSpec projects are to environment establishment files located in the <code>/config</code> directory or in the <code>/inst</code> directory if extending the DIMSpec API or web applications.</p>
 <ul>
 <li><p><code>/config</code> Files pertaining to the build, description, and population of the underlying database, as well as certain compute environment settings and import settings. This serves for rapid rebuilding and reuse of the underlying database structure. Also included are environment establishment files for the project (“env_glob.txt”), the R session (“env_R.R”) and the optional logging (“env_logger.R”) functionality.</p>
 <ul>
@@ -401,16 +399,16 @@ div.csl-indent {
 <li><p><code>/plumber</code> Environment establishment and API definition functions are located here. These will determine how requests to the API are routed and functionality are provided through http protocols in a RESTful manner. It comes complete with Swagger documentation available when the server is running.</p></li>
 <li><p><code>/apps</code> Environment establishment, general resources, and shiny application files are located here. Each application is contained within its own directory.</p></li>
 </ul></li>
-<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the “db” namespace will be written to “logs/log_db.txt”).</p></li>
+<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the “db” namespace will be written to <code>“logs/log_db.txt”</code>).</p></li>
 <li><p><code>/R</code> directory; most general R functions are housed here or in one of the subdirectories.</p></li>
 </ul>
 </div>
 <div id="project-set-up" class="section level2 unnumbered hasAnchor">
 <h2>Project Set Up<a href="instructions.html#project-set-up" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Running the compliance script at <code>"R/compliance.R"</code> will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the <a href="technical-details.html#compute-environments">Compute Environments</a> section. To accept the default settings, source the compliance file and move on to the <a href="instructions.html#using-dimspec">Using DIMSpec</a> section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.</p>
+<p>Running the compliance script at <code>"/R/compliance.R"</code> will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the <a href="technical-details.html#compute-environments">Compute Environments</a> section. To accept the default settings, source the compliance file and move on to the <a href="instructions.html#using-dimspec">Using DIMSpec</a> section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.</p>
 <div id="step-1---global-compute-environment-settings" class="section level3 unnumbered hasAnchor">
 <h3>Step 1 - Customize global environment settings<a href="instructions.html#step-1---global-compute-environment-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>Several options are available to customize the use of DIMSpec to any given project component; settings are in the file “/config/env_glob.txt”. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.</p>
+<p>Several options are available to customize the use of DIMSpec to any given project component; settings are in the file <code>“/config/env_glob.txt”</code>. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.</p>
 <table>
 <caption>Table 1: Customizing global settings in the “/config/env_glob.txt” file</caption>
 <colgroup>
@@ -521,7 +519,7 @@ div.csl-indent {
 </div>
 <div id="step-2---customizing-r-session-settings-in-the-env_r.r-file" class="section level3 unnumbered hasAnchor">
 <h3>Step 2 - Customize R session settings in the “env_R.R” file<a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>More customization options that require R are available to set up the project specifically for your application. Open the file “config/env_R.R” to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.</p>
+<p>More customization options that require R are available to set up the project specifically for your application. Open the file <code>“config/env_R.R”</code> to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.</p>
 <table>
 <caption>Table 2: Customizing settings specific to the R environment</caption>
 <colgroup>
@@ -698,7 +696,7 @@ div.csl-indent {
 </div>
 <div id="creating-a-new-database" class="section level4 unnumbered hasAnchor">
 <h4>Creating a New Database<a href="instructions.html#creating-a-new-database" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>Tooling to create a new SQLite database using this schema are built into the project; functions are in the “R/db_comm.R” file and help documentation is available from within the project using the <a href="appendix-function-reference.html#fn_def_fn_guide" target="_blank"><code>fn_guide()</code></a> and <a href="appendix-function-reference.html#fn_def_fn_help" target="_blank"><code>fn_help</code></a> functions. When creating a new database, prior to sourcing the compliance file, set options in the “env_glob.txt” and “env_r.R” files appropriately. If the file identified by <code>DB_NAME</code> does not exist it will be created according to the SQL scripts selected as <code>DB_BUILD_FILE</code> and <code>DB_DATA</code>; edit those files if necessary for your use case. To build a new, empty database users need only set <code>DB_NAME</code> to a file that does not exist in the project directory, and <code>DB_DATA</code> to “populate_common.sql” which contains the majority of source data necessary to populate normalization tables (see the <a href="technical-details.html#database-schema">Database Schema</a> and <a href="technical-details.html#populating-data-at-build">Populating Data</a> sections for more detail).</p>
+<p>Tooling to create a new SQLite database using this schema is built into the project; functions are in the “R/db_comm.R” file and help documentation is available from within the project using the <a href="appendix-function-reference.html#fn_def_fn_guide" target="_blank"><code>fn_guide</code></a> and <a href="appendix-function-reference.html#fn_def_fn_help" target="_blank"><code>fn_help</code></a> functions. When creating a new database, prior to sourcing the compliance file, set options in the “env_glob.txt” and “env_r.R” files appropriately. If the file identified by <code>DB_NAME</code> does not exist it will be created according to the SQL scripts selected as <code>DB_BUILD_FILE</code> and <code>DB_DATA</code>; edit those files if necessary for your use case. To build a new, empty database users need only set <code>DB_NAME</code> to a file that does not exist in the project directory, and <code>DB_DATA</code> to “populate_common.sql” which contains the majority of source data necessary to populate normalization tables (see the <a href="technical-details.html#database-schema">Database Schema</a> and <a href="technical-details.html#populating-data-at-build">Populating Data</a> sections for more detail).</p>
 <p>Alternatively, once the compliance file has been sourced, a new database may be created directly from R with the <a href="appendix-function-reference.html#fn_def_build_db" target="_blank"><code>build_db</code></a> function; this function takes as default values those provided in the environment, but you can at any time define different specifications. For example, to create a new database with a different SQL definition and population script use:</p>
 <pre><code>  build_db(
     db = “new_database.sqlite”,
@@ -711,7 +709,7 @@ div.csl-indent {
 </div>
 <div id="connecting-to-multiple-databases" class="section level4 unnumbered hasAnchor">
 <h4>Connecting to Multiple Databases<a href="instructions.html#connecting-to-multiple-databases" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>If your project needs to connect to multiple databases, separate connections can be made and managed within a single R session. For convenience, the supplied <a href="appendix-function-reference.html#fn_def_manage_connection" target="_blank"><code>manage_connection</code></a> function will apply to the database and connection object defined in the setup files (see <a href="instructions.html#project-set-up">Project Set Up</a>). Enable a second connection alongside existing connections (e.g. the one created in the previous section) with <code>manage_connection(db = “new_database.sqlite”, conn_name = “con2”)</code> . There is no limit to the number of connections that can be made in this manner, and the WAL will be flushed each time this function is called if no other connections exist.</p>
+<p>If your project needs to connect to multiple databases, separate connections can be made and managed within a single R session. For convenience, the supplied <a href="appendix-function-reference.html#fn_def_manage_connection" target="_blank"><code>manage_connection</code></a> function will apply to the database and connection object defined in the setup files (see <a href="instructions.html#project-set-up">Project Set Up</a>). Enable new connections alongside existing connections (e.g. the one created in the previous section) with <code>manage_connection(db = “new_database.sqlite”, conn_name = “con2”)</code> where <code>db</code> points to the new database file and <code>conn_name</code> does not exist in the current environment. There is no limit to the number of connections that can be made in this manner, and the WAL will be flushed each time this function is called if no other connections exist.</p>
 </div>
 </div>
 <div id="using-a-database-connection-in-an-r-session" class="section level3 unnumbered hasAnchor">
@@ -848,7 +846,7 @@ div.csl-indent {
 </div>
 <div id="importing-data" class="section level3 unnumbered hasAnchor">
 <h3>Importing Data<a href="instructions.html#importing-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>For now, data imports are only supported from the command line and those generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on <a href="https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool" target="_blank">GitHub</a> that</p>
+<p>For now, data imports are only supported from the command line using outputs generated by the NIST Non-Targeted Analysis Method Reporting Tool (NTA MRT). That tool is a macro-enabled Microsoft Excel® workbook available on <a href="https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool" target="_blank">GitHub</a> that</p>
 <blockquote>
 <p>“…allows for the controlled ontology of method data reporting and the export of the data into a single concise, human-readable file, written in a standard JavaScript Object Notation (JSON).”</p>
 </blockquote>
