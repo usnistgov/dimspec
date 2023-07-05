@@ -13,17 +13,11 @@
 this looks for log text files in the directory defined by 'LOG_DIRECTORY' in
 the session.
 </p>
-<p>By default if 'file' does not exist (i.e. 'file' is not a fully defined path)
-this looks for log text files in the directory defined by 'LOG_DIRECTORY' in
-the session.
-</p>
 
 
 <h3>Usage</h3>
 
 <pre>
-read_log("log.txt")
-
 read_log("log.txt")
 </pre>
 
@@ -50,9 +44,6 @@ just to print the log to the console.</p>
 
 <h3>Value</h3>
 
-<p>CHR vector of the requested log file entries if 'as_object' is TRUE,
-or none with a console print if 'as_object' is FALSE
-</p>
 <p>CHR vector of the requested log file entries if 'as_object' is TRUE,
 or none with a console print if 'as_object' is FALSE
 </p>

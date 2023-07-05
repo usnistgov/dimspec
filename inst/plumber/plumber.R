@@ -542,20 +542,35 @@ function(fragment_ions, mass_error = 5, min_error = 0.002) {
         statement = glue::glue("select id, name from compounds where id in ({paste0(unique(.$compound_id), collapse = ',')})")
       ) %>%
         rename("compound_name" = "name",
-               "compound_id" = "id"),
-      by = c("compound_id" = "compound_id")
+               "compound_id" = "id")
     ) %>%
-    group_by(annotated_fragment_id) %>%
+    left_join(
+      DBI::dbGetQuery(
+        conn = con,
+        statement = glue::glue("select annotated_fragment_id, mz, ppm_error from view_annotated_fragments where annotated_fragment_id in ({paste0(unique(.$annotated_fragment_id), collapse = ',')})")
+      )
+    ) %>%
+    group_by(norm_fragment_id) %>%
     mutate(peak_id = if ("peak_id" %in% names(.)) peak_id else NA_integer_) %>%
     nest(compounds = starts_with("compound"),
-         peak_id = c(peak_id)) %>%
+         peak_ids = c(peak_id),
+         annotated_fragments = c(annotated_fragment_id, mz, ppm_error)) %>%
     mutate(compounds = lapply(compounds, distinct),
            n_compounds = sapply(compounds, nrow, simplify = TRUE),
-           peak_id = lapply(peak_id, function(x) pull(unique(x))),
-           n_peaks = sapply(peak_id, length)
+           peak_ids = lapply(peak_ids, function(x) pull(unique(x))),
+           n_peaks = sapply(peak_ids, length),
+           annotated_fragments = lapply(
+             annotated_fragments,
+             function(x)
+               x %>%
+               group_by(annotated_fragment_id) %>%
+               add_count(name = "measured_n_times") %>%
+               distinct()
+           ),
+           n_annotations = sapply(annotated_fragments, function(x) sum(x$measured_n_times), simplify = TRUE)
     ) %>%
     mutate(has_smiles = !is.na(smiles)) %>%
-    select(annotated_fragment_id, compounds, peak_id, formula, fixedmass, netcharge, radical, has_smiles, smiles, n_compounds, n_peaks)
+    select(norm_fragment_id, compounds, peak_ids, annotated_fragments, formula, fixedmass, netcharge, radical, has_smiles, smiles, n_compounds, n_peaks, n_annotations)
   return(out)
 }
 

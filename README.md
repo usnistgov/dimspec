@@ -2,7 +2,11 @@
 
 ## About
 
-Welcome to the home page of the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division.
+Welcome to the home page of the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical method, quality analysis, and samples.
+
+## Latest News
+
+2023 July (@jmr-nist-gov) - DIMSpec has been updated to its first release candidate version. Changes include schema tightening for annotated fragments and PFAS data updates including consistency updates to analayte nomenclature including aliases, and other minor bug fixes.
 
 ## Motivation
 
@@ -45,7 +49,7 @@ A [quick guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) is availa
 
 For evaluation and distribution purposes, DIMSpec is distributed with a populated database of per- and polyfluorinated alkyl substances (PFAS), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
 
-## Guides and docs/dimspec_user_guide
+## Guides and Documentation
 
 For a full description of the project and its different aspects, please see the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/index.html).
 

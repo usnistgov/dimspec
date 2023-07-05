@@ -702,7 +702,7 @@ dashboardPage(
       # About ----
       tabItem("about",
               fluidRow(
-                box(title = "About this tool",
+                box(title = NULL,
                     width = 12,
                     solidHeader = FALSE,
                     status = "primary",

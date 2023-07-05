@@ -117,56 +117,6 @@ p {
   min-width: 250px;
 }
 
-#fig02-08 {
-  width: 100%;
-  max-width: 800px;
-}
-
-#fig03-02 {
-  max-width: 700px;
-}
-
-#fig03-03 {
-  width: 100%;
-  max-width: 700px;
-}
-
-#fig04-01 {
-  max-width: 800px;
-}
-
-#fig04-03 {
-  max-width: 500px;
-}
-
-#fig04-04 {
-  max-width: 900px;
-}
-
-#fig04-05 {
-  max-width: 600px;
-}
-
-#fig04-09 {
-  max-width: 400px;
-}
-
-#fig04-10 {
-  max-width: 500px;
-}
-
-#fig04-11 {
-  max-width: 800px;
-}
-
-#fig04-12 {
-  max-width: 800px;
-}
-
-#fig05-05 {
-  width: 900px;
-}
-
 .signature-block { padding-left: 10px; }
 .signature-block > span { display: block; }
 .signature-block > .names { padding: 0.5em; margin-bottom: 0 !important;}

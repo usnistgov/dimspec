@@ -91,14 +91,14 @@ equal to database columns in `additive_props$db_table` and values matching
 regex to match names in `obj[[mobile_phase_props$in_item]]`
 `obj[[mobile_phase_props$in_item]][[mobile_phase_props$db_table]]`, and an
 extra element named `id_by` containing regex used to match names in the
-import object indicate an additive (e.g. "add$")}
+import object indicate an additive (e.g. names terminating in "add")}
 
 \item{exclude_values}{CHR vector indicating which values to ignore in `obj`
 (default: c("none", "", NA))}
 
 \item{fuzzy}{LGL scalar of whether to do a "fuzzy" match in the sense that
-values provided are wrapped in an SQL "LIKE '%value%'" clause; overrides
-the `case_sensitive` setting if TRUE (default: FALSE).}
+values provided are wrapped in an SQL SQL LIKE clause bookended with wildcards; 
+overrides the `case_sensitive` setting if TRUE (default: FALSE).}
 
 \item{clean_up}{LGL scalar determining whether or not to clean up the
 `mix_collection_table` by removing just-added records if there are errors

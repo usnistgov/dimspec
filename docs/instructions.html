@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-17" />
+<meta name="date" content="2023-07-05" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,8 +52,6 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<link href="libs/font-awesome-5.15.3/css/all.min.css" rel="stylesheet" />
-<link href="libs/font-awesome-5.15.3/css/v4-shims.min.css" rel="stylesheet" />
 <!-- Insert NIST header and footer -->
   <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
   <!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded. That script has been recreated here with the proper modifications to override gitbook CSS with the NIST header styling; see below.
@@ -131,7 +129,7 @@
     });
   </script>
 <!-- Insert NIST GA, uncomment the next line to activate.  -->
-  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+<!--  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>  -->
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -270,10 +268,17 @@ div.csl-indent {
 
 <ul class="summary">
 <li class="part" id="book-links">
-    <a id="nist-logo-link" href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img></a>
-    <h3 id="gitbook-title">
-        <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">A Database Infrastructure for Mass Spectrometry (DIMSpec)  <i class="fab fa-github"></i></a>
-    </h3>
+  <a id="nist-logo-link" href="https://www.nist.gov">
+    <img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img>
+  </a>
+  <h3 id="gitbook-title">
+    <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">
+      A Database Infrastructure for Mass Spectrometry (DIMSpec)  
+      <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;">
+        <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+      </svg>
+    </a>
+  </h3>
 </li>
 
 <li class="divider"></li>
@@ -365,7 +370,7 @@ div.csl-indent {
 </div>
 <div id="quick-start-guide" class="section level3 unnumbered hasAnchor">
 <h3>Initial Setup<a href="instructions.html#quick-start-guide" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>This section provides instructions in a “quick start” format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project, including <a href="https://pages.nist.gov/dimspec/docs/quick_install.pdf" target="_blank">installation</a>, are also available in the repository (listed in the project <a href="https://github.com/usnistgov/dimspec" target="_blank">README</a>) and for download from the online <a href="https://pages.nist.gov/dimspec/docs" target="_blank">User Guide</a> by clicking the download icon in the header at the top of the User Guide to select your download of choice.</p>
+<p>This section provides instructions in a “quick start” format. While every effort was made to make this as painless as possible, success may vary from system to system. This assumes that R v4.1 or later is installed. Several quick start guides offering more detail about aspects of the project, including <a href="https://pages.nist.gov/dimspec/docs/quick_install.pdf" target="_blank">installation</a>, are also available in the repository (listed in the project <a href="https://github.com/usnistgov/dimspec" target="_blank">README</a>) and for download from the online <a href="https://pages.nist.gov/dimspec/docs">User Guide</a> by clicking the download icon in the header at the top of the User Guide to select your download of choice.</p>
 <ul>
 <li><em>If using RStudio:</em>
 <ol style="list-style-type: decimal">
@@ -399,7 +404,7 @@ div.csl-indent {
 <li><p><code>/plumber</code> Environment establishment and API definition functions are located here. These will determine how requests to the API are routed and functionality are provided through http protocols in a RESTful manner. It comes complete with Swagger documentation available when the server is running.</p></li>
 <li><p><code>/apps</code> Environment establishment, general resources, and shiny application files are located here. Each application is contained within its own directory.</p></li>
 </ul></li>
-<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the “db” namespace will be written to <code>“logs/log_db.txt”</code>).</p></li>
+<li><p><code>/logs</code> If logging functionality is turned on, logs will be written here according to the namespace of the log (e.g. logs written to the “db” namespace will be written to <code>"logs/log_db.txt"</code>).</p></li>
 <li><p><code>/R</code> directory; most general R functions are housed here or in one of the subdirectories.</p></li>
 </ul>
 </div>
@@ -408,7 +413,7 @@ div.csl-indent {
 <p>Running the compliance script at <code>"/R/compliance.R"</code> will establish the project for you in most cases. It leverages several files to determine project settings; these are detailed here for clarity and customization options, with further details provided in the <a href="technical-details.html#compute-environments">Compute Environments</a> section. To accept the default settings, source the compliance file and move on to the <a href="instructions.html#using-dimspec">Using DIMSpec</a> section. This may take a while to resolve package dependencies. To customize your implementation, read on. Changing any of these settings is entirely optional.</p>
 <div id="step-1---global-compute-environment-settings" class="section level3 unnumbered hasAnchor">
 <h3>Step 1 - Customize global environment settings<a href="instructions.html#step-1---global-compute-environment-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>Several options are available to customize the use of DIMSpec to any given project component; settings are in the file <code>“/config/env_glob.txt”</code>. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.</p>
+<p>Several options are available to customize the use of DIMSpec to any given project component; settings are in the file <code>"/config/env_glob.txt"</code>. These values are not set at the system level to add flexibility across operating systems; they are instead session values that are available while a session is active.</p>
 <table>
 <caption>Table 1: Customizing global settings in the “/config/env_glob.txt” file</caption>
 <colgroup>
@@ -519,7 +524,7 @@ div.csl-indent {
 </div>
 <div id="step-2---customizing-r-session-settings-in-the-env_r.r-file" class="section level3 unnumbered hasAnchor">
 <h3>Step 2 - Customize R session settings in the “env_R.R” file<a href="instructions.html#step-2---customizing-r-session-settings-in-the-env_r.r-file" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>More customization options that require R are available to set up the project specifically for your application. Open the file <code>“config/env_R.R”</code> to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.</p>
+<p>More customization options that require R are available to set up the project specifically for your application. Open the file <code>"config/env_R.R"</code> to customize these for your use. These values are not set at the system level to add flexibility across systems; they are instead session values that are available during use of the project, and many depend on settings from the section above, which will be applied automatically if they are not already set.</p>
 <table>
 <caption>Table 2: Customizing settings specific to the R environment</caption>
 <colgroup>
@@ -730,24 +735,24 @@ div.csl-indent {
 <p>Code decoration conventions used in the SQL files enable reading table definitions and properties from SQLite into R with the function <a href="appendix-function-reference.html#fn_def_pragma_table_info" target="_blank"><code>pragma_table_info.</code></a> Supply the name of a database table or view to get information about that table; different connections can also be used for comparison if desired. This is the interactive version; a version in JSON format can be saved using <a href="appendix-function-reference.html#fn_def_save_data_dictionary" target="_blank"><code>save_data_dictionary.</code></a> This saved file is loaded during the compliance script as object <code>db_dict</code> which is a named list of data frames; names correspond to database entities. This can be regenerated and brought back into the R session at any time (see <a href="appendix-function-reference.html#fn_def_data_dictionary" target="_blank"><code>data_dictionary</code></a>) and should be updated if modifications are made to the underlying schema.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-01a_data_dict1.png" title="Figure 1a. An example of the data dictionary object." id="fig02-01a" width="500" alt="" />
+<img src="assets/fig02-01a_data_dict1.png" title="Figure 1a. An example of the data dictionary object." id="fig02-01a" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 1a. An example of the data dictionary object.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-01b_data_dict2.png" title="Figure 1b. Details of the &#39;samples&#39; table from the data dictionary." id="fig02-01b" width="500" alt="" />
+<img src="assets/fig02-01b_data_dict2.png" title="Figure 1b. Details of the &#39;samples&#39; table from the data dictionary." id="fig02-01b" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 1b. Details of the “samples” table from the data dictionary.</p>
 </div>
 <hr />
 <p>Relationships between database entities can also be queried programmatically. Use the <a href="appendix-function-reference.html#fn_def_er_map" target="_blank">er_map</a> function to read the same decoration convention in the SQL definitions to extract relationships. An object is created during the compliance script as <code>db_map</code> to make it available to your session. This results in a nested list with names corresponding to database entities, and elements describing the object name, its type, which table(s) and column(s) it references, which table(s) reference it, which table(s) it normalizes, and which view(s) use it.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-02a_db_map1.png" title="Figure 2a. An example of the entity map list" id="fig02-02a" width="500" alt="" />
+<img src="assets/fig02-02a_db_map1.png" title="Figure 2a. An example of the entity map list" id="fig02-02a" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 2a. An example of the R object structure of an entity map as a list.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-02b_db_map2.png" title="Figure 2b. Details of the &#39;samples&#39; table from the data entity map" id="fig02-02b" width="500" alt="" />
+<img src="assets/fig02-02b_db_map2.png" title="Figure 2b. Details of the &#39;samples&#39; table from the data entity map" id="fig02-02b" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 2b. Details of the “samples” table from the data entity map object in <a href="instructions.html#fig02-02a">Figure 2a</a>.</p>
 </div>
 </div>
@@ -784,12 +789,12 @@ div.csl-indent {
 <p>These and other endpoints can be easily defined, expanded, or refined as needed to meet project requirements. Use <a href="appendix-function-reference.html#fn_def_api_reload" target="_blank"><code>api_reload</code></a> to refresh the server when definitions change, or test interactively prior to deployment using Swagger by launching a separate server either by opening the plumber file and clicking the “Run API” button in RStudio, or using the <a href="appendix-function-reference.html#fn_def_api_start" target="_blank"><code>api_start</code></a> or <a href="appendix-function-reference.html#fn_def_api_reload" target="_blank"><code>api_reload</code></a> functions as described above. To support eventual network deployment, any number of API servers may be launched manually on predefined ports to allow for load balancing.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-03_swagger_example.png" title="Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the &#39;Try It Out&#39; button to activate the testing mode." id="fig02-03" width="500" alt="" />
+<img src="assets/fig02-03_swagger_example.png" title="Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the &#39;Try It Out&#39; button to activate the testing mode." id="fig02-03" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint <code>/compound_data</code>, available using <code>api_open_doc()</code>. Click the “Try It Out” button to activate the testing mode.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-04_endpoint_example.png" title="Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session" id="fig02-04" width="500" alt="" />
+<img src="assets/fig02-04_endpoint_example.png" title="Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session" id="fig02-04" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.</p>
 </div>
 <hr />
@@ -825,7 +830,7 @@ div.csl-indent {
 <p>Users developing on top of this infrastructure are encouraged to take advantage of the logging functionality and make liberal use of the <a href="appendix-function-reference.html#fn_def_log_it" target="_blank"><code>log_it</code></a> function to ease debugging and maintenance.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-06_logging_example.png" title="Figure 6. Example uses of log_it to create logging messages." id="fig02-06" width="500" alt="" />
+<img src="assets/fig02-06_logging_example.png" title="Figure 6. Example uses of log_it to create logging messages." id="fig02-06" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 6. Example uses of <code>log_it</code> to create logging messages.</p>
 </div>
 <hr />

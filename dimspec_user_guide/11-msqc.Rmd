@@ -63,7 +63,7 @@ If anything is needed from the user, interactive feedback will occur in the cons
 
 While this version of DIMSpec includes analytical data for PFAS, MSQC can be tailored for any given database name. See [Technical Details](#msqc-technical-details)>[Application Settings](#msqc-application-settings) for customization options.
 
-![Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.](assets/fig05-01_msqc_landing_page.png "Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case."){#fig05-01 width="100%"}
+![Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.](assets/fig05-01_msqc_landing_page.png "Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case."){#fig05-01 style="width:100%"}
 
 ### Using MSQC {#msqc-using-msqc .unnumbered}
 
@@ -73,7 +73,7 @@ Every effort has been made to make using the MSQC application as intuitive to us
 
 Prior to file processing, verify or set parameters to be used for quality control analysis can be modified. On the left menu, select “QC Settings” to navigate to the settings dashboard shown in [Figure 2](#fig05-02). The default settings are recommended, but can be modified if needed.
 
-![Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021.](assets/fig05-02_msqc_settings.png "Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021."){#fig05-02 width="50%"}
+![Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021.](assets/fig05-02_msqc_settings.png "Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021."){#fig05-02 style="width:100%;max-width:500px"}
 
 #### Step 1 - Import mzML and Sample JSON Files {#msqc-step1 .unnumbered}
 
@@ -83,11 +83,11 @@ First, load the mzML files of interest using the top “Load” button or by dra
 
 Second, load the paired sample JSON files using the second “Load” button or by dragging the JSON file(s) to the input widget labeled *2) Load Sample JSON file(s)*. The sample JSON files do not need to be selected in the same order as the mzML files and will be matched by name when processed.
 
-![Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided.](assets/fig05-03_data_import.png "Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided."){#fig05-03 width="67%"}
+![Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided.](assets/fig05-03_data_import.png "Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided."){#fig05-03 style="width:100%;max-width:600px"}
 
 Once mzML and Sample JSON files are uploaded, the application will automatically check to see if there are valid pairs of mzML and Sample JSON files. A successful upload will give a screen similar to [Figure 4](#fig05-04). If multiple files are loaded, only files with verified matches will be included in the table and available for further processing.
 
-![Figure 4. The data import page after data files have been loaded.](assets/fig05-04_data_input_files_uploaded.png ""){#fig05-04 width="100%"}
+![Figure 4. The data import page after data files have been loaded.](assets/fig05-04_data_input_files_uploaded.png "Figure 4. The data import page after data files have been loaded."){#fig05-04 style="width:100%;max-width:1000px"}
 
 #### Step 2 - Process Data {#msqc-step2 .unnumbered}
 

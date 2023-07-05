@@ -136,8 +136,8 @@ from parameter `file_name` (default: "import_requirements")}
 \item{method_in}{CHR scalar name of the `obj` list containing method
 information}
 
-\item{ms_methods_table}{CHR scalar name of the database table containing method
-information}
+\item{ms_methods_table}{CHR scalar name of the database table containing
+method information}
 
 \item{instrument_properties_table}{CHR scalar name of the database table
 holding instrument property information for a given method (default:
@@ -179,9 +179,8 @@ chromatographic information (default: "chromatography")}
 \item{mobile_phases_in}{CHR scalar name of the database table holding mobile
 phase and chromatographic information (default: "chromatography")}
 
-\item{qc_method_in}{CHR scalar name of an item in `obj` containing QC method
-results as a data.frame object of the form `data.frame(name = character(0),
-value = logical(0))` (default: "qcmethod")}
+\item{qc_method_in}{CHR scalar name of the import object element containing
+QC method information (default: "qcmethod")}
 
 \item{qc_method_table}{CHR scalar of the database table name holding QC
 method check information (default: "qc_methods")}
@@ -191,12 +190,6 @@ QC methods type (default: "norm_qc_methods_name")}
 
 \item{qc_references_in}{CHR scalar of the name in `obj[[qc_method_in]]` that
 contains the reference or citation for the QC protocol (default: "source")}
-
-\item{qc_data_in}{CHR scalar name of an item in `obj` containing QC information
-(default: "qc")}
-
-\item{qc_data_table}{CHR scalar name of the database table holding QC data
-(default: "qc_data")}
 
 \item{carrier_mix_names}{CHR vector (optional) of carrier mix collection
 names to assign, the length of which should equal 1 or the length of
@@ -246,8 +239,8 @@ import object indicate an additive (e.g. "add$")}
 \item{peaks_in}{CHR scalar name of the element within `import_object`
 containing peak information}
 
-\item{peaks_table}{CHR scalar of the database table name holding QC method check
-information (default: "peaks")}
+\item{peaks_table}{CHR scalar name of the database table holding sample
+information (default: "samples")}
 
 \item{ms_data_in}{CHR scalar of the named component of `obj` holding mass
 spectral data (default: "msdata")}

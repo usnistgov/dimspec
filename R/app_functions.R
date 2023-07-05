@@ -1550,12 +1550,13 @@ user_guide <- function(view_online = TRUE, path = here::here("docs", "index.html
   )
   if (view_online) {
     if (httr::http_error(url_gh)) {
-      warning("The User Guide is not available on GitHub at this time. Using a local copy. Search will be disabled.")
+      warning("The User Guide is not available at this time. Using a local copy. Search will be disabled.")
     } else {
       path = url_gh
     }
   } else {
     stopifnot(file.exists(path))
+    error("Could not find the DIMSpec User Guide. The default path is 'docs/index.html'; please verify the file used for argument `path` exists.")
   }
   browseURL(url = path)
 }

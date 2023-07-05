@@ -18,7 +18,7 @@ DB_BUILT       <- length(DB_DATE) > 0
 #   - Second position: application tooling changes (e.g. new tools)
 #   - Third position: data changes (e.g. new compounds)
 #   - Fourth position: creation date
-DB_RELEASE     <- "1.0.0"
+DB_RELEASE     <- "1.0.1"
 DB_VERSION     <- sprintf("%s.%s",
                           DB_RELEASE,
                           ifelse(DB_BUILT,
@@ -120,7 +120,7 @@ if (USE_API) {
     PLUMBER_PORT <- getOption("plumber.port", 8080)
     PLUMBER_URL  <- sprintf("http://%s:%s", PLUMBER_HOST, PLUMBER_PORT)
   }
-  PLUMBER_VERSION <- 0.1
+  PLUMBER_VERSION <- 1.0
   PLUMBER_FILE <- here::here("inst", "plumber", "plumber.R")
 }
 

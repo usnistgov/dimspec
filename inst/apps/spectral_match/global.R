@@ -10,7 +10,7 @@ default_title      <- "Mass Spectral Match"
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- FALSE
+dev                <- TRUE
 # Set to true in order to base this app on the API defined in the environment files.
 USE_API            <- TRUE
 

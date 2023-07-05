@@ -387,8 +387,8 @@
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
 		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
-		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.id 
-		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = vfms.fragment_id 
+		INNER JOIN view_annotated_fragments vaf ON af.id = vaf.annotated_fragment_id 
+		INNER JOIN view_fragment_mz_stats vfms ON af.fragment_id = vfms.norm_fragment_id 
 		GROUP BY c.id, c.formula, vaf.smiles, vaf.radical, vaf.fixedmass
 		ORDER BY af.mz ASC;
 	/*magicsplit*/
@@ -397,7 +397,7 @@
 		SELECT
 			c.name,
 				/* compounds.name field */
-			c.formula AS compound,
+			c.formula AS formula,
 				/* compounds.formula field */
 			COUNT(DISTINCT(nf.formula)) AS n_fragments
 				/* distinct number of fragments associated with this compound as the count of associated fragments.formula */
@@ -405,13 +405,15 @@
 		INNER JOIN compound_fragments cf ON c.id = cf.compound_id
 		INNER JOIN annotated_fragments af ON cf.annotated_fragment_id = af.id
 		INNER JOIN norm_fragments nf ON af.fragment_id = nf.id
-		GROUP BY compound
+		GROUP BY c.formula
 		ORDER BY n_fragments DESC;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS view_annotated_fragments AS
 		/* Measured fragments as compared with fixed masses */
 		SELECT
-			nf.id, 
+			af.id as annotated_fragment_id, 
+				/* annotated fragment identifier */
+			nf.id as norm_fragment_id,
 				/* normalized fragment identifier */
 			nf.formula, 
 				/* normalized fragment formula */
@@ -432,15 +434,29 @@
 	CREATE VIEW IF NOT EXISTS view_fragment_mz_stats AS 
 		/* Mean measures of measured_mz values - a supplementary calculation table. */
 		SELECT
-			af.fragment_id,
-				/* Annotated fragment id */
-			AVG(af.mz) AS mz_mean,
+			vaf.norm_fragment_id,
+				/* Normalized fragment id */
+			vaf.formula,
+				/* Normalized fragment formula */
+			COUNT(cf.annotated_fragment_id) as n_annotated,
+				/* Number of times this normalized fragment has been measured */
+			vaf.fixedmass,
+				/* Monoisotopic fragment mass */
+			MIN(vaf.mz) AS mz_min,
+				/* Minimum mass-to-charge ratio at which a given fragment id has been measured. */
+			MAX(vaf.mz) AS mz_max,
+				/* Maximum mass-to-charge ratio at which a given fragment id has been measured. */
+			AVG(vaf.mz) AS mz_mean,
 				/* Mean mass-to-charge ratio at which a given fragment id has been measured. */
+			MIN(vaf.ppm_error) AS ppm_min,
+				/* Minimum mass-to-charge ratio at which a given fragment id has been measured. */
+			MAX(vaf.ppm_error) AS ppm_max,
+				/* Maximum mass-to-charge ratio at which a given fragment id has been measured. */
 			AVG(vaf.ppm_error) AS ppm_error_mean
 			 /* Mean part per million error of measured fragments compared with idealized fixed mass */
-		FROM annotated_fragments af
-		LEFT JOIN view_annotated_fragments vaf ON af.fragment_id = vaf.id 
-		GROUP BY af.fragment_id;
+		FROM view_annotated_fragments vaf
+		LEFT JOIN compound_fragments cf on cf.annotated_fragment_id = vaf.annotated_fragment_id 
+		GROUP BY vaf.norm_fragment_id;
 	/*magicsplit*/
 	CREATE VIEW IF NOT EXISTS compound_url AS
 		/* Combine information from the compounds table to form a URL link to the resource. */

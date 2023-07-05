@@ -10,7 +10,7 @@ DB_TITLE       = "DIMSpec for PFAS"
 EXPLICIT_PATHS = FALSE
 
 # Text name to use for this project's database file.
-DB_NAME        = "nist_pfas_nta_dev.sqlite"
+DB_NAME        = "dimspec_nist_pfas.sqlite"
 
 # Build file used for the database.
 DB_BUILD_FILE  = "build.sql"
@@ -62,5 +62,5 @@ INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
 # Make shiny apps available on launch (requires R). Set as FALSE for interactive use.
-USE_SHINY      = TRUE
+USE_SHINY      = FALSE
 # SHINY_BG       = TRUE

@@ -101,32 +101,6 @@
 		/* Foreign key relationships */
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_qc_methods_reference
-		/* Normalization table for quality control reference types. */
-	(
-		id
-			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL UNIQUE
-			/* type of QC reference */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS norm_qc_methods_name
-		/* Normalization table for quality control types. */
-	(
-		id
-			INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-			/* primary key */
-		name
-			TEXT NOT NULL UNIQUE
-			/* type of QC method */
-		/* Check constraints */
-		/* Foreign key relationships */
-	);
-	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS norm_ce_desc
 		/* Normalization table for collision energy description. */
 	(
@@ -404,27 +378,6 @@
 		FOREIGN KEY (vendor_id) REFERENCES norm_vendors(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS instrument_properties
-	  /* Expandable properties describing performance properties of the ms at the time the method was run. */
-	(
-	  ms_methods_id
-			INTEGER NOT NULL,
-			/* foreign key to ms_methods */
-		name
-		  TEXT NOT NULL,
-		  /* performance property name */
-		value
-		  TEXT NOT NULL,
-		  /* property value, either in numerical form or in text description */
-		value_unit
-		  TEXT,
-		  /* units associated with this value; open text */
-		/* Check constraints */
-		UNIQUE(ms_methods_id, name, value, value_unit),
-		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE
-	);
-	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS chromatography_descriptions
 		/* Full description of all chromatography types used for a given entry in ms_methods. */
 	(
@@ -524,37 +477,6 @@
 		FOREIGN KEY (ce_units) REFERENCES norm_ce_units(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (fragmentation) REFERENCES norm_fragmentation_types(id) ON UPDATE CASCADE ON DELETE RESTRICT,
 		FOREIGN KEY (ms2_type) REFERENCES norm_ms_n_types(id) ON UPDATE CASCADE ON DELETE RESTRICT
-	);
-	/*magicsplit*/
-	CREATE TABLE IF NOT EXISTS qc_methods
-		/* References to quality control (QC) methods used to vet experimental results */
-	(
-		ms_methods_id
-			INTEGER NOT NULL,
-			/* foreign key to ms_methods */
-		sample_id
-			INTEGER NOT NULL,
-			/* foreign key to samples */
-		name
-			INTEGER NOT NULL,
-			/* the type of QC performed; controlled vocabulary must be one of "Mass Analyzer Calibration", "External Standard Verification", "Internal Standard Verification", or "Matrix Standard Verification" */
-	  value
-	    INTEGER NOT NULL,
-	    /* constrained to (0, 1) boolean: the result of the QC check */
-		reference
-			INTEGER,
-			/* the category of the QC method; controlled vocabulary must be one of "SOP (Internal)", "SOP (External/Published)", or "Manuscript" */
-		reference_text
-			TEXT,
-			/* free text entry pointing to a description of the QC method, whether a DOI, SOP reference, or manual description */
-		/* Check constraints */
-		CHECK (value IN (0, 1)),
-		UNIQUE (ms_methods_id, sample_id, name, value),
-		/* Foreign key relationships */
-		FOREIGN KEY (ms_methods_id) REFERENCES ms_methods(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (sample_id) REFERENCES samples(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		FOREIGN KEY (name) REFERENCES norm_qc_methods_name(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-		FOREIGN KEY (reference) REFERENCES norm_qc_methods_reference(id) ON UPDATE CASCADE ON DELETE RESTRICT
 	);
 	/*magicsplit*/
 	CREATE TABLE IF NOT EXISTS carrier_aliases

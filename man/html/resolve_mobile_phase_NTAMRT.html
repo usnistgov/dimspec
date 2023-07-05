@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Resolve the mobile phase node</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link rel="stylesheet" type="text/css" href="R-help.css" />
+<link rel="stylesheet" type="text/css" href="R.css" />
 </head><body>
 
 <table width="100%" summary="page for resolve_mobile_phase_NTAMRT"><tr><td>resolve_mobile_phase_NTAMRT</td><td style="text-align: right;">R Documentation</td></tr></table>
@@ -140,7 +140,7 @@ equal to database columns in 'additive_props$db_table' and values matching
 regex to match names in 'obj[[mobile_phase_props$in_item]]'
 'obj[[mobile_phase_props$in_item]][[mobile_phase_props$db_table]]', and an
 extra element named 'id_by' containing regex used to match names in the
-import object indicate an additive (e.g. &quot;add$&quot;)</p>
+import object indicate an additive (e.g. names terminating in &quot;add&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>exclude_values</code></td>
 <td>
@@ -150,8 +150,8 @@ import object indicate an additive (e.g. &quot;add$&quot;)</p>
 <tr valign="top"><td><code>fuzzy</code></td>
 <td>
 <p>LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that
-values provided are wrapped in an SQL &quot;LIKE '
-the 'case_sensitive' setting if TRUE (default: FALSE).</p>
+values provided are wrapped in an SQL SQL LIKE clause bookended with wildcards; 
+overrides the 'case_sensitive' setting if TRUE (default: FALSE).</p>
 </td></tr>
 <tr valign="top"><td><code>clean_up</code></td>
 <td>

@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-17" />
+<meta name="date" content="2023-07-05" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,8 +52,6 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<link href="libs/font-awesome-5.15.3/css/all.min.css" rel="stylesheet" />
-<link href="libs/font-awesome-5.15.3/css/v4-shims.min.css" rel="stylesheet" />
 <!-- Insert NIST header and footer -->
   <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
   <!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded. That script has been recreated here with the proper modifications to override gitbook CSS with the NIST header styling; see below.
@@ -131,7 +129,7 @@
     });
   </script>
 <!-- Insert NIST GA, uncomment the next line to activate.  -->
-  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+<!--  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>  -->
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -270,10 +268,17 @@ div.csl-indent {
 
 <ul class="summary">
 <li class="part" id="book-links">
-    <a id="nist-logo-link" href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img></a>
-    <h3 id="gitbook-title">
-        <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">A Database Infrastructure for Mass Spectrometry (DIMSpec)  <i class="fab fa-github"></i></a>
-    </h3>
+  <a id="nist-logo-link" href="https://www.nist.gov">
+    <img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img>
+  </a>
+  <h3 id="gitbook-title">
+    <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">
+      A Database Infrastructure for Mass Spectrometry (DIMSpec)  
+      <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;">
+        <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+      </svg>
+    </a>
+  </h3>
 </li>
 
 <li class="divider"></li>
@@ -362,62 +367,62 @@ div.csl-indent {
 <pre><code>  /*magicsplit*/
   CREATE TABLE IF NOT EXISTS annotated_fragments
     /* Potential annotated fragment ions that are attributed to one or more mass spectra. */
-  (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-      /* primary key */
-    mz REAL NOT NULL,
-      /* m/z value for specific fragment, derived */
-    fragment_id INTEGER NOT NULL,
-      /* foreign key to fragments table */
-    /* Check constraints */
-    /* Foreign key relationships */
-    FOREIGN KEY (fragment_id) REFERENCES
-      norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
-  );</code></pre>
+    (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        /* primary key */
+      mz REAL NOT NULL,
+        /* m/z value for specific fragment, derived */
+      fragment_id INTEGER NOT NULL,
+        /* foreign key to fragments table */
+      /* Check constraints */
+      /* Foreign key relationships */
+      FOREIGN KEY (fragment_id) REFERENCES
+        norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+    );</code></pre>
 <p>to obtain entity properties (<a href="technical-details.html#fig02-07a">Figure 7a</a>), pull column comments directly from the definition (<a href="technical-details.html#fig02-07b">Figure 7b</a>), inspect mapping between entities (<a href="technical-details.html#fig02-07c">Figure 7c</a>; here <code>db_map</code> is an object created by <a href="appendix-function-reference.html#fn_def_er_map" target="_blank"><code>er_map</code></a>), or pull information together into a formalized data dictionary (<a href="technical-details.html#fig02-07d">Figure 7d</a>; here <code>db_dict</code> is read from a JSON object created by <a href="appendix-function-reference.html#fn_def_save_data_dictionary" target="_blank"><code>save_data_dictionary</code></a>) and available for all database tables and views.</p>
 <p>This allows for programmatic accessibility, as R sessions can now understand the linkages between tables easily. One implementation example is checking for, resolving, and automatically adding new normalization values with <a href="appendix-function-reference.html#fn_def_resolve_normalization_value" target="_blank"><code>resolve_normalization_value</code></a> for import resolutions, but could be as simple as understanding that <code>fragment_id</code> here references the <code>norm_fragments</code> table (<a href="technical-details.html#fig02-07e">Figure 7e</a>). In addition, once relationships are in a structured format, applications like the <a href="table-explorer-home.html#table-explorer-home">Table Explorer</a> can be built to display to users in a more natural manner the structure of the underlying data tables (<a href="technical-details.html#fig02-08">Figure 8</a>).</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-07a_mapping_dictionary_direct.png" title="Figure 7a. An example of using `pragma_table_info` to explore schema." id="fig02-07a" width="500" alt="" />
-<p class="caption">Figure 7a. An example of using <a href="appendix-function-reference.html#fn_def_pragma_table_info" target="_blank">pragma_table_info</a> to explore table definitions.</p>
+<img src="assets/fig02-07a_mapping_dictionary_direct.png" title="Figure 7a. An example of using pragma_table_info to explore schema." id="fig02-07a" style="width:100%;max-width:500px" alt="" />
+<p class="caption">Figure 7a. An example of using <code>[pragma_table_info](#fn_def_pragma_table_info){target="_blank"}</code> to explore table definitions.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-07b_mapping_dictionary_direct_comments.png" title="Figure 7b. Comments can be easily added to the definition." id="fig02-07b" width="500" alt="" />
+<img src="assets/fig02-07b_mapping_dictionary_direct_comments.png" title="Figure 7b. Comments can be easily added to the definition." id="fig02-07b" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 7b. Comments can be easily added to the definition.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-07c_mapping_dictionary_map.png" title="Figure 7c. Entity mapping can also be parsed from the SQL decoration convention." id="fig02-07c" width="500" alt="" />
+<img src="assets/fig02-07c_mapping_dictionary_map.png" title="Figure 7c. Entity mapping can also be parsed from the SQL decoration convention." id="fig02-07c" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 7c. Entity mapping can also be parsed directly from the SQL decoration convention.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-07d_mapping_dictionary_map_json.png" title="Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention." id="fig02-07d" width="500" alt="" />
+<img src="assets/fig02-07d_mapping_dictionary_map_json.png" title="Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention." id="fig02-07d" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-07e_mapping_dictionary_ref_map.png" title="Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships." id="fig02-07e" width="500" alt="" />
+<img src="assets/fig02-07e_mapping_dictionary_ref_map.png" title="Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships." id="fig02-07e" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[&#39;table_explorer&#39;]`." id="fig02-08" alt="" />
-<p class="caption">Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The “Table Explorer” shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with <code>shiny::runApp(SHINY_APPS[['table_explorer']]</code>).</p>
+<img src="assets/fig02-08_table_explorer_example.png" title="Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with start_app(&#39;table_explorer&#39;)." id="fig02-08" style="width:100%;max-width:800px" alt="" />
+<p class="caption">Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The “Table Explorer” shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with <code>start_app('table_explorer')</code>).</p>
 </div>
 <hr />
 <p>The following subsections contain summary information about each of the database nodes, its purpose, and the tables and views held within. Some of this information is subject to change as the database schema is refined and maintained. See the full database schema definition as a JSON object in the project directory as a file ending in <code>"_data_dictionary.json”</code>. Entities found in each node and snapshots of their structure from the <a href="assets/ERD.png" target="_blank">complete entity relationship diagram</a> (ERD) are provided (right click and open a diagram in a new tab to see it larger); generally, node tables are in a color, automatic views are in grey, and functional views are in white.</p>
 <p>Some views are automatically generated (see the flag <code>“[autogenerated by sqlite_auto_view()]”</code> in the description) to display human-meaningful values instead of the index linkages for normalized columns, e.g. the <code>ms_methods</code> table can then be viewed in a “denormalized” way using the <code>view_ms_methods</code> view to get display values for normalized fields (<a href="technical-details.html#fig02-09a">Figure 9</a>).</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-09a_ms_methods_normalized.png" title="Figure 9a. Screenshot of the first four rows of the normalized database table &#39;ms_methods&#39;." id="fig02-09a" width="500" alt="" />
+<img src="assets/fig02-09a_ms_methods_normalized.png" title="Figure 9a. Screenshot of the first four rows of the normalized database table &#39;ms_methods&#39;." id="fig02-09a" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 9a. Screenshot of the first four rows of the normalized database table ‘ms_methods’.</p>
 </div>
 <hr />
 <div class="figure">
-<img src="assets/fig02-09b_ms_methods_denormalized.png" title="Figure 9a. Screenshot of the first four rows of the normalized database table &#39;ms_methods&#39;." id="fig02-09b" width="500" alt="" />
-<p class="caption">Figure 9b. Screenshot of the first four rows of the denormalized database table ‘ms_methods’.</p>
+<img src="assets/fig02-09b_ms_methods_denormalized.png" title="Figure 9b. Screenshot of the first four rows of the denormalized database table &#39;ms_methods&#39;." id="fig02-09b" style="width:100%;max-width:500px" alt="" />
+<p class="caption">Figure 9b. Screenshot of the first four rows of the denormalized database table ‘ms_methods’ available as view ‘view_ms_methods’.</p>
 </div>
 <hr />
 <div id="the-analyte-node" class="section level4 unnumbered hasAnchor">
@@ -516,21 +521,25 @@ div.csl-indent {
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “compounds” normalized by “norm_source_types”.</td>
 </tr>
 <tr class="odd">
+<td>view_fragment_aliases</td>
+<td><code>[autogenerated by sqlite_auto_view()]</code> View of “fragment_aliases” normalized by “norm_analyte_alias_references”.</td>
+</tr>
+<tr class="even">
 <td>view_fragment_count</td>
 <td>Number of fragments associated with compounds.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_fragment_mz_stats</td>
 <td>[DRAFT] Mean measures of measured_mz values - a supplementary calculation table.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_fragment_sources</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “fragment_sources” normalized by “norm_generation_type”.</td>
 </tr>
 </tbody>
 </table>
 <div class="figure">
-<img src="assets/fig02-10_erd_node_analyte.png" title="Figure 10. Analyte node of the entity relationship diagram (modified)" id="fig02-010" width="750" alt="" />
+<img src="assets/fig02-10_erd_node_analyte.png" title="Figure 10. Analyte node of the entity relationship diagram (modified)" id="fig02-010" style="width:100%;max-width:1000px" alt="" />
 <p class="caption">Figure 10. Analyte node of the entity relationship diagram (modified).</p>
 </div>
 <hr />
@@ -572,9 +581,8 @@ div.csl-indent {
 </tr>
 </tbody>
 </table>
-<hr />
 <div class="figure">
-<img src="assets/fig02-11_erd_node_contributors.png" title="Figure 11. Contributors node of the entity relationship diagram (modified)" id="fig02-011" width="600" alt="" />
+<img src="assets/fig02-11_erd_node_contributors.png" title="Figure 11. Contributors node of the entity relationship diagram (modified)" id="fig02-011" style="width:100%;max-width:600px" alt="" />
 <p class="caption">Figure 11. Contributors node of the entity relationship diagram (modified).</p>
 </div>
 <hr />
@@ -631,16 +639,32 @@ div.csl-indent {
 <td>Normalization table linking to samples to hold controlled vocabulary.</td>
 </tr>
 <tr class="even">
+<td>norm_qc_methods_name</td>
+<td>Normalization table for quality control types: controlled vocabulary.</td>
+</tr>
+<tr class="odd">
+<td>norm_qc_methods_reference</td>
+<td>Normalization table for quality control reference types: controlled vocabulary.</td>
+</tr>
+<tr class="even">
 <td>opt_ums_params</td>
 <td>Table of optimal parameters for uncertainty mass spectra</td>
 </tr>
 <tr class="odd">
+<td>instrument_properties</td>
+<td>Expandable properties describing performance properties of the mass spectrometer at the time a peak was measured, generally the same across a given sample and ms_method, but not always.</td>
+</tr>
+<tr class="even">
 <td>peaks</td>
 <td>Peaks (or features) identified within the results from a sample.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>qc_data</td>
 <td>Detailed quality control data as assessed by expert review (long format).</td>
+</tr>
+<tr class="even">
+<td>qc_methods</td>
+<td>References to quality control (QC) methods used to vet experimental results</td>
 </tr>
 <tr class="odd">
 <td>sample_aliases</td>
@@ -671,24 +695,24 @@ div.csl-indent {
 <td>View of “peaks” with text values displayed from normalization tables.</td>
 </tr>
 <tr class="even">
+<td>view_qc_methods</td>
+<td><code>[autogenerated by sqlite_auto_view()]</code> View of “qc_methods” normalized by “norm_qc_methods_name” and “norm_qc_methods_reference”.</td>
+</tr>
+<tr class="odd">
 <td>view_sample_narrative</td>
 <td>Collapses the contents of view_samples and view_contributors into a single narrative string by ID</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_samples</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “samples” normalized by “norm_sample_classes”, “norm_generation_type”, and “norm_carriers”.</td>
 </tr>
 </tbody>
 </table>
 <div class="figure">
-<img src="assets/fig02-12_erd_node_data_all.png" title="Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node." id="fig02-012" width="600" alt="" />
-<p class="caption">Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node.</p>
+<img src="assets/fig02-12_erd_node_data_all.png" title="Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node (modified)." id="fig02-012" style="width:100%;max-width:800px" alt="" />
+<p class="caption">Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node (modified).</p>
 </div>
 <hr />
-</div>
-<div id="the-logging-node" class="section level4 unnumbered hasAnchor">
-<h4>The Logging Node<a href="technical-details.html#the-logging-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
-<p>This node is included for automatic logging within the database itself (a future development opportunity), with tables to store and normalize logs and store a database version history. It is not used by default, but rather serves as a placeholder in case logging should be enabled via triggers if required by the data management and quality control systems for a given project. As it is not in use and has not been tested, details are not included but can be queried like any other tables.</p>
 </div>
 <div id="the-methods-node" class="section level4 unnumbered hasAnchor">
 <h4>The Methods Node<a href="technical-details.html#the-methods-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
@@ -734,84 +758,76 @@ div.csl-indent {
 <td>Full description of all chromatography types used for a given entry in ms_methods.</td>
 </tr>
 <tr class="even">
-<td>instrument_properties</td>
-<td>Expandable properties describing performance properties of the mass spectrometer at the time the method was run.</td>
-</tr>
-<tr class="odd">
 <td>mobile_phases</td>
 <td>Description of mobile phases used during a chromatographic separation.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>ms_descriptions</td>
 <td>Full description of all mass spectrometer types used for a given entry in ms_methods.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ms_methods</td>
 <td>Mass spectrometer method settings.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_additive_units</td>
 <td>Normalization table for mobile phase additive units: controlled vocabulary</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_additives</td>
 <td>Normalization table for the carrier additives list: controlled vocabulary.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_carriers</td>
 <td>Mobile phase carrier list: controlled vocabulary.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_ce_desc</td>
 <td>Normalization table for collision energy description: controlled vocabulary.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_ce_units</td>
 <td>Normalization table for collision energy units: controlled vocabulary.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_chromatography_types</td>
 <td>Normalization table for chromatography types: controlled vocabulary.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_column_chemistries</td>
 <td>Normalization table for chromatographic column type: controlled vocabulary.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_column_positions</td>
 <td>Normalization table for chromatographic column position: controlled vocabulary</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_duration_units</td>
 <td>Normalization table for mobile phase duration units: controlled vocabulary</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_flow_units</td>
 <td>Normalization table for mobile phase flow rate units: controlled vocabulary</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_fragmentation_types</td>
 <td>Normalization table for fragmentation type: controlled vocabulary.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>norm_ionization</td>
 <td>Normalization table for mass spectrometer ionization source types: controlled vocabulary</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>norm_ms_types</td>
-<td>Normalization table for mass spectrometer types: controlled vocabulary.</td>
+<td>Normalization table for types of ms_n experiments.</td>
+</tr>
+<tr class="even">
+<td>norm_ms_n_types</td>
+<td>Normalization table for ionization polarity: controlled vocabulary.</td>
 </tr>
 <tr class="odd">
 <td>norm_polarity_types</td>
 <td>Normalization table for ionization polarity: controlled vocabulary.</td>
-</tr>
-<tr class="even">
-<td>norm_qc_methods_name</td>
-<td>Normalization table for quality control types: controlled vocabulary.</td>
-</tr>
-<tr class="odd">
-<td>norm_qc_methods_reference</td>
-<td>Normalization table for quality control reference types: controlled vocabulary.</td>
 </tr>
 <tr class="even">
 <td>norm_vendors</td>
@@ -822,80 +838,72 @@ div.csl-indent {
 <td>Normalization table for ionization energy units: controlled vocabulary.</td>
 </tr>
 <tr class="even">
-<td>qc_methods</td>
-<td>References to quality control (QC) methods used to vet experimental results</td>
-</tr>
-<tr class="odd">
 <td><em>Views</em></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_additive_aliases</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “additive_aliases” normalized by “norm_additives”.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_carrier_additives</td>
 <td>View complete mobile phase used in a mixture</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_carrier_aliases</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “carrier_aliases” normalized by “norm_carriers”.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_carrier_mix</td>
 <td>View complete mobile phase used in a mixture</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_carrier_mix_collection</td>
 <td>Tabular view of carrier mix components by mixture ID</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_carrier_mixes</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “carrier_mixes” normalized by “norm_carriers”.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_chromatography_types</td>
 <td>View all chromatography types in methods</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_column_chemistries</td>
 <td>Convenience view to build view_method_as by providing a single character string for column chemistries used in this method</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_detectors</td>
 <td>Convenience view to build view_method_as by providing a single character string for detectors used in this method</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_mass_analyzers</td>
 <td>View all mass analyzers used in methods</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_method</td>
 <td>View mass spectrometer information and method settings</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_method_narrative</td>
 <td>Collapses the contents of view_method into a single narrative string by ID</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_mobile_phase_narrative</td>
 <td>A print convenience view creating a narrative from the elution profile of each ms_methods_id, with one row for each profile stage.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_mobile_phases</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “mobile_phases” normalized by “norm_flow_units” and “norm_duration_units”.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>view_ms_descriptions</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “ms_descriptions” normalized by “norm_ms_types” and “norm_vendors”.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>view_ms_methods</td>
 <td><code>[autogenerated by sqlite_auto_view()]</code> View of “ms_methods” normalized by “norm_ionization”, “norm_voltage_units”, “norm_polarity_types”, “norm_ce_units”, “norm_ce_desc”, “norm_fragmentation_types”, and “norm_ms_n_types”.</td>
-</tr>
-<tr class="even">
-<td>view_qc_methods</td>
-<td><code>[autogenerated by sqlite_auto_view()]</code> View of “qc_methods” normalized by “norm_qc_methods_name” and “norm_qc_methods_reference”.</td>
 </tr>
 <tr class="odd">
 <td>view_separation_types</td>
@@ -903,22 +911,18 @@ div.csl-indent {
 </tr>
 </tbody>
 </table>
-<p><em>Figure 13. Methods node of the entity relationship diagram (modified) containing the mass spectrometer (“mass spec”, <a href="technical-details.html#fig02-13a">13a</a>), descriptions (<a href="technical-details.html#fig02-13b">13b</a>), quality control (“QC”, <a href="technical-details.html#fig02-13c">13c</a>), and mobile phase (<a href="technical-details.html#fig02-13d">13d</a>) subnodes. Together these completely describe the chromatographic separation and mass spectrometric system used for a single entry in the “ms_methods” table.</em></p>
+<p><em>Figure 13. Methods node of the entity relationship diagram (modified) containing the mass spectrometer (“mass spec”, <a href="technical-details.html#fig02-13a">13a</a>), descriptions (<a href="technical-details.html#fig02-13b">13b</a>), and mobile phase (<a href="technical-details.html#fig02-13c">13d</a>) subnodes. Together these describe the chromatographic separation and mass spectrometric system used for a single entry in the “ms_methods” table.</em></p>
 <div class="figure">
-<img src="assets/fig02-13a_erd_node_methods1.png" title="Figure 13a. Mass spectrometer subnode of the methods node (modified)." id="fig02-13a" width="600" alt="" />
+<img src="assets/fig02-13a_erd_node_methods1.png" title="Figure 13a. Mass spectrometer subnode of the methods node (modified)." id="fig02-13a" style="width:100%;max-width:800px" alt="" />
 <p class="caption">Figure 13a. Mass spectrometer subnode of the methods node (modified).</p>
 </div>
 <div class="figure">
-<img src="assets/fig02-13b_erd_node_methods2.png" title="Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified)." id="fig02-13b" width="600" alt="" />
+<img src="assets/fig02-13b_erd_node_methods2.png" title="Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified)." id="fig02-13b" style="width:100%;max-width:800px" alt="" />
 <p class="caption">Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified).</p>
 </div>
 <div class="figure">
-<img src="assets/fig02-13c_erd_node_methods3.png" title="Figure 13c. Quality control subnode of the methods node (modified)." id="fig02-13c" width="328" alt="" />
-<p class="caption">Figure 13c. Quality control subnode of the methods node (modified).</p>
-</div>
-<div class="figure">
-<img src="assets/fig02-13d_erd_node_methods4.png" title="Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified)." id="fig02-13d" width="600" alt="" />
-<p class="caption">Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified).</p>
+<img src="assets/fig02-13c_erd_node_methods4.png" title="Figure 13c. Chromatographic mobile phase information subnode of the methods node (modified)." id="fig02-13c" style="width:100%;max-width:800px" alt="" />
+<p class="caption">Figure 13c. Chromatographic mobile phase information subnode of the methods node (modified).</p>
 </div>
 <hr />
 </div>
@@ -968,9 +972,14 @@ div.csl-indent {
 </tbody>
 </table>
 <div class="figure">
-<img src="assets/fig02-14_erd_node_reference.png" title="Figure 14. Reference node of the entity relationship diagram (modified)" id="fig02-14" width="436" alt="" />
+<img src="assets/fig02-14_erd_node_reference.png" title="Figure 14. Reference node of the entity relationship diagram (modified)" id="fig02-14" style="width:100%;max-width:900px" alt="" />
 <p class="caption">Figure 14. Reference node of the entity relationship diagram (modified)</p>
 </div>
+<hr />
+</div>
+<div id="the-logging-node" class="section level4 unnumbered hasAnchor">
+<h4>The Logging Node<a href="technical-details.html#the-logging-node" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>This node is included for automatic logging within the database itself (a future development opportunity), with tables to store and normalize logs and store a database version history. It is not used by default, but rather serves as a placeholder in case logging should be enabled via triggers if required by the data management and quality control systems for a given project. As it is not in use and has not been tested, details are not included but can be queried like any other tables. For visualization purposes, it is included with the <a href="technical-details.html#the-reference-node">reference node</a>.</p>
 <hr />
 </div>
 <div id="script-generated-views-and-triggers" class="section level4 unnumbered hasAnchor">
@@ -1012,7 +1021,7 @@ div.csl-indent {
 <p>The Table Explorer application is detailed in its own <a href="table-explorer-home.html#table-explorer-home">section</a>.</p>
 <hr />
 <div class="figure">
-<img src="assets/fig02-15_screenshot_table_explorer.png" title="Figure 15. Screenshot of the &#39;Table Explorer&#39; shiny application showing database structural information available at a glance for the view_exact_masses database table." id="fig02-15" width="500" alt="" />
+<img src="assets/fig02-15_screenshot_table_explorer.png" title="Figure 15. Screenshot of the &#39;Table Explorer&#39; shiny application showing database structural information available at a glance for the view_exact_masses database table." id="fig02-15" style="width:100%;max-width:1000px" alt="" />
 <p class="caption">Figure 15. Screenshot of the “Table Explorer” shiny application showing database structural information available at a glance for the view_exact_masses database table.</p>
 </div>
 <hr />
@@ -1022,7 +1031,7 @@ div.csl-indent {
 <p>This Shiny application could easily be considered the entire reason behind the genesis of the DIMSpec project. It was built specifically to accelerate non-targeted analysis projects by searching experiment result data in <a href="https://www.psidev.info/mzML" target="_blank">mzML</a> format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec. It is one example of a tool that can built on top of the DIMSpec tool set. Launch it after the compliance script has been run with <code>run_app(“spectral_match”)</code> or from the console or command line with <code>shiny::runApp(“inst/apps/spectral_match”)</code> which will solve the environment and launch the application. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program (<a href="https://serdp-estcp.org/" target="_blank">DOD-SERDP</a>), project number <a href="https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview" target="_blank">ER20-1056</a>.</p>
 <p>The MSMatch application is detailed in its own <a href="msmatch-home.html#msmatch-home">section</a>.</p>
 <div class="figure">
-<img src="assets/fig02-16_app_spectral_match_example.png" title="Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures." id="fig02-16" style="width:100.0%" alt="" />
+<img src="assets/fig02-16_app_spectral_match_example.png" title="Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures." id="fig02-16" style="width:100%;max-width:1000px" alt="" />
 <p class="caption">Figure 16. Screenshot of the “Mass Spectral Match” application with user data showing matches to known mass spectral signatures.</p>
 </div>
 </div>
@@ -1045,7 +1054,7 @@ div.csl-indent {
 <h2>Logger<a href="technical-details.html#logger" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Logging status and meaningful messages to both the console for interactive sessions and to disk allows for more efficient troubleshooting and debugging, as well as status reports on performance. Logging is enabled by default in the project and implemented by custom functions on top of the logger package. That package supports namespaced logging at various levels and prints nicely to the console if provided with a formatter function. This user guide does not go into detail about the logger package, but <a href="https://daroczig.github.io/logger/" target="_blank">documentation is readily available online</a>.</p>
 <p>Logging parameters are set when the compliance script is sourced (see <a href="instructions.html#project-set-up">Project Set Up</a>). Settings are stored in a session list <code>LOGGING</code> with each element named for a namespace. Turn off logging by setting <code>LOGGING_ON = FALSE</code> in the set up process. At any time during a session, you may change the logging settings and run the <a href="appendix-function-reference.html#fn_def_update_logger_settings" target="_blank"><code>update_logger_settings</code></a> function to change the way to logging functions are working. Setting the <code>$log</code> property to <code>FALSE</code> will cease printing and recording of log messages for that namespace. Options for the <code>$to</code> property include “file”, “console”, and “both” and, if this is either “file” or “both”, logs will be written to the path in the <code>$file</code> property. The threshold must be one of the valid options in logger, which is a ranked vector (i.e. one of <code>“trace” &lt; “debug” &lt; “info” &lt; “success” &lt; “warn” &lt; “error” &lt; “fatal”</code>); the <code>$threshold</code> property represents the minimum level at which to record logs. If, for example, the threshold is set to “info” then “trace” and “debug” messages will be ignored.</p>
-<p><img src="assets/fig02-supp-1_logging_object.png" /></p>
+<p><img src="assets/fig02-supp-1_logging_object.png" style="width:100%;max-width:700px" /></p>
 <p>Users may then issue logging statements directly through <code>logger</code> using the <code>$ns</code> property namespace. The primary manner of issuing logging messages in the project however is the <a href="appendix-function-reference.html#fn_def_log_it" target="_blank"><code>log_it</code></a> function which works without <code>logger</code> to display messages in the console and includes an abstraction and validation layer that provides the benefits of argument validation, ignoring certain function calls, inclusion of the function from which <a href="appendix-function-reference.html#fn_def_log_it" target="_blank"><code>log_it</code></a> was called, and setting up new namespaces by cloning the settings from an existing one. If <code>logger</code> is available, logs will print nicely to the console and be saved to disk if set to do so. Logs written to disk can at any time be read back into the session either printed to the console (<a href="appendix-function-reference.html#fn_def_read_log" target="_blank"><code>read_log</code></a>) or to a data frame (<a href="appendix-function-reference.html#fn_def_log_as_dataframe" target="_blank"><code>log_as_dataframe</code></a>) for examination.</p>
 <p>Logs are not tracked in the git repository for the project as each installation should have isolated logs. The <code>logger</code> package supports rollover past a certain size. The log directory (or any directory, though that is not recommended except in the case of a directory of temporary files) can be flushed at any time with the included function <a href="appendix-function-reference.html#fn_def_flush_dir" target="_blank"><code>flush_dir</code></a><code>(directory = “logs”, pattern = “.txt”)</code> where <code>directory</code> is the name of an available directory and <code>pattern</code> is a regular expression used to match files to remove. Matching files will be removed by default but can be archived with the current date suffixed to the file name by setting <code>archive = TRUE</code>.</p>
 </div>

@@ -16,20 +16,11 @@ manually changing it during the upload process. If they are not, a
 [nist_shinyalert] modal is displayed prompting the user to upload a file in
 one of the requested formats.
 </p>
-<p>This input validation check uses [tools::file_ext] to ensure that files
-uploaded to [shiny::fileInput] are among the acceptable file formats. Users
-may sometimes wish to load a file outside the &quot;accepts&quot; format list by
-manually changing it during the upload process. If they are not, a
-[nist_shinyalert] modal is displayed prompting the user to upload a file in
-one of the requested formats.
-</p>
 
 
 <h3>Usage</h3>
 
 <pre>
-req(valid_file_format(input$file_upload, c(".csv", ".xls")))
-
 req(valid_file_format(input$file_upload, c(".csv", ".xls")))
 </pre>
 
@@ -55,8 +46,6 @@ FALSE to return the status of the check</p>
 
 <h3>Value</h3>
 
-<p>Whether or not all required values are present.
-</p>
 <p>Whether or not all required values are present.
 </p>
 

@@ -6,9 +6,10 @@
 \usage{
 resolve_qc_data_NTAMRT(
   obj,
-  sample_id,
+  peak_id,
   qc_data_in = "qc",
   qc_data_table = "qc_data",
+  peaks_table = "peaks",
   ignore = FALSE,
   db_conn = con,
   log_ns = "db"
@@ -17,13 +18,16 @@ resolve_qc_data_NTAMRT(
 \arguments{
 \item{obj}{LIST object containing data formatted from the import generator}
 
-\item{sample_id}{INT scalar of the sample id (e.g. from the import workflow)}
+\item{peak_id}{INT vector of the peak ids (e.g. from the import workflow)}
 
 \item{qc_data_in}{CHR scalar name of the component in `obj` containing QC
 data (default: "qc")}
 
 \item{qc_data_table}{CHR scalar name of the database table holding QC data
 (default: "qc_data")}
+
+\item{peaks_table}{CHR scalar name of the database table holding peaks data
+(default: "peaks")}
 
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}

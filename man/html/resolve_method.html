@@ -25,13 +25,9 @@ resolve_method(
   db_conn = con,
   ensure_unique = TRUE,
   log_ns = "db",
-  qc_data_in = "qc",
-  qc_data_table = "qc_data",
   qc_method_in = "qcmethod",
-  qc_method_table = "qc_methods",
-  search_text_in = "name",
-  search_text = "QC Method Used",
-  value_in = "value",
+  qc_search_text = "QC Method Used",
+  qc_value_in = "value",
   require_all = TRUE,
   import_map = IMPORT_MAP,
   ...
@@ -53,8 +49,8 @@ information</p>
 </td></tr>
 <tr valign="top"><td><code>ms_methods_table</code></td>
 <td>
-<p>CHR scalar name of the database table containing method
-information</p>
+<p>CHR scalar name of the database table containing
+method information</p>
 </td></tr>
 <tr valign="top"><td><code>db_conn</code></td>
 <td>
@@ -69,41 +65,22 @@ values provided form a new unique record (default: TRUE)</p>
 <td>
 <p>CHR scalar of the logging namespace to use (default: &quot;db&quot;)</p>
 </td></tr>
-<tr valign="top"><td><code>qc_data_in</code></td>
-<td>
-<p>CHR scalar name of an item in 'obj' containing QC information
-(default: &quot;qc&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>qc_data_table</code></td>
-<td>
-<p>CHR scalar name of the database table holding QC data
-(default: &quot;qc_data&quot;)</p>
-</td></tr>
 <tr valign="top"><td><code>qc_method_in</code></td>
 <td>
-<p>CHR scalar name of an item in 'obj' containing QC method
-results as a data.frame object of the form 'data.frame(name = character(0),
-value = logical(0))' (default: &quot;qcmethod&quot;)</p>
+<p>CHR scalar name of the import object element containing
+QC method information (default: &quot;qcmethod&quot;)</p>
 </td></tr>
-<tr valign="top"><td><code>qc_method_table</code></td>
+<tr valign="top"><td><code>qc_search_text</code></td>
 <td>
-<p>CHR scalar of the database table name holding QC
-method check information (default: &quot;qc_methods&quot;)</p>
+<p>CHR scalar name of an element in the import object in
+part 'qc_method_in' identifying whether or not a QC method was used
+(default: &quot;QC Method Used&quot;)</p>
 </td></tr>
-<tr valign="top"><td><code>search_text_in</code></td>
+<tr valign="top"><td><code>qc_value_in</code></td>
 <td>
-<p>CHR scalar column name in 'obj[[qc_method_in]]'
-containing the QC result names to look for (default: &quot;name&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>search_text</code></td>
-<td>
-<p>CHR scalar of the QC result to look for (default: &quot;QC
-Method Used&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>value_in</code></td>
-<td>
-<p>CHR scalar column name in 'obj[[qc_method_in]]' containing
-the values of QC results in boolean format (default: &quot;name&quot;)</p>
+<p>CHR scalar name of an element in the import object
+corresponding to 'qc_method_in' where the value of the metric named for
+'qc_search_text' is located (default: &quot;value&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>require_all</code></td>
 <td>

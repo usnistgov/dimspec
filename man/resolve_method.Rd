@@ -11,13 +11,9 @@ resolve_method(
   db_conn = con,
   ensure_unique = TRUE,
   log_ns = "db",
-  qc_data_in = "qc",
-  qc_data_table = "qc_data",
   qc_method_in = "qcmethod",
-  qc_method_table = "qc_methods",
-  search_text_in = "name",
-  search_text = "QC Method Used",
-  value_in = "value",
+  qc_search_text = "QC Method Used",
+  qc_value_in = "value",
   require_all = TRUE,
   import_map = IMPORT_MAP,
   ...
@@ -29,8 +25,8 @@ resolve_method(
 \item{method_in}{CHR scalar name of the `obj` list containing method
 information}
 
-\item{ms_methods_table}{CHR scalar name of the database table containing method
-information}
+\item{ms_methods_table}{CHR scalar name of the database table containing
+method information}
 
 \item{db_conn}{connection object (default: con)}
 
@@ -39,27 +35,16 @@ values provided form a new unique record (default: TRUE)}
 
 \item{log_ns}{CHR scalar of the logging namespace to use (default: "db")}
 
-\item{qc_data_in}{CHR scalar name of an item in `obj` containing QC information
-(default: "qc")}
+\item{qc_method_in}{CHR scalar name of the import object element containing
+QC method information (default: "qcmethod")}
 
-\item{qc_data_table}{CHR scalar name of the database table holding QC data
-(default: "qc_data")}
+\item{qc_search_text}{CHR scalar name of an element in the import object in
+part `qc_method_in` identifying whether or not a QC method was used
+(default: "QC Method Used")}
 
-\item{qc_method_in}{CHR scalar name of an item in `obj` containing QC method
-results as a data.frame object of the form `data.frame(name = character(0),
-value = logical(0))` (default: "qcmethod")}
-
-\item{qc_method_table}{CHR scalar of the database table name holding QC
-method check information (default: "qc_methods")}
-
-\item{search_text_in}{CHR scalar column name in `obj[[qc_method_in]]`
-containing the QC result names to look for (default: "name")}
-
-\item{search_text}{CHR scalar of the QC result to look for (default: "QC
-Method Used")}
-
-\item{value_in}{CHR scalar column name in `obj[[qc_method_in]]` containing
-the values of QC results in boolean format (default: "name")}
+\item{qc_value_in}{CHR scalar name of an element in the import object
+corresponding to `qc_method_in` where the value of the metric named for
+`qc_search_text` is located (default: "value")}
 
 \item{require_all}{LGL scalar of whether to require all columns (except the
 assumed primary key column of "id") or only those defined as "NOT NULL"

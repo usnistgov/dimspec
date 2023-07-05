@@ -79,7 +79,7 @@ mapped,pivot_long,get_from_workflow,get_from_user,required,import_category,impor
 1,0,0,0,1,qcmethod,source,qc_methods,reference,norm_qc_methods_reference,,
 0,0,0,0,0,,,qc_methods,reference_text,,,??
 0,0,1,0,1,,,peaks,sample_id,,,id from samples
-1,0,0,0,1,peak,count,peaks,num_points,,,
+1,0,0,0,1,peak,count,,,,,internal index number for the NTA MRT sampleJSON -> peakJSON conversion
 0,0,1,0,1,peak,name,,,,,scrub from import
 0,0,1,0,1,peak,identifier,,,,,scrub from import
 1,0,0,0,1,peak,ionstate,peaks,ion_state,norm_ion_states,,

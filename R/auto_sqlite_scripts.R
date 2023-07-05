@@ -439,7 +439,7 @@ sqlite_auto_trigger <- function(target_table,
 #'   data_dictionary(con)), drop_if_exists = FALSE)
 #'   
 sqlite_auto_view <- function(table_pragma, target_table, relationships, drop_if_exists) {
-  stopifnot(is.logical(drop_if_exists), !length(drop_if_exists) == 1)
+  stopifnot(is.logical(drop_if_exists), length(drop_if_exists) == 1)
   if (target_table %in% names(relationships)) {
     relationships <- relationships[[target_table]]
   }

@@ -179,8 +179,8 @@ information</p>
 </td></tr>
 <tr valign="top"><td><code>ms_methods_table</code></td>
 <td>
-<p>CHR scalar name of the database table containing method
-information</p>
+<p>CHR scalar name of the database table containing
+method information</p>
 </td></tr>
 <tr valign="top"><td><code>instrument_properties_table</code></td>
 <td>
@@ -246,9 +246,8 @@ phase and chromatographic information (default: &quot;chromatography&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>qc_method_in</code></td>
 <td>
-<p>CHR scalar name of an item in 'obj' containing QC method
-results as a data.frame object of the form 'data.frame(name = character(0),
-value = logical(0))' (default: &quot;qcmethod&quot;)</p>
+<p>CHR scalar name of the import object element containing
+QC method information (default: &quot;qcmethod&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>qc_method_table</code></td>
 <td>
@@ -264,16 +263,6 @@ QC methods type (default: &quot;norm_qc_methods_name&quot;)</p>
 <td>
 <p>CHR scalar of the name in 'obj[[qc_method_in]]' that
 contains the reference or citation for the QC protocol (default: &quot;source&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>qc_data_in</code></td>
-<td>
-<p>CHR scalar name of an item in 'obj' containing QC information
-(default: &quot;qc&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>qc_data_table</code></td>
-<td>
-<p>CHR scalar name of the database table holding QC data
-(default: &quot;qc_data&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>carrier_mix_names</code></td>
 <td>
@@ -341,8 +330,8 @@ containing peak information</p>
 </td></tr>
 <tr valign="top"><td><code>peaks_table</code></td>
 <td>
-<p>CHR scalar of the database table name holding QC method check
-information (default: &quot;peaks&quot;)</p>
+<p>CHR scalar name of the database table holding sample
+information (default: &quot;samples&quot;)</p>
 </td></tr>
 <tr valign="top"><td><code>ms_data_in</code></td>
 <td>

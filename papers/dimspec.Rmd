@@ -21,15 +21,17 @@ con <- dbConnect(SQLite(), here::here(params$db_file))
 
 # Introduction
 
-The use of mass spectral libraries is essential for the confident identification and reporting of analytical chemistry measureands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology provides a series of mass spectral libraries in use at analytical research, development, and contracting laboratories throughout the US. Contrasting with targeted methods, where analyte identities and their mass spectral properties are known a priori are non-targeted analysis (NTA) methods, where compound identity is unknown. Even when analytes are "known" (i.e. their mass spectral properties have been measured and reported in the literature) different extraction and measurement methods may show slight differences in mass spectral properties. The gold standard for matching mass spectra is use of a library of mass spectral standards, yet such standards are available only for a small fraction of "known" analytes.
+Non-targeted analysis (NTA) is a term to describe a broad set of techniques aimed at characterizing the chemical composition of a material using advanced instrumental techniques, such as high resolution mass spectrometry (HRMS). A component of many NTA workflows is the identification of individual chemical compounds through the combination of HRMS data with computational tools and reference databases. The use of mass spectral libraries or databases is essential for the confident identification and reporting of analytical chemistry measurands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology provides a series of mass spectral libraries in use at analytical research, development, and contracting laboratories throughout the US. Even when analytes are "known" (i.e. their mass spectral properties have been measured and reported in the literature) different extraction and measurement methods may show slight differences in mass spectral properties. The gold standard for matching mass spectra is use of a library of mass spectral standards, yet such standards are available only for a small fraction of "known" analytes.
 
-For analyte classes with decades of analytical study (e.g. polychlorinated biphenyls, vitamins, etc.), such "known" analytes are generally covered well by analytical standards. This is not the case for analyte classes of more recent interest (e.g. per- and polyfluorinated alkyl substances). Research needs generally run ahead of standards availability; new paradigms such as NTA are therefore necessary to assess analyte identity and properties by identifying mass spectral patterns of both the analyte itself and its fragmentation patterns. Analytes characterized in this fashion can then be published for identification in other methods and laboratories. As of 2023, the process of distributing such data still lags behind many research needs. Several efforts to address this are beginning to emerge [@TODO cite a bunch of stuff], but few achieve the effort of being reusable and interoperable.
+For analyte classes with decades of analytical study (e.g. polychlorinated biphenyls, vitamins, etc.), such "known" analytes are generally covered well by analytical standards. This is not the case for the analyte classes of more recent interest, per- and polyfluorinated alkyl substances (PFAS). Research needs generally run ahead of standards availability; new paradigms such as NTA are therefore necessary to assess analyte identity and properties by identifying mass spectral patterns of both the analyte itself and its fragmentation patterns. Analytes characterized in this fashion can then be published for identification in other methods and laboratories. As of 2023, the process of distributing such data still lags behind many research needs. Several efforts to address this are beginning to emerge [@TODO cite a bunch of stuff], but few achieve the effort of being reusable and interoperable.
 
 Here, we describe a tool set produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass (HRAM) spectrometry experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) project allows for the creation of portable databases that tie experimental mass spectra with sample and methodological metadata. DIMSpec uses SQLite, a common portable database engine, for data storage and a collected set of data management and NTA tools written in the R language. This includes the ability to rapidly iterate and launch new databases supporting a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated toolkit, researchers can leverage NTA tools in active use at NIST for quality assurance and identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.
 
 We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward practices that will facilitate sharing and reuse of such data, moving analytical chemistry data practices for NTA toward the FAIR principles [@TODO cite].
 
-# Content and Usage of DIMSpec Databases
+# Methods
+
+## Content and Usage of DIMSpec Databases
 
 A full user guide for the DIMSpec project is hosted as a webbook on GitHub [@TODO cite]; this will be updated as the project develops and serves as the definitive "how to" on using DIMSpec databases. Information in the following sections is provided as a summary of that user guide to provide context for this publication. Data preprocessing steps for DIMSpec databases includes three steps as provided.
 
@@ -49,7 +51,23 @@ Each node file defines the tables and views necessary to store and serve data fo
 
 Currently there are X nodes in the database
 
-## Toolkit
+## Data collection and import
+
+### NTA Method Reporting Tool
+
+To gather the relevant sample, method, and compound data required for context and feature identification, a macro-enabled Microsoft Excel workbook (Microsoft Office 365) was developed and named the NTA Method Reporting Tool (NTA-MRT). The NTA-MRT is designed to collect data on a single sample (single data file). The NTA-MRT is a tool that provides the ability to collect sample and method-specific information with controlled ontology on specific parameters, such as sample classification, chromatographic column stationary phase chemistry, and mass spectrometric ionization technique. In addition, the NTA-MRT has a "peaks" portion that users can enter identified chemical compounds in the sample and provide a designated level of confidence for that identification (based on the PFAS Confidence of Identification scale described by Charbonnet et al.)[@TODO cite] Finally, the NTA-MRT can generate MS\^2 fragment annotation tables for users to provide elemental formulas and structures (if available) for observed fragments of individual identified chemical compounds. The fragment annotation step is highly recommend, but optional.
+
+Once complete, the NTA-MRT has an export button that converts the completed fields into a schema-defined JSON file, which can be used by subsequent tools in the data collection workflow in conjunction with a converted mzML raw data file.
+
+### Quality evaluation of data and metadata
+
+While the procedure can be run via CLI, the quality evaluation of the data has been streamlined into the MSQC Shiny application (described below). Using both the mzML raw data file and the NTA-MRT-exported JSON file, the data is evaluated.
+
+The quality evaluation includes seven data quality checks ensuring that: (1) the reported precursor ion(s) are within reported mass accuracy bounds given an ideal ion mass for each identified analyte, (2) the MS1 isotopic pattern matches that of a calculated isotopic pattern above an acceptability threshold, (3) precursor ion(s) are present in the provided data file, (4) annotated fragments are present in the provided data file, (5) the mass accuracy of annotated fragments are within reported instrumental error ranges given an ideal ion mass for each identified fragment, (6) the reported elemental formulas for each annotated fragment are a valid subset of the identified analyte, and (7) if there is a SMILES structure provided that it reasonably the elemental formula of the annotated fragment. Additionally, parameters for an optimized uncertainty mass spectrum are calculated for import which facilitates searching of unknown data against recorded fragmentation patterns.
+
+### Import of mass spectral data
+
+## Data Analysis Toolkit
 
 The DIMSpec toolkit [^1] has been tested on both Windows 10 and a virtual machine running Ubuntu 20.0.4.3 LTS 64-bit[^2] platforms and should run on any system able to install R, Python, SQLite3, and a web browser [^3], though installation details may vary by operating systems. Follow the instructions for each requirement on the target operating system. The only hard requirement is [R v4.1+](https://cran.r-project.org/)[@R-base] and many packages (which will be installed automatically), as well as [RTools](https://cran.r-project.org/bin/windows/Rtools/) for Windows users; as the project is oriented as a an RStudio project, it is strongly recommended that users also install the RStudio [@RStudio] integrated development environment for ease of use. Other strongly recommended software installs are [SQLite3](https://www.sqlite.com/download.html) and its command line interface [CLI](https://www.sqlite.org/cli.html) to simplify aspects of reuse, a lightweight database interface such as [DBeaver Lite](https://dbeaver.com/download/lite/), and [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) for project version control; for best results the git and sqlite3 CLI executables must be available via PATH. If chemometric support is desired, the DIMSpec project includes an integration of the rdkit [@RDKit] python library; it is recommended but not required to install python 3.9+ and a package manager such as miniconda, though the installation routine from within R will install these automatically if necessary. Refer to relevant sections of the full user guide if the machine using DIMSpec already has installations of python for other purposes as setups may vary widely. DIMSpec ships with a populated database of per- and polyfluorinated alkyl substances (PFAS) for demonstration.
 
@@ -65,7 +83,7 @@ The DIMSpec toolkit [^1] has been tested on both Windows 10 and a virtual machin
 
 ### R
 
-To get started seting up the project toolkit, download it from [GitHub](@TODO%20link).
+To get started setting up the project toolkit, download it from [GitHub](@TODO%20link).
 
 ### Chemometrics
 
@@ -87,8 +105,6 @@ To facilitate visual exploration of the database, the Table Explorer application
 
 Due to the nature of NTA project, it is recommended to perform quality control checks of experimental data prior to populating data. The Mass Spectral Quality Control application was developed to facilitate application of quality control metrics developed by NIST, and will create DIMSpec compliant import files in JSON format that meet all requirements by combining the results of experimental data (in mzML format), and the annotations provided by the NTA-MRT.
 
-It applies seven data quality checks ensuring that: (1) the reported precursor ion(s) are within reported mass accuracy bounds given an ideal ion mass for each identified analyte, (2) the MS1 isotopic pattern matches that of a calculated isotopic pattern above an acceptability threshold, (3) precursor ion(s) are present in the provided data file, (4) annotated fragments are present in the provided data file, (5) the mass accuracy of annotated fragments are within reported instrumental error ranges given an ideal ion mass for each identified fragment, (6) the reported elemental formulas for each annotated fragment are a valid subset of the identified analyte, and (7) if there is a SMILES structure provided that it reasonably the elemental formula of the annotated fragment. Additionally, parameters for an optimized uncertainty mass spectrum are calculated for import which facilitates searching of unknown data against recorded fragmentation patterns.
-
 Thresholds for each of these checks
 
 #### Mass Spectral Match (MSMatch)
@@ -101,13 +117,17 @@ ms_spectra <- dbGetQuery(con, "select count(*) from ms_data")
 peaks <- dbReadTable(con, "peaks")
 ```
 
-## Included data for PFAS
+## Initial data population
+
+[@TODO Ben describe the acquisition and/or generation of the data and incorporation of the data]
+
+## Current database size and characteristics
 
 In its distributed form, the DIMSpec project includes a database populated with empirical high resolution tandem mass spectrometry experiments for per- and polyfluorinated alkyl substances. Samples from analytical standards (n = `r sample_classes$n[sample_classes$sample_class_id == "analytical standard"]`), aqueous film-forming foam solutions (n = `r sample_classes$n[sample_classes$sample_class_id == "aqueous film-forming form (AFFF)"]`), and commercial formulations (n = `r sample_classes$n[sample_classes$sample_class_id == "commercial formulation"]`) are represented. From these, `r scales::comma(ms_spectra[[1]])` HRAM spectra of high quality describing `r nrow(peaks)` were recorded using a [@TODO Ben do you have an analytical method brief we can drop in here?].
 
 # Conclusion
 
-In this paper we present the DIMSpec project, a freely available and open source toolkit for rapid iteration of databases supporting data storage and retrieval for non-targeted analysis of high resolution mass spectrometry data. Included in the project repository is a database of more than 24,000 high quality HRAMS spectra for per- and polyfluorinated alkyl substances. The toolkit and any DIMSpec databases are easily extensible and can be customized for a wide variety of use cases. While DIMSpec is not intended to support quantitative measurements at this time, as data storage is focused specifically around chromatographic peaks it could easily do so by adding a table referencing the peak objects with columns storing desireable quantitative measures such as integrated intensity, calculated mass fraction, and units.
+In this paper we present the DIMSpec project, a freely available and open source toolkit for rapid iteration of databases supporting data storage and retrieval for non-targeted analysis of high resolution mass spectrometry data. Included in the project repository is a database of more than 24,000 [@TODO this is probably the number of msdata rows, which is a bit misleading, I would go with the number of Peaks x 2 (MS1 and MS2) to be the spectral count] high quality HRAMS spectra for per- and polyfluorinated alkyl substances. The toolkit and any DIMSpec databases are easily extensible and can be customized for a wide variety of use cases. While DIMSpec is not intended to support quantitative measurements at this time, as data storage is focused specifically around chromatographic peaks it could easily do so by adding a table referencing the peak objects with columns storing desireable quantitative measures such as integrated intensity, calculated mass fraction, and units.
 
 # References
 

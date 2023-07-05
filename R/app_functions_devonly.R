@@ -56,9 +56,9 @@ open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
   if (file.exists(name)) {
     usethis::edit_file(usethis::proj_path(name), open = open)
   } else if (is.null(dir)) {
-    match_name <- list.files(pattern = name, recursive = TRUE, full.names = TRUE)
+    match_name <- grep(pattern = name, list.files(path = here::here(), recursive = TRUE, full.names = TRUE), value = TRUE)
     if (length(match_name) == 1) {
-      usethis::edit_file(usethis::proj_path(match_name), open = open)
+      usethis::edit_file(match_name, open = open)
     } else if (length(match_name) == 0) {
       if (exists("log_it")) {
         log_it(ifelse(create_new, "warn", "error"),
@@ -73,7 +73,7 @@ open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
         cat(paste0(match_name, collapse = "\n"))
       }
     }
-  } else if (file.exists(file.path(dir, name))) {
+  } else if (file.exists(here::here(dir, name))) {
     usethis::edit_file(usethis::proj_path(dir, name), open = open)
   } else {
     all_dirs <- list.dirs()
@@ -82,8 +82,8 @@ open_proj_file <- function(name, dir = NULL, create_new = FALSE) {
       if (length(match_dir) > 1) {
         if (exists("log_it")) {
           log_it("error", sprintf('Multiple directories matching the pattern "%s" were found. Please be more specific.', dir))
-          stop()
-        }
+          cat(paste0(match_dir, collapse = "\n"))
+          }
       }
     } else {
       if (exists("log_it")) {

@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-17" />
+<meta name="date" content="2023-07-05" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,8 +52,6 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<link href="libs/font-awesome-5.15.3/css/all.min.css" rel="stylesheet" />
-<link href="libs/font-awesome-5.15.3/css/v4-shims.min.css" rel="stylesheet" />
 <!-- Insert NIST header and footer -->
   <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
   <!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded. That script has been recreated here with the proper modifications to override gitbook CSS with the NIST header styling; see below.
@@ -131,7 +129,7 @@
     });
   </script>
 <!-- Insert NIST GA, uncomment the next line to activate.  -->
-  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+<!--  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>  -->
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -270,10 +268,17 @@ div.csl-indent {
 
 <ul class="summary">
 <li class="part" id="book-links">
-    <a id="nist-logo-link" href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img></a>
-    <h3 id="gitbook-title">
-        <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">A Database Infrastructure for Mass Spectrometry (DIMSpec)  <i class="fab fa-github"></i></a>
-    </h3>
+  <a id="nist-logo-link" href="https://www.nist.gov">
+    <img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img>
+  </a>
+  <h3 id="gitbook-title">
+    <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">
+      A Database Infrastructure for Mass Spectrometry (DIMSpec)  
+      <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;">
+        <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+      </svg>
+    </a>
+  </h3>
 </li>
 
 <li class="divider"></li>
@@ -1283,14 +1288,6 @@ Explore properties of an SQLite table
 </td>
 <td>
 Are all conda modules available in the active environment
-</td>
-</tr>
-<tr>
-<td>
-<a id="fn_qc_result" class="fn_link" href="#fn_def_qc_result" target="_blank">qc_result</a>
-</td>
-<td>
-Does an import object have a defined QC value present?
 </td>
 </tr>
 <tr>
@@ -4744,21 +4741,10 @@ function prior to reading form entries to ensure that all values requested by
 name in in ‘values’ are present. If they are not, a [<a href="appendix-function-reference.html#fn_def_nist_shinyalert">nist_shinyalert</a>] modal
 is displayed prompting the user to complete the form.
 </p>
-<p>
-This input validation check ensures the current session’s input object
-includes non-NA, non-NULL, and non-blank values similarly to [shiny::req] and
-[shiny::validate] but can be called with a predefined list of input names to
-check. Typically this is used for validate form entry completion. Call this
-function prior to reading form entries to ensure that all values requested by
-name in in ‘values’ are present. If they are not, a [<a href="appendix-function-reference.html#fn_def_nist_shinyalert">nist_shinyalert</a>] modal
-is displayed prompting the user to complete the form.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-req(complete_form_entry(input, c("need1", "need2")))
-
 req(complete_form_entry(input, c("need1", "need2")))
 </pre>
 <h3>
@@ -4800,9 +4786,6 @@ FALSE to return the status of the check
 <h3>
 Value
 </h3>
-<p>
-Whether or not all required values are present.
-</p>
 <p>
 Whether or not all required values are present.
 </p>
@@ -6940,8 +6923,8 @@ information
 </td>
 <td>
 <p>
-CHR scalar name of the database table containing method
-information
+CHR scalar name of the database table containing
+method information
 </p>
 </td>
 </tr>
@@ -7079,9 +7062,8 @@ phase and chromatographic information (default: “chromatography”)
 </td>
 <td>
 <p>
-CHR scalar name of an item in ‘obj’ containing QC method
-results as a data.frame object of the form ‘data.frame(name = character(0),
-value = logical(0))’ (default: “qcmethod”)
+CHR scalar name of the import object element containing
+QC method information (default: “qcmethod”)
 </p>
 </td>
 </tr>
@@ -7115,28 +7097,6 @@ QC methods type (default: “norm_qc_methods_name”)
 <p>
 CHR scalar of the name in ‘obj[[qc_method_in]]’ that
 contains the reference or citation for the QC protocol (default: “source”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>qc_data_in</code>
-</td>
-<td>
-<p>
-CHR scalar name of an item in ‘obj’ containing QC information
-(default: “qc”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>qc_data_table</code>
-</td>
-<td>
-<p>
-CHR scalar name of the database table holding QC data
-(default: “qc_data”)
 </p>
 </td>
 </tr>
@@ -7255,8 +7215,8 @@ containing peak information
 </td>
 <td>
 <p>
-CHR scalar of the database table name holding QC method check
-information (default: “peaks”)
+CHR scalar name of the database table holding sample
+information (default: “samples”)
 </p>
 </td>
 </tr>
@@ -9901,25 +9861,10 @@ remove the colors (the majority should be caught by the string provided as
 the default in this package) and ‘log_split_column’ will split the lines in
 your logging file into discrete categories named by ‘df_titles’.
 </p>
-<p>
-Log messages generated by logger with anything other than the standard
-formatting options can have multiple formatting tags to display in the R
-console. These “junk up” any resulting object. If you want to read it
-directly in the console and preserve formatting, call [<a href="appendix-function-reference.html#fn_def_read_log">read_log</a>] with the
-default ‘as_object’ argument (FALSE). For deeper inspection, a data frame
-works well, provided the formatting matches up. In ‘env_logger.R’ there is an
-option to set formatting layouts. In addition to setting formatting layouts,
-generate regex strings matching the desired format - ‘log_remove_color’ will
-remove the colors (the majority should be caught by the string provided as
-the default in this package) and ‘log_split_column’ will split the lines in
-your logging file into discrete categories named by ‘df_titles’.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-log_as_dataframe("log.txt")
-
 log_as_dataframe("log.txt")
 </pre>
 <h3>
@@ -9998,34 +9943,15 @@ Details
 <p>
 This will attempt to fail gracefully.
 </p>
-<p>
-This will attempt to fail gracefully.
-</p>
 <h3>
 Value
 </h3>
 <p>
 tibble with one row per log entry (or groups)
 </p>
-<p>
-tibble with one row per log entry (or groups)
-</p>
 <h3>
 Note
 </h3>
-<p>
-If “time” is included and ‘condense’ == TRUE, the log messages in the
-resulting tibble will nested to the nearest second.
-</p>
-<p>
-If “status” is included it will be a factor with levels including the
-valid statuses from logger (see [logger::log_levels]).
-</p>
-<p>
-Use care to develop ‘regex_split’ in order to split the log entries
-into the appropriate columns as defined by ‘df_titles’; extra
-values will be merged into the messages column.
-</p>
 <p>
 If “time” is included and ‘condense’ == TRUE, the log messages in the
 resulting tibble will nested to the nearest second.
@@ -11866,7 +11792,7 @@ Note
 </h3>
 <p>
 If ‘spectra_animate’ is set to true, it requires the [<a href="https://CRAN.R-project.org/package=gganimate">gganimate</a>]
-package to be installed (and may also require the [<a href="https://CRAN.R-project.org/package=gifski">gifski</a>] package) and
+package to be installed (and may also require the [gifski] package) and
 WILL take a large amount of time to complete, but results in an animation
 that will iterate through the scan period and display mass spectral data as
 they appear across the peak. Your mileage likely will vary.
@@ -12446,17 +12372,10 @@ This pass through function serves only to call [shinyalert::shinyalert] with
 parameters defined by this function, and can be used for additional styling
 that may be necessary. It is used solely for consistency sake.
 </p>
-<p>
-This pass through function serves only to call [shinyalert::shinyalert] with
-parameters defined by this function, and can be used for additional styling
-that may be necessary. It is used solely for consistency sake.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-nist_shinyalert("test", "info", shiny::h3("test"))
-
 nist_shinyalert("test", "info", shiny::h3("test"))
 </pre>
 <h3>
@@ -12560,15 +12479,9 @@ Value
 <p>
 None, shows a shinyalert modal
 </p>
-<p>
-None, shows a shinyalert modal
-</p>
 <h3>
 See Also
 </h3>
-<p>
-shinyalert::shinyalert
-</p>
 <p>
 shinyalert::shinyalert
 </p>
@@ -13675,125 +13588,6 @@ LGL scalar of whether or not all modules are available. Check console
 for further details.
 </p>
 <hr/>
-<table id="fn_def_qc_result" width="100%" summary="page for qc_result">
-<tr>
-<td>
-qc_result
-</td>
-<td style="text-align: right;">
-R Documentation
-</td>
-</tr>
-</table>
-<h2>
-Does an import object have a defined QC value present?
-</h2>
-<h3>
-Description
-</h3>
-<p>
-This returns a numerical boolean of whether or not the import has a given
-structure for QC data, indicating whether the analytical method has a QC
-method attached.
-</p>
-<h3>
-Usage
-</h3>
-<pre>
-qc_result(
-  obj,
-  qc_data_in = "qc",
-  qc_method_in = "qcmethod",
-  search_text_in = "name",
-  search_text = "QC Method Used",
-  value_in = "value"
-)
-</pre>
-<h3>
-Arguments
-</h3>
-<table summary="R argblock">
-<tr valign="top">
-<td>
-<code>obj</code>
-</td>
-<td>
-<p>
-LIST import object of a single import file
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>qc_data_in</code>
-</td>
-<td>
-<p>
-CHR scalar name of an item in ‘obj’ containing QC information
-(default: “qc”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>qc_method_in</code>
-</td>
-<td>
-<p>
-CHR scalar name of an item in ‘obj’ containing QC method
-results as a data.frame object of the form ‘data.frame(name = character(0),
-value = logical(0))’ (default: “qcmethod”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>search_text_in</code>
-</td>
-<td>
-<p>
-CHR scalar column name in ‘obj[[qc_method_in]]’
-containing the QC result names to look for (default: “name”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>search_text</code>
-</td>
-<td>
-<p>
-CHR scalar of the QC result to look for (default: “QC
-Method Used”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>value_in</code>
-</td>
-<td>
-<p>
-CHR scalar column name in ‘obj[[qc_method_in]]’ containing
-the values of QC results in boolean format (default: “name”)
-</p>
-</td>
-</tr>
-</table>
-<h3>
-Value
-</h3>
-<p>
-LGL scalar of the value, if present, as numeric, or 0 if not present
-</p>
-<h3>
-Examples
-</h3>
-<pre>
-qc_result(list(qc = list(letters), qcmethod = data.frame(name = "QC Method Used", value = TRUE)))
-
-</pre>
-<hr/>
 <table id="fn_def_rdkit_active" width="100%" summary="page for rdkit_active">
 <tr>
 <td>
@@ -14057,17 +13851,10 @@ By default if ‘file’ does not exist (i.e. ‘file’ is not a fully defined
 this looks for log text files in the directory defined by ‘LOG_DIRECTORY’ in
 the session.
 </p>
-<p>
-By default if ‘file’ does not exist (i.e. ‘file’ is not a fully defined path)
-this looks for log text files in the directory defined by ‘LOG_DIRECTORY’ in
-the session.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-read_log("log.txt")
-
 read_log("log.txt")
 </pre>
 <h3>
@@ -14110,10 +13897,6 @@ just to print the log to the console.
 <h3>
 Value
 </h3>
-<p>
-CHR vector of the requested log file entries if ‘as_object’ is TRUE,
-or none with a console print if ‘as_object’ is FALSE
-</p>
 <p>
 CHR vector of the requested log file entries if ‘as_object’ is TRUE,
 or none with a console print if ‘as_object’ is FALSE
@@ -15820,13 +15603,9 @@ resolve_method(
   db_conn = con,
   ensure_unique = TRUE,
   log_ns = "db",
-  qc_data_in = "qc",
-  qc_data_table = "qc_data",
   qc_method_in = "qcmethod",
-  qc_method_table = "qc_methods",
-  search_text_in = "name",
-  search_text = "QC Method Used",
-  value_in = "value",
+  qc_search_text = "QC Method Used",
+  qc_value_in = "value",
   require_all = TRUE,
   import_map = IMPORT_MAP,
   ...
@@ -15863,8 +15642,8 @@ information
 </td>
 <td>
 <p>
-CHR scalar name of the database table containing method
-information
+CHR scalar name of the database table containing
+method information
 </p>
 </td>
 </tr>
@@ -15901,79 +15680,36 @@ CHR scalar of the logging namespace to use (default: “db”)
 </tr>
 <tr valign="top">
 <td>
-<code>qc_data_in</code>
-</td>
-<td>
-<p>
-CHR scalar name of an item in ‘obj’ containing QC information
-(default: “qc”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>qc_data_table</code>
-</td>
-<td>
-<p>
-CHR scalar name of the database table holding QC data
-(default: “qc_data”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
 <code>qc_method_in</code>
 </td>
 <td>
 <p>
-CHR scalar name of an item in ‘obj’ containing QC method
-results as a data.frame object of the form ‘data.frame(name = character(0),
-value = logical(0))’ (default: “qcmethod”)
+CHR scalar name of the import object element containing
+QC method information (default: “qcmethod”)
 </p>
 </td>
 </tr>
 <tr valign="top">
 <td>
-<code>qc_method_table</code>
+<code>qc_search_text</code>
 </td>
 <td>
 <p>
-CHR scalar of the database table name holding QC
-method check information (default: “qc_methods”)
+CHR scalar name of an element in the import object in
+part ‘qc_method_in’ identifying whether or not a QC method was used
+(default: “QC Method Used”)
 </p>
 </td>
 </tr>
 <tr valign="top">
 <td>
-<code>search_text_in</code>
+<code>qc_value_in</code>
 </td>
 <td>
 <p>
-CHR scalar column name in ‘obj[[qc_method_in]]’
-containing the QC result names to look for (default: “name”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>search_text</code>
-</td>
-<td>
-<p>
-CHR scalar of the QC result to look for (default: “QC
-Method Used”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>value_in</code>
-</td>
-<td>
-<p>
-CHR scalar column name in ‘obj[[qc_method_in]]’ containing
-the values of QC results in boolean format (default: “name”)
+CHR scalar name of an element in the import object
+corresponding to ‘qc_method_in’ where the value of the metric named for
+‘qc_search_text’ is located (default: “value”)
 </p>
 </td>
 </tr>
@@ -16250,7 +15986,42 @@ name of the table containing carrier aliases to search (default:
 equal to database columns in ‘additive_props<span class="math inline">\(db_table&#39; and values matching regex to match names in &#39;obj[[mobile_phase_props\)</span>in_item]]’
 ‘obj[[mobile_phase_props<span class="math inline">\(in_item]][[mobile_phase_props\)</span>db_table]]’, and an
 extra element named ‘id_by’ containing regex used to match names in the
-import object indicate an additive (e.g. “add<span class="math inline">\(&quot;)&lt;/p&gt; &lt;/td&gt; &lt;/tr&gt; &lt;tr valign=&quot;top&quot;&gt; &lt;td&gt;&lt;code&gt;exclude_values&lt;/code&gt;&lt;/td&gt; &lt;td&gt; &lt;p&gt;CHR vector indicating which values to ignore in &#39;obj&#39; (default: c(&quot;none&quot;, &quot;&quot;, NA))&lt;/p&gt; &lt;/td&gt; &lt;/tr&gt; &lt;tr valign=&quot;top&quot;&gt; &lt;td&gt;&lt;code&gt;fuzzy&lt;/code&gt;&lt;/td&gt; &lt;td&gt; &lt;p&gt;LGL scalar of whether to do a &quot;fuzzy&quot; match in the sense that values provided are wrapped in an SQL &quot;LIKE &#39; the &#39;case_sensitive&#39; setting if TRUE (default: FALSE).&lt;/p&gt; &lt;/td&gt; &lt;/tr&gt; &lt;tr valign=&quot;top&quot;&gt; &lt;td&gt;&lt;code&gt;clean_up&lt;/code&gt;&lt;/td&gt; &lt;td&gt; &lt;p&gt;LGL scalar determining whether or not to clean up the &#39;mix_collection_table&#39; by removing just-added records if there are errors adding to &#39;carrier_props\)</span>db_table’ (default: TRUE)
+import object indicate an additive (e.g. names terminating in “add”)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>exclude_values</code>
+</td>
+<td>
+<p>
+CHR vector indicating which values to ignore in ‘obj’
+(default: c(“none”, ““, NA))
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>fuzzy</code>
+</td>
+<td>
+<p>
+LGL scalar of whether to do a “fuzzy” match in the sense that
+values provided are wrapped in an SQL SQL LIKE clause bookended with wildcards;
+overrides the ‘case_sensitive’ setting if TRUE (default: FALSE).
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>clean_up</code>
+</td>
+<td>
+<p>
+LGL scalar determining whether or not to clean up the
+‘mix_collection_table’ by removing just-added records if there are errors
+adding to ‘carrier_props$db_table’ (default: TRUE)
 </p>
 </td>
 </tr>
@@ -17247,9 +17018,10 @@ Usage
 <pre>
 resolve_qc_data_NTAMRT(
   obj,
-  sample_id,
+  peak_id,
   qc_data_in = "qc",
   qc_data_table = "qc_data",
+  peaks_table = "peaks",
   ignore = FALSE,
   db_conn = con,
   log_ns = "db"
@@ -17271,11 +17043,11 @@ LIST object containing data formatted from the import generator
 </tr>
 <tr valign="top">
 <td>
-<code>sample_id</code>
+<code>peak_id</code>
 </td>
 <td>
 <p>
-INT scalar of the sample id (e.g. from the import workflow)
+INT vector of the peak ids (e.g. from the import workflow)
 </p>
 </td>
 </tr>
@@ -17298,6 +17070,17 @@ data (default: “qc”)
 <p>
 CHR scalar name of the database table holding QC data
 (default: “qc_data”)
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>peaks_table</code>
+</td>
+<td>
+<p>
+CHR scalar name of the database table holding peaks data
+(default: “peaks”)
 </p>
 </td>
 </tr>
@@ -17353,15 +17136,13 @@ Usage
 <pre>
 resolve_qc_methods_NTAMRT(
   obj,
-  method_id,
-  sample_id,
+  peak_id,
   qc_method_in = "qcmethod",
   qc_method_table = "qc_methods",
   qc_method_norm_table = "norm_qc_methods_name",
   qc_method_norm_reference = "norm_qc_methods_reference",
   qc_references_in = "source",
-  ms_methods_table = "ms_methods",
-  sample_table = "samples",
+  peaks_table = "peaks",
   ignore = FALSE,
   db_conn = con,
   log_ns = "db"
@@ -17383,21 +17164,11 @@ LIST object containing data formatted from the import generator
 </tr>
 <tr valign="top">
 <td>
-<code>method_id</code>
+<code>peak_id</code>
 </td>
 <td>
 <p>
-INT scalar of the method id (e.g. from the import workflow)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>sample_id</code>
-</td>
-<td>
-<p>
-INT scalar of the sample id (e.g. from the import workflow)
+INT vector of the peak ids (e.g. from the import workflow)
 </p>
 </td>
 </tr>
@@ -17459,34 +17230,12 @@ contains the reference or citation for the QC protocol (default: “source”)
 </tr>
 <tr valign="top">
 <td>
-<code>ms_methods_table</code>
-</td>
-<td>
-<p>
-CHR scalar name of the database table holding mass
-spectrometry methods data (default: “ms_methods”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>sample_table</code>
+<code>peaks_table</code>
 </td>
 <td>
 <p>
 CHR scalar name of the database table holding sample
 information (default: “samples”)
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
-<code>ignore</code>
-</td>
-<td>
-<p>
-LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
-constraints; default: FALSE)
 </p>
 </td>
 </tr>
@@ -18251,6 +18000,37 @@ object generated from ‘create_search_ms’ function
 </p>
 </td>
 </tr>
+<tr valign="top">
+<td>
+<code>normfn</code>
+</td>
+<td>
+<p>
+the normalization function typically “mean” or “sum” for normalizing the intensity values
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>cormethod</code>
+</td>
+<td>
+<p>
+the correlation method used for calculating the correlation, see ‘cor’ function for methods
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>optimized_params</code>
+</td>
+<td>
+<p>
+LGL scalar indicating whether or not to use the
+optimal search parameters stored in the database table ‘opt_ums_params’
+</p>
+</td>
+</tr>
 </table>
 <h3>
 Value
@@ -18311,6 +18091,37 @@ SQLite database connection
 <td>
 <p>
 object generated from ‘create_search_ms’ function
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>normfn</code>
+</td>
+<td>
+<p>
+the normalization function typically “mean” or “sum” for normalizing the intensity values
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>cormethod</code>
+</td>
+<td>
+<p>
+the correlation method used for calculating the correlation, see ‘cor’ function for methods
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>optimized_params</code>
+</td>
+<td>
+<p>
+LGL scalar indicating whether or not to use the
+optimal search parameters stored in the database table ‘opt_ums_params’
 </p>
 </td>
 </tr>
@@ -20487,19 +20298,10 @@ current value of the LOGGING object. If LOGGING is changed (i.e. a logging
 namespace is added or changed) this function should be run to update routing
 and formatting to be in line with the current settings.
 </p>
-<p>
-This applies the internal routing and formatting for logger functions to the
-current value of the LOGGING object. If LOGGING is changed (i.e. a logging
-namespace is added or changed) this function should be run to update routing
-and formatting to be in line with the current settings.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-update_logger_settings(log_all_warnings = FALSE, log_all_errors =
-  FALSE)
-
 update_logger_settings(log_all_warnings = FALSE, log_all_errors =
   FALSE)
 </pre>
@@ -20536,20 +20338,9 @@ Value
 <p>
 None
 </p>
-<p>
-None
-</p>
 <h3>
 Note
 </h3>
-<p>
-The calling stack for auto logging of warnings and errors does not work
-with background processes. These settings call [logger::log_warnings()] and
-[logger::log_errors()].
-</p>
-<p>
-This function is used only for its side effects.
-</p>
 <p>
 The calling stack for auto logging of warnings and errors does not work
 with background processes. These settings call [logger::log_warnings()] and
@@ -20591,18 +20382,6 @@ Arguments
 <table summary="R argblock">
 <tr valign="top">
 <td>
-<code>view_on_github</code>
-</td>
-<td>
-<p>
-LGL scalar of whether to use the hosted version of the
-User Guide on GitHub (default: TRUE is recommended) which will always
-display the most up to date version
-</p>
-</td>
-</tr>
-<tr valign="top">
-<td>
 <code>path</code>
 </td>
 <td>
@@ -20619,6 +20398,18 @@ CHR scalar representing a valid file path to the local user guide
 <p>
 CHR scalar pointing to the web resource, in this case the URL
 to the User Guide hosted on GitHub pages
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>view_on_github</code>
+</td>
+<td>
+<p>
+LGL scalar of whether to use the hosted version of the
+User Guide on GitHub (default: TRUE is recommended) which will always
+display the most up to date version
 </p>
 </td>
 </tr>
@@ -20661,20 +20452,10 @@ manually changing it during the upload process. If they are not, a
 [<a href="appendix-function-reference.html#fn_def_nist_shinyalert">nist_shinyalert</a>] modal is displayed prompting the user to upload a file in
 one of the requested formats.
 </p>
-<p>
-This input validation check uses [tools::file_ext] to ensure that files
-uploaded to [shiny::fileInput] are among the acceptable file formats. Users
-may sometimes wish to load a file outside the “accepts” format list by
-manually changing it during the upload process. If they are not, a
-[<a href="appendix-function-reference.html#fn_def_nist_shinyalert">nist_shinyalert</a>] modal is displayed prompting the user to upload a file in
-one of the requested formats.
-</p>
 <h3>
 Usage
 </h3>
 <pre>
-req(valid_file_format(input$file_upload, c(".csv", ".xls")))
-
 req(valid_file_format(input$file_upload, c(".csv", ".xls")))
 </pre>
 <h3>
@@ -20716,9 +20497,6 @@ FALSE to return the status of the check
 <h3>
 Value
 </h3>
-<p>
-Whether or not all required values are present.
-</p>
 <p>
 Whether or not all required values are present.
 </p>
@@ -21600,8 +21378,6 @@ Most standard Shiny widgets are supported, but maybe not all.
 </p>
 
 </div>
-
-
 
 
 

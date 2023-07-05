@@ -16,6 +16,13 @@ search_precursor(
 \item{con}{SQLite database connection}
 
 \item{searchms}{object generated from `create_search_ms` function}
+
+\item{normfn}{the normalization function typically "mean" or "sum" for normalizing the intensity values}
+
+\item{cormethod}{the correlation method used for calculating the correlation, see `cor` function for methods}
+
+\item{optimized_params}{LGL scalar indicating whether or not to use the
+optimal search parameters stored in the database table `opt_ums_params`}
 }
 \value{
 table of match statistics for the compound of interest

@@ -20,15 +20,13 @@ Non-Targeted Analysis Method Reporting Tool (NTA MRT).
 <pre>
 resolve_qc_methods_NTAMRT(
   obj,
-  method_id,
-  sample_id,
+  peak_id,
   qc_method_in = "qcmethod",
   qc_method_table = "qc_methods",
   qc_method_norm_table = "norm_qc_methods_name",
   qc_method_norm_reference = "norm_qc_methods_reference",
   qc_references_in = "source",
-  ms_methods_table = "ms_methods",
-  sample_table = "samples",
+  peaks_table = "peaks",
   ignore = FALSE,
   db_conn = con,
   log_ns = "db"
@@ -43,13 +41,9 @@ resolve_qc_methods_NTAMRT(
 <td>
 <p>LIST object containing data formatted from the import generator</p>
 </td></tr>
-<tr valign="top"><td><code>method_id</code></td>
+<tr valign="top"><td><code>peak_id</code></td>
 <td>
-<p>INT scalar of the method id (e.g. from the import workflow)</p>
-</td></tr>
-<tr valign="top"><td><code>sample_id</code></td>
-<td>
-<p>INT scalar of the sample id (e.g. from the import workflow)</p>
+<p>INT vector of the peak ids (e.g. from the import workflow)</p>
 </td></tr>
 <tr valign="top"><td><code>qc_method_in</code></td>
 <td>
@@ -77,20 +71,10 @@ normalizing QC methods reference type (default:
 <p>CHR scalar of the name in 'obj[[qc_method_in]]' that
 contains the reference or citation for the QC protocol (default: &quot;source&quot;)</p>
 </td></tr>
-<tr valign="top"><td><code>ms_methods_table</code></td>
-<td>
-<p>CHR scalar name of the database table holding mass
-spectrometry methods data (default: &quot;ms_methods&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>sample_table</code></td>
+<tr valign="top"><td><code>peaks_table</code></td>
 <td>
 <p>CHR scalar name of the database table holding sample
 information (default: &quot;samples&quot;)</p>
-</td></tr>
-<tr valign="top"><td><code>ignore</code></td>
-<td>
-<p>LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
-constraints; default: FALSE)</p>
 </td></tr>
 <tr valign="top"><td><code>log_ns</code></td>
 <td>

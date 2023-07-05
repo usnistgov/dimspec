@@ -42,13 +42,13 @@ getmzML <- function(search_df, CONVERT = FALSE, CHECKCONVERT = TRUE, is_waters =
   ext <-  gsub(pattern = "[[:print:]]*\\.(.*)$", replacement = "\\1", basename(search_df$filename))
   mzmlfile = search_df$filename
   if (ext != "mzML") {
-  if (CONVERT == TRUE) {
+    if (CONVERT == TRUE) {
       outdir = getwd()
       mzmlfile <- mzMLconvert(search_df$filename, msconvert = NULL, config = NULL, outdir = outdir)
       while (!file.exists(paste(outdir, "/convert_done.txt", sep = ""))) {
         Sys.sleep(1)
       }
-  }
+    }
     if (CONVERT == FALSE) {
       stop("The raw file is not an mzML file, please use Proteowizard MSConvert to convert the file to mzML. \n See Documentation for more information.")
     }
@@ -191,6 +191,18 @@ create_search_ms <- function(searchobj, correl = NULL, ph = NULL, freq = NULL, n
 #' @return data.frame of mass spectral data
 #' @export
 get_msdata_precursors <- function(con, precursorion, masserror, minerror) {
+  stopifnot(
+    DBI::dbIsValid(con),
+    length(precursorion) > 0,
+    all(precursorion == as.numeric(precursorion)),
+    length(masserror) == 1,
+    masserror == as.numeric(masserror),
+    length(minerror) == 1,
+    minerror == as.numeric(minerror)
+  )
+  precursorion <- as.numeric(precursorion)
+  masserror <- as.numeric(masserror)
+  minerror <- as.numeric(minerror)
   DBI::dbGetQuery(
     conn = con,
     paste0(
@@ -215,6 +227,8 @@ get_msdata_precursors <- function(con, precursorion, masserror, minerror) {
 #' @usage
 #' get_msdata_compound(con, 15)
 get_msdata_compound <- function(con, compoundid) {
+  stopifnot(DBI::dbIsValid(con), all(compoundid == as.integer(as.numeric(compoundid))))
+  compoundid <- as.integer(as.numeric(compoundid))
   DBI::dbGetQuery(
     conn = con,
     paste0(
@@ -237,6 +251,8 @@ get_msdata_compound <- function(con, compoundid) {
 #' @usage
 #' get_msdata_peakid(con, 15)
 get_msdata_peakid <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
   DBI::dbGetQuery(
     conn = con,
     paste0(
@@ -256,6 +272,18 @@ get_msdata_peakid <- function(con, peakid) {
 #' @return data.frame of mass spectral data
 #' @export
 get_annotated_fragments <- function(con, fragmentions, masserror, minerror) {
+  stopifnot(
+    DBI::dbIsValid(con),
+    length(fragmentions) > 0,
+    all(fragmentions == as.numeric(fragmentions)),
+    length(masserror) == 1,
+    masserror == as.numeric(masserror),
+    length(minerror) == 1,
+    minerror == as.numeric(minerror)
+  )
+  fragmentions <- as.numeric(fragmentions)
+  masserror <- as.numeric(masserror)
+  minerror <- as.numeric(minerror)
   do.call(rbind, lapply(fragmentions, function(ion) 
     DBI::dbGetQuery(
       conn = con,
@@ -280,16 +308,32 @@ get_annotated_fragments <- function(con, fragmentions, masserror, minerror) {
 #' @return data.frame object describing known fragments in the database with known compound and peak references attached
 #' @export
 get_compound_fragments <- function(con, fragmentions, masserror, minerror) {
+  stopifnot(
+    DBI::dbIsValid(con),
+    length(fragmentions) > 0,
+    all(fragmentions == as.numeric(fragmentions)),
+    length(masserror) == 1,
+    masserror == as.numeric(masserror),
+    length(minerror) == 1,
+    minerror == as.numeric(minerror)
+  )
+  fragmentions <- as.numeric(fragmentions)
+  masserror <- as.numeric(masserror)
+  minerror <- as.numeric(minerror)
   do.call(rbind, lapply(fragmentions, function(ion) 
     DBI::dbGetQuery(
       conn = con,
-      paste0(
-        "SELECT * FROM norm_fragments 
-      LEFT JOIN compound_fragments ON norm_fragments.id = compound_fragments.annotated_fragment_id
-      WHERE norm_fragments.fixedmass BETWEEN ", 
-        ion - max(ion*masserror*10^-6,minerror),
-        " AND ",
-        ion + max(ion*masserror*10^-6,minerror)
+      statement = DBI::sqlInterpolate(
+        conn = con,
+        sql = "
+          select nf.id as norm_fragment_id, nf.fixedmass, nf.netcharge, nf.formula, nf.radical, nf.smiles, cf.peak_id, cf.compound_id, cf.annotated_fragment_id
+          from norm_fragments nf
+          left join annotated_fragments af on nf.id = af.fragment_id
+          left join compound_fragments cf ON af.id = cf.annotated_fragment_id
+          where nf.fixedmass between ?mz_lo and ?mz_hi
+        ",
+        mz_lo = ion - max(ion*masserror*10^-6,minerror),
+        mz_hi = ion + max(ion*masserror*10^-6,minerror)
       )
     )
   ))
@@ -303,6 +347,7 @@ get_compound_fragments <- function(con, fragmentions, masserror, minerror) {
 #' @export
 #'
 get_msdata <- function(con) {
+  stopifnot(DBI::dbIsValid(con))
   DBI::dbGetQuery(
     conn = con,
     paste0(
@@ -319,6 +364,9 @@ get_msdata <- function(con) {
 #' @return numeric value of precursor ion m/z value
 #' @export
 get_peak_precursor <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
+  stopifnot(all(peakid %in% DBI::dbGetQuery(con, "select id from peaks")[[1]]))
   DBI::dbGetQuery(
     conn = con,
     paste0(
@@ -338,12 +386,16 @@ get_peak_precursor <- function(con, peakid) {
 #' @return data.frame of annotated fragments
 #' @export
 get_peak_fragments <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
+  stopifnot(all(peakid %in% DBI::dbGetQuery(con, "select id from peaks")[[1]]))
   DBI::dbGetQuery(
     conn = con,
     paste0(
       "SELECT peak_id, fixedmass, formula, radical, smiles, GROUP_CONCAT(citation) AS citations FROM compound_fragments 
-      LEFT JOIN norm_fragments ON compound_fragments.annotated_fragment_id = norm_fragments.id 
-      LEFT JOIN fragment_sources ON norm_fragments.id = fragment_sources.annotated_fragments_id
+      LEFT JOIN annotated_fragments ON compound_fragments.annotated_fragment_id = annotated_fragments.id
+      LEFT JOIN norm_fragments ON annotated_fragments.fragment_id = norm_fragments.id 
+      LEFT JOIN fragment_sources ON annotated_fragments.id = fragment_sources.annotated_fragments_id
       WHERE compound_fragments.peak_id IN (",
       paste(peakid, collapse = ","),
       ")
@@ -363,6 +415,18 @@ get_peak_fragments <- function(con, peakid) {
 #' @return table of fragments and TRUE/FALSE for if the fragment is within the unknown mass spectrum
 #' @export
 check_fragments <- function(con, ums, peakid, masserror = 5, minerror = 0.001) {
+  stopifnot(
+    DBI::dbIsValid(con),
+    length(peakid) > 0,
+    all(peakid == as.integer(as.numeric(peakid))),
+    length(masserror) == 1,
+    masserror == as.numeric(masserror),
+    length(minerror) == 1,
+    minerror == as.numeric(minerror)
+  )
+  peakid <- as.integer(as.numeric(peakid))
+  masserror <- as.numeric(masserror)
+  minerror <- as.numeric(minerror)
   peak_fragments <- get_peak_fragments(con, peakid)
   results <- rep(FALSE, nrow(peak_fragments))
   for (i in 1:nrow(peak_fragments)) {
@@ -402,6 +466,8 @@ summarize_check_fragments <- function(fragments_checked) {
 #' @return data.frame object of sample classes associated with a given peak
 #' @export
 get_sample_class <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
   DBI::dbGetQuery(conn = con, 
                   paste0(
                     "SELECT norm_sample_classes.name AS sample_class FROM samples
@@ -421,6 +487,8 @@ get_sample_class <- function(con, peakid) {
 #' @return table of compound IDs and names
 #' @export
 get_compoundid <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
   DBI::dbGetQuery(conn = con, 
                   paste0(
                     "SELECT view_compounds.id AS compound_id, view_compounds.name AS name FROM view_compounds
@@ -434,6 +502,8 @@ get_compoundid <- function(con, peakid) {
 }
 
 get_errorinfo <- function(con, peakid) {
+  stopifnot(DBI::dbIsValid(con), all(peakid == as.integer(as.numeric(peakid))))
+  peakid <- as.integer(as.numeric(peakid))
   DBI::dbGetQuery(conn = con,
                   paste0(
                     "SELECT * FROM view_masserror
@@ -445,8 +515,12 @@ get_errorinfo <- function(con, peakid) {
 
 #' Search the database for all compounds with matching precursor ion m/z values
 #'
-#' @param con SQLite database connection 
+#' @inheritParams get_ums
+#'
+#' @param con SQLite database connection
 #' @param searchms object generated from `create_search_ms` function
+#' @param optimized_params LGL scalar indicating whether or not to use the
+#'   optimal search parameters stored in the database table `opt_ums_params`
 #'
 #' @return table of match statistics for the compound of interest
 #' @export
@@ -455,13 +529,13 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
   peak_ids <- unique(msdata$peak_id)
   if (length(peak_ids) == 0) {
     return(list(result = data.frame(ms1match.scores = NULL, ms2match.scores = NULL, peak_sum = NULL, sample_classes = NULL, peak_ids = NULL, compounds = NULL),
-         ums2_compare = list(),
-         ums1_compare = list()))
+                ums2_compare = list(),
+                ums1_compare = list()))
   }
   mslist <- lapply(peak_ids, function(x) create_peak_list(msdata[which(msdata$peak_id == x),]))
   errorinfo <- get_errorinfo(con, peak_ids)
-    opt_params <- get_opt_params(con, peak_ids)
-    opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
+  opt_params <- get_opt_params(con, peak_ids)
+  opt_params[which(opt_params == -1, arr.ind = TRUE)] <- NA
   if (optimized_params == FALSE) {
     opt_params$correl <- opt_params$ph <- opt_params$freq <- opt_params$n <- rep(NA, nrow(opt_params))
   }
@@ -514,9 +588,13 @@ search_precursor <- function(con, searchms, normfn = "sum", cormethod = "pearson
 }
 
 #' Search all mass spectra within database against unknown mass spectrum
+#' 
+#' @inheritParams get_ums
 #'
 #' @param con SQLite database connection 
 #' @param searchms object generated from `create_search_ms` function 
+#' @param optimized_params LGL scalar indicating whether or not to use the
+#'   optimal search parameters stored in the database table `opt_ums_params`
 #'
 #' @return LIST of search results
 #' @export

@@ -6,15 +6,13 @@
 \usage{
 resolve_qc_methods_NTAMRT(
   obj,
-  method_id,
-  sample_id,
+  peak_id,
   qc_method_in = "qcmethod",
   qc_method_table = "qc_methods",
   qc_method_norm_table = "norm_qc_methods_name",
   qc_method_norm_reference = "norm_qc_methods_reference",
   qc_references_in = "source",
-  ms_methods_table = "ms_methods",
-  sample_table = "samples",
+  peaks_table = "peaks",
   ignore = FALSE,
   db_conn = con,
   log_ns = "db"
@@ -23,9 +21,7 @@ resolve_qc_methods_NTAMRT(
 \arguments{
 \item{obj}{LIST object containing data formatted from the import generator}
 
-\item{method_id}{INT scalar of the method id (e.g. from the import workflow)}
-
-\item{sample_id}{INT scalar of the sample id (e.g. from the import workflow)}
+\item{peak_id}{INT vector of the peak ids (e.g. from the import workflow)}
 
 \item{qc_method_in}{CHR scalar of the name in `obj` that contains QC method
 check information (default: "qcmethod")}
@@ -43,14 +39,8 @@ normalizing QC methods reference type (default:
 \item{qc_references_in}{CHR scalar of the name in `obj[[qc_method_in]]` that
 contains the reference or citation for the QC protocol (default: "source")}
 
-\item{ms_methods_table}{CHR scalar name of the database table holding mass
-spectrometry methods data (default: "ms_methods")}
-
-\item{sample_table}{CHR scalar name of the database table holding sample
+\item{peaks_table}{CHR scalar name of the database table holding sample
 information (default: "samples")}
-
-\item{ignore}{LGL scalar of whether to ignore insert conflicts (e.g. UNIQUE
-constraints; default: FALSE)}
 
 \item{log_ns}{CHR scalar of the logging namespace to use during execution
 (default: "db")}

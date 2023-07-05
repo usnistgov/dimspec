@@ -1955,8 +1955,8 @@ add_normalization_value <- function(db_table, db_conn = con, log_ns = "db", id_c
 #'   coerce value matches by upper, lower, sentence, and title case matches
 #' @param db_conn connection object (default: con)
 #' @param fuzzy LGL scalar of whether to do a "fuzzy" match in the sense that
-#'   values provided are wrapped in an SQL "LIKE '%value%'" clause; overrides
-#'   the `case_sensitive` setting if TRUE (default: FALSE).
+#'   values provided are used in an SQL LIKE clause bookended with wildcards; 
+#'   overrides the `case_sensitive` setting if TRUE (default: FALSE).
 #'
 #' @return LIST of length 1-2 containing "exists" as a LGL scalar for whether
 #'   the values were found, and "values" containing the result of the database

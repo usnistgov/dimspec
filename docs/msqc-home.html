@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-03-17" />
+<meta name="date" content="2023-07-05" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,8 +52,6 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<link href="libs/font-awesome-5.15.3/css/all.min.css" rel="stylesheet" />
-<link href="libs/font-awesome-5.15.3/css/v4-shims.min.css" rel="stylesheet" />
 <!-- Insert NIST header and footer -->
   <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css" />
   <!-- The live updating version is preferrable, but it causes race conditions in the DOM with auto formatting based on whether or not the NIST header/footer can be loaded. That script has been recreated here with the proper modifications to override gitbook CSS with the NIST header styling; see below.
@@ -131,7 +129,7 @@
     });
   </script>
 <!-- Insert NIST GA, uncomment the next line to activate.  -->
-  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+<!--  <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>  -->
 <!--
   Use this file to address any browser compatibility or accessibility adjustments neccessary.
   Opening locally (and likely hosted) throws several errors and warnings in DevTools
@@ -270,10 +268,17 @@ div.csl-indent {
 
 <ul class="summary">
 <li class="part" id="book-links">
-    <a id="nist-logo-link" href="https://www.nist.gov"><img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img></a>
-    <h3 id="gitbook-title">
-        <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">A Database Infrastructure for Mass Spectrometry (DIMSpec)  <i class="fab fa-github"></i></a>
-    </h3>
+  <a id="nist-logo-link" href="https://www.nist.gov">
+    <img id="nist-logo-svg" src="assets/NIST-Logo-Brand-White.svg" target="_blank" title="NIST logo"></img>
+  </a>
+  <h3 id="gitbook-title">
+    <a id="github-link" href="https://github.com/usnistgov/dimspec" target="_blank">
+      A Database Infrastructure for Mass Spectrometry (DIMSpec)  
+      <svg aria-hidden="true" role="img" viewBox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;">
+        <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
+      </svg>
+    </a>
+  </h3>
 </li>
 
 <li class="divider"></li>
@@ -382,7 +387,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 </div>
 <div id="msqc-launching-msqc" class="section level3 unnumbered hasAnchor">
 <h3>Launching MSQC<a href="msqc-home.html#msqc-launching-msqc" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>Launch this tool similarly to other “shiny”-based tools as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio <span class="citation">(<a href="#ref-RStudio" role="doc-biblioref">RStudio Team 2020</a>)</span>. The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package <span class="citation">(<a href="#ref-R-shiny" role="doc-biblioref">Chang et al. 2021</a>)</span> and other necessary R packages will be installed if it not already available by running the script at <code>R/compliance.R</code>, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.</p>
+<p>Launch this tool similarly to other “shiny”-based tools as part of DIMSpec. In brief, this can be done from a terminal or the R console, though the preferred method is to use RStudio <span class="citation">(<a href="#ref-RStudio" role="doc-biblioref">RStudio Team 2020</a>)</span>. The following commands are typical given an existing installation of R or RStudio and should always be run from the project directory. The shiny package <span class="citation">(<a href="#ref-R-shiny" role="doc-biblioref">Chang et al. 2022</a>)</span> and other necessary R packages will be installed if it not already available by running the script at <code>R/compliance.R</code>, but shiny is the only package required to start the application. When first run, it may take a moment to install necessary dependencies and launch the application programming interface (API) server.</p>
 <p><em>Terminal</em><a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
 <blockquote>
 <p>R.exe “shiny::runApp(‘inst/apps/msqc’)”</p>
@@ -400,7 +405,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <p>If anything is needed from the user, interactive feedback will occur in the console from which it was launched. Install any packages required if prompted by the application. Once the package environment requirements have been satisfied and the server has spun up, which may take a moment, the tool will launch and display the “About” screen (<a href="msqc-home.html#fig05-01">Figure 1</a>) either in the RStudio viewer or the browser. The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page.</p>
 <p>While this version of DIMSpec includes analytical data for PFAS, MSQC can be tailored for any given database name. See <a href="msqc-home.html#msqc-technical-details">Technical Details</a>&gt;<a href="msqc-home.html#msqc-application-settings">Application Settings</a> for customization options.</p>
 <div class="figure">
-<img src="assets/fig05-01_msqc_landing_page.png" title="Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case." id="fig05-01" style="width:100.0%" alt="" />
+<img src="assets/fig05-01_msqc_landing_page.png" title="Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case." id="fig05-01" style="width:100%" alt="" />
 <p class="caption">Figure 1. The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.</p>
 </div>
 </div>
@@ -411,7 +416,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <h4>Step 0 - Modify quality control settings (optional)<a href="msqc-home.html#msqc-step0" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <p>Prior to file processing, verify or set parameters to be used for quality control analysis can be modified. On the left menu, select “QC Settings” to navigate to the settings dashboard shown in <a href="msqc-home.html#fig05-02">Figure 2</a>. The default settings are recommended, but can be modified if needed.</p>
 <div class="figure">
-<img src="assets/fig05-02_msqc_settings.png" title="Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021." id="fig05-02" style="width:50.0%" alt="" />
+<img src="assets/fig05-02_msqc_settings.png" title="Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021." id="fig05-02" style="width:100%;max-width:500px" alt="" />
 <p class="caption">Figure 2. The QC Settings window that has settings that can be adjusted for quality control analysis, the uncertainty mass spectrum settings are described in Place 2021.</p>
 </div>
 </div>
@@ -421,12 +426,12 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 <p>First, load the mzML files of interest using the top “Load” button or by dragging the data file(s) to the input widget labeled <em>1) Load raw mzML file(s)</em>.</p>
 <p>Second, load the paired sample JSON files using the second “Load” button or by dragging the JSON file(s) to the input widget labeled <em>2) Load Sample JSON file(s)</em>. The sample JSON files do not need to be selected in the same order as the mzML files and will be matched by name when processed.</p>
 <div class="figure">
-<img src="assets/fig05-03_data_import.png" title="Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided." id="fig05-03" style="width:67.0%" alt="" />
+<img src="assets/fig05-03_data_import.png" title="Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided." id="fig05-03" style="width:100%;max-width:600px" alt="" />
 <p class="caption">Figure 3. The data import page of MSQC where data files, experiment parameters, and features of interest are identified. Workflow guidance options become available once data are provided.</p>
 </div>
 <p>Once mzML and Sample JSON files are uploaded, the application will automatically check to see if there are valid pairs of mzML and Sample JSON files. A successful upload will give a screen similar to <a href="msqc-home.html#fig05-04">Figure 4</a>. If multiple files are loaded, only files with verified matches will be included in the table and available for further processing.</p>
 <div class="figure">
-<img src="assets/fig05-04_data_input_files_uploaded.png" id="fig05-04" style="width:100.0%" alt="" />
+<img src="assets/fig05-04_data_input_files_uploaded.png" title="Figure 4. The data import page after data files have been loaded." id="fig05-04" style="width:100%;max-width:1000px" alt="" />
 <p class="caption">Figure 4. The data import page after data files have been loaded.</p>
 </div>
 </div>
@@ -646,7 +651,7 @@ The file name entered in the NTA-MRT under the Sample tab must exactly match (ca
 Adusumilli, Ravali and Mallick, Parag. 2017. <span>“Data <span>Conversion</span> with <span>ProteoWizard</span> <span class="nocase">msConvert</span>.”</span> <em>Methods in Molecular Biology (Clifton, N.J.)</em> 1550: 339–68. <a href="https://doi.org/10.1007/978-1-4939-6747-6_23">https://doi.org/10.1007/978-1-4939-6747-6_23</a>.
 </div>
 <div id="ref-R-shiny" class="csl-entry">
-Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2021. <em>Shiny: Web Application Framework for r</em>. <a href="https://shiny.rstudio.com/">https://shiny.rstudio.com/</a>.
+Chang, Winston, Joe Cheng, JJ Allaire, Carson Sievert, Barret Schloerke, Yihui Xie, Jeff Allen, Jonathan McPherson, Alan Dipert, and Barbara Borges. 2022. <em>Shiny: Web Application Framework for r</em>. <a href="https://shiny.rstudio.com/">https://shiny.rstudio.com/</a>.
 </div>
 <div id="ref-deutsch_mass_2010" class="csl-entry">
 Deutsch, Eric W. 2010. <span>“Mass <span>Spectrometer</span> <span>Output</span> <span>File</span> <span>Format</span> <span class="nocase">mzML</span>.”</span> In <em>Proteome <span>Bioinformatics</span></em>, edited by Simon J. Hubbard and Andrew R. Jones, 319–31. Methods in <span>Molecular</span> <span>Biology</span>™. Totowa, NJ: Humana Press. <a href="https://doi.org/10.1007/978-1-60761-444-9_22">https://doi.org/10.1007/978-1-60761-444-9_22</a>.

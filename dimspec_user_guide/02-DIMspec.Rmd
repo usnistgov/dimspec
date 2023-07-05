@@ -245,11 +245,11 @@ Code decoration conventions used in the SQL files enable reading table definitio
 
 ------------------------------------------------------------------------
 
-![Figure 1a. An example of the data dictionary object.](assets/fig02-01a_data_dict1.png "Figure 1a. An example of the data dictionary object."){#fig02-01a width="500"}
+![Figure 1a. An example of the data dictionary object.](assets/fig02-01a_data_dict1.png "Figure 1a. An example of the data dictionary object."){#fig02-01a style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 1b. Details of the "samples" table from the data dictionary.](assets/fig02-01b_data_dict2.png "Figure 1b. Details of the 'samples' table from the data dictionary."){#fig02-01b width="500"}
+![Figure 1b. Details of the "samples" table from the data dictionary.](assets/fig02-01b_data_dict2.png "Figure 1b. Details of the 'samples' table from the data dictionary."){#fig02-01b style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
@@ -257,11 +257,11 @@ Relationships between database entities can also be queried programmatically. Us
 
 ------------------------------------------------------------------------
 
-![Figure 2a. An example of the R object structure of an entity map as a list.](assets/fig02-02a_db_map1.png "Figure 2a. An example of the entity map list"){#fig02-02a width="500"}
+![Figure 2a. An example of the R object structure of an entity map as a list.](assets/fig02-02a_db_map1.png "Figure 2a. An example of the entity map list"){#fig02-02a style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 2b. Details of the "samples" table from the data entity map object in [Figure 2a](#fig02-02a).](assets/fig02-02b_db_map2.png "Figure 2b. Details of the 'samples' table from the data entity map"){#fig02-02b width="500"}
+![Figure 2b. Details of the "samples" table from the data entity map object in [Figure 2a](#fig02-02a).](assets/fig02-02b_db_map2.png "Figure 2b. Details of the 'samples' table from the data entity map"){#fig02-02b style="width:100%;max-width:500px"}
 
 ### Using the Application Programming Interface (API) {#using-the-api .unnumbered}
 
@@ -309,11 +309,11 @@ These and other endpoints can be easily defined, expanded, or refined as needed 
 
 ------------------------------------------------------------------------
 
-![Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint `/compound_data`, available using `api_open_doc()`. Click the "Try It Out" button to activate the testing mode.](assets/fig02-03_swagger_example.png "Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the 'Try It Out' button to activate the testing mode."){#fig02-03 width="500"}
+![Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint `/compound_data`, available using `api_open_doc()`. Click the "Try It Out" button to activate the testing mode.](assets/fig02-03_swagger_example.png "Figure 3. Screen shot and descriptions of the interactive Swagger documentation page for the endpoint /compound_data, available using api_open_doc(). Click the 'Try It Out' button to activate the testing mode."){#fig02-03 style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.](assets/fig02-04_endpoint_example.png "Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session"){#fig02-04 width="500"}
+![Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session.](assets/fig02-04_endpoint_example.png "Figure 4. Screen shot of the result of calling the same API endpoint as in Figure 3 from an R session"){#fig02-04 style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
@@ -357,7 +357,7 @@ Users developing on top of this infrastructure are encouraged to take advantage 
 
 ------------------------------------------------------------------------
 
-![Figure 6. Example uses of `log_it` to create logging messages.](assets/fig02-06_logging_example.png "Figure 6. Example uses of log_it to create logging messages."){#fig02-06 width="500"}
+![Figure 6. Example uses of `log_it` to create logging messages.](assets/fig02-06_logging_example.png "Figure 6. Example uses of log_it to create logging messages."){#fig02-06 style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
@@ -422,18 +422,18 @@ Each node file defines the tables and views necessary to store and serve data fo
       /*magicsplit*/
       CREATE TABLE IF NOT EXISTS annotated_fragments
         /* Potential annotated fragment ions that are attributed to one or more mass spectra. */
-      (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          /* primary key */
-        mz REAL NOT NULL,
-          /* m/z value for specific fragment, derived */
-        fragment_id INTEGER NOT NULL,
-          /* foreign key to fragments table */
-        /* Check constraints */
-        /* Foreign key relationships */
-        FOREIGN KEY (fragment_id) REFERENCES
-          norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
-      );
+        (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            /* primary key */
+          mz REAL NOT NULL,
+            /* m/z value for specific fragment, derived */
+          fragment_id INTEGER NOT NULL,
+            /* foreign key to fragments table */
+          /* Check constraints */
+          /* Foreign key relationships */
+          FOREIGN KEY (fragment_id) REFERENCES
+            norm_fragments(id) ON UPDATE CASCADE ON DELETE CASCADE
+        );
 
 to obtain entity properties ([Figure 7a](#fig02-07a)), pull column comments directly from the definition ([Figure 7b](#fig02-07b)), inspect mapping between entities ([Figure 7c](#fig02-07c); here `db_map` is an object created by [`er_map`](#fn_def_er_map){target="_blank"}), or pull information together into a formalized data dictionary ([Figure 7d](#fig02-07d); here `db_dict` is read from a JSON object created by [`save_data_dictionary`](#fn_def_save_data_dictionary){target="_blank"}) and available for all database tables and views.
 
@@ -441,27 +441,27 @@ This allows for programmatic accessibility, as R sessions can now understand the
 
 ------------------------------------------------------------------------
 
-![Figure 7a. An example of using [pragma_table_info](#fn_def_pragma_table_info){target="_blank"} to explore table definitions.](assets/fig02-07a_mapping_dictionary_direct.png "Figure 7a. An example of using `pragma_table_info` to explore schema."){#fig02-07a width="500"}
+![Figure 7a. An example of using `[pragma_table_info](#fn_def_pragma_table_info){target="_blank"}` to explore table definitions.](assets/fig02-07a_mapping_dictionary_direct.png "Figure 7a. An example of using pragma_table_info to explore schema."){#fig02-07a style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 7b. Comments can be easily added to the definition.](assets/fig02-07b_mapping_dictionary_direct_comments.png "Figure 7b. Comments can be easily added to the definition."){#fig02-07b width="500"}
+![Figure 7b. Comments can be easily added to the definition.](assets/fig02-07b_mapping_dictionary_direct_comments.png "Figure 7b. Comments can be easily added to the definition."){#fig02-07b style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 7c. Entity mapping can also be parsed directly from the SQL decoration convention.](assets/fig02-07c_mapping_dictionary_map.png "Figure 7c. Entity mapping can also be parsed from the SQL decoration convention."){#fig02-07c width="500"}
+![Figure 7c. Entity mapping can also be parsed directly from the SQL decoration convention.](assets/fig02-07c_mapping_dictionary_map.png "Figure 7c. Entity mapping can also be parsed from the SQL decoration convention."){#fig02-07c style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention.](assets/fig02-07d_mapping_dictionary_map_json.png "Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention."){#fig02-07d width="500"}
+![Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention.](assets/fig02-07d_mapping_dictionary_map_json.png "Figure 7d. Entity mapping can be saved to disk and recalled conveniently using the SQL decoration convention."){#fig02-07d style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.](assets/fig02-07e_mapping_dictionary_ref_map.png "Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships."){#fig02-07e width="500"}
+![Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships.](assets/fig02-07e_mapping_dictionary_ref_map.png "Figure 7e. Entity relationships can also be parsed to programmatically return foreign key relationships."){#fig02-07e style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The "Table Explorer" shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS[['table_explorer']]`).](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `shiny::runApp(SHINY_APPS['table_explorer']`."){#fig02-08}
+![Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The "Table Explorer" shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with `start_app('table_explorer')`).](assets/fig02-08_table_explorer_example.png "Figure 8. Decorated SQL definitions provide R with metadata regarding the database. The Table Explorer shiny application allows visual exploration of both data and context for any given database entity. With the project active and the compliance file sourced, launch this application in your browser from the console with start_app('table_explorer')."){#fig02-08 style="width:100%;max-width:800px"}
 
 ------------------------------------------------------------------------
 
@@ -471,11 +471,11 @@ Some views are automatically generated (see the flag `“[autogenerated by sqlit
 
 ------------------------------------------------------------------------
 
-![Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'.](assets/fig02-09a_ms_methods_normalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09a width="500"}
+![Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'.](assets/fig02-09a_ms_methods_normalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09a style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
-![Figure 9b. Screenshot of the first four rows of the denormalized database table 'ms_methods'.](assets/fig02-09b_ms_methods_denormalized.png "Figure 9a. Screenshot of the first four rows of the normalized database table 'ms_methods'."){#fig02-09b width="500"}
+![Figure 9b. Screenshot of the first four rows of the denormalized database table 'ms_methods' available as view 'view_ms_methods'.](assets/fig02-09b_ms_methods_denormalized.png "Figure 9b. Screenshot of the first four rows of the denormalized database table 'ms_methods'."){#fig02-09b style="width:100%;max-width:500px"}
 
 ------------------------------------------------------------------------
 
@@ -526,6 +526,8 @@ This node contains information relevant to analytical targets. This node does no
 +-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_compounds                | `[autogenerated by sqlite_auto_view()]` View of "compounds" normalized by "norm_source_types".                                                                                                             |
 +-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| view_fragment_aliases         | `[autogenerated by sqlite_auto_view()]` View of "fragment_aliases" normalized by "norm_analyte_alias_references".                                                                                          |
++-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_fragment_count           | Number of fragments associated with compounds.                                                                                                                                                             |
 +-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_fragment_mz_stats        | [DRAFT] Mean measures of measured_mz values - a supplementary calculation table.                                                                                                                           |
@@ -533,7 +535,7 @@ This node contains information relevant to analytical targets. This node does no
 | view_fragment_sources         | `[autogenerated by sqlite_auto_view()]` View of "fragment_sources" normalized by "norm_generation_type".                                                                                                   |
 +-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-![Figure 10. Analyte node of the entity relationship diagram (modified).](assets/fig02-10_erd_node_analyte.png "Figure 10. Analyte node of the entity relationship diagram (modified)"){#fig02-010 width="750"}
+![Figure 10. Analyte node of the entity relationship diagram (modified).](assets/fig02-10_erd_node_analyte.png "Figure 10. Analyte node of the entity relationship diagram (modified)"){#fig02-010 style="width:100%;max-width:1000px"}
 
 ------------------------------------------------------------------------
 
@@ -555,9 +557,7 @@ This node contains information relevant to identifying data contributors, simila
 | view_contributors | Readable version of the contributors table that can be expanded with counts of contributions from various places. |
 +-------------------+-------------------------------------------------------------------------------------------------------------------+
 
-------------------------------------------------------------------------
-
-![Figure 11. Contributors node of the entity relationship diagram (modified).](assets/fig02-11_erd_node_contributors.png "Figure 11. Contributors node of the entity relationship diagram (modified)"){#fig02-011 width="600"}
+![Figure 11. Contributors node of the entity relationship diagram (modified).](assets/fig02-11_erd_node_contributors.png "Figure 11. Contributors node of the entity relationship diagram (modified)"){#fig02-011 style="width:100%;max-width:600px"}
 
 ------------------------------------------------------------------------
 
@@ -586,11 +586,19 @@ This node contains mass spectral data, metadata about samples and the software u
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | norm_sample_classes               | Normalization table linking to samples to hold controlled vocabulary.                                                                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| norm_qc_methods_name              | Normalization table for quality control types: controlled vocabulary.                                                                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| norm_qc_methods_reference         | Normalization table for quality control reference types: controlled vocabulary.                                                                                                                           |
++-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | opt_ums_params                    | Table of optimal parameters for uncertainty mass spectra                                                                                                                                                  |
++-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| instrument_properties             | Expandable properties describing performance properties of the mass spectrometer at the time a peak was measured, generally the same across a given sample and ms_method, but not always.                 |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | peaks                             | Peaks (or features) identified within the results from a sample.                                                                                                                                          |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | qc_data                           | Detailed quality control data as assessed by expert review (long format).                                                                                                                                 |
++-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| qc_methods                        | References to quality control (QC) methods used to vet experimental results                                                                                                                               |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | sample_aliases                    | Alternative names by which this sample may be identified e.g. laboratory or repository names, external reference IDs, URIs, etc.                                                                          |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -606,18 +614,16 @@ This node contains mass spectral data, metadata about samples and the software u
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_peaks                        | View of "peaks" with text values displayed from normalization tables.                                                                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| view_qc_methods                   | `[autogenerated by sqlite_auto_view()]` View of "qc_methods" normalized by "norm_qc_methods_name" and "norm_qc_methods_reference".                                                                        |
++-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_sample_narrative             | Collapses the contents of view_samples and view_contributors into a single narrative string by ID                                                                                                         |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_samples                      | `[autogenerated by sqlite_auto_view()]` View of "samples" normalized by "norm_sample_classes", "norm_generation_type", and "norm_carriers".                                                               |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-![Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node.](assets/fig02-12_erd_node_data_all.png "Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node."){#fig02-012 width="600"}
+![Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node (modified).](assets/fig02-12_erd_node_data_all.png "Figure 12. Data node of the entity relationship diagram (modified) showing the samples (top) and peaks (bottom) subnodes with node connections to the contributors node, the analyte node, and subnodes in the methods node (modified)."){#fig02-012 style="width:100%;max-width:800px"}
 
 ------------------------------------------------------------------------
-
-#### The Logging Node {#the-logging-node .unnumbered}
-
-This node is included for automatic logging within the database itself (a future development opportunity), with tables to store and normalize logs and store a database version history. It is not used by default, but rather serves as a placeholder in case logging should be enabled via triggers if required by the data management and quality control systems for a given project. As it is not in use and has not been tested, details are not included but can be queried like any other tables.
 
 #### The Methods Node {#the-methods-node .unnumbered}
 
@@ -639,8 +645,6 @@ This node contains data describing experimental settings, both for the chromatog
 | carrier_mixes               | Mobile phase carrier mixture for a given elution method                                                                                                                                                                         |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | chromatography_descriptions | Full description of all chromatography types used for a given entry in ms_methods.                                                                                                                                              |
-+-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| instrument_properties       | Expandable properties describing performance properties of the mass spectrometer at the time the method was run.                                                                                                                |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | mobile_phases               | Description of mobile phases used during a chromatographic separation.                                                                                                                                                          |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -672,19 +676,15 @@ This node contains data describing experimental settings, both for the chromatog
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | norm_ionization             | Normalization table for mass spectrometer ionization source types: controlled vocabulary                                                                                                                                        |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| norm_ms_types               | Normalization table for mass spectrometer types: controlled vocabulary.                                                                                                                                                         |
+| norm_ms_types               | Normalization table for types of ms_n experiments.                                                                                                                                                                              |
++-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| norm_ms_n_types             | Normalization table for ionization polarity: controlled vocabulary.                                                                                                                                                             |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | norm_polarity_types         | Normalization table for ionization polarity: controlled vocabulary.                                                                                                                                                             |
-+-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| norm_qc_methods_name        | Normalization table for quality control types: controlled vocabulary.                                                                                                                                                           |
-+-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| norm_qc_methods_reference   | Normalization table for quality control reference types: controlled vocabulary.                                                                                                                                                 |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | norm_vendors                | Normalization table holding commercial instrument vendor information: controlled vocabulary.                                                                                                                                    |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | norm_voltage_units          | Normalization table for ionization energy units: controlled vocabulary.                                                                                                                                                         |
-+-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| qc_methods                  | References to quality control (QC) methods used to vet experimental results                                                                                                                                                     |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Views*                     |                                                                                                                                                                                                                                 |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -720,20 +720,16 @@ This node contains data describing experimental settings, both for the chromatog
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_ms_methods             | `[autogenerated by sqlite_auto_view()]` View of "ms_methods" normalized by "norm_ionization", "norm_voltage_units", "norm_polarity_types", "norm_ce_units", "norm_ce_desc", "norm_fragmentation_types", and "norm_ms_n\_types". |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| view_qc_methods             | `[autogenerated by sqlite_auto_view()]` View of "qc_methods" normalized by "norm_qc_methods_name" and "norm_qc_methods_reference".                                                                                              |
-+-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | view_separation_types       | Convenience view to build view_method_as by providing a single character string for chromatography type                                                                                                                         |
 +-----------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-*Figure 13. Methods node of the entity relationship diagram (modified) containing the mass spectrometer ("mass spec", [13a](#fig02-13a)), descriptions ([13b](#fig02-13b)), quality control ("QC", [13c](#fig02-13c)), and mobile phase ([13d](#fig02-13d)) subnodes. Together these completely describe the chromatographic separation and mass spectrometric system used for a single entry in the "ms_methods" table.*
+*Figure 13. Methods node of the entity relationship diagram (modified) containing the mass spectrometer ("mass spec", [13a](#fig02-13a)), descriptions ([13b](#fig02-13b)), and mobile phase ([13d](#fig02-13c)) subnodes. Together these describe the chromatographic separation and mass spectrometric system used for a single entry in the "ms_methods" table.*
 
-![Figure 13a. Mass spectrometer subnode of the methods node (modified).](assets/fig02-13a_erd_node_methods1.png "Figure 13a. Mass spectrometer subnode of the methods node (modified)."){#fig02-13a width="600"}
+![Figure 13a. Mass spectrometer subnode of the methods node (modified).](assets/fig02-13a_erd_node_methods1.png "Figure 13a. Mass spectrometer subnode of the methods node (modified)."){#fig02-13a style="width:100%;max-width:800px"}
 
-![Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified).](assets/fig02-13b_erd_node_methods2.png "Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified)."){#fig02-13b width="600"}
+![Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified).](assets/fig02-13b_erd_node_methods2.png "Figure 13b. Chromatographic and instrumental descriptions subnode of the methods node (modified)."){#fig02-13b style="width:100%;max-width:800px"}
 
-![Figure 13c. Quality control subnode of the methods node (modified).](assets/fig02-13c_erd_node_methods3.png "Figure 13c. Quality control subnode of the methods node (modified)."){#fig02-13c width="328"}
-
-![Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified).](assets/fig02-13d_erd_node_methods4.png "Figure 13d. Chromatographic mobile phase information subnode of the methods node (modified)."){#fig02-13d width="600"}
+![Figure 13c. Chromatographic mobile phase information subnode of the methods node (modified).](assets/fig02-13c_erd_node_methods4.png "Figure 13c. Chromatographic mobile phase information subnode of the methods node (modified)."){#fig02-13c style="width:100%;max-width:800px"}
 
 ------------------------------------------------------------------------
 
@@ -759,7 +755,13 @@ This node contains universally applicable reference information for chemical met
 | view_element_isotopes | A view of all elemental isotopes and their relative abundances joining reference tables "elements" and "isotopes". |
 +-----------------------+--------------------------------------------------------------------------------------------------------------------+
 
-![Figure 14. Reference node of the entity relationship diagram (modified)](assets/fig02-14_erd_node_reference.png "Figure 14. Reference node of the entity relationship diagram (modified)"){#fig02-14 width="436"}
+![Figure 14. Reference node of the entity relationship diagram (modified)](assets/fig02-14_erd_node_reference.png "Figure 14. Reference node of the entity relationship diagram (modified)"){#fig02-14 style="width:100%;max-width:900px"}
+
+------------------------------------------------------------------------
+
+#### The Logging Node {#the-logging-node .unnumbered}
+
+This node is included for automatic logging within the database itself (a future development opportunity), with tables to store and normalize logs and store a database version history. It is not used by default, but rather serves as a placeholder in case logging should be enabled via triggers if required by the data management and quality control systems for a given project. As it is not in use and has not been tested, details are not included but can be queried like any other tables. For visualization purposes, it is included with the [reference node](#the-reference-node).
 
 ------------------------------------------------------------------------
 
@@ -815,7 +817,7 @@ The Table Explorer application is detailed in its own [section](#table-explorer-
 
 ------------------------------------------------------------------------
 
-![Figure 15. Screenshot of the "Table Explorer" shiny application showing database structural information available at a glance for the view_exact_masses database table.](assets/fig02-15_screenshot_table_explorer.png "Figure 15. Screenshot of the 'Table Explorer' shiny application showing database structural information available at a glance for the view_exact_masses database table."){#fig02-15 width="500"}
+![Figure 15. Screenshot of the "Table Explorer" shiny application showing database structural information available at a glance for the view_exact_masses database table.](assets/fig02-15_screenshot_table_explorer.png "Figure 15. Screenshot of the 'Table Explorer' shiny application showing database structural information available at a glance for the view_exact_masses database table."){#fig02-15 style="width:100%;max-width:1000px"}
 
 ------------------------------------------------------------------------
 
@@ -825,7 +827,7 @@ This Shiny application could easily be considered the entire reason behind the g
 
 The MSMatch application is detailed in its own [section](#msmatch-home).
 
-![Figure 16. Screenshot of the "Mass Spectral Match" application with user data showing matches to known mass spectral signatures.](assets/fig02-16_app_spectral_match_example.png "Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures."){#fig02-16 width="100%"}
+![Figure 16. Screenshot of the "Mass Spectral Match" application with user data showing matches to known mass spectral signatures.](assets/fig02-16_app_spectral_match_example.png "Figure 16. Screenshot of the Mass Spectral Match application with user data showing matches to known mass spectral signatures."){#fig02-16 style="width:100%;max-width:1000px"}
 
 ### Mass Spectral Quality Control (MSQC) {#app-mscq .unnumbered}
 
@@ -848,7 +850,7 @@ Logging status and meaningful messages to both the console for interactive sessi
 
 Logging parameters are set when the compliance script is sourced (see [Project Set Up](#project-set-up)). Settings are stored in a session list `LOGGING` with each element named for a namespace. Turn off logging by setting `LOGGING_ON = FALSE` in the set up process. At any time during a session, you may change the logging settings and run the [`update_logger_settings`](#fn_def_update_logger_settings){target="_blank"} function to change the way to logging functions are working. Setting the `$log` property to `FALSE` will cease printing and recording of log messages for that namespace. Options for the `$to` property include "file", "console", and "both" and, if this is either "file" or "both", logs will be written to the path in the `$file` property. The threshold must be one of the valid options in logger, which is a ranked vector (i.e. one of `“trace” < “debug” < “info” < “success” < “warn” < “error” < “fatal”`); the `$threshold` property represents the minimum level at which to record logs. If, for example, the threshold is set to "info" then "trace" and "debug" messages will be ignored.
 
-![](assets/fig02-supp-1_logging_object.png)
+![](assets/fig02-supp-1_logging_object.png){style="width:100%;max-width:700px"}
 
 Users may then issue logging statements directly through `logger` using the `$ns` property namespace. The primary manner of issuing logging messages in the project however is the [`log_it`](#fn_def_log_it){target="_blank"} function which works without `logger` to display messages in the console and includes an abstraction and validation layer that provides the benefits of argument validation, ignoring certain function calls, inclusion of the function from which [`log_it`](#fn_def_log_it){target="_blank"} was called, and setting up new namespaces by cloning the settings from an existing one. If `logger` is available, logs will print nicely to the console and be saved to disk if set to do so. Logs written to disk can at any time be read back into the session either printed to the console ([`read_log`](#fn_def_read_log){target="_blank"}) or to a data frame ([`log_as_dataframe`](#fn_def_log_as_dataframe){target="_blank"}) for examination.
 
