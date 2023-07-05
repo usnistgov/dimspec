@@ -63,7 +63,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
   if (is.character(elementlist)) {
     elementlist <- lapply(elementlist, extract.elements)
   }
-  
+  use_db <- FALSE
   if (is.null(exactmasses)) {
     if (is.character(db_conn)) {
       if (exists(db_conn)) {
