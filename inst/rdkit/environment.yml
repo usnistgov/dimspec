@@ -1,4 +1,4 @@
-name: nist_hrms_db
+name: nist_dimspec
 channels:
   - conda-forge
   - defaults

@@ -62,5 +62,5 @@ INFORMATICS    = TRUE
 USE_RDKIT      = TRUE
 
 # Make shiny apps available on launch (requires R). Set as FALSE for interactive use.
-USE_SHINY      = FALSE
+USE_SHINY      = TRUE
 # SHINY_BG       = TRUE

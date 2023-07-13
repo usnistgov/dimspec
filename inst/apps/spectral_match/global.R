@@ -1,16 +1,16 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "Mass Spectral Match for PFAS"
+default_title      <- "Mass Spectral Match"
+APP_TITLE          <- "Mass Spectral Match"
 if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "Mass Spectral Match"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's
 # current state in the console.
-dev                <- TRUE
+dev                <- FALSE
 # Set to true in order to base this app on the API defined in the environment files.
 USE_API            <- TRUE
 

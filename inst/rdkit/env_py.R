@@ -1,7 +1,7 @@
 # [REQUIRED]--------------------------------------------------------------------
 # The name of the python environment to use. If this environment exists on the
 # current system, it will be used, otherwise one will be created with this name.
-PYENV_NAME <- "nist_hrms_db"
+PYENV_NAME <- "nist_dimspec"
 
 # The name of the R object to use for importing the rdkit module. Every effort
 # has been made to make this flexible, but for best use this should be "rdk" and

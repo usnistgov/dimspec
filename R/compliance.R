@@ -170,11 +170,39 @@ if (INFORMATICS) {
 rm(sources, exclusions, installed_packages)
 RENV_ESTABLISHED_COMPLIANCE <- TRUE
 
-message("\nWelcome to the Database Infrastructure for Mass Spectrometry (DIMSpec) Project.\n\nThis product of the NIST Material Measurement Laboratory's Chemical Sciences Division is provided by NIST as a public service.\n\nYou may use, copy, and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify, and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.\n\nNIST-developed software is expressly provided 'AS IS'. NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT, OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.\n\nYou are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.")
+cat("\n-------------------------------------\n")
+cat("\nWelcome to the Database Infrastructure for Mass Spectrometry (DIMSpec) Project.\n")
+cat("\n  ___ ___ __  __ ___              \n |   \\_ _|  \\/  / __|_ __  ___ __ \n | |) | || |\\/| \\__ \\ '_ \\/ -_) _|\n |___/___|_|  |_|___/ .__/\\___\\__|\n                    |_|           \n")
+message("\nThis product of the NIST Material Measurement Laboratory's Chemical Sciences Division is provided by NIST as a public service.\n\nYou may use, copy, and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify, and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.\n\nNIST-developed software is expressly provided 'AS IS'. NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT, OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.\n\nYou are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.")
+cat("\n-------------------------------------\n")
 
+cat("\nTips for this session:\n")
 if (exists("fn_guide")) {
-  message("\n\nHelp documentation for functions is available from the console using fn_help(X) where X is the name (quoted or unquoted) of a function in this project, or open the indexed HTML function documentation using fn_guide().")
+  message('- Help documentation for functions is available from the console using `fn_help(X)` where X is the name (quoted or unquoted) of a function in this project, or open the indexed HTML function documentation using `fn_guide()`.')
+}
+if (INIT_CONNECT && dbIsValid(eval(sym(DB_CONN_NAME)))) {
+  message(sprintf('- You are connected to "%s" using object "%s".', DB_NAME, DB_CONN_NAME))
+  if (!"try-error" %in% class(db_map)) {
+    message('- A database map is available as object "db_map".')
+  }
+  if (!"try-error" %in% class(db_dict)) {
+    message('- A data dictionary is available as object "db_dict".')
+  }
 }
 if (exists("user_guide")) {
-  message("\nView the full DIMSpec User Guide with user_guide() at the console.")
+  message('- View the full DIMSpec User Guide with `user_guide()`.')
 }
+if (INFORMATICS && USE_RDKIT) {
+  message(sprintf('- Chemometrics were requested through RDKit using the "%s" environment as session object "%s". You may verify that it is running using `rdkit_active()`.', PYENV_NAME, PYENV_REF))
+}
+if (USE_API) {
+  message('- The API service was requested and may still be launching in a background process. Check it using `api_endpoint("_ping")` or view the interactive documentation with `api_open_doc()`.')
+}
+if (USE_SHINY && exists("SHINY_APPS") && length(SHINY_APPS) > 0) {
+  message(sprintf(
+    '- Launch any of %s available shiny applications using "start_app(X)" where X is the name of an app. Currently available options include %s. Use files in the "app_template" directory to begin building new apps with a similar style.',
+    length(SHINY_APPS),
+    format_list_of_names(names(SHINY_APPS))
+  ))
+}
+cat("\n-------------------------------------\n")
