@@ -2,11 +2,11 @@ id,name,description,reference
 1,CASRN,"Chemical Abstracts Service Registry Number",https://www.cas.org/support/documentation/chemical-substances/cas-rn-verified-partner-program
 2,DTXCID,"EPA CompTox Chemicals Dashboard Chemical ID",https://comptox.epa.gov/dashboard
 3,DTXSID,"EPA CompTox Chemicals Dashboard Substance ID",https://comptox.epa.gov/dashboard
-4,INCHI,"IUPAC International Chemical Identifier notation",https://iupac.org/who-we-are/divisions/division-details/inchi/
-5,INCHIKEY,"SHA-256 hash of the InChI identifier",http://inchi.info/inchikey_overview_en.html
+4,InChI,"IUPAC International Chemical Identifier notation",https://iupac.org/who-we-are/divisions/division-details/inchi/
+5,InChI Key,"SHA-256 hash of the InChI identifier",http://inchi.info/inchikey_overview_en.html
 6,PUBCHEMID,"PubChem Database ID",https://pubchem.ncbi.nlm.nih.gov/
 7,SMILES,"Simplified Molecular Input Line Entry System notation",https://archive.epa.gov/med/med_archive_03/web/html/smiles.html
-8,ACRONYM,"Acronyms for the chemical",
-9,ALIAS,"Human readable compound name, typically in IUPAC or other accepted format.",
-10,FIXEDINCHI,"INCHI including the fixed hydrogen layer extension",https://www.inchi-trust.org/technical-faq-2/#6
-11,PREFERRED_NAME,"Community preference human readable compound name, typically in IUPAC or other accepted format.",
+8,Acronym,"Acronyms for the chemical",
+9,Alias,"Human readable compound name, typically in IUPAC or other accepted format.",
+10,Fixed InChI,"InChI including the fixed hydrogen layer extension",https://www.inchi-trust.org/technical-faq-2/#6
+11,Preferred Name,"Community preference human readable compound name, typically in IUPAC or other accepted format.",
