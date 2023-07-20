@@ -1,5 +1,6 @@
 # Set up environment -----------------------------------------------------------
 PLUMBER_OBJ_NAME <- "plumber_service"
+rdkit_override <- TRUE
 if (!exists("DB_TITLE")) source(here::here("config", "env_glob.txt"))
 if (!exists("RENV_ESTABLISHED") || !RENV_ESTABLISHED) {
   source(here::here("config", "env_R.R"))
@@ -57,7 +58,7 @@ update_logger_settings(log_all_warnings = FALSE, log_all_errors = FALSE)
 
 # Enable RDKit -----------------------------------------------------------------
 # RDKIT is required for certain endpoints.
-if (INFORMATICS && USE_RDKIT) {
+if (rdkit_override || INFORMATICS && USE_RDKIT) {
   if (!exists("RENV_ESTABLISHED_RDKIT") || !RENV_ESTABLISHED_RDKIT) source(here::here("inst", "rdkit", "env_py.R"))
   rdkit_active(make_if_not = TRUE, log_ns = "api")
 }

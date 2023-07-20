@@ -13,6 +13,8 @@ app_ns             <- paste0("app_", app_name)
 dev                <- FALSE
 # Set to true in order to base this app on the API defined in the environment files.
 USE_API            <- TRUE
+# Set to whether or not this needs an rdkit integration
+APP_RDKIT          <- FALSE
 
 # Set the start options to use advanced settings and tooltips by default. These
 # can be changed while using the app at any time if the "enable" options are set
