@@ -4,7 +4,8 @@ dashboardPage(
   header = dashboardHeader(
     title = a(
       img(src = "NIST-Logo-Brand-White.svg"),
-      href = "https://www.nist.gov/programs-projects/measurement-science-and-polyfluoroalkyl-substances-pfas#:~:text=Overview%20of%20the%20NIST%20program%20on%20per-%20and,for%20a%20variety%20of%20commercial%20and%20industrial%20applications."
+      href = "https://www.nist.gov/programs-projects/measurement-science-and-polyfluoroalkyl-substances-pfas#:~:text=Overview%20of%20the%20NIST%20program%20on%20per-%20and,for%20a%20variety%20of%20commercial%20and%20industrial%20applications.",
+	  target = "_blank"
     )
   ),
   sidebar = dashboardSidebar(

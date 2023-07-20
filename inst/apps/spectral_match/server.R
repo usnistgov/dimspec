@@ -1654,15 +1654,18 @@ shinyServer(function(input, output, session) {
       ) %>%
         mutate(
           ref_type = case_when(
-            ref_type == "ALIAS" ~ "Supplied Alias",
-            ref_type == "PREFERRED_NAME" ~ "Preferred Name",
-            ref_type == "INCHI" ~ "InChI",
-			ref_type == "FIXEDINCHI" ~ "Fixed InChI",
-            ref_type == "INCHIKEY" ~ "InChIKey",
-            ref_type == "SMILES" ~ "Smiles Notation",
+            ref_type == "Acronym" ~ "User Supplied Acronym",
+            ref_type == "Alias" ~ "Supplied Alias",
             ref_type == "CASRN" ~ "CAS Registry Number",
             ref_type == "DTXCID" ~ "EPA CompTox CID",
             ref_type == "DTXSID" ~ "EPA CompTox SID",
+            ref_type == "Fixed InChI" ~ "Fixed InChI Notation",
+            ref_type == "InChI" ~ "InChI Notation",
+            ref_type == "InChIKey" ~ "InChIKey Notation",
+            ref_type == "NIST Suspec List" ~ "NIST Suspect List ID",
+            ref_type == "PUBCHEMID" ~ "PubChem CID",
+            ref_type == "Preferred Name" ~ "Preferred Name",
+            ref_type == "SMILES" ~ "SMILES Notation",
             ref_type == "ADDITIONAL" ~ "Additional Notations",
             TRUE ~ ref_type
           ),
