@@ -1,11 +1,11 @@
 # Set the basics for display and identification for this application here, such
 # as the page name, logging namespace, and database title.
-APP_TITLE          <- "Mass Spectral Quality Control for PFAS"
+APP_TITLE          <- "DIMSpec Quality Control for PFAS"
 if (!exists("DB_TITLE")) DB_TITLE <- "DIMSpec"
 app_name           <- basename(getwd())
 app_dir            <- file.path(app_name)
 app_ns             <- paste0("app_", app_name)
-default_title      <- "Mass Spectral Quality Control"
+default_title      <- "DIMSpec Quality Control"
 
 # Set to true to enable development mode, which includes a link to the
 # underlying API documentation and a live inspection button to see the app's

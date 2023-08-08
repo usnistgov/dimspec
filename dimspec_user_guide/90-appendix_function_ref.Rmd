@@ -2,7 +2,7 @@
 
 # Function Reference {#appendix-function-reference .unnumbered}
 
-This appendix contains links to all documented functions included as part of the DIMSpec tool set. As is common in R packages, not all functions are documented, but most are. Functions referenced in the rest of this user guide are linked directly to their entry on this page. Click any function in this table of contents to open its documentation.
+This appendix contains links to all documented functions included as part of the DIMSpec toolkit. As is common in R packages, not all functions are documented, but most are. Functions referenced in the rest of this user guide are linked directly to their entry on this page. Click any function in this table of contents to open its documentation.
 
 ```{r appendix_fn, include=FALSE}
 book_dir <- here::here("dimspec_user_guide")

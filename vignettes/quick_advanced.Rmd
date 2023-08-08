@@ -224,7 +224,7 @@ Settings for shiny applications are generally best left to the individual applic
    
 1. `logger_settings` will establish the logging parameters for the launched application and by default will copy settings from the `LOGGING$SHINY` object if available.
 
-To build new shiny web applications in an active DIMSpec project, a templated directory has been provided at `inst/apps/app_template/` and contains a skeleton similar to other web applications included in DIMSpec. In our experience, this app template greatly shortens many technical aspects of development as it leverages established environments and connections to the plumber API. The MSQC application was built from this template in a fraction of the time it would have taken when starting from scratch.
+To build new shiny web applications in an active DIMSpec project, a templated directory has been provided at `inst/apps/app_template/` and contains a skeleton similar to other web applications included in DIMSpec. In our experience, this app template greatly shortens many technical aspects of development as it leverages established environments and connections to the plumber API. The DIMSpec-QC application was built from this template in a fraction of the time it would have taken when starting from scratch.
 
 All other settings are left to the individual applications to define needs. See more details in the Shiny Applications section of Technical Details in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#shiny-applications) or the [DIMSpec Quick Guide - Shiny Web Applications](https://pages.nist.gov/dimspec/docs/docs/quick_guides/quick_apps.pdf) vignette for details of using the included application template.
 

@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</title>
+  <title>User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit</title>
   <meta name="description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   <meta name="generator" content="bookdown 0.29 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  <meta property="og:title" content="User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit" />
   <meta property="og:type" content="book" />
   <meta property="og:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
   <meta property="og:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set" />
+  <meta name="twitter:title" content="User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit" />
   
   <meta name="twitter:description" content="This is the User Guide distributed alongside the R Project containing the toolset supporting the “Database Infrastructure for Mass Spectrometry (DIMSpec)” project." />
   <meta name="twitter:image" content="/assets/fig00-02_dimspec_conceptual_graphic.png" />
@@ -23,7 +23,7 @@
 <meta name="author" content="Jared M. Ragland and Benjamin J. Place" />
 
 
-<meta name="date" content="2023-07-05" />
+<meta name="date" content="2023-08-08" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -317,13 +317,13 @@ div.csl-indent {
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-table-viewer"><i class="fa fa-check"></i>Table Viewer</a></li>
 <li class="chapter" data-level="" data-path="table-explorer-home.html"><a href="table-explorer-home.html#table-explorer-erd"><i class="fa fa-check"></i>Entity Relationship Diagram</a></li>
 </ul></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html"><i class="fa fa-check"></i>Mass Spectral Quality Control (MSQC)</a>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html"><i class="fa fa-check"></i>DIMSpec Quality Control (DIMSpec-QC)</a>
 <ul>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-intro"><i class="fa fa-check"></i>Introduction</a></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-instructions"><i class="fa fa-check"></i>Instructions</a></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
-<li class="chapter" data-level="" data-path="msqc-home.html"><a href="msqc-home.html#msqc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html#dimspec-qc-intro"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html#dimspec-qc-instructions"><i class="fa fa-check"></i>Instructions</a></li>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html#dimspec-qc-technical-details"><i class="fa fa-check"></i>Technical Details</a></li>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html#dimspec-qc-conclusions"><i class="fa fa-check"></i>Conclusions</a></li>
+<li class="chapter" data-level="" data-path="dimspec-qc-home.html"><a href="dimspec-qc-home.html#dimspec-qc-appendices"><i class="fa fa-check"></i>Appendices</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="msmatch-home.html"><a href="msmatch-home.html"><i class="fa fa-check"></i>Mass Spectral Match (MSMatch)</a>
 <ul>
@@ -346,7 +346,7 @@ div.csl-indent {
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit</a>
           </h1>
         </div>
 
@@ -355,9 +355,9 @@ div.csl-indent {
 
             <section class="normal" id="section-">
 <div id="header">
-<h1 class="title">User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set</h1>
+<h1 class="title">User Guide for the NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit</h1>
 <p class="author"><em>Jared M. Ragland and Benjamin J. Place</em></p>
-<p class="date"><em>2023-07-05</em></p>
+<p class="date"><em>2023-08-08</em></p>
 </div>
 <div id="preface" class="section level1 unnumbered hasAnchor">
 <h1>Preface<a href="index.html#preface" class="anchor-section" aria-label="Anchor link to header"></a></h1>
@@ -367,8 +367,8 @@ div.csl-indent {
 </div>
 <p>The use of mass spectral databases is essential for the confident identification and reporting of analytical chemistry measurands, whether they be environmental contaminants or novel compounds. Toward that end the US National Institute of Standards and Technology provides a series of mass spectral databases in use at analytical research, development, and contracting laboratories throughout the US. Contrasting with targeted methods, where analyte identities and their mass spectral properties are known <em>a priori</em> are non-targeted analysis (NTA) methods, where compound identity is unknown. Even when analytes are “known” (i.e. their mass spectral properties have been measured and reported in the literature) different extraction and measurement methods may show slight differences in mass spectral properties. The gold standard for matching mass spectra is use of a library of mass spectral standards, yet such standards are available only for a small fraction of “known” analytes.</p>
 <p>For analyte classes with decades of analytical study (e.g. polychlorinated biphenyls, vitamins, etc.), such “known” analytes are generally covered well by analytical standards. This is not the case for analyte classes of more recent interest (e.g. per- and polyfluorinated alkyl substances). Research needs generally run ahead of standards availability; paradigms such as NTA are therefore necessary to assess analyte identity and properties by identifying mass spectral patterns of both the analyte itself and its fragmentation patterns. Analytes characterized in this fashion can then be published for identification in other methods and laboratories. As of 2023, the process of distributing such data still lags behind many research needs.</p>
-<p>This book describes a tool set produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass spectrometric experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) allows for the creation of portable databases that tie such data with sample and methodological metadata. DIMSpec uses <a href="https://sqlite.org" target="_blank">SQLite</a>, a common portable database engine, for data storage and a collected set of data management and NTA tools written in the <a href="https://www.r-project.org" target="_blank">R</a> language. This includes the ability to rapidly iterate and launch new databases to hold data for a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated tools, researchers can leverage NTA tools in active use at NIST for quality assurance, identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.</p>
-<p>We believe strongly in the public availability of and open access to research data and hope that the tool set described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the <a href="https://www.go-fair.org" target="_blank">FAIR</a> principles.</p>
+<p>This book describes a toolkit produced by the NIST Chemical Sciences Division to capture data from high resolution accurate mass spectrometric experiments in a formal manner. The Database Infrastructure for Mass Spectrometry (DIMSpec) allows for the creation of portable databases that tie such data with sample and methodological metadata. DIMSpec uses <a href="https://sqlite.org" target="_blank">SQLite</a>, a common portable database engine, for data storage and a collected set of data management and NTA tools written in the <a href="https://www.r-project.org" target="_blank">R</a> language. This includes the ability to rapidly iterate and launch new databases to hold data for a particular project, analyte class of interest, or research program, and results in a single database file that may be shared widely without restriction on resulting use. When used with the associated tools, researchers can leverage NTA tools in active use at NIST for quality assurance, identification of unknown analytes using current state-of-the-science techniques, and to record their data and contribute back to the research community. Only open access frameworks were used in the development of DIMSpec.</p>
+<p>We believe strongly in the public availability of and open access to research data and hope that the toolkit described here can be of use in moving the NTA research community toward a data structure amenable to sharing and reuse and move analytical chemistry data for NTA toward the <a href="https://www.go-fair.org" target="_blank">FAIR</a> principles.</p>
 <div class="signature-block">
 <span class="signoff">Sincerely,</span>
 <p class="names">
