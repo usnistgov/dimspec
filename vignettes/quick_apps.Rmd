@@ -28,7 +28,7 @@ This quick guide introduces the three web applications that ship with the projec
 The following subsections provide an introduction to web applications provided in the DIMSpec project.
 
 1. [Table Explorer](#table-explorer)
-1. [Mass Spectral Quality Control (MSQC)](#msqc)
+1. [DIMSpec Quality Control (DIMSpec-QC)](#dimspec-qc)
 1. [Mass Spectral Match (MSMatch)](#ms-match)
 1. [Application Template](#application-template)
 
@@ -54,11 +54,11 @@ A graphic of the entity relationship diagram is provided on the second page. Cli
 
 \newpage
 
-### Mass Spectral Quality Control (MSQC){#msqc}
+### DIMSpec Quality Control (DIMSpec-QC){#dimspec-qc}
 
-Quality control and assessment is key for trust and ensuring data integrity. Algorithms were developed for the DIMSpec project to validate the quality of new experimental data and build files suitable for database import. The Mass Spectral Quality Control (MSQC) application was developed to accelerate this quality review process and installs alongside DIMSpec.
+Quality control and assessment is key for trust and ensuring data integrity. Algorithms were developed for the DIMSpec project to validate the quality of new experimental data and build files suitable for database import. The DIMSpec Quality Control (DIMSpec-QC) application was developed to accelerate this quality review process and installs alongside DIMSpec.
 
-1. Two preprocessing steps are required to use MSQC. First, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) MSConvert software [@adusumilli_data_2017] There are specific parameters that must be used during conversion. A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf).
+1. Two preprocessing steps are required to use DIMSpec-QC. First, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) MSConvert software [@adusumilli_data_2017] There are specific parameters that must be used during conversion. A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf).
 
       Filter: Threshold peak filter
       Threshold type: absolute
@@ -69,15 +69,15 @@ Quality control and assessment is key for trust and ensuring data integrity. Alg
       MS levels: 1-2
 
 
-1. The second step prior to using MSQC is to use a macro-enabled Microsoft Excel workbook, called the Non-Targeted Analysis Method Reporting Tool (NTA-MRT) for the systematic collection of sample, method, and compound information related to chemicals identified in a sample. The most up-to-date version of NTA-MRT is publicly available at [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool). Instructions for completing the NTA-MRT are contained within the tool itself. In order to use the MSQC application, a `sample.JSON` file must be generated using the “Export to JSON file output” button on the first tab of the NTA-MRT.
+1. The second step prior to using DIMSpec-QC is to use a macro-enabled Microsoft Excel workbook, called the Non-Targeted Analysis Method Reporting Tool (NTA-MRT) for the systematic collection of sample, method, and compound information related to chemicals identified in a sample. The most up-to-date version of NTA-MRT is publicly available at [GitHub](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool). Instructions for completing the NTA-MRT are contained within the tool itself. In order to use the DIMSpec-QC application, a `sample.JSON` file must be generated using the “Export to JSON file output” button on the first tab of the NTA-MRT.
 
-  **The file name entered in the NTA-MRT under the Sample tab must exactly match (case-sensitive) the paired mzML file name to be used for the MSQC.**
+  **The file name entered in the NTA-MRT under the Sample tab must exactly match (case-sensitive) the paired mzML file name to be used for the DIMSpec-QC.**
 
-See above for details of how to launch this app; the easiest method is from the console after the `compliance.R` script has been executed, use `start_app("msqc")` to launch it in your preferred browser. The "About" screen will appear when the MSQC application is available ([Figure 2](#fig2)). The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page. The app itself should guide you through the process in a straightforward manner. Click the "Click Here to get Started" button on the "About" page or click "Data Import" in the navigation panel on the left to get started.
+See above for details of how to launch this app; the easiest method is from the console after the `compliance.R` script has been executed, use `start_app("dimspec-qc")` to launch it in your preferred browser. The "About" screen will appear when the DIMSpec-QC application is available ([Figure 2](#fig2)). The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page. The app itself should guide you through the process in a straightforward manner. Click the "Click Here to get Started" button on the "About" page or click "Data Import" in the navigation panel on the left to get started.
 
 ---
 
-![The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case.](../dimspec_user_guide/assets/fig05-01_msqc_landing_page.png "The home page for the MSQC web application contains basic information about the application and can be tailored easiliy for each use case."){#fig2}
+![The home page for the DIMSpec-QC web application contains basic information about the application and can be tailored easiliy for each use case.](../dimspec_user_guide/assets/fig05-01_dimspec-qc_landing_page.png "The home page for the DIMSpec-QC web application contains basic information about the application and can be tailored easiliy for each use case."){#fig2}
 
 ---
 
@@ -107,7 +107,7 @@ After files have been loaded and matched, a button will appear on the “Data Im
 \
 Once processed, the QC results can be reviewed by selecing “Quality Review” in the left menu or clicking the “Quality Review” button that appears below the “Process Data” button. The top table, which is the only visible table when starting a new review, shows the raw files that have been processed and the respective quality control check results ("PassCheck"). If all compounds in the raw file passed all QC checks, the PassCheck result will be true. If any compound in the raw file failed any of the QC checks, the PassCheck result will be false. To review the compounds within a single raw file:
 
-   1. Click a row in the table at the top left to select an mzML file. This will display a second table of all compounds within the selected raw file. The PassCheck result for each compound is displayed in this table. If all QC checks for each compound in the raw file passed all QC checks, the PassCheck result will be true for that compound. If a compound in the raw file failed any of the QC checks, the PassCheck result will be false for that compound. To review the individual QC checks (described in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#app-mscq)), select a row for the peak to review in the table labeled
+   1. Click a row in the table at the top left to select an mzML file. This will display a second table of all compounds within the selected raw file. The PassCheck result for each compound is displayed in this table. If all QC checks for each compound in the raw file passed all QC checks, the PassCheck result will be true for that compound. If a compound in the raw file failed any of the QC checks, the PassCheck result will be false for that compound. To review the individual QC checks (described in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#app-dimspec-qc)), select a row for the peak to review in the table labeled
    
    1. Click a row in the second table on the left to see metrics for that peak. This will display boxes to the right containing all QC checks for that compound. Expand a specific QC check by clicking on the box header to display the results of the QC check as a table. A note below the two tables on the left will indicate whether any QC checks failed.
    
@@ -116,7 +116,7 @@ Once processed, the QC results can be reviewed by selecing “Quality Review” 
 \
 Once data are processed, all data can be exported (regardless of quality review status) by selecting “Export Data” in the left menu. Additional options may be added in the future to refine the export process such as selecting only peaks and files that pass all defined quality checks. Clicking the button labeled “Export all data”, will write the peak JSON files and download them in a single .zip file. This file can be unzipped and the peak JSONs can be directly incorporated into the DIMSpec database using the import routine described in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#importing-data) or the [Quick Guide - Importing Data](https://pages.nist.gov/dimspec/docs/docs/quick_guides/quick_import.pdf).
 
-Using the MSQC application greatly accelerates the process of performing quality control and assurance tasks for non-targeted data and ensures checks are performed consistently across data files. It serves as a key component of using the DIMSpec project in an active research lab setting when adding to the mass spectral library.
+Using the DIMSpec-QC application greatly accelerates the process of performing quality control and assurance tasks for non-targeted data and ensures checks are performed consistently across data files. It serves as a key component of using the DIMSpec project in an active research lab setting when adding to the mass spectral library.
 
 ---
 
@@ -124,7 +124,7 @@ Using the MSQC application greatly accelerates the process of performing quality
 
 A common user need addressed by DIMSpec is identification of analytes in a sample measured by high resolution mass spectrometry. Often the components are unknown but may be suspected. Ability to identify not only an analyte from its mass spectra, but to identify known fragments for unknown analytes is a key need; when the analyte itself cannot be identified, non-targeted analysis workflows make use of fragmentation patterns to determine or reconstruct its identity. The Mass Spectral Match for Non-Targeted Analysis (MSMatch) application was built to accelerate non-targeted analysis projects by searching experiment result data in [mzML](https://www.psidev.info/mzML) format for matches against a curated mass spectral library of both compounds and annotated fragments.
 
-As with the MSQC app application, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software. There are specific parameters that must be used during conversion.
+As with the DIMSpec-QC app application, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) msConvert software. There are specific parameters that must be used during conversion.
 
       Filter: Threshold peak filter
       Threshold type: absolute
@@ -134,9 +134,9 @@ As with the MSQC app application, raw data files produced by a mass spectrometer
       Algorithm: vendor
       MS levels: 1-2
 
-A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf). This data format conversion step is the same as for the [MSQC application](#msqc).
+A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf). This data format conversion step is the same as for the [DIMSpec-QC application](#dimspec-qc).
 
-See above for details of how to launch this app, but the easiest method is after the `compliance.R` script has been executed, use `start_app("spectral_match")` to launch it in your preferred browser. The "Home" screen will appear when the MSMatch application is available ([Figure 3, next page](#fig3)). The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page. The app itself should guide you through the process in a straightforward manner. Click the "Click Here to get Started" button on the "Home" page or click "Data Input" in the navigation panel on the left to get started.
+See above for details of how to launch this app, but the easiest method is after the `compliance.R` script has been executed, use `start_app("msmatch")` to launch it in your preferred browser. The "Home" screen will appear when the MSMatch application is available ([Figure 3, next page](#fig3)). The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page. The app itself should guide you through the process in a straightforward manner. Click the "Click Here to get Started" button on the "Home" page or click "Data Input" in the navigation panel on the left to get started.
 
 Every effort has been made to make using MSMatch as intuitive as possible. Hints in the form of tooltips are provided throughout; hover over question mark icons or controls to see them. These can be toggled on and off at any time using the "Show Tooltips" toggle button at the bottom left of the application window (see [Figure 3 inset at bottom right]({#fig3}). If enabled, advanced search settings can be similarly toggled on and off for the session (see the [DIMSpec User Guide](https://pages.nist.gov/dimspec) for instructions on how to set default accessibility and settings for tooltips and advanced settings). The "hamburger" icon at the top left of the screen will collapse the left-hand navigation panel to provide more horizontal room on smaller screens, though the application will rearrange itself when screens are smaller than a minimum width.
 
@@ -244,7 +244,7 @@ Use the Fragment Match page to explore fragmentation patterns in more detail for
 
 ### Application Template{#application-template}
 
-The Table Explorer, MSQC, and MSMatch web applications serve to increase utility and usability of the DIMSpec project by making data and code available for casual users. They can be launched locally from the project, or hosted on a network. These are not, however, intended to provide exhaustive functionality for potential users.
+The Table Explorer, DIMSpec-QC, and MSMatch web applications serve to increase utility and usability of the DIMSpec project by making data and code available for casual users. They can be launched locally from the project, or hosted on a network. These are not, however, intended to provide exhaustive functionality for potential users.
 
 The underlying infrastructure enabling these apps has been constructed as to make adding new ones as easy as possible. Toward that end, the Table Explorer app served as a proof-of-concept to develop the application template at `/inst/apps/app_template`. It is in the "3 file" format and contains subdirectories for data, modal dialogs, and app resources (in the `www` subdirectory). To start developing a new app within the project, simply copy and rename the entire `app_template` folder. The new app will benefit from the same environment establishment routines used elsewhere. Simply edit the `/global.R` file as needed, add any data and image or resource files, set `need_files` in `/global.R` to include any .R files you want available when the app is launched, and begin development with an assured connection either directly to a database or by leveraging the plumber API. An isolated `/app_functions.R` file is also provided for custom functions the new app will require.
 

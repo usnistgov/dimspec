@@ -12,7 +12,7 @@ There is only one page for interactive content, named "Table Viewer" ([Figure 1]
 
 ------------------------------------------------------------------------
 
-![Figure 1. The Table Explorer main page.](assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page."){#fig03-01 style="width:100%"}
+![Figure 1. The Table Explorer main page.](assets/fig03-01_table_view_screen.png "Figure 1. The Table Explorer main page."){#fig03-01 style="width:100%; max-width:1200px"}
 
 ------------------------------------------------------------------------
 

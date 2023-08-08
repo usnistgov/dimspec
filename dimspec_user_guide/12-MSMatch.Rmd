@@ -2,7 +2,7 @@
 
 ## Introduction {#msmatch-intro .unnumbered}
 
-One goal of the Data Infrastructure for Mass Spectrometry ([DIMSpec](#introduction)) project is to provide a database that can be easily built to support individual projects within the Chemical Sciences Division to manage data coherently and accelerate analyte identification, screening, and annotation processes for non-targeted analysis projects. Toward that end, the Mass Spectral Match for Non-Targeted Analysis (MSMatch) application was built to accelerate non-targeted analysis projects by searching experiment result data in [mzML](https://www.psidev.info/mzML) format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec tool set. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/){target="_blank"}), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview){target="_blank"}.
+One goal of the Data Infrastructure for Mass Spectrometry (DIMSpec) project is to provide a database that can be easily built to support individual projects within the Chemical Sciences Division to manage data coherently and accelerate analyte identification, screening, and annotation processes for non-targeted analysis projects. Toward that end, the Mass Spectral Match for Non-Targeted Analysis (MSMatch) application was built to accelerate non-targeted analysis projects by searching experiment result data in [mzML](https://www.psidev.info/mzML) format for matches against a curated mass spectral library of compounds and annotated fragments. MSMatch is a web application built using the Shiny package in R and installs alongside DIMSpec and is one example of a tool that can built on top of the DIMSpec toolkit. Databases built and managed with DIMSpec are SQLite files used within a distributed R Project. Scripts for automated setup are included. For this initial release, DIMSpec is distributed with data populated for per- and polyfluorinated alkyl substances (PFAS); that effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/){target="_blank"}), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview){target="_blank"}.
 
 This section serves as a user guide for using the MSMatch application.
 
@@ -36,16 +36,16 @@ Launch this tool similarly to other "shiny"-based tools provided as part of DIMS
 
 [^5]: Requires R.exe is available in your system PATH
 
-> R.exe "shiny::runApp('inst/apps/spectral_match')"
+> R.exe "shiny::runApp('inst/apps/msmatch')"
 
 *R console*
 
-> `shiny::runApp(‘inst/apps/spectral_match’)`
+> `shiny::runApp(‘inst/apps/msmatch’)`
 
 *RStudio*
 
 > Open the ".Rproj" project file in RStudio, navigate to the
-> "inst/apps/spectral_match" directory, open one of the "global.R,"
+> "inst/apps/msmatch" directory, open one of the "global.R,"
 > "server.R," or "ui.R" files, and click the "Run App" button. Files
 > open in an RStudio project will remain open by default when RStudio is
 > closed, allowing users to quickly relaunch by simply loading the
@@ -54,7 +54,7 @@ Launch this tool similarly to other "shiny"-based tools provided as part of DIMS
 > system's default web browser. This application has been tested on
 > Chrome, Edge, and Firefox.
 
-Alternatively, once the compliance script has been executed MSMatch can be launched using `start_app("spectral_match")`.
+Alternatively, once the compliance script has been executed MSMatch can be launched using `start_app("msmatch")`.
 
 Once launched the API server will remain active until stopped, allowing users to freely launch, close, and relaunch any shiny apps dependent upon it much more quickly. The application is fluid and will dynamically resize to fit the dimensions of a browser window. By default, the server does not stop when the browser is closed. This means that, once started, it is available by navigating a web browser back to the URL where it launched until the server is shut down.
 
@@ -245,7 +245,7 @@ Two options are available for more contextual information regarding compounds an
 
 When finished using the application, typing the escape key at the R console is the simplest way to stop the server and exit the application. If using RStudio there is a "stop sign" button at the top right of the console pane that will also stop it. When finished completely with the project, users also need to shut down the API server.
 
--   Loading the entire project from the compliance script (i.e. MSMatch was launched using `start_app("spectral_match")`) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function [`close_up_shop()`](#fn_def_close_up_shop) with the argument `back_up_connected_tbls` set to `TRUE` to preserve these, or the default FALSE to simply close all connections including the API server).
+-   Loading the entire project from the compliance script (i.e. MSMatch was launched using `start_app("msmatch")`) provides additional actions and includes a live database connection with the ability to read data into tables and preserve them for further analysis. Use the function [`close_up_shop()`](#fn_def_close_up_shop) with the argument `back_up_connected_tbls` set to `TRUE` to preserve these, or the default FALSE to simply close all connections including the API server).
 -   If launching the app directly and using the default settings there will be a session object named `plumber_service` connected to that server. To stop it, use the [`api_stop`](#fn_def_api_stop) function from the console or stop the service directly using `plumber_service$kill()`; it will also generally stop when the calling R process closes (e.g. when RStudio is closed), but it is highly recommended to stop it manually to prevent hanging connections.
 -   After closing all connections, a hanging connection may be indicated by the presence of "-shm" and "-wal" files in the project directory. Flushing these hanging connections is not required but is recommended.
     -   If launching MSMatch with the compliance script, run [`close_up_shop()`](#fn_def_close_up_shop) again.
@@ -264,7 +264,7 @@ This concludes the User Guide for the Mass Spectral Match (MSMatch) web applicat
 
 Implementation and environment details for the MSMatch application largely follow those for DIMSpec. See the sections on [System Requirements](#system-requirements), [Environment Resolution](#compute-environments), [Shiny Applications](#shiny-applications), [Plumber](#plumber) for the API implementation which is required for this application, and [Python Integration](#python) for chemometrics support.
 
-Technical details in this section will describe only the MSMatch application found in the `inst/apps/spectral_match` directory and, unless otherwise noted, all files referred to hereafter refer to that directory.
+Technical details in this section will describe only the MSMatch application found in the `inst/apps/msmatch` directory and, unless otherwise noted, all files referred to hereafter refer to that directory.
 
 ### Mass Spectral Search Object {#msmatch-search-object .unnumbered}
 
@@ -358,4 +358,4 @@ Both the R/Shiny and python code bases are fully extensible for future functiona
 
 ## Conclusions {#msmatch-conclusions .unnumbered}
 
-The Mass Spectral Match for Non-Targeted Analysis application provides a new way to make NTA tools developed at NIST using the Database Infrastructure for Mass Spectrometry accessible to both internal and external stakeholders. It is the first demonstration of tools that can be built on top of databases conforming to the [DIMSpec project](#intro-start), which can be repurposed for any class of chemicals or project of interest using mass spectrometry data.
+The Mass Spectral Match for Non-Targeted Analysis application provides a new way to make NTA tools developed at NIST accessible to both internal and external stakeholders using the Database Infrastructure for Mass Spectrometry project toolkit. It is the first demonstration of tools that can be built on top of databases conforming to the [DIMSpec project](#intro-start), which can be repurposed for any class of chemicals or project of interest using mass spectrometry data.

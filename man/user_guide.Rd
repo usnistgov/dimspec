@@ -21,7 +21,7 @@ None, opens a browser to the index page of the User Guide
 }
 \description{
 Use this function to launch the bookdown version of the User Guide for the
-NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Tool Set
+NIST Database Infrastructure for Mass Spectrometry (DIMSpec) Toolkit
 }
 \note{
 This works ONLY when DIMSpec is used as a project with the defined
