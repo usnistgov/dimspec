@@ -159,9 +159,9 @@ bootstrap_compare_ms <- function(ms1, ms2, error = c(5,5), minerror = c(0.002,0.
   ))
   results <- do.call(rbind, lapply(1:runs, function(x) compare_ms(ms1.rms[[x]], ms2.rms[[x]], error, minerror)))
   dp_summary <- data.frame(
-    dp = quantile(results$dp, probs = seq(0,1,0.25)), 
-    rdp = quantile(results$rdp, probs = seq(0,1,0.25))
-    )
+    dp = quantile(results$dp, probs = seq(0,1,0.25), na.rm = T), 
+    rdp = quantile(results$rdp, probs = seq(0,1,0.25), na.rm = T)
+  )
   list(results = results, dp_summary = dp_summary)
 }
 
@@ -222,11 +222,28 @@ plot_compare_ms <- function(ums1, ums2, main = "Comparison Mass Spectrum", size 
   ylim <- c(min(c(-ums1[,"int"] - ylim.exp, -ums2[,"int"] - ylim.exp)), max(c(ums1[,"int"] + ylim.exp, ums2[,"int"] + ylim.exp)))
   df1 <- data.frame(x1 = ums1[,"mz"], y1 = ums1[,"int"], x1u = ums1[,"mz.u"], y1u = ums1[,"int.u"])
   df2 <- data.frame(x2 = ums2[,"mz"], y2 = -ums2[,"int"], x2u = ums2[,"mz.u"], y2u = ums2[,"int.u"])
-  ggplot(data = df1) + geom_linerange(aes(x = x1,  ymin = 0, ymax = y1), color = c1, size = size) + 
-    geom_errorbar(aes(x = x1, ymin = y1 - y1u, ymax = y1 + y1u, width = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
-    geom_errorbarh(aes(y = y1, xmin = x1 - x1u, xmax = x1 + x1u, height = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
-    geom_linerange(data = df2, aes(x = x2, ymin = 0, ymax = y2), color = c2, size = size) +
-    geom_errorbar(data = df2, aes(x = x2, ymin = y2 - y2u, ymax = y2 + y2u, width = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
-    geom_errorbarh(data = df2, aes(y = y2, xmin = x2 - x2u, xmax = x2 + x2u, height = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
-    ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") + coord_cartesian(xlim = xlim, ylim = ylim)+ theme_bw() 
+  # Breaking change to line geometries in arguments from `size` to `linewidth` starting in ggplot2 v3.4.0
+  if (packageVersion("ggplot2") >= '3.4.0') {
+    ggplot(data = df1) +
+      geom_linerange(aes(x = x1,  ymin = 0, ymax = y1), color = c1, linewidth = size) + 
+      geom_errorbar(aes(x = x1, ymin = y1 - y1u, ymax = y1 + y1u, width = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
+      geom_errorbarh(aes(y = y1, xmin = x1 - x1u, xmax = x1 + x1u, height = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
+      geom_linerange(data = df2, aes(x = x2, ymin = 0, ymax = y2), color = c2, linewidth = size) +
+      geom_errorbar(data = df2, aes(x = x2, ymin = y2 - y2u, ymax = y2 + y2u, width = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
+      geom_errorbarh(data = df2, aes(y = y2, xmin = x2 - x2u, xmax = x2 + x2u, height = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
+      ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") +
+      coord_cartesian(xlim = xlim, ylim = ylim) +
+      theme_bw() 
+  } else {
+    ggplot(data = df1) +
+      geom_linerange(aes(x = x1,  ymin = 0, ymax = y1), color = c1, size = size) + 
+      geom_errorbar(aes(x = x1, ymin = y1 - y1u, ymax = y1 + y1u, width = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
+      geom_errorbarh(aes(y = y1, xmin = x1 - x1u, xmax = x1 + x1u, height = 0.01), color = c2, na.rm = TRUE, linetype = 5) + 
+      geom_linerange(data = df2, aes(x = x2, ymin = 0, ymax = y2), color = c2, size = size) +
+      geom_errorbar(data = df2, aes(x = x2, ymin = y2 - y2u, ymax = y2 + y2u, width = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
+      geom_errorbarh(data = df2, aes(y = y2, xmin = x2 - x2u, xmax = x2 + x2u, height = 0.01), color = c1, na.rm = TRUE, linetype = 5) + 
+      ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") +
+      coord_cartesian(xlim = xlim, ylim = ylim) +
+      theme_bw() 
+  }
 }

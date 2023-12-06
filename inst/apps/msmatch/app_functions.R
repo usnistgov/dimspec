@@ -84,6 +84,6 @@ complete_form_entry <- function(input, values, show_alert = TRUE) {
 nist_shinyalert <- function(title, type, text, className = "nist_shinyalert", html = TRUE, closeOnClickOutside = TRUE, immediate = TRUE, ...) {
   kwargs <- append(as.list(environment()), list(...))
   kwargs <- kwargs[names(kwargs) %in% names(formals(shinyalert::shinyalert))]
-  text <- div(class = "nist_shinyalert_text", text)
+  kwargs$text <- tagList(div(class = "nist_shinyalert_text", text))
   do.call(shinyalert, args = kwargs)
 }

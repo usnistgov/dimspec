@@ -25,30 +25,30 @@ mod_uncertainty_evaluation <- function(msn, advanced_use) {
                                                 label = "Tolerable ppm error (this spectrum)",
                                                 width = "100%",
                                                 # ticks = uncertainty_mass_error_compare_actual$ticks,
-                                                value = uncertainty_mass_error_compare_actual$value,
-                                                min = uncertainty_mass_error_compare_actual$min,
-                                                max = uncertainty_mass_error_compare_actual$max,
-                                                step = uncertainty_mass_error_compare_actual$step
+                                                value = uncertainty_mass_error_compare_actual$this_value,
+                                                min = uncertainty_mass_error_compare_actual$this_min,
+                                                max = uncertainty_mass_error_compare_actual$this_max,
+                                                step = uncertainty_mass_error_compare_actual$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_mass_error_compare_actual"]]),
                                    numericInput(inputId = "mod_uncertainty_min_error_compare_actual",
                                                 label = "Minimum mass error (this spectrum)",
                                                 width = "100%",
                                                 # ticks = uncertainty_min_error_compare_actual$ticks,
-                                                value = uncertainty_min_error_compare_actual$value,
-                                                min = uncertainty_min_error_compare_actual$min,
-                                                max = uncertainty_min_error_compare_actual$max,
-                                                step = uncertainty_min_error_compare_actual$step
+                                                value = uncertainty_min_error_compare_actual$this_value,
+                                                min = uncertainty_min_error_compare_actual$this_min,
+                                                max = uncertainty_min_error_compare_actual$this_max,
+                                                step = uncertainty_min_error_compare_actual$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_min_error_compare_actual"]]),
                                    sliderInput(inputId = "mod_uncertainty_weighting_mass",
                                                label = "Uncertainty weighting mass",
                                                width = "100%",
                                                ticks = uncertainty_weighting_mass$ticks,
-                                               value = uncertainty_weighting_mass$value,
-                                               min = uncertainty_weighting_mass$min,
-                                               max = uncertainty_weighting_mass$max,
-                                               step = uncertainty_weighting_mass$step
+                                               value = uncertainty_weighting_mass$this_value,
+                                               min = uncertainty_weighting_mass$this_min,
+                                               max = uncertainty_weighting_mass$this_max,
+                                               step = uncertainty_weighting_mass$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_weighting_mass"]])
                             ),
@@ -57,30 +57,30 @@ mod_uncertainty_evaluation <- function(msn, advanced_use) {
                                                 label = "Tolerable mass error for comparison against reference spectra (ppm)",
                                                 width = "100%",
                                                 # ticks = uncertainty_mass_error_compare_with$ticks,
-                                                value = uncertainty_mass_error_compare_with$value,
-                                                min = uncertainty_mass_error_compare_with$min,
-                                                max = uncertainty_mass_error_compare_with$max,
-                                                step = uncertainty_mass_error_compare_with$step
+                                                value = uncertainty_mass_error_compare_with$this_value,
+                                                min = uncertainty_mass_error_compare_with$this_min,
+                                                max = uncertainty_mass_error_compare_with$this_max,
+                                                step = uncertainty_mass_error_compare_with$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_mass_error_compare_with"]]),
                                    numericInput(inputId = "mod_uncertainty_min_error_compare_with",
                                                 label = "Minimum mass error for comparison against reference spectra (Da)",
                                                 width = "100%",
                                                 # ticks = uncertainty_min_error_compare_with$ticks,
-                                                value = uncertainty_min_error_compare_with$value,
-                                                min = uncertainty_min_error_compare_with$min,
-                                                max = uncertainty_min_error_compare_with$max,
-                                                step = uncertainty_min_error_compare_with$step
+                                                value = uncertainty_min_error_compare_with$this_value,
+                                                min = uncertainty_min_error_compare_with$this_min,
+                                                max = uncertainty_min_error_compare_with$this_max,
+                                                step = uncertainty_min_error_compare_with$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_min_error_compare_with"]]),
                                    sliderInput(inputId = "mod_uncertainty_weighting_intensity",
                                                label = "Uncertainty Weighting Intensity",
                                                width = "100%",
                                                ticks = uncertainty_weighting_intensity$ticks,
-                                               value = uncertainty_weighting_intensity$value,
-                                               min = uncertainty_weighting_intensity$min,
-                                               max = uncertainty_weighting_intensity$max,
-                                               step = uncertainty_weighting_intensity$step
+                                               value = uncertainty_weighting_intensity$this_value,
+                                               min = uncertainty_weighting_intensity$this_min,
+                                               max = uncertainty_weighting_intensity$this_max,
+                                               step = uncertainty_weighting_intensity$this_step
                                    ) %>%
                                      with_help(tooltip = tooltip_text[["mod_uncertainty_weighting_intensity"]])
                             )
@@ -119,7 +119,12 @@ mod_uncertainty_evaluation <- function(msn, advanced_use) {
                  width = "100%") %>%
       with_help(tooltip = tooltip_text[["mod_uncertainty_calculate"]]),
     div(id = "mod_uncertainty_results",
+        hr(),
+        checkboxInput(inputId = "mod_uncertainty_include_nan",
+                      label = "Include out of bounds estimates as 0.",
+                      value = FALSE),
         htmlOutput(outputId = "mod_uncertainty_narrative"),
+        hr(),
         plotOutput(outputId = "mod_uncertainty_boxplot",
                    width = "100%") %>%
           withSpinner()
