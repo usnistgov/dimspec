@@ -21,9 +21,8 @@ plot_ms(
 nested list of dataframes containing all MS1 and MS2 data for the peak
 }
 \description{
-TODO update documentation
+Extract relevant information from a mass spectrum and plot it as an uncertainty mass spectrum.
 }
 \details{
-The function extracts the relevant information and sorts it into nested lists for
-use in the uncertainty functions
+Extract relevant information from a mass spectrum and plot it as an uncertainty mass spectrum.
 }

@@ -16,11 +16,11 @@ output:
 
 ## Getting set up quickly with DIMSpec
 
-If your needs require only the database itself and not the attached toolkit, the SQLite file may be downloaded directly from the [NIST Public Data Repository (this link is not yet active)](TODO LINK) and, along with the technical sections in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/technical-details.html#technical-details) and the data dictionary describing its schema (a JSON file located in the project directory), used by any platform able to interact with SQLite databases.
+If your needs require only the current example database of per- and polyfluoroalkyl substances (PFAS) and not the attached toolkit, that SQLite file may be downloaded directly from the [NIST Public Data Repository](https://data.nist.gov/od/id/mds2-2905) and, along with the technical sections in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#technical-details) and the data dictionary describing its schema (a JSON file located in the project directory), used by any platform able to interact with SQLite databases.
 
 To get the most from DIMSpec, the software toolkit [^1] provided with the project enables a wide variety of customized functionality including convenience, utility, and visualization functions written in the [R](https://www.r-project.org/about.html) language, an Application Programming Interface powered by [`plumber`](https://www.rplumber.io), web applications powered by [`shiny`](https://shiny.rstudio.com), and an integration of the python interface to the [`rdkit`](https://www.rdkit.org/docs/index.html) chemometrics package. A file is provided at `/config/env_glob.txt` which enables configuration customization including database title, database file name, and several other options affecting system integration. Due to its intended reuse and level of available customization, the DIMSpec project is not distributed as an R package.
 
-The easiest way to get started with the full DIMSpec project is by [forking](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the project repository from [GitHub](https://github.com/usnistgov/dimspec), though it may also be downloaded without a GitHub account as a zip file for ease of use (if so, simply extract it to a location of your choosing). Install the required software (see below) and run the compliance script (e.g. `source("/R/compliance.R")` from the project directory). This should in most cases establish the computational environment supporting the toolkit. When starting from scratch this may take a while as packages are downloaded and installed.
+The easiest way to get started with the full DIMSpec project is by [forking](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the project repository from [GitHub](https://github.com/usnistgov/dimspec), though it may also be downloaded without a GitHub account as a zip file for ease of use (if so, simply extract it to a location of your choosing). Either way, consider signing in and giving the project a Star or Watch to easily keep track of updates. Install the required software (see below) and run the compliance script (e.g. `source("/R/compliance.R")` from the project directory). This should in most cases establish the computational environment supporting the toolkit. When starting from scratch this may take a while as packages are downloaded and installed.
 
 \
 \
@@ -48,7 +48,7 @@ The DIMSpec project [^2] is distributed as an R project built around R version 4
 
 ## Step by Step
 
-*See the [DIMSpec User Guide](https://pages.nist.gov/dimspec/instructions.html#installation) for full instructions and how to use DIMSpec. These instructions are a summary of those found there.*
+*See the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/instructions.html#installation) for full instructions and how to use DIMSpec. These instructions are a summary of those found there.*
 
 1. Install software requirements for your operating system
 
@@ -60,7 +60,7 @@ The DIMSpec project [^2] is distributed as an R project built around R version 4
    -   A lightweight database interaction interface (e.g. DBeaver Lite ([download](https://dbeaver.com/download/lite/)) or similar) (suggested) 
    -   Miniconda with python 3.8 or later (suggested only if there are problems, the compliance script will install RMiniconda for you if chemometrics support is requested) ([download](https://docs.conda.io/en/latest/miniconda.html))
    
-1. (Optional, advanced) Customize any settings for your implementation (see the Project Set Up section of the [DIMSpec User Guide](https://pages.nist.gov/dimspec/instructions.html#project-set-up))
+1. (Optional, advanced) Customize any settings for your implementation (see the [Project Set Up section of the DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/instructions.html#project-set-up))
 
 1. Run the script at `/R/compliance.R` to establish the compute environment, which by default will:
 
@@ -78,15 +78,15 @@ These steps may take a while the first time. After that, start DIMSpec again fro
 
 ## Developing With DIMSpec
 
-More information on developing with DIMSpec is provided in the full [DIMSpec User Guide](https://pages.nist.gov/dimspec) or the [Quick Guide - Developing with DIMSpec](https://pages.nist.gov/dimspec/docs/quick_guides/quick_advanced.pdf)
+More information on developing with DIMSpec is provided in the full [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs) or the [Quick Guide - Developing with DIMSpec](https://pages.nist.gov/dimspec/docs/quick_advanced.pdf)
 
 ### A Note on Environments
 
-While the provided convenience script for environment establishment (located at `/R/compliance.R`) should in most cases establish the proper environment for you, it is admittedly using a large number of packages. To increase flexibility across various computing and operating systems without modifying libraries that may already be in place, a resolved environment is not provided. The most common place where difficulties may be encountered therefore is package version conflicts and setting up the python environment providing `rdkit` integration. For troubleshooting purposes, the list of required packages can be located IN the `DEPENDS_ON` environment variable in the `/config/env_R.R` file. Generally, package issues in R will print a meaningful error message to the console and guide users toward a resolution. These occasionally arise due to conflicting dependencies; the order in which packages are installed in the compliance script should minimize this. On Windows systems, some R packages require that RTools be installed first. RStudio should provide a streamlined experience for installing packages compared with base R.
+While the provided convenience script for environment establishment (located at `/R/compliance.R`) should in most cases establish the proper environment for you, it is admittedly using a large number of packages. To increase flexibility across various computing and operating systems without modifying libraries that may already be in place, a resolved environment is not provided. The most common place where difficulties may be encountered therefore is package version conflicts and setting up the python environment providing `rdkit` integration. For troubleshooting purposes, the list of required packages can be located in the `DEPENDS_ON` environment variable in the `/config/env_R.R` file. Generally, package issues in R will print a meaningful error message to the console and guide users toward a resolution. These occasionally arise due to conflicting dependencies; the order in which packages are installed in the compliance script should minimize this. On Windows systems, some R packages require that RTools be installed first. RStudio should provide a streamlined experience for installing packages compared with base R.
 
 ### Speed Concerns
 
-The full DIMSpec project can take a while to load at first. To speed this up, it is recommended that the compliance script be sourced prior to engaging in any development work with DIMSpec. Two developer resources are provided in the project that may slow down execution times. Both logging and argument validation are performed by default, which increases execution time but provides a wealth of information to assist with development. These may be turned off individually In the environment settings by setting `LOGGING_ON` or `VERIFY_ARGUMENTS` to `FALSE`, respectively; set `MINIMIZE` to `FALSE` to turn off both at once.
+The full DIMSpec project can take a while to load at first. To speed this up, it is recommended that the compliance script be sourced prior to engaging in any development work with DIMSpec. Two developer resources are provided in the project that may slow down execution times. Both logging and argument validation are performed by default, which increases execution time but provides a wealth of information to assist with development. These may be turned off individually In the environment settings by setting `LOGGING_ON` or `VERIFY_ARGUMENTS` to `FALSE`, respectively; set `MINIMIZE` to `TRUE` to turn off both at once.
 
 ### Development Assistance Functions
 
