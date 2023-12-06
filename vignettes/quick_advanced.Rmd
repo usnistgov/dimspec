@@ -23,7 +23,7 @@ As it stands, it was an intentional choice to distribute this project as an R pr
 
 Though no universally unique identifier is provided, each installation will be internally consistent and share an overall data structure with other installations to facilitate sharing. Each time a database is created using the associated toolkit it receives a hexed 8-bit random blob (a 16 character alphanumeric string) as a psuedo unique identifier in the `config` table; those wishing to customize an existing installation for the purposes of adding data should use the `make_install_code` function to generate and set this.
 
-Further sections (with the exception of Environment Settings) will assume that the `/R/compliance.R` file has been sourced and environments established. Users are referred to the [DIMSpec User Guide](https://pages.nist.gov/dimspec) for full documentation, including function documentation. At any time from a session where the compliance script has been run, documentation is available using (1) `user_guide` to open the full User Guide in a browser, (2) `fn_guide` to launch a browser pointing to HTML function documentation index, or (3) `fn_help(X)` where `X` is the name of a function to see documentation for that function.
+Further sections (with the exception of Environment Settings) will assume that the `/R/compliance.R` file has been sourced and environments established. Users are referred to the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs) for full documentation, including function documentation. At any time from a session where the compliance script has been run, documentation is available using (1) `user_guide` to open the full User Guide in a browser, (2) `fn_guide` to launch a browser pointing to HTML function documentation index, or (3) `fn_help(X)` where `X` is the name of a function to see documentation for that function.
 
 ### Environment Settings
 
@@ -45,7 +45,7 @@ Once these files are sourced into an R session, their package requirements will 
 
 ### DIMSpec Databases
 
-This section describes in brief some aspects of databases produced by the DIMSpec project; more details are available in the [DIMSpec User Guide](https://pages.nist.gov/dimspec).
+This section describes in brief some aspects of databases produced by the DIMSpec project; more details are available in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs).
 
 DIMSpec databases are SQLite files and as such can be used by any software able to open and interact with them. By default they are constructed in the [write-ahead logging (WAL)](https://www.sqlite.org/wal.html) mode to improve speed and provide better concurrency. It is anticipated that most interactions will be read only. Network access is provided by the plumber API as WAL mode does not work across network connections. Similarly, all connections made should set foreign key enforcement (e.g. `"pragma foreign_keys=on"`) when connecting as this is not the default when opening SQLite databases; this is done automatically using the provided `manage_connection` project function and is the recommended method of connecting your R session to the database.
 
@@ -86,7 +86,7 @@ Several convenience functions are provided to improve the development experience
 
 1. `start_app` will launch a shiny application by name; options are contained in the `SHINY_APPS` session object if `USE_SHINY` was set to `TRUE` when the session started.
 
-1. `user_guide` will launch a web browser to the [DIMSpec User Guide](https://pages.nist.gov/dimspec) from the console (either hosted or local).
+1. `user_guide` will launch a web browser to the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs) from the console (either hosted or local).
 
 1. `fn_guide` will launch a web browser pointing to the project function help documentation.
 
@@ -165,13 +165,13 @@ Its basic syntax is to set the logging level, the message, and the namespace to 
 
 Calling `log_it` with a namespace that has not yet been established will conveniently create a new logging namespace if `add_unknown_ns = TRUE`; this can be leveraged to write a completely new namespace for logging at any time. Currently, logging is strictly enforced for shiny apps and the plumber API and will be turned on for those if launching directly from the console or a script (e.g. `shiny::runApp("path_to_app")` or spinning up a background API process with `api_reload(background = TRUE)`). This is useful for debugging and maintenance purposes. For example, the plumber API includes a filter endpoint at the start of its response chain that will log the location from which all requests are received.
 
-It may be useful at times to flush the logs directory. Use the `flush_dir` function with the logs directory (e.g. `flush_dir(LOG_DIRECTORY)`) to flush the log files. Some additional details are availble in the [Technical Details > Logger section of the DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#logger).
+It may be useful at times to flush the logs directory. Use the `flush_dir` function with the logs directory (e.g. `flush_dir(LOG_DIRECTORY)`) to flush the log files. Some additional details are available in the [Technical Details > Logger section of the DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#logger).
 
 A logging table is provided in the database schema but currently is not used for transaction logging by DIMSpec functions as distributed. It is recommended that developers take advantage of this (perhaps by triggers or code-driven database executions) based on workflow needs, but in no way is required.
 
 ### Python
 
-To include chemometric functionality from the excellent RDKit package, reticulate is used to integrate a python environment into DIMSpec projects. Most information is available in the [DIMSpec User Guide](https://pages.nist.gov/dimspec), but the most relevant settings for DIMSpec developers include references to the python environment and how to establish it on any given system. In most cases, ensuring that `PYENV_NAME` is either a valid environment for running a reticulated version of rdkit OR does not exist, and that `CONDA_PATH` refers to the system PATH alias or conda executable for your installation of conda ("auto" will suffice in many cases) will be the extent of necessary customization. If no conda executable is available on the system, R will install miniconda and establish an appropriate environment. See the [Technical Details > Python section of the DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#python) for more information.
+To include chemometric functionality from the excellent RDKit package, reticulate is used to integrate a python environment into DIMSpec projects. Most information is available in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs), but the most relevant settings for DIMSpec developers include references to the python environment and how to establish it on any given system. In most cases, ensuring that `PYENV_NAME` is either a valid environment for running a reticulated version of rdkit OR does not exist, and that `CONDA_PATH` refers to the system PATH alias or conda executable for your installation of conda ("auto" will suffice in many cases) will be the extent of necessary customization. If no conda executable is available on the system, R will install miniconda and establish an appropriate environment. See the [Technical Details > Python section of the DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#python) for more information.
 
 In summary, a "reticulated rdkit" environment includes at minimum python 3.8, reticulate 1.24, and rdkit 2021.09.4; these are provided in an `/inst/rdkit/environment.yml` file for convenience of those who want to establish an environment independently. Once the environment is established, systems should be able to identify it without difficulty during the environment establishment phase. The easiest method to activate this integration (outside of sourcing the compliance file with `USE_RDKIT = TRUE`) is to call `rdkit_active(make_if_not = TRUE)` which will attempt to bind to the environment whose name matches `PYENV_NAME` and, if one does not exist, will create it. More support for python integration is not provided here as systems can vary considerably.
 
@@ -226,13 +226,13 @@ Settings for shiny applications are generally best left to the individual applic
 
 To build new shiny web applications in an active DIMSpec project, a templated directory has been provided at `inst/apps/app_template/` and contains a skeleton similar to other web applications included in DIMSpec. In our experience, this app template greatly shortens many technical aspects of development as it leverages established environments and connections to the plumber API. The DIMSpec-QC application was built from this template in a fraction of the time it would have taken when starting from scratch.
 
-All other settings are left to the individual applications to define needs. See more details in the Shiny Applications section of Technical Details in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#shiny-applications) or the [DIMSpec Quick Guide - Shiny Web Applications](https://pages.nist.gov/dimspec/docs/docs/quick_guides/quick_apps.pdf) vignette for details of using the included application template.
+All other settings are left to the individual applications to define needs. See more details in the Shiny Applications section of Technical Details in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/technical-details.html#shiny-applications) or the [DIMSpec Quick Guide - Shiny Web Applications](https://pages.nist.gov/dimspec/docs/quick_apps.pdf) vignette for details of using the included application template.
 
 \newpage
 
 ## Final Words
 
-Due to its nature, the DIMSpec project includes several aspects, some complicated. The quick guides are meant as a, hopefully, brief reference for some of the more common use cases and settings, and should be viewed as supplements for the full [DIMSpec User Guide](https://pages.nist.gov/dimspec). A note on network hosting: if your organization (as it should) scans for active sites and vulnerabilities, and you are running the plumber API or shiny applications on your local network in the manner described here, contact your IT professionals to ensure adherence to your organization's IT security policies.
+Due to its nature, the DIMSpec project includes several aspects, some complicated. The quick guides are meant as a, hopefully, brief reference for some of the more common use cases and settings, and should be viewed as supplements for the full [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs). A note on network hosting: if your organization (as it should) scans for active sites and vulnerabilities, and you are running the plumber API or shiny applications on your local network in the manner described here, contact your IT professionals to ensure adherence to your organization's IT security policies.
 
 The DIMSpec team hopes the documentation provided for the project is sufficient for your needs and allows you to quickly iterate. We want the project to be successful; reach out by email at <a href="mailto:pfas@nist.gov">pfas@nist.gov</a> with ideas or contributions.
 

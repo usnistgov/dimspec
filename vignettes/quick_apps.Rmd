@@ -21,7 +21,7 @@ A driving goal of the Database Infrastructure for Mass Spectrometry (DIMSpec) pr
 
 For many users, the majority of their interaction with the DIMSpec project will be through graphical user interfaces providing access to the underlying data and functionality. This simplifies their experience and increases the value of the project tremendously. Web applications in the DIMSpec project are powered by the [`shiny`](https://shiny.rstudio.com) R package. Provided applications communicate with the database through the application programming interface (API) provided by the [`plumber`](https://www.rplumber.io) R package, though others can be readily developed that connect directly to the database if desired.
 
-This quick guide introduces the three web applications that ship with the project, and the application template designed to accelerate development of new applications. Refer to the [DIMSpec User Guide](https://pages.nist.gov/dimspec) for installation and other details of each application introduced here; information contained here is a selected subset of the DIMSpec User Guide and does not provide an introduction to the `shiny` platform.
+This quick guide introduces the three web applications that ship with the project, and the application template designed to accelerate development of new applications. Refer to the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs) for installation and other details of each application introduced here; information contained here is a selected subset of the DIMSpec User Guide and does not provide an introduction to the `shiny` platform.
 
 ## DIMSpec Web Applications
 
@@ -58,7 +58,7 @@ A graphic of the entity relationship diagram is provided on the second page. Cli
 
 Quality control and assessment is key for trust and ensuring data integrity. Algorithms were developed for the DIMSpec project to validate the quality of new experimental data and build files suitable for database import. The DIMSpec Quality Control (DIMSpec-QC) application was developed to accelerate this quality review process and installs alongside DIMSpec.
 
-1. Two preprocessing steps are required to use DIMSpec-QC. First, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) MSConvert software [@adusumilli_data_2017] There are specific parameters that must be used during conversion. A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf).
+1. Two preprocessing steps are required to use DIMSpec-QC. First, raw data files produced by a mass spectrometer must be converted into mzML format using [Proteowizard's](https://proteowizard.sourceforge.io/) MSConvert software [@adusumilli_data_2017] There are specific parameters that must be used during conversion. A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/file_convert.pdf).
 
       Filter: Threshold peak filter
       Threshold type: absolute
@@ -134,11 +134,11 @@ As with the DIMSpec-QC app application, raw data files produced by a mass spectr
       Algorithm: vendor
       MS levels: 1-2
 
-A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/docs/quick_guides/file_convert.pdf). This data format conversion step is the same as for the [DIMSpec-QC application](#dimspec-qc).
+A more detailed user guide for converting the files is provided as another [quick guide](https://pages.nist.gov/dimspec/docs/file_convert.pdf). This data format conversion step is the same as for the [DIMSpec-QC application](#dimspec-qc).
 
 See above for details of how to launch this app, but the easiest method is after the `compliance.R` script has been executed, use `start_app("msmatch")` to launch it in your preferred browser. The "Home" screen will appear when the MSMatch application is available ([Figure 3, next page](#fig3)). The navigation panel on the left will control which page is currently being viewed; click an entry to navigate to that page. The app itself should guide you through the process in a straightforward manner. Click the "Click Here to get Started" button on the "Home" page or click "Data Input" in the navigation panel on the left to get started.
 
-Every effort has been made to make using MSMatch as intuitive as possible. Hints in the form of tooltips are provided throughout; hover over question mark icons or controls to see them. These can be toggled on and off at any time using the "Show Tooltips" toggle button at the bottom left of the application window (see [Figure 3 inset at bottom right]({#fig3}). If enabled, advanced search settings can be similarly toggled on and off for the session (see the [DIMSpec User Guide](https://pages.nist.gov/dimspec) for instructions on how to set default accessibility and settings for tooltips and advanced settings). The "hamburger" icon at the top left of the screen will collapse the left-hand navigation panel to provide more horizontal room on smaller screens, though the application will rearrange itself when screens are smaller than a minimum width.
+Every effort has been made to make using MSMatch as intuitive as possible. Hints in the form of tooltips are provided throughout; hover over question mark icons or controls to see them. These can be toggled on and off at any time using the "Show Tooltips" toggle button at the bottom left of the application window (see [Figure 3 inset at bottom right]({#fig3}). If enabled, advanced search settings can be similarly toggled on and off for the session (see the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs) for instructions on how to set default accessibility and settings for tooltips and advanced settings). The "hamburger" icon at the top left of the screen will collapse the left-hand navigation panel to provide more horizontal room on smaller screens, though the application will rearrange itself when screens are smaller than a minimum width.
 
 Click the "Click Here to Get Started" button to begin ([Figure 3](#fig3), top). This will activate the "Data Input" page ([Figure 4](#fig4), next page). Example data files are provided in the project directory ("/example/PFAC30PAR_PFCA2.mzML" and "/example/example_peaklist.csv").
 
@@ -216,7 +216,7 @@ Clicking the "Process Data" button. Buttons will appear to navigate to the "Comp
 #### Step 4 - Explore Results
 \
 \
-Navigate to the desired search page. Algorithmic matching of provided mass spectral data for features of interest is performed against data stored in the attached database. Matching algorithms are described in detail in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/msmatch-home.html#msmatch-search-object)). Both the "Compound Match" and "Fragment Match" pages are laid out in similar fashion. Select a feature of interest from the drop down box at the top of the page and click the "Search" button. Continue with your investigation of matches for the selected features.
+Navigate to the desired search page. Algorithmic matching of provided mass spectral data for features of interest is performed against data stored in the attached database. Matching algorithms are described in detail in the [DIMSpec User Guide](https://pages.nist.gov/dimspec/docs/msmatch-home.html#msmatch-search-object)). Both the "Compound Match" and "Fragment Match" pages are laid out in similar fashion. Select a feature of interest from the drop down box at the top of the page and click the "Search" button. Continue with your investigation of matches for the selected features.
 
 The Compound Match page will search features of interest for known mass spectral pattern matches against the attached database ([Figure 7, next page](#fig7); [Figure 8, next page](#fig8)).
 

@@ -223,15 +223,12 @@ get_ums <- function(peaktable, correl = NULL, ph = NULL, freq = NULL, normfn = "
 }
 
 #' Generate consensus mass spectrum
-#' 
-#' TODO update documentation
 #'
-#' The function extracts the relevant information and sorts it into nested lists for
-#' use in the uncertainty functions
+#' Extract relevant information from a mass spectrum and plot it as an uncertainty mass spectrum.
 #'
 #' @param peaklist result of the `create_peak_list` function
 #'
-#' @return nested list of dataframes containing all MS1 and MS2 data for the peak
+#' @return ggplot object
 #' @export
 #'
 plot_ms <- function(ms, xlim = NULL, ylim = NULL, main = "Mass Spectrum", color = "black", size = 1, removal = 0) {
@@ -241,5 +238,9 @@ plot_ms <- function(ms, xlim = NULL, ylim = NULL, main = "Mass Spectrum", color 
   intu <- ms$int.u
   mz <- ms$mz
   mzu <- ms$mz.u
-  ggplot(data.frame(mz = mz, int = int)) + geom_linerange(aes(x = mz, ymin = 0, ymax = int), color = color, size = size) + geom_pointrange(aes(x = mz, ymin = 0, ymax = int, y= int), shape = 20, size = 0.5) + geom_errorbar(aes(x = mz, ymin = int - intu, ymax = int + intu, width = 0.01), color = "red", na.rm = TRUE, linetype = 5) + geom_errorbarh(aes(y = int, xmin = mz - mzu, xmax = mz + mzu, height = 0.01), color = "red", na.rm = TRUE, linetype = 5) + ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") + coord_cartesian(xlim = xlim, ylim = ylim, expand = FALSE)+ theme_bw() 
+  if (packageVersion("ggplot2") >= '3.4.0') {
+    ggplot(data.frame(mz = mz, int = int)) + geom_linerange(aes(x = mz, ymin = 0, ymax = int), color = color, linewidth = size) + geom_pointrange(aes(x = mz, ymin = 0, ymax = int, y= int), shape = 20, size = 0.5) + geom_errorbar(aes(x = mz, ymin = int - intu, ymax = int + intu, width = 0.01), color = "red", na.rm = TRUE, linetype = 5) + geom_errorbarh(aes(y = int, xmin = mz - mzu, xmax = mz + mzu, height = 0.01), color = "red", na.rm = TRUE, linetype = 5) + ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") + coord_cartesian(xlim = xlim, ylim = ylim, expand = FALSE)+ theme_bw() 
+  } else {
+    ggplot(data.frame(mz = mz, int = int)) + geom_linerange(aes(x = mz, ymin = 0, ymax = int), color = color, size = size) + geom_pointrange(aes(x = mz, ymin = 0, ymax = int, y= int), shape = 20, size = 0.5) + geom_errorbar(aes(x = mz, ymin = int - intu, ymax = int + intu, width = 0.01), color = "red", na.rm = TRUE, linetype = 5) + geom_errorbarh(aes(y = int, xmin = mz - mzu, xmax = mz + mzu, height = 0.01), color = "red", na.rm = TRUE, linetype = 5) + ggtitle(main) + xlab("m/z") + ylab("Relative Intensity") + coord_cartesian(xlim = xlim, ylim = ylim, expand = FALSE)+ theme_bw() 
+  }
 }

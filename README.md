@@ -2,11 +2,13 @@
 
 ## About
 
-Welcome to the home page of the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical method, quality analysis, and samples.
+Welcome to the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical instrument method, quality analysis, and samples. If you would like to get involved, or just to keep track of the project, please give this repository a watch or star, or send an email to <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Interest">pfas@nist.gov</a> to receive updates.
 
 ## Latest News
 
-2023 July (@jmr-nist-gov) - DIMSpec has been updated to its first release candidate version. Changes include schema tightening for annotated fragments and PFAS data updates including consistency updates to analayte nomenclature including aliases, and other minor bug fixes.
+2023 December (@jmr-nist-gov) - This update provides quality of life improvements and minor bug fixes in MSMatch, and supports certain functionality issues related to package versioning when installed on R v4.3 as of Nov 2023. If you are running with R v4.1 and certain package combinations, you may run into an issue with logging and receive a console message regarding `log_formatter`. If so, turn off logging by setting `LOGGING_ON <- FALSE` in the `config/env_log.txt` file or update your packages. Furthermore, this update (a) fixes certain instances with alert messages failing to render, (b) fixes a rare issue with uncertainty calculation inheriting NaN values, (c) adds support for advanced settings on the match uncertainty evaluation tool, and (d) fixes the location of alert messages which could occasionally run past the bottom of the browser.
+
+2023 July (@jmr-nist-gov) - DIMSpec has been updated to its first release candidate version. Changes include schema tightening for annotated fragments and PFAS data updates including consistency updates to analyte nomenclature including aliases, and other minor bug fixes.
 
 ## Motivation
 
@@ -22,21 +24,23 @@ This report describes a set of tools developed in the NIST Chemical Sciences Div
 - Application programming interface (API) support using the [plumber](https://www.rplumber.io/index.html) framework.
 - Web applications for exploration and data processing, including a template web application to quickly build new GUI functionality using the [shiny](https://shiny.rstudio.com) framework.
 - Development support through flexible logging and function argument validation frameworks.
-- Includes curated high resolution mass spectra for 133 per- and polyfluorinated alkyl substances from over 100 samples using ESI-, ESI+, and APCI- detection methods (as of 2023-03-16).
+- Includes curated high resolution mass spectra for 133 per- and polyfluorinated alkyl substances from over 100 samples using ESI-, ESI+, and APCI- detection methods (as of 2023-03-16). The DIMSpec for PFAS database is provided here as an example, and is published on the NIST Public Data Repository at https://doi.org/10.18434/mds2-2905. If you use the DIMSpec for PFAS database, please cite both this repository and that file.
 
 ## Getting Started
 
-While the only hard requirement for using DIMSpec is R version 4.1 or later (packages will be installed as part of the installation compliance script, though users on Windows systems should also install RTools), to get the most out of DIMSpec users may want to include other software such as (but are in no way limited to):
+While the only hard requirement for using DIMSpec is R version 4.1 or later (packages will be installed as part of the installation compliance script, though users on Windows systems should also install RTools), to get the most out of DIMSpec users may want to include other software such as (but in no way limited to):
 
 - Java (with bit architecture matching that of R)
 - MSConvert >= 3.0.21050 (from ProteoWizard)
 - SQLite >= v3.32.0
 - Mini/Anaconda w/ Python >= 3.8 (if not already installed, R will install it as part of the compliance script, though advanced users may want to explicitly install this themselves)
 
+Note: As of the [December 2023 release](https://github.com/usnistgov/dimspec/releases/tag/v1.0.2-202312), use of R v4.3 is encouraged as support for older versions of R will sunset in 2024.
+
 To get started in most cases from a blank slate:
 
 1. Ensure R v4.1+ is installed ([download](https://www.r-project.org/))
-1. Download the project by cloning this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip).
+1. Download the project by forking this repository or downloading the [zip file](https://github.com/usnistgov/dimspec/archive/refs/heads/main.zip).
    - If using Windows, ensure RTools ([download](https://cran.r-project.org/bin/windows/Rtools/)) matching your R version is installed to build certain packages.
 1. Run the compliance script, which should install everything needed for the project.
    - The easiest way is to load the project using RStudio ([download](https://posit.co/download/rstudio-desktop/)).
@@ -47,7 +51,7 @@ To get started in most cases from a blank slate:
 
 A [quick guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) is available describing the install process.
 
-For evaluation and distribution purposes, DIMSpec is distributed with a populated database of per- and polyfluorinated alkyl substances (PFAS), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
+For evaluation and distribution purposes, DIMSpec is distributed with a populated database of [per- and polyfluorinated alkyl substances (PFAS)](https://doi.org/10.18434/mds2-2905), but supporting functionality is present to easily create new databases. This enables DIMSpec to support multiple efforts simultaneously as research needs require.
 
 ## Guides and Documentation
 
@@ -62,24 +66,25 @@ A series of Quick Guides have been made available focusing on various aspects of
 - [DIMSpec Quick Guide - Importing Data](https://pages.nist.gov/dimspec/docs/quick_import.pdf)
 - [File Conversion using msconvert](https://pages.nist.gov/dimspec/docs/file_convert.pdf)
 
-In addition, a series of video tutorials will also be available.
+In addition, a series of video tutorials will also be made available in the near future.
 
+- Download and installation (not yet available)
 - Import files and process on MSMatch
   - Waters Instruments (not yet available)
   - All Other Instruments (not yet available)
 - Library searching and data mining (not yet available)
 - Fragmenation searching and data mining (not yet available)
-- Download and install the R program (not yet available)
 - mzmine conversion (not yet available)
 
 ## Links
 
-Several links can provide additional contextual information about this project. If any of the resource links above are broken, <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
+Several links can provide additional contextual information about this project. If any of the resource links below are broken, <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
 
 - [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
 - [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
 - [NIST Suspect List of Possible PFAS](https://github.com/usnistgov/NISTPFAS/blob/main/suspectlist) 
 - [NIST Method Reporting Tool for Non-Targeted Analysis (NTA MRT)](https://github.com/usnistgov/NISTPFAS/blob/main/methodreportingtool) 
+- [Database Infrastructure for Mass Spectrometry - Per- and Polyfluoroalkyl Substances](https://data.nist.gov/od/id/mds2-2905)
 
 ## Contacting Us
 
@@ -101,4 +106,4 @@ NIST projects are provided as a public service, and we always appreciate feedbac
 
 ## Funding Source
 
-The data included in this repository has been funded in part by the Department of Defense's Strategic Environmental Research and Development Program (SERDP), project number ER20-1056.
+The work included in this repository has been funded in large part by the Department of Defense's Strategic Environmental Research and Development Program (SERDP), project [number ER20-1056](https://serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview).

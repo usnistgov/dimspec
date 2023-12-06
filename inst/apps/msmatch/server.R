@@ -551,7 +551,7 @@ shinyServer(function(input, output, session) {
       } else {
         if (input$mod_upload_parameter_append) {
           upload_parameters <- data_input_search_parameters() %>%
-              bind_rows(upload_parameters)
+            bind_rows(upload_parameters)
         }
         data_input_search_parameters(upload_parameters)
         user_data(NULL)
@@ -736,12 +736,12 @@ shinyServer(function(input, output, session) {
       )
     }
     match_title <- h3("Top match is",
-                    strong(matches$name),
-                    "from",
-                    ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
-                           "an",
-                           "a"),
-                    matches$sample_class)
+                      strong(matches$name),
+                      "from",
+                      ifelse(substr(matches$sample_class, 1, 1) %in% vowels,
+                             "an",
+                             "a"),
+                      matches$sample_class)
     if (!is.na(matches$ms1_dp)) {
       match_score1 <- p(
         "MS1 Score: ",
@@ -872,13 +872,18 @@ shinyServer(function(input, output, session) {
         inputId = "search_compounds_msn",
         selected = "MS1"
       )
+      nist_shinyalert(
+        title = NULL,
+        type = "info",
+        text = "There are no MS2 data to evaluate."
+      )
+      log_it("warn", "MS2 data requested but no MS2 data were found.", app_ns)
       if (!is.null(uncertainty_results())) {
         shinyWidgets::updateRadioGroupButtons(
           session = session,
           inputId = "mod_uncertainty_msn",
           selected = "MS1"
         )
-        log_it("warn", "MS2 data requested but no MS2 data were found.", app_ns)
       }
     }
   })
@@ -937,15 +942,15 @@ shinyServer(function(input, output, session) {
       log_it("info", "User requested long-running search of type 'all'.", app_ns)
     }
     # execute_compound_search(TRUE)
-  # })
-  # observeEvent(execute_compound_search(), ignoreInit = TRUE, ignoreNULL = TRUE, {
-  #   if (!execute_compound_search)
-  #   if (input$execute_compound_search) {
-  #     log_it("info", "User confirmed long-running search of type 'all'.", app_ns)
-  #   } else {
-  #     log_it("info", "User cancelled search type 'all'.", app_ns)
-  #     return()
-  #   }
+    # })
+    # observeEvent(execute_compound_search(), ignoreInit = TRUE, ignoreNULL = TRUE, {
+    #   if (!execute_compound_search)
+    #   if (input$execute_compound_search) {
+    #     log_it("info", "User confirmed long-running search of type 'all'.", app_ns)
+    #   } else {
+    #     log_it("info", "User cancelled search type 'all'.", app_ns)
+    #     return()
+    #   }
     req(
       user_data(),
       data_input_search_parameters(),
@@ -1099,6 +1104,7 @@ shinyServer(function(input, output, session) {
     uncertainty_results(NULL)
     showModal(mod_uncertainty_evaluation(input$search_compounds_msn, advanced_use()))
     if (!show_help()) runjs('$(".info-tooltip").hide()')
+    if (!is.null(input$mod_uncertainty_msn) && input$mod_uncertainty_msn == input$search_compounds_msn) click("mod_uncertainty_calculate")
   })
   observeEvent(input$mod_uncertainty_calculate, ignoreNULL = TRUE, ignoreInit = TRUE, {
     log_it("info", "Calculating uncertainty.", app_ns)
@@ -1169,15 +1175,40 @@ shinyServer(function(input, output, session) {
   output$mod_uncertainty_narrative <- renderUI({
     req(uncertainty_results())
     scores <- uncertainty_results()$result
+    include_nan <- input$mod_uncertainty_include_nan
+    oob_iter <- scores |>
+      filter(is.nan(dp) | is.nan(rdp)) |>
+      nrow()
+    if (include_nan) {
+      scores$dp[which(is.nan(scores$dp))] <- 0
+      scores$rdp[which(is.nan(scores$rdp))] <- 0
+    } else {
+      scores <- scores |>
+        filter(!is.nan(dp), !is.nan(rdp))
+    }
+    iter <- as.numeric(req(isolate(input$mod_uncertainty_iterations)))
+    if (nrow(scores) == iter && !include_nan) {
+      hide("mod_uncertainty_include_nan")
+    } else {
+      show("mod_uncertainty_include_nan")
+    }
     tagList(
-      hr(),
+      if (!nrow(scores) == iter | include_nan) {
+        p(glue::glue("Attributes were sampled outside error tolerance levels for {oob_iter} iterations; these have been {ifelse(include_nan, 'included as zeros for', 'excluded from')} summary statistics."))
+      },
       p(glue::glue("Forward match scores ranged {paste0(round(range(scores$dp), 4), collapse = ' - ')} with an IQR of {round(IQR(scores$dp), 4)} and median of {round(median(scores$dp), 4)}.")),
       p(glue::glue("Reverse match scores ranged {paste0(round(range(scores$rdp), 4), collapse = ' - ')} with an IQR of {round(IQR(scores$rdp), 4)} and median of {round(median(scores$rdp), 4)}.")),
-      hr()
+      # hr()
     )
   })
   output$mod_uncertainty_boxplot <- renderPlot({
     res <- req(uncertainty_results()$results)
+    # ADDED PLAYING --v
+    if (input$mod_uncertainty_include_nan) {
+      res$dp[which(is.nan(res$dp))] <- 0
+      res$rdp[which(is.nan(res$rdp))] <- 0
+    }
+    # ADDED PLAYING --^
     iter <- req(isolate(input$mod_uncertainty_iterations))
     msn <- req(isolate(input$mod_uncertainty_msn))
     real_match <- req(isolate(search_compounds_results_selected())) %>%
@@ -1235,16 +1266,21 @@ shinyServer(function(input, output, session) {
     dat <- search_fragments_results()$spectra %>%
       arrange(mz, norm_fragment_id) %>%
       select(match, mz, mz.u, int, int.u, formula) %>%
-	  distinct()
+      distinct()
     conf <- dat$match
     cap1 <- if ("unknown" %in% conf) glue::glue('{sum(conf == "unknown")} unknown fragment{ifelse(sum(conf == "unknown") == 1, "", "s")}.') else NULL
     cap2 <- if ("formula" %in% conf) glue::glue('{sum(conf == "formula")} fragment{ifelse(sum(conf == "formula") == 1, "", "s")} with an annotated formula.') else NULL
     cap3 <- if ("structure" %in% conf) glue::glue('{sum(conf == "structure")} fragment{ifelse(sum(conf == "structure") == 1, "", "s")} with an annotated structure.') else NULL
     chosen_mzrt <- isolate(search_fragments_mzrt_text()[as.numeric(search_fragments_mzrt())])
     this_caption <- paste0(c(chosen_mzrt, cap1, cap2, cap3), collapse = "\n")
-    dat %>%
-      ggplot(aes(x = mz, y = int, ymin = 0, ymax = int, color = match)) +
-      geom_linerange(size = 1) + 
+    p <- dat %>%
+      ggplot(aes(x = mz, y = int, ymin = 0, ymax = int, color = match))
+    if (packageVersion("ggplot2") >= '3.4.0') {
+      p <- p + geom_linerange(linewidth = 1)
+    } else {
+      p <- p + geom_linerange(size = 1)
+    }
+    p +
       geom_pointrange(shape = 20, size = 0.5,
                       show.legend = FALSE) +
       geom_errorbar(aes(ymin = int - int.u, ymax = int + int.u),
@@ -1755,19 +1791,19 @@ shinyServer(function(input, output, session) {
       )
       sample_narrative <- api_endpoint(path = sprintf("sample_narrative/%d", peak_data$sample_id))
       if (is.na(sample_narrative)) sample_narrative <- "[ Sample narrative unavailable. ]"
-      links <- api_endpoint(
-        path = "table_search",
-        table_name = "compound_fragments",
-        match_criteria = list(peak_id = peak_data$id),
-        return_format = "data.frame"
-      )
-      peak_ms <- api_endpoint(
-        path = "table_search",
-        table_name = "ms_data",
-        match_criteria = list(peak_id = peak_data$id),
-        return_format = "data.frame"
-      ) %>%
-        tidy_spectra(is_file = FALSE)
+      # links <- api_endpoint(
+      #   path = "table_search",
+      #   table_name = "compound_fragments",
+      #   match_criteria = list(peak_id = peak_data$id),
+      #   return_format = "data.frame"
+      # )
+      # peak_ms <- api_endpoint(
+      #   path = "table_search",
+      #   table_name = "ms_data",
+      #   match_criteria = list(peak_id = peak_data$id),
+      #   return_format = "data.frame"
+      # ) %>%
+      #   tidy_spectra(is_file = FALSE)
       nist_shinyalert(
         title = NULL,
         type = "info",
@@ -1785,4 +1821,3 @@ shinyServer(function(input, output, session) {
     }
   })
 })
-  
