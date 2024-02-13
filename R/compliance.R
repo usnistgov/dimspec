@@ -44,7 +44,11 @@ if (!dir.exists(here::here("output", "example"))) {dir.create(here::here("output
 # set value of USE_RDKIT
 packs       <- DEPENDS_ON
 packs_TRUE  <- which(packs %in% installed_packages)
-packs_FALSE <- packs[-packs_TRUE]
+if (length(packs_TRUE) == 0) {
+  packs_FALSE <- packs
+} else {
+  packs_FALSE <- packs[-packs_TRUE]
+}
 if (length(packs_FALSE) > 0) {
   install.packages(pkgs         = packs_FALSE,
                    quiet        = FALSE,
