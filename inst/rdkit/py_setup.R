@@ -362,7 +362,7 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
 #' caffeine <- "C[n]1cnc2N(C)C(=O)N(C)C(=O)c12"
 #' molecule_picture(caffeine, show = TRUE)
 molecule_picture <- function(mol,
-                             mol_type = "smiles",
+                             mol_type = c("smiles", "inchi", "smarts", "sequence"),
                              file_name = NULL,
                              rdkit_name = "rdk",
                              open_file = FALSE,
@@ -371,17 +371,22 @@ molecule_picture <- function(mol,
   if (exists("log_it")) {
     logging <- TRUE
     log_ns <- rectify_null_from_env(log_ns, PYENV_REF, NA_character_)
+  } else {
+    logging <- FALSE
   }
   if (logging) log_fn("start", log_ns)
   if (!is.character(rdkit_name)) rdkit_name <- deparse(substitute(rdkit_name))
   stopifnot(exists(rdkit_name))
   rdk <- .GlobalEnv[[rdkit_name]]
+  mol_type <- tolower(mol_type)
+  mol_type <- match.arg(mol_type)
+  if (stringr::str_detect(mol, "InChI=") && !mol_type == "inchi") mol_type <- "inchi"
   from_func <- sprintf("MolFrom%s", stringr::str_to_sentence(mol_type))
   if (!from_func %in% names(rdk$Chem)) {
     stop("Did not recognize '", from_func, "' as a valid RDkit.Chem module.")
   } else {
-    molecule <- rdk$Chem[[from_func]](mol)
-    if (!dir.exists(here::here("images"))) dir.create("images")
+    molecule <- try(rdk$Chem[[from_func]](mol))
+    if (!dir.exists(here::here("images"))) dir.create(here::here("images"))
     if (!dir.exists(here::here("images", "molecules"))) dir.create(here::here("images", "molecules"))
     filepath <- here::here(
       "images",
@@ -390,7 +395,24 @@ molecule_picture <- function(mol,
         "%s.png",
         ifelse(
           is.null(file_name),
-          mol,
+          mol %>%
+			# Bad end
+			str_replace_all("\\.+$| $", "") %>%
+		    # SMILES specific
+		    str_replace_all("\\*", "arom") %>%
+		    str_replace_all("\\.", "dscn") %>%
+			# OS invalid
+		    str_replace_all("/", "frsl") %>%
+		    str_replace_all("<", "lt") %>%
+		    str_replace_all(">", "gt") %>%
+		    str_replace_all(":", "colon") %>%
+		    str_replace_all("\"", "dbquo") %>%
+		    str_replace_all("\\\\", "bksl") %>%
+		    str_replace_all("\\|", "vbar") %>%
+		    str_replace_all("\\?", "unkn") %>%
+			# Windows reserved
+			str_replace_all("(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])", "cntrl\\1") %>%
+			str_replace_all("\\\\([0-9]+)", "ascii\\1"),
           tools::file_path_sans_ext(file_name)
         )
       )
@@ -405,9 +427,10 @@ molecule_picture <- function(mol,
     if (successful) {
       if (logging) log_it("success", sprintf('File %s at "%s"', ifelse(file_exists, "located", "created"), filepath), log_ns)
       if (open_file) {
-        file.show(filepath)
+        mol_image <- load.image(filepath)
+		return(mol_image)
       } else if (show) {
-        return(picture)
+        browseURL(filepath)
       }
     } else {
       if (logging) log_it("error", "There was a problem drawing this molecule.", log_ns)
