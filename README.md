@@ -2,19 +2,43 @@
 
 ## About
 
-Welcome to the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical instrument method, quality analysis, and samples. If you would like to get involved, or just to keep track of the project, please give this repository a watch or star, or send an email to <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Interest">pfas@nist.gov</a> to receive updates.
+&emsp;Welcome to the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical instrument method, quality analysis, and samples. If you would like to get involved, or just to keep track of the project, please give this repository a watch or star, or send an email to <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Interest">pfas@nist.gov</a> to receive updates.
 
 ## Latest News
 
-2023 December (@jmr-nist-gov) - This update provides quality of life improvements and minor bug fixes in MSMatch, and supports certain functionality issues related to package versioning when installed on R v4.3 as of Nov 2023. If you are running with R v4.1 and certain package combinations, you may run into an issue with logging and receive a console message regarding `log_formatter`. If so, turn off logging by setting `LOGGING_ON <- FALSE` in the `config/env_log.txt` file or update your packages. Furthermore, this update (a) fixes certain instances with alert messages failing to render, (b) fixes a rare issue with uncertainty calculation inheriting NaN values, (c) adds support for advanced settings on the match uncertainty evaluation tool, and (d) fixes the location of alert messages which could occasionally run past the bottom of the browser.
+<strong>2024 February</strong> (@jmr-nist-gov)
 
-2023 July (@jmr-nist-gov) - DIMSpec has been updated to its first release candidate version. Changes include schema tightening for annotated fragments and PFAS data updates including consistency updates to analyte nomenclature including aliases, and other minor bug fixes.
+&emsp;Minor changes to the [quick install guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) were made to clarify some language, especially in regards to what is actually required versus recommended versus suggested, and under which circumstances those apply.
+
+&emsp;A bug was fixed in the `molecule_picture` function where invalid filenames were produced from InChI (and other) strings. Invalid filename characters are now substituted with descriptive characters for these; the result is that filenames no longer match 1:1 with molecular notation in many cases, though most SMILES strings should remain intact. Also, use of the `show` argument should be more intuitive and will now display the resulting picture in the system viewer.
+
+&emsp;These changes will be included in the next release, but can be downloaded directly from the current repository.
+
+----
+
+<strong>2024 January</strong> (@jmr-nist-gov)
+
+&emsp;The DIMSpec project was featured as part of the SERDP Webinar Series on December 7, 2024. A recording of that webinar, the first half of which is dedicated to DIMSpec is now [available](https://www.serdp-estcp.mil/toolsandtraining/details/a50f42a3-db4a-4857-9b63-0ff4266a47b3/forensic-methods-for-pfas-source-tracking-and-allocation).
+
+----
+
+<details>
+<summary><strong>Older news items (click to expand)</strong></summary>
+<details>
+<summary><strong>2023 December</strong> (@jmr-nist-gov)</summary>
+&emsp;This update provides quality of life improvements and minor bug fixes in MSMatch, and supports certain functionality issues related to package versioning when installed on R v4.3 as of Nov 2023. If you are running with R v4.1 and certain package combinations, you may run into an issue with logging and receive a console message regarding `log_formatter`. If so, turn off logging by setting `LOGGING_ON <- FALSE` in the `config/env_log.txt` file or update your packages. Furthermore, this update (a) fixes certain instances with alert messages failing to render, (b) fixes a rare issue with uncertainty calculation inheriting NaN values, (c) adds support for advanced settings on the match uncertainty evaluation tool, and (d) fixes the location of alert messages which could occasionally run past the bottom of the browser.
+</details>
+<details>
+<summary><strong>2023 July</strong> (@jmr-nist-gov)</summary>
+&emsp;DIMSpec has been updated to its first release candidate version. Changes include schema tightening for annotated fragments and PFAS data updates including consistency updates to analyte nomenclature including aliases, and other minor bug fixes.
+</details>
+</details>
 
 ## Motivation
 
-In analytical chemistry, the objective of **non-targeted analysis (NTA)** is to detect and identify unknown (generally organic) compounds using a combination of advanced analytical instrumentation (e.g. high-resolution mass spectrometry) and computational tools. For NTA using mass spectrometry, the use of reference libraries containing fragmentation mass spectra of known compounds is essential to successfully identifying unknown compounds in complex mixtures. However, due to the diversity of vendors of mass spectrometers and mass spectrometry software, it is difficult to easily share mass spectral data sets between laboratories using different instrument vendor software packages while maintaining the quality and detail of complex data and metadata that makes the mass spectra commutable and useful. Additionally, this diversity can also alter fragmentation patterns as instrument engineering and method settings can differ between analyses.
+&emsp;In analytical chemistry, the objective of **non-targeted analysis (NTA)** is to detect and identify unknown (generally organic) compounds using a combination of advanced analytical instrumentation (e.g. high-resolution mass spectrometry) and computational tools. For NTA using mass spectrometry, the use of reference libraries containing fragmentation mass spectra of known compounds is essential to successfully identifying unknown compounds in complex mixtures. However, due to the diversity of vendors of mass spectrometers and mass spectrometry software, it is difficult to easily share mass spectral data sets between laboratories using different instrument vendor software packages while maintaining the quality and detail of complex data and metadata that makes the mass spectra commutable and useful. Additionally, this diversity can also alter fragmentation patterns as instrument engineering and method settings can differ between analyses.
 
-This report describes a set of tools developed in the NIST Chemical Sciences Division to provide a database infrastructure for the management and use of NTA data and associated metadata. In addition, as part of a NIST-wide effort to make data more Findable, Accessible, Interoperable, and Reusable ([FAIR](https://www.go-fair.org/)), the database and affiliated tools were designed using only open-source resources that can be easily shared and reused by researchers within and outside of NIST. The information provided in this report includes guidance for the setup, population, and use of the database and its affiliated analysis tools. This effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/)), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview). As that project focuses on per- and polyfluoroalkyl substances (PFAS), DIMSpec is distributed with mass spectra including compounds on the [NIST Suspect List of Possible PFAS](https://data.nist.gov/od/id/mds2-2387) as collected using the [Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool).
+&emsp;This report describes a set of tools developed in the NIST Chemical Sciences Division to provide a database infrastructure for the management and use of NTA data and associated metadata. In addition, as part of a NIST-wide effort to make data more Findable, Accessible, Interoperable, and Reusable ([FAIR](https://www.go-fair.org/)), the database and affiliated tools were designed using only open-source resources that can be easily shared and reused by researchers within and outside of NIST. The information provided in this report includes guidance for the setup, population, and use of the database and its affiliated analysis tools. This effort has been primarily supported by the Department of Defense Strategic Environmental Research and Development Program ([DOD-SERDP](https://serdp-estcp.org/)), project number [ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview). As that project focuses on per- and polyfluoroalkyl substances (PFAS), DIMSpec is distributed with mass spectra including compounds on the [NIST Suspect List of Possible PFAS](https://data.nist.gov/od/id/mds2-2387) as collected using the [Non-Targeted Analysis Method Reporting Tool](https://github.com/usnistgov/NISTPFAS/tree/main/methodreportingtool).
 
 ## Features
 
@@ -24,7 +48,7 @@ This report describes a set of tools developed in the NIST Chemical Sciences Div
 - Application programming interface (API) support using the [plumber](https://www.rplumber.io/index.html) framework.
 - Web applications for exploration and data processing, including a template web application to quickly build new GUI functionality using the [shiny](https://shiny.rstudio.com) framework.
 - Development support through flexible logging and function argument validation frameworks.
-- Includes curated high resolution mass spectra for 133 per- and polyfluorinated alkyl substances from over 100 samples using ESI-, ESI+, and APCI- detection methods (as of 2023-03-16). The DIMSpec for PFAS database is provided here as an example, and is published on the NIST Public Data Repository at https://doi.org/10.18434/mds2-2905. If you use the DIMSpec for PFAS database, please cite both this repository and that file.
+- Includes curated high resolution mass spectra for 132 per- and polyfluorinated alkyl substances from over 100 samples using ESI-, ESI+, and APCI- detection methods (as of 2023-03-16). The DIMSpec for PFAS database is provided here as an example, and is published on the NIST Public Data Repository at https://doi.org/10.18434/mds2-2905. If you use the DIMSpec for PFAS database, please cite both this repository and that file.
 
 ## Getting Started
 
