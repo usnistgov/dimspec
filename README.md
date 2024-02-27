@@ -8,6 +8,10 @@
 
 <strong>2024 February</strong> (@jmr-nist-gov)
 
+&emsp;A [video tutorial series](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools/dimspec) is now available for DIMSpec, discussing download and setup, file conversion to .mzML, and using the MSMatch application.
+
+<strong>2024 February</strong> (@jmr-nist-gov)
+
 &emsp;Minor changes to the [quick install guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) were made to clarify some language, especially in regards to what is actually required versus recommended versus suggested, and under which circumstances those apply.
 
 &emsp;A bug was fixed in the `molecule_picture` function where invalid filenames were produced from InChI (and other) strings. Invalid filename characters are now substituted with descriptive characters for these; the result is that filenames no longer match 1:1 with molecular notation in many cases, though most SMILES strings should remain intact. Also, use of the `show` argument should be more intuitive and will now display the resulting picture in the system viewer.
@@ -59,7 +63,7 @@ While the only hard requirement for using DIMSpec is R version 4.1 or later (pac
 - SQLite >= v3.32.0
 - Mini/Anaconda w/ Python >= 3.8 (if not already installed, R will install it as part of the compliance script, though advanced users may want to explicitly install this themselves)
 
-Note: As of the [December 2023 release](https://github.com/usnistgov/dimspec/releases/tag/v1.0.2-202312), use of R v4.3 is encouraged as support for older versions of R will sunset in 2024.
+Note: <strong>As of the [December 2023 release](https://github.com/usnistgov/dimspec/releases/tag/v1.0.2-202312), use of R v4.3 is encouraged as support for older versions of R will sunset in 2024.</strong>
 
 To get started in most cases from a blank slate:
 
@@ -90,19 +94,17 @@ A series of Quick Guides have been made available focusing on various aspects of
 - [DIMSpec Quick Guide - Importing Data](https://pages.nist.gov/dimspec/docs/quick_import.pdf)
 - [File Conversion using msconvert](https://pages.nist.gov/dimspec/docs/file_convert.pdf)
 
-In addition, a series of video tutorials will also be made available in the near future.
+In addition, a series of [short video tutorials](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools/dimspec) are available discussing certain topics.
 
-- Download and installation (not yet available)
+- Download and installation
+- mzML conversion of instrument data files
 - Import files and process on MSMatch
-  - Waters Instruments (not yet available)
-  - All Other Instruments (not yet available)
-- Library searching and data mining (not yet available)
-- Fragmenation searching and data mining (not yet available)
-- mzmine conversion (not yet available)
+- Library searching and data mining
+- Fragmenation searching and data mining
 
 ## Links
 
-Several links can provide additional contextual information about this project. If any of the resource links below are broken, <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it.
+Several links can provide additional contextual information about this project. If any of the resource links below are broken, <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Documentation%20Unavailable">please report them</a> so we may address it. The user guide is also available in running DIMSpec sessions using the `user_guide()` function which will load a local version of the user guide if the web version is unavailable or your computer is offline.
 
 - [PFAS Program at the US National Institute of Standards and Technology](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas) 
 - [DoD SERDP Progam Project ER20-1056](https://www.serdp-estcp.org/projects/details/a0bb4198-02cd-44b9-9e73-9ef916e7f7e0/er20-1056-project-overview#:~:text=ER20-1056%20Objective%20The%20use%20of%20spectral%20libraries%20is,per-%20and%20polyfluoroalkyl%20substances%20%28PFAS%29%20in%20environmental%20samples.) 
