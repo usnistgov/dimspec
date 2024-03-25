@@ -177,7 +177,7 @@ shinyServer(function(input, output) {
             runjs("$('#data_import_overlay_text').text('Reading mzML file...');")
             mzml_file <- input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])]
             checkjson <- try(is_valid_samplejson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])]))
-            if (class(checkjson) == "try-error") nist_shinyalert("Bad JSON file", text = paste("At least one file is not a valid Sample JSON file."))
+            if (inherits(checkjson, "try-error")) nist_shinyalert("Bad JSON file", text = paste("At least one file is not a valid Sample JSON file."))
             if (input$has_lockmass) {
               if (is.na(input$lockmass)) {
                 nist_shinyalert("Missing Settings", text = "Please provide a numeric value for the lock mass in Daltons.")

@@ -64,6 +64,7 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
     elementlist <- lapply(elementlist, extract.elements)
   }
   use_db <- FALSE
+  use_api <- FALSE
   if (is.null(exactmasses)) {
     if (is.character(db_conn)) {
       if (exists(db_conn)) {
@@ -73,11 +74,20 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
     use_db <- try(DBI::dbIsValid(db_conn))
     if (inherits(use_db, "try-error")) {
       use_db <- FALSE
+      if (exists("api_endpoint")) {
+        use_api <- api_endpoint("_ping")$status == "OK"
+      }
     }
     if (use_db) {
         exactmasses <- tbl(db_conn, "view_exact_masses") %>%
           select(symbol, exact_mass) %>%
           collect()
+    } else if (use_api) {
+      exactmasses <- api_endpoint(
+        path = "table_search",
+        table_name = "view_exact_masses",
+        return_format = "data.frame"
+      )
     } else {
       exactmasses <- setNames(
         readRDS(here::here("R", "misc", "exactmasses.RDS")),
@@ -85,34 +95,53 @@ calculate.monoisotope <- function(elementlist, exactmasses = NULL, adduct = "neu
       )
     }
   }
-  if (use_db) {
-    mass <- lapply(elementlist,
-                   function(x) {
-                     tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
-                     if (adduct != "neutral") {
-                       mass.adj <- get_massadj(adduct, exactmasses = exactmasses, db_conn = db_conn)
-                       tmp <- tmp + mass.adj
-                     }
-                     return(tmp)
-                   })
-  } else {
-    mass <- lapply(elementlist,
-                   function(x) {
-                     tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
-                     if (adduct != "neutral") {
-                       if (adduct == "+H") {mass.adj = -1.0072767}
-                       if (adduct == "-H") {mass.adj = 1.0072766}
-                       if (adduct == "+Na") {mass.adj = -22.9892213}
-                       if (adduct == "+K") {mass.adj = -38.9631585}
-                       if (adduct == "+") {mass.adj = 0.0005484}
-                       if (adduct == "-") {mass.adj = -0.0005484}
-                       if (adduct == "-radical") {mass.adj = 2*-0.0005484}
-                       if (adduct == "+radical") {mass.adj = 0}
-                       tmp <- tmp - mass.adj
-                     }
-                     return(tmp)
-                   })
-  }
+  mass <- lapply(elementlist,
+                 function(x) {
+                   tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+                   if (adduct != "neutral") {
+                     mass.adj <- get_massadj(adduct, exactmasses)
+                     tmp <- tmp + mass.adj
+                   }
+                   return(tmp)
+                 })
+  # if (use_db) {
+  #   mass <- lapply(elementlist,
+  #                  function(x) {
+  #                    tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+  #                    if (adduct != "neutral") {
+  #                      mass.adj <- get_massadj(adduct, exactmasses = exactmasses, db_conn = db_conn)
+  #                      tmp <- tmp + mass.adj
+  #                    }
+  #                    return(tmp)
+  #                  })
+  # } else if (use_api) {
+    # mass <- lapply(elementlist,
+    #                function(x) {
+    #                  tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+    #                  if (adduct != "neutral") {
+    #                    mass.adj <- get_massadj(adduct, exactmasses = exactmasses)
+    #                    tmp <- tmp + mass.adj
+    #                  }
+    #                  return(tmp)
+    #                })
+  # } else {
+  #   mass <- lapply(elementlist,
+  #                  function(x) {
+  #                    tmp <- sum(x$counts * exactmasses$exact_mass[match(x$elements, exactmasses$symbol)])
+  #                    if (adduct != "neutral") {
+  #                      if (adduct == "+H") {mass.adj = -1.0072767}
+  #                      if (adduct == "-H") {mass.adj = 1.0072766}
+  #                      if (adduct == "+Na") {mass.adj = -22.9892213}
+  #                      if (adduct == "+K") {mass.adj = -38.9631585}
+  #                      if (adduct == "+") {mass.adj = 0.0005484}
+  #                      if (adduct == "-") {mass.adj = -0.0005484}
+  #                      if (adduct == "-radical") {mass.adj = 2*-0.0005484}
+  #                      if (adduct == "+radical") {mass.adj = 0}
+  #                      tmp <- tmp - mass.adj
+  #                    }
+  #                    return(tmp)
+  #                  })
+  # }
   unlist(mass)
 }
 
