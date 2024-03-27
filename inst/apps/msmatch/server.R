@@ -1585,8 +1585,16 @@ shinyServer(function(input, output, session) {
     )
     if (!"netcharge" %in% names(fragment_matches)) {
       fragment_matches <- fragment_matches %>%
-        mutate(netcharge = NA)
+        mutate(netcharge = NA_integer_)
     }
+	if (!"radical" %in% names(fragment_matches)) {
+      fragment_matches <- fragment_matches %>%
+        mutate(radical = NA_integer_)
+	}
+	if (!"smiles" %in% names(fragment_matches)) {
+      fragment_matches <- fragment_matches %>%
+        mutate(smiles = NA_character_)
+	}
     if (nrow(fragment_matches) == 0) {
       fragment_matches <- tibble(
         norm_fragment_id = integer(),
