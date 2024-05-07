@@ -414,7 +414,7 @@ shinyServer(function(input, output, session) {
   }, {
     req(input$data_input_isolation_width, input$data_input_experiment_type)
     if (input$data_input_isolation_width > app_settings$data_input_isolation_width_warn_threshold) {
-      types <- app_settings$experiment_types
+      types <- app_settings$experiment_types$choices
       experiment_type <- names(types[types == input$data_input_experiment_type])
       if (!str_detect(experiment_type, "SWATH")) {
         nist_shinyalert(
