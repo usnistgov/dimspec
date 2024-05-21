@@ -414,7 +414,7 @@ shinyServer(function(input, output, session) {
   }, {
     req(input$data_input_isolation_width, input$data_input_experiment_type)
     if (input$data_input_isolation_width > app_settings$data_input_isolation_width_warn_threshold) {
-      types <- app_settings$experiment_types
+      types <- app_settings$experiment_types$choices
       experiment_type <- names(types[types == input$data_input_experiment_type])
       if (!str_detect(experiment_type, "SWATH")) {
         nist_shinyalert(
@@ -1585,8 +1585,16 @@ shinyServer(function(input, output, session) {
     )
     if (!"netcharge" %in% names(fragment_matches)) {
       fragment_matches <- fragment_matches %>%
-        mutate(netcharge = NA)
+        mutate(netcharge = NA_integer_)
     }
+	if (!"radical" %in% names(fragment_matches)) {
+      fragment_matches <- fragment_matches %>%
+        mutate(radical = NA_integer_)
+	}
+	if (!"smiles" %in% names(fragment_matches)) {
+      fragment_matches <- fragment_matches %>%
+        mutate(smiles = NA_character_)
+	}
     if (nrow(fragment_matches) == 0) {
       fragment_matches <- tibble(
         norm_fragment_id = integer(),

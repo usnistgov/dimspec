@@ -71,6 +71,17 @@ shinyServer(function(input, output) {
     sampleJSON_name <- file_samplejson()$name
     RawFile <- file_rawdata()$name
     sampleJSON_raw <- sapply(sampleJSONs, function(x) x$sample$name)
+    # Catch case of unenforced NTA-MRT sample name entry without the file extension.
+    # Only replace those where the extension is blank.
+    if (any(tools::file_ext(sampleJSON_raw) == "")) {
+      target_ext <- tools::file_ext(RawFile)
+      for (i in 1:length(sampleJSON_raw)) {
+        if (tools::file_ext(sampleJSON_raw[i]) == "") {
+          sampleJSONs[[i]]$sample$name <- paste0(sampleJSONs[[i]]$sample$name, ".", target_ext)
+          sampleJSON_raw[i] <- paste0(sampleJSON_raw[i], ".", target_ext)
+        }
+      }
+    }
     SampleJSON <- rep(NA, length(RawFile))
     Valid <- rep(FALSE, length(RawFile))
     rawfiles <- tibble(
@@ -166,7 +177,7 @@ shinyServer(function(input, output) {
             runjs("$('#data_import_overlay_text').text('Reading mzML file...');")
             mzml_file <- input$rawdata_filename$datapath[which(input$rawdata_filename$name == import_results$file_dt$RawFile[i])]
             checkjson <- try(is_valid_samplejson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])]))
-            if (class(checkjson) == "try-error") nist_shinyalert("Bad JSON file", text = paste("At least one file is not a valid Sample JSON file."))
+            if (inherits(checkjson, "try-error")) nist_shinyalert("Bad JSON file", text = paste("At least one file is not a valid Sample JSON file."))
             if (input$has_lockmass) {
               if (is.na(input$lockmass)) {
                 nist_shinyalert("Missing Settings", text = "Please provide a numeric value for the lock mass in Daltons.")
@@ -188,8 +199,17 @@ shinyServer(function(input, output) {
           }
           
           samplejson <- parse_methodjson(input$sampleJSON_filename$datapath[which(input$sampleJSON_filename$name == import_results$file_dt$SampleJSON[i])])
-          import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
           check_name <- import_results$file_dt$RawFile[i]
+          check_name_ext <- tools::file_ext(check_name)
+          # Fragility checks for name matching and values (e.g. msaccuracy) entered as text.
+          if (!tools::file_ext(samplejson$sample$name) == check_name_ext) {
+            samplejson$sample$name <- paste0(tools::file_path_sans_ext(basename(samplejson$sample$name)), ".", check_name_ext)
+          }
+          samplejson$massspectrometry$msaccuracy <- samplejson$massspectrometry$msaccuracy %>%
+            str_remove_all("[A-Za-z]") %>%
+            str_trim()
+          import_results$processed_data[[i]] <- peak_gather_json(samplejson, mzml, data_react$compoundtable, zoom = c(input$ms1zoom_low, input$ms1zoom_high), minerror = input$minerror)
+          
         }
         runjs("$('#data_import_overlay_text').text('Processing mzML data...');")
         incProgress(amount = 1/n, detail = sprintf("Processing entry %d of %d", i, n))
@@ -279,8 +299,8 @@ shinyServer(function(input, output) {
   )
   
   output$overall_qc_results <- renderText({
-    qc <- req(qc_check_results())
-    all_results <- do.call(c, lapply(qc, function(x) c(x$result)))
+    qc <- req(qc_check_results()$qc)
+    all_results <- unlist(lapply(qc, function(x) x$result))
     ifelse(any(FALSE %in% all_results),
            paste0("There are ", length(which(all_results == FALSE)), " failed QC checks for this peak."),
            "There are no failed QC checks for this peak."
@@ -335,7 +355,12 @@ shinyServer(function(input, output) {
                      options = list(
                        dom = "t"
                      )
-                   ),
+                   ) %>%
+                     formatStyle(
+                       "result",
+                       target = 'row',
+                       backgroundColor = styleEqual(c(TRUE, FALSE), c("none", "tomato"))
+                     ),
                  )
                )
              }),
@@ -351,16 +376,30 @@ shinyServer(function(input, output) {
   
   observeEvent(input$results_rendered, {
     if (input$results_rendered) {
-      # Collapse all result boxes but the first
       qc_data <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
       qc_names <- lapply(qc_data, function(x) unique(x$parameter)) %>%
         unlist() %>% unname()
-      if (length(qc_names) > 1) {
-        lapply(qc_names[-1],
-               function(x) {
-                 runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
-               })
+      qc_failures <- qc_data %>%
+        lapply(\(x) !all(x$result)) %>%
+        unlist()
+      if (all(!qc_failures)) {
+        # Collapse all result boxes but the first if no errors
+        if (length(qc_names) > 1) {
+          lapply(qc_names[-1],
+                 function(x) {
+                   runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
+                 })
+        }
+      } else {
+        # Expand out boxes with failed checks otherwise
+        if (length(qc_names) > 1) {
+          lapply(qc_names[!qc_failures],
+                 function(x) {
+                   runjs(sprintf('$("#qc_result_box_%s > div > div > div.box-header > div > button").click()', x))
+                 })
+        }
       }
+      
       updateCheckboxInput(inputId = "results_rendered", value = FALSE)
     }
   })
@@ -392,6 +431,8 @@ shinyServer(function(input, output) {
           outdat <- import_results$processed_data[[j]][[i]]
           outdat$qc <- import_results$qc_results[[j]][[i]]
           outdat$opt_ums_params <- import_results$opt_ums_params[[j]][[i]]
+          # Insert USER for missing fragment_citation
+          outdat$annotation$fragment_citation[outdat$annotation$fragment_citation == ""] <- "USER"
           write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
                      auto_unbox = TRUE,
                      pretty = TRUE)

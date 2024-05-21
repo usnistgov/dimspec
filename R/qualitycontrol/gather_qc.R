@@ -88,7 +88,7 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
     adducts <- paste(charge, sapply(1:nrow(gather_peak$annotation), function(x) {
       if (gather_peak$annotation$fragment_radical[x] == TRUE) {return("radical")}
       if (gather_peak$annotation$fragment_radical[x] == FALSE) {return("")}
-      if (gather_peak$annotation$fragment_radical[x] == "unknown") {return("")}
+      if (gather_peak$annotation$fragment_radical[x] %in% c("", "unknown")) {return("")}
     }), sep = "")
     calculated_mz <- sapply(1:nrow(gather_peak$annotation), function(x) calculate.monoisotope(gather_peak$annotation$fragment_formula[x], exactmasses, adducts[x]))
     massdiff <- sapply(1:length(mz), function(x) mz[x] - calculated_mz[x])
