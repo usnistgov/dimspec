@@ -5,12 +5,18 @@
 &emsp;Welcome to the Database Infrastructure for Mass Spectrometry project. This project is the result of work from the National Institute of Standards and Technology's Material Measurement Laboratory, Chemical Sciences Division. We seek to provide a comprehensive portable database toolkit supporting non-targeted analysis of high resolution mass spectrometry experiments for exposure-based analyte targets (e.g. per- and polyfluorinated alkyl substances (PFAS)) including descriptive metadata for analytical instrument method, quality analysis, and samples. If you would like to get involved, or just to keep track of the project, please give this repository a watch or star, or send an email to <a href="mailto:pfas@nist.gov?subject=DIMSpec%20Interest">pfas@nist.gov</a> to receive updates.
 
 ## Latest News
+<strong>2024 May</strong> (@jmr-nist-gov)
+
+&emsp;A [paper describing this project](https://doi.org/10.1021/jasms.4c00073) has been published in the Journal of the American Society for Mass Spectrometry. It is freely available until November 2024 as an ACS Editor's Choice selection.
+> Ragland, J. M.; Place, B. J. A Portable and Reusable Database Infrastructure for Mass Spectrometry, and Its Associated Toolkit (The DIMSpec Project). J. Am. Soc. Mass Spectrom. 2024. https://doi.org/10.1021/jasms.4c00073.
+
+&emps;The MSMatch application has been updated slightly to fix a typo on the landing page and fix a bug preventing isolation widths above 4 Da on the data input page, mostly applicable to SWATH experiments.
+
+----
 
 <strong>2024 February</strong> (@jmr-nist-gov)
 
 &emsp;A [video tutorial series](https://www.nist.gov/programs-projects/and-polyfluoroalkyl-substances-pfas/research/reference-data-and-tools/dimspec) is now available for DIMSpec, discussing download and setup, file conversion to .mzML, and using the MSMatch application.
-
-<strong>2024 February</strong> (@jmr-nist-gov)
 
 &emsp;Minor changes to the [quick install guide](https://pages.nist.gov/dimspec/docs/quick_install.pdf) were made to clarify some language, especially in regards to what is actually required versus recommended versus suggested, and under which circumstances those apply.
 
