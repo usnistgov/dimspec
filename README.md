@@ -10,7 +10,7 @@
 &emsp;A [paper describing this project](https://doi.org/10.1021/jasms.4c00073) has been published in the Journal of the American Society for Mass Spectrometry. It is freely available until November 2024 as an ACS Editor's Choice selection.
 > Ragland, J. M.; Place, B. J. A Portable and Reusable Database Infrastructure for Mass Spectrometry, and Its Associated Toolkit (The DIMSpec Project). J. Am. Soc. Mass Spectrom. 2024. https://doi.org/10.1021/jasms.4c00073.
 
-&emps;The MSMatch application has been updated to fix a typo on the landing page, fix a bug preventing isolation widths above 4 Da on the data input page (mostly applicable to SWATH experiments), and prevent certain edge conditions from resulting in unrenderable tables. Additionally, the DIMSpec-QC application and underlying functions in `gather_qc.R` and `elementalcomposition.R` have received some quality of life improvements to preferentially interact with the API, if available, rather than a local database connection.
+&emsp;The MSMatch application has been updated to fix a typo on the landing page, fix a bug preventing isolation widths above 4 Da on the data input page (mostly applicable to SWATH experiments), and prevent certain edge conditions from resulting in unrenderable tables. Additionally, the DIMSpec-QC application and underlying functions in `gather_qc.R` and `elementalcomposition.R` have received some quality of life improvements to preferentially interact with the API, if available, rather than a local database connection.
 
 ----
 
