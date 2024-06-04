@@ -21,7 +21,7 @@ shinyServer(function(input, output) {
   )
   file_rawdata <- reactiveVal(NULL)
   observeEvent(input$rawdata_filename, ignoreNULL = TRUE, ignoreInit = TRUE, {
-    if (all(valid_file_format(input$rawdata_filename$name, ".mzML"))) {
+    if (all(sapply(input$rawdata_filename$name, valid_file_format, accepts = app_settings$rawdata_import_file_types))) {
       out <- input$rawdata_filename
     } else {
       reset("rawdata_filename")
@@ -31,7 +31,7 @@ shinyServer(function(input, output) {
   })
   file_samplejson <- reactiveVal(NULL)
   observeEvent(input$sampleJSON_filename, ignoreNULL = TRUE, ignoreInit = TRUE, {
-    if (all(valid_file_format(input$sampleJSON_filename$name, ".json"))) {
+    if (all(sapply(input$sampleJSON_filename$name, valid_file_format, accepts = app_settings$methodjson_import_file_types))) {
       out <- input$sampleJSON_filename
     } else {
       reset("sampleJSON_filename")
@@ -74,8 +74,8 @@ shinyServer(function(input, output) {
     # Catch case of unenforced NTA-MRT sample name entry without the file extension.
     # Only replace those where the extension is blank.
     if (any(tools::file_ext(sampleJSON_raw) == "")) {
-      target_ext <- tools::file_ext(RawFile)
       for (i in 1:length(sampleJSON_raw)) {
+        target_ext <- tools::file_ext(RawFile[i])
         if (tools::file_ext(sampleJSON_raw[i]) == "") {
           sampleJSONs[[i]]$sample$name <- paste0(sampleJSONs[[i]]$sample$name, ".", target_ext)
           sampleJSON_raw[i] <- paste0(sampleJSON_raw[i], ".", target_ext)
@@ -93,19 +93,51 @@ shinyServer(function(input, output) {
         tibble(sampleJSON_raw = sampleJSON_raw, SampleJSON = sampleJSON_name),
         by = c("RawFile" = "sampleJSON_raw")
       )
-    if (!nrow(file_check) == length(sampleJSON_raw)) {
-      no_match <- sampleJSON_name[!sampleJSON_name %in% file_check$SampleJSON]
+    if (any(!file_check$Valid)) {
+      no_sample_file <- file_check$RawFile[!file_check$Valid]
       nist_shinyalert(
-        title = "Inapplicable JSON Files",
+        title = sprintf(
+          "Unable to match .%s files to .%s files",
+          str_flatten_comma(unique(tools::file_ext(sampleJSON_name))),
+          str_flatten_comma(unique(tools::file_ext(no_sample_file)))
+        ),
         type = "warning",
         text = tagList(
-          h3(sprintf("%d files did not contain matching data.", length(no_match))),
-          h4("These will be excluded from QC checks."),
-          HTML(paste0(no_match, collapse = "\n"))
+          h3(sprintf("%d instrument file(s) did not match sample file(s).", length(no_sample_file))),
+          p("Typically this is because the name in the sample file(s) does not exactly match that in the instrument file(s). Perhaps you chose the wrong file? These will be excluded from QC checks."),
+          br(),
+          HTML(paste0(no_sample_file, collapse = "\n"))
         )
       )
     }
-    import_results$file_dt <- file_check
+    if (any(!sampleJSON_raw %in% file_check$RawFile)) {
+      no_instrument_file <- setdiff(sampleJSON_name, file_check$SampleJSON)
+      nist_shinyalert(
+        title = sprintf(
+          "Unable to match .%s files to .%s files",
+          str_flatten_comma(unique(tools::file_ext(no_instrument_file))),
+          str_flatten_comma(unique(tools::file_ext(sampleJSON_name)))
+        ),
+        type = "warning",
+        text = tagList(
+          h3(sprintf("%d sample file(s) did not match instrument file(s).", length(no_instrument_file))),
+          p("Typically this is because the name in the instrument file(s) does not exactly match that in the sample file(s). Perhaps you chose the wrong file? These will be excluded from QC checks."),
+          br(),
+          HTML(paste0(no_instrument_file, collapse = "\n"))
+        )
+      )
+    }
+    file_check <- file_check[file_check$Valid, ]
+    if (nrow(file_check) > 0) {
+      import_results$file_dt <- file_check
+    } else {
+      nist_shinyalert(
+        title = "No Matches",
+        type = "error",
+        text = "None of the provided sample files could be matched with the provided instrument files."
+      )
+      import_results$file_dt <- NULL
+    }
   })
   
   output$qc_review_status <- renderText({
@@ -324,9 +356,33 @@ shinyServer(function(input, output) {
       need(!is.null(input$sample_qc_rows_selected), message = "Please select a file on the left."),
       need(!is.null(input$peak_qc_rows_selected), message = "Please select a peak on the left.")
     )
-    selected_file <- import_results$sample_list$RawFile[input$sample_qc_rows_selected]
-    selected_analyte <- import_results$peak_list[[input$sample_qc_rows_selected]]$peak[input$peak_qc_rows_selected]
-    qc_data <- import_results$qc_results[[input$sample_qc_rows_selected]][[input$peak_qc_rows_selected]]
+    sample_qc_index <- input$sample_qc_rows_selected
+    peak_qc_index <- input$peak_qc_rows_selected
+    selected_file <- import_results$sample_list$RawFile[sample_qc_index]
+    selected_analyte <- import_results$peak_list[[sample_qc_index]]$peak[peak_qc_index]
+    qc_data <- import_results$qc_results[[sample_qc_index]][[peak_qc_index]]
+    qc_valid <- !sapply(qc_data, \(x) is.na(x$result) || is.nan(x$result) || is.null(x$result))
+    if (any(!qc_valid)) {
+      qc_invalid <- qc_data[!qc_valid]
+      qc_invalid_names <- sapply(qc_invalid, \(x) x$parameter)
+      no_annotations <- all(str_detect(qc_invalid_names, "annfragments"))
+      nist_shinyalert(
+        title = "QC Checks Unavailable",
+        type = "warning",
+        text = tagList(
+          p("The following checks could not be performed and will be excluded from further analysis and from the export."),
+          if (no_annotations) p("No fragment annotations were detected."),
+          br(),
+          lapply(qc_invalid_names |>
+                   str_replace_all("_", " ") |>
+                   str_to_title(),
+                 p
+          )
+        )
+      )
+      qc_data <- qc_data[qc_valid]
+      import_results$qc_results[[sample_qc_index]][[peak_qc_index]] <- qc_data
+    }
     tagList(
       h3(sprintf("Metrics for %s in %s", selected_analyte, selected_file)),
       p("Click to expand or collapse details for any given metric."),
