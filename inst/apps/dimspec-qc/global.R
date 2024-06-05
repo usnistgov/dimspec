@@ -54,8 +54,8 @@ DB_TITLE           <- rectify_null_from_env("DB_TITLE", DB_TITLE, default_title)
 # Add any settings for controls within the application. These will be used to
 # populate controls in the UI at run time.
 app_settings <- list(
-  rawdata_import_file_types = c(".mzML"),
-  methodjson_import_file_types = c(".JSON")
+  rawdata_import_file_types = c("mzML"),
+  methodjson_import_file_types = c("JSON")
 )
 
 # Check that rdkit is available in the API so the application can decide whether
