@@ -75,6 +75,7 @@ dashboardPage(
                                  buttonLabel = "Load",
                                  placeholder = "Select a raw data file to begin"
                        ),
+                       uiOutput(outputId = "rawdata_filename_list"),
                        checkboxInput(inputId = "has_lockmass",
                                      label = "These data were collected with a lock mass",
                                      value = FALSE,
@@ -100,6 +101,7 @@ dashboardPage(
                                   )
                            )
                        ),
+                       hr(style = "border-color: #d2d6de;"),
                        fileInput(inputId = "sampleJSON_filename",
                                  label = "2) Load Sample JSON file(s)",
                                  width = "100%",
@@ -108,6 +110,7 @@ dashboardPage(
                                  buttonLabel = "Load",
                                  placeholder = "Select a sample.JSON file to begin"
                        ),
+                       uiOutput(outputId = "sampleJSON_filename_list"),
                        actionButton(inputId = "process_data_btn",
                                     label = "Process Data",
                                     width = "100%",

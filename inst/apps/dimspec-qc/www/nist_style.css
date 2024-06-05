@@ -264,3 +264,17 @@ section {
   width: 100%;
   padding-top: 12px;
 }
+
+.underlined {
+  text-decoration-line: underline;
+}
+
+.zero-space {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.align-left {
+  text-align: left !important;
+}
