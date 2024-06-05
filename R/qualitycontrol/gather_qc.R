@@ -60,11 +60,11 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   if (value == FALSE) {
     result <- FALSE
     measuredmz <- NA
-    }
+  }
   if (value == TRUE) {
     result <- TRUE
     measuredmz = ms1empirical$mz[ind]
-    }
+  }
   check[[length(check)+1]] <- data.frame(parameter = "ms1precursor_detected", reportedmz = as.numeric(gather_peak$peak$mz), measuredmz = measuredmz, msaccuracy = as.numeric(gather_peak$massspectrometry$msaccuracy), value = value, result = result)
   
   #check 4: do the annotated fragments appear in the MS2 spectra (average)
@@ -100,31 +100,31 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   #check 6: are the fragments subsets of the parent structure
   if (is.null(gather_peak$annotation) | length(gather_peak$annotation) == 0) {check[[length(check) + 1]] <- data.frame(parameter = "annfragments_subset", value = NA, result = NA)}
   if (!is.null(gather_peak$annotation) & length(gather_peak$annotation) > 0) {
-  fragment_form <- gather_peak$annotation$fragment_formula
-  result <- sapply(fragment_form, function(x) is_elemental_subset(x, gather_peak$compounddata$formula))
-  check[[length(check)+1]] <- data.frame(parameter = "annfragments_subset", reportedformula = fragment_form, parentformula = gather_peak$compounddata$formula, result = result, row.names = c())
+    fragment_form <- gather_peak$annotation$fragment_formula
+    result <- sapply(fragment_form, function(x) is_elemental_subset(x, gather_peak$compounddata$formula))
+    check[[length(check)+1]] <- data.frame(parameter = "annfragments_subset", reportedformula = fragment_form, parentformula = gather_peak$compounddata$formula, result = result, row.names = c())
   }
   #check 7: do the structures give the same formula as the proposed formula?
   if (is.null(gather_peak$annotation) | length(gather_peak$annotation) == 0) {check[[length(check) + 1]] <- data.frame(parameter = "annfragments_elementalmatch", value = NA, result = NA)}
   if (!is.null(gather_peak$annotation) & length(gather_peak$annotation) > 0) {
-  fragment_form <- gather_peak$annotation$fragment_formula
-  fragment_smiles <- gather_peak$annotation$fragment_SMILES
-  value <- c()
-  result <- c()
-  for (i in 1:length(fragment_smiles)) {
-    if (is.null(fragment_smiles[i]) | fragment_smiles[i] == "") {
-      value <- c(value, NA)
-      result <- c(result, NA)
+    fragment_form <- gather_peak$annotation$fragment_formula
+    fragment_smiles <- gather_peak$annotation$fragment_SMILES
+    value <- c()
+    result <- c()
+    for (i in 1:length(fragment_smiles)) {
+      if (is.null(fragment_smiles[i]) | fragment_smiles[i] == "") {
+        value <- c(value, NA)
+        result <- c(result, NA)
       }
-    if (!is.null(fragment_smiles[i]) & fragment_smiles[i] != "") {
-      smiles_formula <- smilestoformula(fragment_smiles[i])$FORMULA
-      value <- c(value, smiles_formula)
-      result <- c(result, is_elemental_match(smiles_formula, fragment_form[i]))
+      if (!is.null(fragment_smiles[i]) & fragment_smiles[i] != "") {
+        smiles_formula <- smilestoformula(fragment_smiles[i])$FORMULA
+        value <- c(value, smiles_formula)
+        result <- c(result, is_elemental_match(smiles_formula, fragment_form[i]))
+      }
     }
-  }
-  result <- TRUE
-  if (FALSE %in% value) {result <- FALSE}
-  check[[length(check)+1]] <- data.frame(parameter = "annfragments_elementalmatch", reportedformula = fragment_form, reported_smiles = fragment_smiles, calculatedformula = value, result = result)
+    result <- TRUE
+    if (FALSE %in% value) {result <- FALSE}
+    check[[length(check)+1]] <- data.frame(parameter = "annfragments_elementalmatch", reportedformula = fragment_form, reported_smiles = fragment_smiles, calculatedformula = value, result = result)
   }
   
   #added 06142022, get optimal ums settings
@@ -135,8 +135,8 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   opt_ums2_params <- optimal_ums(ms2empirical, max_correl = max_correl, correl_bin = correl_bin, max_ph = max_ph, ph_bin = ph_bin, max_freq = max_freq, freq_bin = freq_bin, min_n_peaks = min_n_peaks, cormethod = cormethod)
   opt_ums2_params <- c(opt_ums2_params, masserror = as.numeric(gather_peak$massspectrometry$msaccuracy), minerror = minerror)
   opt_ums_params <- data.frame(parameter = "optimized_ums_parameters", mslevel = c(1,2), rbind(opt_ums1_params, opt_ums2_params))
-
+  
   #return results
-
+  
   list(check = check, opt_ums_params = opt_ums_params)
 }
