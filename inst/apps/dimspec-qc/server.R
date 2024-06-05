@@ -67,6 +67,14 @@ shinyServer(function(input, output) {
   })
   observe({
     req(file_rawdata(), file_samplejson())
+    import_results$processed_data = NULL
+    import_results$qc_results = list()
+    import_results$opt_ums_params = list()
+    import_results$data_select = NULL
+    import_results$qc_check_select = NULL
+    import_results$file_dt = NULL
+    import_results$sample_list = NULL
+    import_results$peak_list = NULL
     sampleJSONs <- lapply(file_samplejson()$datapath, parse_methodjson)
     sampleJSON_name <- file_samplejson()$name
     RawFile <- file_rawdata()$name
@@ -149,7 +157,7 @@ shinyServer(function(input, output) {
   
   # Element Display ----
   observe({
-    toggleElement(id = "process_data_btn", condition = !is.null(import_results$file_dt))
+    toggleElement(id = "process_data_btn", condition = !is.null(import_results$file_dt) && is.null(import_results$processed_data))
     toggleElement(id = "peak_qc_selector", condition = !is.null(input$sample_qc_rows_selected))
     toggleElement(id = "qc_results_span", condition = !is.null(import_results$processed_data))
     toggleElement(id = "lockmass_settings", condition = input$has_lockmass)
