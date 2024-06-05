@@ -718,11 +718,17 @@
 				/* chromatography system vendor */
 			REPLACE(GROUP_CONCAT(DISTINCT(cd.system_vendor_model)), ",", " x ") AS "chrom_model",
 				/* chromatography system vendor */
-			REPLACE(GROUP_CONCAT(ct.acronym), ",", " x ") AS "chrom_type"
+			ctv.acronym AS "chrom_type"
 				/* chromatography type (e.g. LC, GC, etc.) */
-		FROM 
-			chromatography_descriptions cd 
+		FROM chromatography_descriptions cd 
 		LEFT JOIN norm_chromatography_types ct ON cd.chromatography_types_id = ct.id
+		LEFT JOIN(
+			SELECT ms_methods_id, replace(GROUP_CONCAT(acronym), ",", " x ") AS "acronym"
+			FROM chromatography_descriptions ncd
+			LEFT JOIN norm_chromatography_types nct ON ncd.chromatography_types_id = nct.id
+			WHERE column_position_id = 2
+			GROUP BY ms_methods_id
+		) ctv ON cd.ms_methods_id = ctv.ms_methods_id
 		LEFT JOIN norm_vendors nv ON cd.system_vendor_id = nv.id
 		GROUP BY cd.ms_methods_id;
 	/*magicsplit*/
