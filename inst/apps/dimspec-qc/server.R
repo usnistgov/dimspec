@@ -90,48 +90,206 @@ shinyServer(function(input, output) {
         }
       }
     }
-    SampleJSON <- rep(NA, length(RawFile))
-    Valid <- rep(FALSE, length(RawFile))
+    # SampleJSON <- rep(NA, length(RawFile))
+    # Valid <- rep(FALSE, length(RawFile))
     rawfiles <- tibble(
       RawFile = RawFile,
       Valid = RawFile %in% sampleJSON_raw
+    )
+    samplefiles <- tibble(
+      samplefile = sampleJSON_name,
+      refers_to = sampleJSON_raw,
+      Valid = sampleJSON_raw %in% RawFile
     )
     file_check <- rawfiles %>%
       left_join(
         tibble(sampleJSON_raw = sampleJSON_raw, SampleJSON = sampleJSON_name),
         by = c("RawFile" = "sampleJSON_raw")
       )
-    if (any(!file_check$Valid)) {
-      no_sample_file <- file_check$RawFile[!file_check$Valid]
-      nist_shinyalert(
-        title = sprintf(
-          "Unable to match .%s files to .%s files",
-          str_flatten_comma(unique(tools::file_ext(sampleJSON_name))),
-          str_flatten_comma(unique(tools::file_ext(no_sample_file)))
+    missing_sample_files <- samplefiles$samplefile[!samplefiles$Valid]
+    missing_instrument_files <- rawfiles$RawFile[!rawfiles$Valid]
+    if (length(missing_sample_files) > 0 & length(missing_instrument_files) > 0) {
+      alert_size = "s"
+      alert_title <- "Unable to match files"
+      alert_h3 <- h3("Mismatches were identified for both sample and instrument files")
+      alert_description <- tagList(
+        p(
+          sprintf(
+            "Typically this is because name references in %s and %s do not exactly match. Perhaps you chose the wrong file or renamed %s?",
+            ifelse(length(sampleJSON_name) > 1, "sample files", "the sample file"),
+            ifelse(length(RawFile) > 1, "instrument files", "the instrument file"),
+            ifelse(length(RawFile) > 1, "instrument files", "the instrument file")
+          )
         ),
-        type = "warning",
-        text = tagList(
-          h3(sprintf("%d instrument file(s) did not match sample file(s).", length(no_sample_file))),
-          p("Typically this is because the name in the sample file(s) does not exactly match that in the instrument file(s). Perhaps you chose the wrong file? These will be excluded from QC checks."),
-          br(),
-          HTML(paste0(no_sample_file, collapse = "\n"))
+        br(),
+        tags$strong(
+          sprintf(
+            "If you continue, the following %d file%s will be excluded from QC checks. It is recommended that you reload file(s) where all names can be matched.",
+            length(c(missing_sample_files, missing_instrument_files)),
+            ifelse(length(c(missing_sample_files, missing_instrument_files)) > 1, "s", "")
+          )
+        )
+      )
+      alert_details <- tagList(
+        hr(),
+        p(
+          sprintf(
+            "%s did not have a matching sample file.",
+            ifelse(length(missing_instrument_files) > 1, "The following instrument files", "This instrument file")
+          )
+        ),
+        br(),
+        lapply(missing_instrument_files, tags$li),
+        hr(),
+        p(
+          sprintf(
+            "%s did not have have a matching instrument file.",
+            ifelse(length(missing_sample_files) > 1, "The following sample files", "This sample file")
+          )
+        ),
+        br(),
+        tags$ul(
+          sprintf(
+            "%s expected instrument file %s",
+            samplefiles$samplefile[!samplefiles$Valid],
+            samplefiles$refers_to[!samplefiles$Valid]
+          ) |>
+            lapply(tags$li, class = "align-left")
+        )
+      )
+    } else if (length(missing_sample_files) > 0) {
+      alert_size = "s"
+      alert_title <- sprintf(
+        "Unable to match all %s file%s with %s file%s",
+        str_flatten_comma(unique(tools::file_ext(missing_sample_files)), last = ", or "),
+        ifelse(length(missing_sample_files) > 1, "s", ""),
+        str_flatten_comma(unique(tools::file_ext(RawFile)), last = ", or "),
+        ifelse(length(RawFile) > 1, "s", "")
+      )
+      alert_h3 <- h3(
+        sprintf(
+          "%d sample file%s could not be matched.",
+          length(missing_sample_files),
+          ifelse(length(missing_sample_files) > 1, "s", "")
+        )
+      )
+      alert_description <- tagList(
+        p(
+          sprintf(
+            "Typically this is because the name%s referenced in the sample file%s not exactly match that in %s. Perhaps you chose the wrong file or renamed %s?",
+            ifelse(length(missing_sample_files) > 1, "s", ""),
+            ifelse(length(missing_sample_files) > 1, "s do", " does"),
+            ifelse(length(RawFile) > 1, "instrument files", "the instrument file"),
+            ifelse(length(RawFile) > 1, "instrument files", "the instrument file")
+          )
+        ),
+        br(),
+        tags$strong(
+          sprintf(
+            "If you continue, the following sample file%s will be excluded from QC checks. It is recommended that you reload instrument file(s) matching the expected names.",
+            ifelse(length(missing_sample_files) > 1, "s", "")
+          )
+        ),
+      )
+      alert_details <- tagList(
+        p(
+          sprintf(
+            "Unmatched sample file%s:",
+            ifelse(length(missing_sample_files) > 1, "s were", " is")
+          )
+        ),
+        br(),
+        tags$ul(
+          sprintf(
+            "%s expected instrument file %s",
+            samplefiles$samplefile[!samplefiles$Valid],
+            samplefiles$refers_to[!samplefiles$Valid]
+          ) |>
+            lapply(tags$li, class = "align-left")
+        ),
+        hr(),
+        p(
+          sprintf(
+            "Currently loaded instrument file%s %s:",
+            ifelse(length(RawFile) > 1, "s", ""),
+            ifelse(length(RawFile) > 1, "includes", "is")
+          )
+        ),
+        br(),
+        tags$ul(
+          lapply(RawFile, tags$li, class = "align-left")
+        )
+      )
+    } else if (length(missing_instrument_files) > 0) {
+      alert_size = "s"
+      alert_title <- sprintf(
+        "Unable to match %s file%s to %s file%s",
+        str_flatten_comma(unique(tools::file_ext(missing_instrument_files)), last = ", or "),
+        ifelse(length(missing_instrument_files) > 1, "s", ""),
+        str_flatten_comma(unique(tools::file_ext(sampleJSON_name)), last = ", or "),
+        ifelse(length(sampleJSON_name) > 1, "s", "")
+      )
+      alert_h3 <- h3(
+        sprintf(
+          "%d instrument file%s could not be matched.",
+          length(missing_instrument_files),
+          ifelse(length(missing_instrument_files) > 1, "s", "")
+        )
+      )
+      alert_description <- tagList(
+        p(
+          sprintf(
+            "Typically this is because the name%s of the instrument file%s not exactly match %s in the sample file%s. Perhaps you chose the wrong file or renamed %s?",
+            ifelse(length(missing_instrument_files) > 1, "s", ""),
+            ifelse(length(missing_instrument_files) > 1, "s do", " does"),
+            ifelse(nrow(samplefiles) > 1, "any of those", "the one"),
+            ifelse(nrow(samplefiles) > 1, "s", ""),
+            ifelse(length(RawFile) > 1, "instrument files", "the instrument file")
+          )
+        ),
+        br(),
+        tags$strong(
+          sprintf(
+            "If you continue, the following instrument file%s will be excluded from QC checks, but you can always load new files:",
+            ifelse(length(missing_instrument_files) > 1, "s", "")
+          )
+        )
+      )
+      alert_details <- tagList(
+        p(
+          sprintf(
+            "Unmatched instrument file%s:",
+            ifelse(length(missing_instrument_files) > 1, "s were", " is")
+          )
+        ),
+        br(),
+        tags$ul(
+          lapply(missing_instrument_files, tags$li, class = "align-left")
+        ),
+        hr(),
+        p(
+          sprintf(
+            "Currently loaded sample file%s expected:",
+            ifelse(nrow(samplefiles) > 1, "s", "")
+          )
+        ),
+        br(),
+        tags$ul(
+          lapply(sampleJSON_raw, tags$li, class = "align-left")
         )
       )
     }
-    if (any(!sampleJSON_raw %in% file_check$RawFile)) {
-      no_instrument_file <- setdiff(sampleJSON_name, file_check$SampleJSON)
+    if (any(length(missing_sample_files) > 0, length(missing_instrument_files) > 0)) {
       nist_shinyalert(
-        title = sprintf(
-          "Unable to match .%s files to .%s files",
-          str_flatten_comma(unique(tools::file_ext(no_instrument_file))),
-          str_flatten_comma(unique(tools::file_ext(sampleJSON_name)))
-        ),
+        title = alert_title,
+        size = alert_size,
         type = "warning",
         text = tagList(
-          h3(sprintf("%d sample file(s) did not match instrument file(s).", length(no_instrument_file))),
-          p("Typically this is because the name in the instrument file(s) does not exactly match that in the sample file(s). Perhaps you chose the wrong file? These will be excluded from QC checks."),
+          alert_h3,
           br(),
-          HTML(paste0(no_instrument_file, collapse = "\n"))
+          alert_description,
+          hr(),
+          alert_details
         )
       )
     }
@@ -142,10 +300,63 @@ shinyServer(function(input, output) {
       nist_shinyalert(
         title = "No Matches",
         type = "error",
-        text = "None of the provided sample files could be matched with the provided instrument files."
+        text = tagList(
+          p(
+            sprintf(
+              "The provided sample file%s could not be matched with the provided instrument file%s.",
+              ifelse(length(sampleJSON_raw) > 1, "s", ""),
+              ifelse(length(RawFile) > 1, "s", "")
+            )
+          ),
+          br(),
+          p(
+            sprintf(
+              "Names of mzML files must match%s:",
+              ifelse(length(sampleJSON_raw) > 1, " one of", "")
+            )
+          ),
+          br(),
+          lapply(sampleJSON_raw, tags$li, class = "align-left")
+        )
       )
       import_results$file_dt <- NULL
     }
+  })
+  
+  output$rawdata_filename_list <- renderUI({
+    req(input$rawdata_filename)
+    tagList(
+      tags$small(
+        class = "zero-space underlined",
+        sprintf(
+          "Loaded instrument file%s",
+          ifelse(nrow(input$rawdata_filename) > 1, "s", "")
+        )
+      ),
+      lapply(input$rawdata_filename$name, tags$small, class = "zero-space")
+    )
+  })
+  
+  output$sampleJSON_filename_list <- renderUI({
+    req(file_samplejson())
+    sampleJSONs <- lapply(file_samplejson()$datapath, parse_methodjson)
+    sampleJSON_raw <- sapply(sampleJSONs, function(x) x$sample$name)
+    expects <- sprintf(
+      "%s expects %s",
+      file_samplejson()$name,
+      sampleJSON_raw
+    )
+    tagList(
+      tags$small(
+        class = "zero-space underlined",
+        sprintf(
+          "Loaded sample file%s",
+          ifelse(nrow(file_samplejson()) > 1, "s", "")
+        )
+      ),
+      lapply(expects, tags$small, class = "zero-space"),
+      br()
+    )
   })
   
   output$qc_review_status <- renderText({
@@ -369,19 +580,28 @@ shinyServer(function(input, output) {
     selected_file <- import_results$sample_list$RawFile[sample_qc_index]
     selected_analyte <- import_results$peak_list[[sample_qc_index]]$peak[peak_qc_index]
     qc_data <- import_results$qc_results[[sample_qc_index]][[peak_qc_index]]
-    qc_valid <- !sapply(qc_data, \(x) is.na(x$result) || is.nan(x$result) || is.null(x$result))
+    names(qc_data) <- sapply(qc_data, \(x) unique(x$parameter))
+    annotation_index <- which(str_detect(names(qc_data), "annfragments"))
+    annotation_names <- names(qc_data)[annotation_index]
+    qc_valid <- !sapply(
+      qc_data,
+      \(x) {
+        any(is.na(x$result)) ||
+          any(is.nan(x$result)) ||
+          any(is.null(x$result))
+      })
     if (any(!qc_valid)) {
       qc_invalid <- qc_data[!qc_valid]
-      qc_invalid_names <- sapply(qc_invalid, \(x) x$parameter)
-      no_annotations <- all(str_detect(qc_invalid_names, "annfragments"))
+      no_annotations <- any(annotation_names %in% names(qc_invalid))
       nist_shinyalert(
         title = "QC Checks Unavailable",
         type = "warning",
         text = tagList(
-          p("The following checks could not be performed and will be excluded from further analysis and from the export."),
-          if (no_annotations) p("No fragment annotations were detected."),
+          p("The following checks could not be performed."),
+          if (no_annotations) p(br(), "Fragment annotations were not available."),
           br(),
-          lapply(qc_invalid_names |>
+          lapply(qc_invalid |>
+                   names() |>
                    str_replace_all("_", " ") |>
                    str_to_title(),
                  p
