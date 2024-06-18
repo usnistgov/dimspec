@@ -826,9 +826,21 @@ shinyServer(function(input, output) {
         for (i in 1:ni) {
           outdat <- import_results$processed_data[[j]][[i]]
           outdat$qc <- import_results$qc_results[[j]][[i]]
+          invalid_qc <- sapply(outdat$qc, \(x) is.na(x$result))
+          if (any(invalid_qc)) {
+            outdat$qc <- outdat$qc[!invalid_qc]
+          }
           outdat$opt_ums_params <- import_results$opt_ums_params[[j]][[i]]
-          # Insert USER for missing fragment_citation
-          outdat$annotation$fragment_citation[outdat$annotation$fragment_citation == ""] <- "USER"
+          if ("annotation" %in% names(outdat)){
+            if (length(outdat$annotation) == 0) {
+              outdat$annotation <- NULL
+            } else {
+              if (!"fragment_citation" %in% names(outdat$annotation) || any(outdat$annotation$fragment_citation == "")) {
+                # Insert USER for missing fragment_citation
+                outdat$annotation$fragment_citation[outdat$annotation$fragment_citation == ""] <- "USER"
+              }
+            }
+          }
           write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
                      auto_unbox = TRUE,
                      pretty = TRUE)
