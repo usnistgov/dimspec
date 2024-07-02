@@ -761,7 +761,7 @@
 			/* Ionization type */
 			msm.voltage || " " || niu.name AS "voltage",
 			/* Ionization energy */
-			msm.ce_value|| " " || niu.name  AS "collision_energy",
+			msm.ce_value|| " " || ncu.name  AS "collision_energy",
 			/* Collision energy in electron volts */
 			ncd.name AS "collision_energy_description"
 			/* Collision energy description */
