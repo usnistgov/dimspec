@@ -22,9 +22,9 @@ dashboardPage(
     },
     sidebarMenu(
       id = "sidebar_menu",
-      menuItem("About",
+      menuItem("Home",
                tabName = "about",
-               icon = icon("question")
+               icon = icon("house")
       ),
       menuItem("Data Import",
                tabName = "data_import",
@@ -33,10 +33,6 @@ dashboardPage(
       menuItem("Quality Review",
                tabName = "qc_review",
                icon = icon("check-double")
-      ),
-      menuItem("Export Data",
-               tabName = "export",
-               icon = icon("download")
       ),
       menuItem("QC Settings",
                tabName = "settings",
@@ -151,24 +147,13 @@ dashboardPage(
                             textOutput(outputId = "overall_qc_results")
                        ),
                        hr(),
-                       actionButton(inputId = "export_from_review", label = "Export Data for import to DIMSpec", icon = icon("download"), width = "100%")
+                       downloadButton(outputId = "export_from_review", label = "Export Data for import to DIMSpec", icon = icon("download"))
                 ),
                 column(8,
                        checkboxInput(inputId = "results_rendered", label = "New Results Rendered (hidden input)", value = FALSE),
                        uiOutput(outputId = "quality_data")
                 )
               )
-      ),
-      ## Export Data ----
-      tabItem("export",
-              div(class = "overlay",
-                  id = "export_overlay",
-                  img(src = "processing.gif"),
-                  h3(id = "export_overlay_text")
-              ),
-              h5("Export all QC data for sample."),
-              downloadButton(outputId = "export_btn", label = "Export all data", icon = icon("file-download", verify_fa = FALSE)),
-              textOutput(outputId = "export_status")
       ),
       ## QC Settings ----
       tabItem("settings",

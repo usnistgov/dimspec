@@ -150,6 +150,7 @@ a > i {
   padding: 20px 0;
   font-size: large;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 #overall_qc_results {

@@ -22,9 +22,9 @@
 #' @export
 #'
 gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5, 3), ms1isomatchlimit = 0.5, minerror = 0.002, max_correl = 0.8, correl_bin = 0.1, max_ph = 10, ph_bin = 1, max_freq = 10, freq_bin = 1, min_n_peaks = 3, cormethod = "pearson") {
+  require(stringr)
   #performs quality check on the submitted data and adds 'check' list item
   check <- list()
-  
   #check for minimum error setting within gather_peak
   if (!is.null(gather_peak$massspectrometry$msminerror)) {
     minerror <- as.numeric(gather_peak$massspectrometry$msminerror)
@@ -34,10 +34,14 @@ gather_qc <- function(gather_peak, exactmasses, exactmasschart, ms1range = c(0.5
   true_compound <- gather_peak$compounddata
   true_compound_form <- true_compound$formula
   parentadduct <- gather_peak$peak$ionstate
-  if (parentadduct == "[M+H]+") {adduct = "+H"; charge = "positive"}
-  if (parentadduct == "[M-H]-") {adduct = "-H"; charge = "negative"}
-  if (parentadduct == "[M]+") {adduct = "+"; charge = "positive"}
-  if (parentadduct == "[M-2H]-") {adduct = "-H2"; charge = "negative"}
+  charge <- if (str_ends(parentadduct, "\\+")) {
+    "positive"
+  } else if (str_ends(parentadduct, "\\-")) {
+    "negative"
+  } else {
+    "neutral"
+  }
+  adduct <- str_extract(parentadduct, "[\\-\\+][A-Za-z0-9]+")
   true_compound_ion_form <- adduct_formula(true_compound_form, adduct)
   true_compound_mz <- calculate.monoisotope(true_compound_form, exactmasses, adduct = adduct)
   measurederror <- (1E6)*(as.numeric(gather_peak$peak$mz) - true_compound_mz)/true_compound_mz

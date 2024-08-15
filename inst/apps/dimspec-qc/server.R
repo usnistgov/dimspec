@@ -665,8 +665,9 @@ shinyServer(function(input, output) {
   output$overall_qc_results <- renderText({
     qc <- req(qc_check_results()$qc)
     all_results <- unlist(lapply(qc, function(x) x$result))
-    ifelse(any(FALSE %in% all_results),
-           paste0("There are ", length(which(all_results == FALSE)), " failed QC checks for this peak."),
+    n_fail <- length(which(all_results == FALSE))
+    ifelse(n_fail > 0,
+           sprintf("There %s %s failed QC check%s for this peak.", ifelse(n_fail == 1, "is", "are"), n_fail, ifelse(n_fail == 1, "", "s")),
            "There are no failed QC checks for this peak."
     )
   })
@@ -689,7 +690,7 @@ shinyServer(function(input, output) {
     req(
       !is.null(sample_qc_index),
       !is.null(peak_qc_index),
-      peak_qc_index <= length(peak_list[[sample_qc_index]])
+      peak_qc_index <= nrow(peak_list[[sample_qc_index]])
     )
     sample_list <- isolate(import_results$sample_list)
     qc_results <- isolate(import_results$qc_results)
@@ -801,16 +802,8 @@ shinyServer(function(input, output) {
     }
   })
   
-  # output$peak_data <- renderDT(
-  #   DT::datatable(
-  #     data = req(peak_data()),
-  #     options = list(filtering = FALSE, ordering = FALSE, paging = FALSE, searching = FALSE)
-  #   )
-  # )
-  
   # Export Functions ---- 
-  observeEvent(input$export_from_review, ignoreNULL = TRUE, ignoreInit = TRUE, shinyjs::click("export_btn"))
-  output$export_btn <- downloadHandler(
+  output$export_from_review <- downloadHandler(
     filename = function() {
       paste0("DIMSpec_import_files_", Sys.Date(), ".zip")
     },
@@ -820,15 +813,16 @@ shinyServer(function(input, output) {
       temp_directory <- file.path(tempdir(), as.integer(Sys.time()))
       dir.create(temp_directory)
       nj <- length(import_results$processed_data)
-      ntotal <- sapply(import_results$processed_data, length) + 1
       for (j in 1:nj) {
         ni <- length(import_results$processed_data[[j]])
         for (i in 1:ni) {
           outdat <- import_results$processed_data[[j]][[i]]
           outdat$qc <- import_results$qc_results[[j]][[i]]
-          invalid_qc <- sapply(outdat$qc, \(x) is.na(x$result))
-          if (any(invalid_qc)) {
-            outdat$qc <- outdat$qc[!invalid_qc]
+          for (z in length(outdat$qc):1) {
+            outdat$qc[[z]] <- filter(outdat$qc[[z]], !is.na(result))
+            if (nrow(outdat$qc[[z]]) == 0) {
+              outdat$qc[[z]] <- NULL
+            }
           }
           outdat$opt_ums_params <- import_results$opt_ums_params[[j]][[i]]
           if ("annotation" %in% names(outdat)){
