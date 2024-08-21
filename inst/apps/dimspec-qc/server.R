@@ -835,10 +835,20 @@ shinyServer(function(input, output) {
               }
             }
           }
-          write_json(outdat, paste0(temp_directory, "/", gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON"),
-                     auto_unbox = TRUE,
-                     pretty = TRUE)
+          outname <- paste0(gsub("\\.", "_", outdat$sample$name), "_cmpd", outdat$compounddata$id, ".JSON")
+          outdat <- split_by_collision_energy(outdat)
+          n_out <- length(outdat)
           runjs(sprintf("$('#data_import_overlay_text').text('%s');", sprintf("Input file %d of %d, writing peak JSON file %d of %d.", j, nj, i, ni)))
+          for (ix in 1:n_out) {
+            if (n_out > 1) {
+              ce <- outdat[[ix]]$massspectrometry$ce_value
+              outname2 <- gsub(".JSON", sprintf("_ce_%d.JSON", ce), outname)
+            } else {
+              outname2 <- outname
+            }
+            outname2 <- file.path(temp_directory, outname2)
+            write_json(x = outdat[[ix]], path = outname2, auto_unbox = TRUE, pretty = TRUE)
+          }
         }
       }
       runjs("$('#data_import_overlay_text').text('Zipping up results...');")
