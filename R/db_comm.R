@@ -2043,13 +2043,26 @@ resolve_multiple_values <- function(values, search_value, as_regex = FALSE, db_t
     stopifnot(arg_check$valid)
   }
   present  <- any(grepl(search_value, values, fixed = !as_regex))
+  # Added 2024-06-18 to catch multiple similar normalization entries
   if (is.vector(values)) {
     only_one <- sum(values %in% search_value) == 1
+    select_from <- NULL
   } else if (is.data.frame(values)) {
     only_one <- values %>%
       filter(if_any(everything(), .fns = ~ . == search_value)) %>%
       nrow() == 1
+    if (only_one && nrow(values) > 1) {
+      if (ncol(values) > 1) {
+        col_index <- unname(which(sapply(values, \(x) search_value %in% x)))
+      } else {
+        col_index <- 1
+        select_from <- names(values)[1]
+      }
+      chosen_value <- values[[col_index]][which(values[[col_index]] == search_value)]
+      select_from <- names(values)[col_index]
+    }
   }
+  # ---
   if (present && only_one) {
     chosen_value <- search_value
   } else {

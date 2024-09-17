@@ -321,20 +321,20 @@ extract.ms <- function(mzml, scans, mz.round = 4) {
   for (j in scans) {
     x.ms <- cbind(mzml$mzML$run$spectrumList[[j]]$masses, mzml$mzML$run$spectrumList[[j]]$intensities)
     if (length(x.ms) > 0) {
-    x.ms <- matrix(x.ms, ncol = 2)
-    if (x.ms[1,1] != 0 & x.ms[1,2] != 0) {
-    x.ms[,1] <- round(x.ms[,1], digits = mz.round)
-    x.ms <- cbind(x.ms[,1], ave(x.ms[,2], x.ms[,1], FUN = sum))
-    x.ms <- x.ms[!duplicated(x.ms),]
-    x.ms <- matrix(x.ms, ncol = 2)
-    if (j == scans[1]) {
-      full.ms <- x.ms
-    }
-    else {
-      int.ms <- merge(full.ms, x.ms, by = 1, all = TRUE)
-      full.ms <- cbind(int.ms[,1], rowSums(int.ms[,2:3], na.rm = TRUE))
-    }
-    }
+      x.ms <- matrix(x.ms, ncol = 2)
+      if (x.ms[1,1] != 0 & x.ms[1,2] != 0) {
+        x.ms[,1] <- round(x.ms[,1], digits = mz.round)
+        x.ms <- cbind(x.ms[,1], ave(x.ms[,2], x.ms[,1], FUN = sum))
+        x.ms <- x.ms[!duplicated(x.ms),]
+        x.ms <- matrix(x.ms, ncol = 2)
+        if (j == scans[1]) {
+          full.ms <- x.ms
+        }
+        else {
+          int.ms <- merge(full.ms, x.ms, by = 1, all = TRUE)
+          full.ms <- cbind(int.ms[,1], rowSums(int.ms[,2:3], na.rm = TRUE))
+        }
+      }
     }
   }
   if (x.ms[1,1] == 0 & x.ms[1,2] == 0) {return(data.frame(mz = 0, int = 0))}
@@ -380,9 +380,69 @@ getprocessingmethods <- function(mzml) {
 
 zipms <- function(ms, zip = "gzip") {
   ms <- c(t(ms))
- ms <- writeBin(ms, raw(8), endian = "little")
- if (zip != "none") {
-   ms <- memCompress(ms, type = zip)
- }
- base64encode(ms)
+  ms <- writeBin(ms, raw(8), endian = "little")
+  if (zip != "none") {
+    ms <- memCompress(ms, type = zip)
+  }
+  base64encode(ms)
+}
+
+# Added to explicitly extract collision energies from a given mzML given a scan index "i"
+getce <- function(mzml, i) {
+  tmp <- mzml$mzML$run$spectrumlist[[i]]
+  if (!"precursorList" %in% names(tmp)) {return(NA)}
+  if (!"activation" %in% names(tmp$precursorList$precursor)) {return(NA)}
+  tmp <- tmp$precursorList$precursor
+  as.numeric(do.call(c, lapply(which(names(tmp$activation) == "cvParam"), function(x) {if(!"collision energy" %in% tmp$activation[[x]]) {return(NA)}; tmp$activation[[x]][which(names(activation[[x]]) == "value")]})))
+}
+
+# Get ALL cvParam values from an mzML file
+# By default, this does chuck out some trivialities that we're already extracting elsewhere...change `exclude` to include those if you want, but this is not tested.
+# Only values in the `spectrumList` are extracted.
+get_cvParams <- function(mzml, exclude = c("binaryDataArrayList", "masses", "intensities")) {
+  if ("mzML" %in% names(mzml)) {
+    tmp <- mzml$mzML$run$spectrumList 
+  } else {
+    tmp <- mzml
+  }
+  spc_idx <- which(names(tmp) == "spectrum")
+  if (length(exclude) > 0) {
+    flat_tmp <- lapply(tmp[spc_idx], \(x) x[-which(names(x) %in% exclude)])
+  }
+  for (i in 1:length(flat_tmp)) {
+    while(any(sapply(flat_tmp[[i]], is.list))) {
+      flat_tmp[[i]] <- purrr::list_flatten(flat_tmp[[i]])
+    }
+  }
+  flat_tmp <- flat_tmp |>
+    lapply(\(x) {
+      x <- bind_rows(x)
+      if (!"spectrumRef" %in% names(x)) x$spectrumRef = NA_character_
+      x |>
+        fill(id, .direction = "downup") |>
+        fill(spectrumRef, .direction = "downup") |>
+        mutate(
+          scanIndex = as.integer(stringr::str_extract(stringr::str_extract(id, "scan=[0-9]+"), "[0-9]+")),
+          scanIndexParent = as.integer(stringr::str_extract(stringr::str_extract(spectrumRef, "scan=[0-9]+"), "[0-9]+")),
+          .before = everything()
+        ) |>
+        select(-(count:dataProcessingRef)) |>
+        filter(!is.na(cvRef))
+    }
+    )
+  tmp <- flat_tmp |>
+    bind_rows() |>
+    select(any_of(c("scanIndex", "scanIndexParent", "name", "value", "unitName"))) |>
+    pivot_wider(id_cols = c(scanIndex, scanIndexParent), names_from = name, values_from = value)
+  names(tmp) <- names(tmp) |>
+    stringr::str_replace_all("[ \\-]", "_") |>
+    stringr::str_remove_all("/")
+  tmp <- tmp |>
+    mutate(
+      across(everything(), ~ifelse(.x == "", NA_character_, .x)),
+      across(matches("ms_level|charge_state"), as.integer),
+      across(matches("mz$|intensity$|current$|energy$|offset$|time$|limit$|power$"), as.double)
+    ) |>
+    relocate(collision_energy, .after = scanIndexParent)
+  return(tmp)
 }

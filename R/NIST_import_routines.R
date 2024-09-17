@@ -1387,6 +1387,18 @@ resolve_fragments_NTAMRT <- function(obj,
   while (!fragments_in %in% names(obj)) {
     obj <- obj[[1]]
   }
+  # Check for zero length - added 2024-06-18: This should only be a final
+  # convenience check. By this point imports should be well formatted.
+  for (i in 1:length(obj)) {
+    log_it("info", glue::glue("Checking for zero length components from '{fragments_in}' in this import object."), log_ns)
+    zero_length <- which(sapply(obj[[i]], length) == 0)
+    if (any(zero_length)) {
+      log_it("info", glue::glue("Removing {length(zero_length[zero_length])} zero length entries at {str_flatten_comma(names(obj[[i]]), last = ', and ')}."), log_ns)
+    }
+    obj[[i]][zero_length] <- NULL
+  }
+  obj <- obj[sapply(obj, length) > 1]
+  if (length(obj) == 0) return(NA)
   # Resolve direct aliases first - this will make all SMILES aliases resolve
   # automatically during import mapping of the fragment values
   fragment_identifiers <- map_import(

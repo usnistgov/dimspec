@@ -145,10 +145,18 @@ a > i {
   padding-top: calc(50vh + 100px);
 }
 
-#go_data_import, #go_to_quality_review {
+#go_to_data_import, #go_to_data_import2, #go_to_quality_review,
+#export_from_review, #process_data_btn, #go_to_settings {
   padding: 20px 0;
   font-size: large;
   margin-bottom: 20px;
+  width: 100%;
+}
+
+#overall_qc_results {
+  font-weight: bold;
+  font-size: larger;
+  text-align: center;
 }
 
 td.dtr-control {
@@ -173,6 +181,10 @@ ul.dtr-details > li > .dtr-title {
 
 ul.dtr-details > li > .dtr-data {
   float: right !important;
+}
+
+#peak_qc_selector > .datatables > .dataTables_wrapper > .dataTable > tbody > tr {
+  overflow-wrap: anywhere;
 }
 
 .success {
@@ -263,4 +275,18 @@ section {
   position: absolute;
   width: 100%;
   padding-top: 12px;
+}
+
+.underlined {
+  text-decoration-line: underline;
+}
+
+.zero-space {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.align-left {
+  text-align: left !important;
 }

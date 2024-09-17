@@ -124,28 +124,6 @@ if (INIT_CONNECT) {
   }
 }
 
-# _Plumber set up --------------------------------------------------------------
-if (USE_API) {
-  if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
-    log_it("info", "Resolving plumber API environment...", "api")
-    source(here::here("inst", "plumber", "env_plumb.R"))
-  }
-  PLUMBER_URL <- api_reload(
-    pr = "plumber_service",
-    background = TRUE,
-    on_host = PLUMBER_HOST,
-    on_port = PLUMBER_PORT
-  )
-  if (plumber_service$is_alive()) {
-    log_it("success", glue::glue("Running plumber API at {PLUMBER_URL}"))
-    log_it("info", glue::glue("View plumber docs at {PLUMBER_URL}/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`"))
-  } else {
-    log_it("warn", "There was a problem launching the plumber API.", "api")
-  }
-} else {
-  log_it("info", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
-}
-
 # _RDKit set up ----------------------------------------------------------------
 if (INFORMATICS) {
   if (USE_RDKIT) {
@@ -170,6 +148,28 @@ if (INFORMATICS) {
   }
 }
 
+
+# _Plumber set up --------------------------------------------------------------
+if (USE_API) {
+  if (!exists("RENV_ESTABLISHED_API") || !RENV_ESTABLISHED_API) {
+    log_it("info", "Resolving plumber API environment...", "api")
+    source(here::here("inst", "plumber", "env_plumb.R"))
+  }
+  PLUMBER_URL <- api_reload(
+    pr = "plumber_service",
+    background = TRUE,
+    on_host = PLUMBER_HOST,
+    on_port = PLUMBER_PORT
+  )
+  if (plumber_service$is_alive()) {
+    log_it("success", glue::glue("Running plumber API at {PLUMBER_URL}"))
+    log_it("info", glue::glue("View plumber docs at {PLUMBER_URL}/__docs__/ or by calling `api_open_doc(PLUMBER_URL)`"))
+  } else {
+    log_it("warn", "There was a problem launching the plumber API.", "api")
+  }
+} else {
+  log_it("info", "Plumber API not requested according to USE_API setting in env_R.R settings.", "api")
+}
 # _Clean up --------------------------------------------------------------------
 rm(sources, exclusions, installed_packages)
 RENV_ESTABLISHED_COMPLIANCE <- TRUE

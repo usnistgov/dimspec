@@ -255,7 +255,7 @@ create_py_env <- function(env_name = NULL, required_libraries = NULL, log_ns = N
                      log_ns)
             }
           } else {
-            if (packageVersion("reticulate") >= 1.23) {
+            if (packageVersion("reticulate") >= "1.23") {
               if (logger) {
                 cmd <- sprintf('conda_create(envname = "%s", environment = "%s")',
                                env_name,
