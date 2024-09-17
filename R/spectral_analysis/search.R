@@ -656,7 +656,7 @@ search_all <- function(con, searchms, normfn = "sum", cormethod = "pearson", opt
   
   #scoring report, still doesn't work due to db issues 06152022 BJP
   result <- data.frame(ms1match.scores, ms2match.scores, peak_sum, sample_classes, peak_ids, compounds, row.names = NULL)
-  reorder <- order(rowSums(result[,1:4]), decreasing = TRUE)
+  reorder <- order(rowSums(result[,1:4]), na.rm = TRUE, decreasing = TRUE)
   list(result = result[reorder,],
        ums2_compare = l.ums2[reorder],
        ums1_compare = l.ums1[reorder])
